@@ -1,0 +1,49 @@
+name:                copilot
+version:             0.21
+cabal-version:       >= 1.2
+license:             BSD3
+license-file:        LICENSE
+author:              Lee Pike <leepike@gmail.com>, Robin Morisset <robin.morisset@ens.fr>
+synopsis:            A lazy-list language for generating constant-time and constant-space C programs.  Uses Atom as a backend.
+build-type:          Simple
+description:         TODO
+maintainer:          Lee Pike <leepike@gmail.com>
+category:            Code Generation
+homepage:            TODO
+extra-source-files:  TODO
+
+library
+    ghc-options:     -Wall
+    build-depends:     base > 4 && < 5
+                     , atom >= 1.0.5
+                     , containers >= 0.2.0.1
+                     , process >= 1.0.0.0
+                     , random >= 1.0.0.0
+                     , directory
+                     , mtl >= 1.0.0.0                   
+                     , filepath >= 1.0.0.0
+
+    extensions:
+    exposed-modules: Language.Copilot
+                     Language.Copilot.AdHocC
+                     Language.Copilot.Core
+                     Language.Copilot.Language
+                     Language.Copilot.AtomToC
+                     Language.Copilot.Compiler
+                     Language.Copilot.Interpreter
+                     Language.Copilot.Help
+                     Language.Copilot.Analyser
+                     Language.Copilot.PrettyPrinter
+                     Language.Copilot.Tests.Random
+                     Language.Copilot.Dispatch
+                     Language.Copilot.Interface
+                     Language.Copilot.Variables
+                     Language.Copilot.Libs.ErrorChks
+                     Language.Copilot.Libs.PTLTL
+                     Language.Copilot.Libs.LTL
+                     Language.Copilot.Libs.Indexes
+                     Language.Copilot.Libs.Statistics
+                     Language.Copilot.Examples.Examples
+                     Language.Copilot.Examples.LTLExamples
+                     Language.Copilot.Examples.PTLTLExamples
+                     Language.Copilot.Examples.StatExamples
