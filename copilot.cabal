@@ -6,11 +6,12 @@ license-file:        LICENSE
 author:              Lee Pike <leepike@gmail.com>, Robin Morisset <robin.morisset@ens.fr>
 synopsis:            A lazy-list language for generating constant-time and constant-space C programs.  Uses Atom as a backend.
 build-type:          Simple
-description:         TODO
 maintainer:          Lee Pike <leepike@gmail.com>
-category:            Code Generation
-homepage:            TODO
-extra-source-files:  TODO
+category:            Language
+homepage:            http://leepike.github.com/Copilot/
+description:         TODO
+
+extra-source-files:  README
 
 library
     ghc-options:     -Wall
