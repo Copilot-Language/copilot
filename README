@@ -1,6 +1,11 @@
 Copilot: A (Haskell DSL) stream language for generating hard real-time C code.
 
 Maintainer          : Lee Pike <leepike@gmail.com>
-Contributors        : Alwyn Goodloe, Robin Morisett, and Sebastian Niller
+Contributors        : Alwyn Goodloe, Robin Morisset, and Sebastian Niller
 LICENSE             : BSD3
 Academic paper      : http://www.cs.indiana.edu/~lepike/pub_pages/rv2010.html
+
+Getting started: Copilot is a Haskell library, best installed using Cabal. It's
+API is documented Language.Copilot.Help and is run by loading
+Language.Copilot.Interface and running help. There are numerous examples in
+Language.Copilot.Examples/ .
