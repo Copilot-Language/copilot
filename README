@@ -1,0 +1,6 @@
+Copilot: A (Haskell DSL) stream language for generating hard real-time C code.
+
+Maintainer          : Lee Pike <leepike@gmail.com>
+Contributors        : Alwyn Goodloe, Robin Morisett, and Sebastian Niller
+LICENSE             : BSD3
+Academic paper      : http://www.cs.indiana.edu/~lepike/pub_pages/rv2010.html
