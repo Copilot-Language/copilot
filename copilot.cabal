@@ -3,7 +3,7 @@ version:             0.21
 cabal-version:       >= 1.2
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike <leepike@gmail.com>, Robin Morisset <robin.morisset@ens.fr>
+author:              Lee Pike <leepike@gmail.com>, Robin Morisset, Alwyn Goodloe, Sebastian Niller
 synopsis:            A lazy-list language for generating constant-time and constant-space C programs.  Uses Atom as a backend.
 build-type:          Simple
 maintainer:          Lee Pike <leepike@gmail.com>
