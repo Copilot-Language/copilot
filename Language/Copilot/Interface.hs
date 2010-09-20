@@ -160,12 +160,12 @@ setO :: Name -> Options -> Options
 setO fileName opts = opts {optCName = fileName}
 
 -- | Sets the compiler to use, given as a path to the executable.  The default
--- | is \"gcc\".
+-- is \"gcc\".
 setGCC :: String -> Options -> Options
 setGCC compilerStr opts = opts {optCompiler = compilerStr}
 
 -- | Sets the directory into which the output of compiled programs should be
--- | placed.  If the directory does not exist, it will be created."
+-- placed.  If the directory does not exist, it will be created.
 setDir :: String -> Options -> Options
 setDir dir opts = opts {optOutputDir = dir}
 
@@ -175,7 +175,7 @@ setPP :: (String, String) -> Options -> Options
 setPP pp opts = opts {optPrePostCode = Just pp}
 
 -- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
--- | the stream becoms true.
+-- the stream becoms true.
 setTriggers :: [(Var, String)] -> Options -> Options
 setTriggers triggers opts = 
   if null repeats 

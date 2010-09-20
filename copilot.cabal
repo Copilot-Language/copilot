@@ -9,7 +9,23 @@ build-type:          Simple
 maintainer:          Lee Pike <leepike@gmail.com>
 category:            Language
 homepage:            http://leepike.github.com/Copilot/
-description:         TODO
+description:         Can you write a list in Haskell? Then you can write embedded C code using
+                     Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
+                     Word 64s) and tests for even numbers:
+                     .
+                     > fib :: Streams
+                     > fib = do
+                     >  "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
+                     >  "t" .= even (var "fib")
+                     >    where even :: Spec Word64 -> Spec Bool
+                     >          even w = w `mod` const 2 == const 0    
+                     .
+                     Copilot contains an interpreter, a compiler, and uses a model-checker to check
+                     the correctness of your program. The compiler generates constant time and
+                     constant space C code via Tom Hawkin's Atom (thanks Tom!). Copilot was
+                     originally developed to write embedded monitors for more complex embedded
+                     systems, but it can be used to develop a variety of functional-style embedded
+                     code.
 
 extra-source-files:  README
 
