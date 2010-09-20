@@ -5,8 +5,8 @@ Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
 Word 64s) and tests for even numbers:
 
 
-t :: Streams
-t = do
+fib :: Streams
+fib = do
   "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
   "t" .= even (var "fib")
     where even :: Spec Word64 -> Spec Bool

@@ -21,11 +21,8 @@ import Language.Copilot.PrettyPrinter
 
 import Language.Copilot.Libs.LTL
 
-
--- t0, t1, t2 :: basic streams, without external variables
-
-t0 :: Streams
-t0 = do
+fib :: Streams
+fib = do
   "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
   "t"   .= even (var "fib")
     where even :: Spec Word64 -> Spec Bool
