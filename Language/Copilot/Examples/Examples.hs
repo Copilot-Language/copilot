@@ -21,93 +21,7 @@ import Language.Copilot.PrettyPrinter
 
 import Language.Copilot.Libs.LTL
 
-testCoercions :: Streams
-testCoercions = do
-    "short" .= ((cast (varW64 "fib"))::(Spec Word8))  
-    "long" .= ((cast (varW8 "short"))::(Spec Word32))
 
-testCoercionsInt :: Streams
-testCoercionsInt = do
-    "counter" .= [0] ++ varW8 "counter" + 1 
-    "int" .= ((cast (varW8 "counter"))::(Spec Int8)) 
-
-yy :: Streams
-yy = do a .= constW64 4  
-
-zz :: Streams
-zz = do --a .= [0..4] ++ drop 4 (varW32 a) + 1
-  a .= (varW32 a) + 1
-  b .= drop 3 (varW32 a)
-
-xx :: Streams
-xx = do 
-     a .= extW32 "ext" 5 
-     b .= [3] ++ (varW32 a)
-     c .= [0, 1, 3, 4] ++ drop 1 (varW32 b)
-   
-vicious :: Streams
-vicious = do 
-    "varExt" .= extW32 "ext" 5 
-    "vicious" .= [0,1,2,3] ++ drop 4 (varW32 "varExt") + drop 1 (var "varExt") + var "varExt" 
-
-testVicious :: Streams
-testVicious = do
-    "counter" .= [0] ++ varW32 "counter" + 1 
-    "testVicious" .= [0,0,0,0,0,0,0,0,0,0] ++ drop 8 (varW32 "counter") 
-
--- The issue is when a variable v with a prophecy array of length n deps on
--- an external variable pv with a weight w, and that w > - n + 1 Here, w = 0 and
--- n = 2, so 0 > -1 holds.  That means that it is impossible to fill the last
--- case of the prophecy array, because it is not yet known what the external
--- variable will be worth.  It could be easily forbidden in the analyser.
--- However theoretically, nothing seems to prevent us form compiling it, we
--- would only need a way to say that in these case the middle of the prophecy
--- array should be updated and not the . (it would be safe because if another
--- variable was to dep on the  of it it would dep on the external
--- variable with a weight > 0, which is always forbidden).  It is probably
--- easier for now to just forbid it. But it could become an issue.
-isBugged :: Streams
-isBugged = do
-    "v" .= extW16 "ext" 5 
-    "v2" .= [0,1,3] ++ drop 1 (varW16 "v") 
-    
-
--- The next two examples are currently refused, because they include a
--- non-negative weighted closed path. But they could be compiled.  More
--- generally I think that this restriction could be partially lifted to
--- forbiding non-negative circuits.  However, this would demand longer
--- prophecyArrays than we have for now.  (and probably a slightly different
--- algorithm) So even if we partially lift this restriction, a warning should
--- stay, because it breaks the current easy-to-evaluate bound on the memory
--- requirement of a Copilot monitor.
-shouldBeRight :: Streams
-shouldBeRight = do
-    "v1" .= [0] ++ varI32 "v1" + 1 
-    "v2" .= drop 2 (varI32 "v1") 
-
-shouldBeRight2 :: Streams
-shouldBeRight2 = do
-    "loop1" .= [0] ++ varI32 "loop2" + 2 
-    "loop2" .= [1] ++ varI32 "loop1" - 1 
-    "other" .= drop 3 (varI32 "loop1") 
-
-testRules :: Streams
-testRules = do
-    "v1" .= (not (Const True)) || Var "v2" 
-    "v2" .= [True, False] ++ [True] ++ Var "v3" < extI8 "v4" 5 
-    "v3" .= 0 + drop 3 (int8 6) 
-    "v4" .= always 5 (Var "v1") 
-
-i8 :: Streams
-i8 = do
-    v .=  [0, 1] ++ (varI8 v) + 1 
-    
-trap :: Streams
-trap = do
-    "target" .= [0] ++ varW32 "target" + 1 
-    "x" .= [0,0] ++ var "y" + varW32 "target" 
-    "y" .= [0,0] ++ var "x" + varW32 "target" 
-    
 -- t0, t1, t2 :: basic streams, without external variables
 
 t0 :: Streams
@@ -115,7 +29,7 @@ t0 = do
   "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
   "t"   .= even (var "fib")
     where even :: Spec Word64 -> Spec Bool
-          even w' = w' `mod` (const 2) == (const 0)
+          even w' = w' `mod` const 2 == const 0
 
 t1 :: Streams
 t1 = do
@@ -146,8 +60,22 @@ t5 = do
     z .= [False, False] ++ not (var z)
     w .= varB x || var y
 
+yy :: Streams
+yy = do a .= constW64 4  
+
+zz :: Streams
+zz = do --a .= [0..4] ++ drop 4 (varW32 a) + 1
+  a .= (varW32 a) + 1
+  b .= drop 3 (varW32 a)
+
+xx :: Streams
+xx = do 
+     a .= extW32 "ext" 5 
+     b .= [3] ++ (varW32 a)
+     c .= [0, 1, 3, 4] ++ drop 1 (varW32 b)
+
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
--- engine is immediately shut off.
+-- engine is immediately shut off.  From the paper.
 engine :: Streams
 engine = do
    "temps" .= [0, 0, 0] ++ extF "temp" 1
@@ -155,7 +83,7 @@ engine = do
    "trigger" .= (var "overTempRise") ==> (extB "shutoff" 2) 
 
 -- To compile: > let (streams, ss) = dist in interface $ compileOpts streams ss "dist"
--- s at phase 2 on port 1.
+-- s at phase 2 on port 1.  Not stable.
 dist :: DistributedStreams
 dist = 
   ( a .= [0,1] ++ (var a) + constW8 1
@@ -187,3 +115,77 @@ gcd' = do
   "init" .= [True] ++ (const False)
     where sub hi lo = mux (varW16 hi > var lo) (var hi - var lo) (var hi)
           alg ext ex = [0] ++ mux (var "init") (extW16 ext 1) ex
+
+testCoercions :: Streams
+testCoercions = do
+    "short" .= ((cast (varW64 "fib"))::(Spec Word8))  
+    "long" .= ((cast (varW8 "short"))::(Spec Word32))
+
+testCoercionsInt :: Streams
+testCoercionsInt = do
+    "counter" .= [0] ++ varW8 "counter" + 1 
+    "int" .= ((cast (varW8 "counter"))::(Spec Int8)) 
+
+testRules :: Streams
+testRules = do
+    "v1" .= (not (Const True)) || Var "v2" 
+    "v2" .= [True, False] ++ [True] ++ Var "v3" < extI8 "v4" 5 
+    "v3" .= 0 + drop 3 (int8 6) 
+    "v4" .= always 5 (Var "v1") 
+
+i8 :: Streams
+i8 = do
+    v .=  [0, 1] ++ (varI8 v) + 1 
+    
+trap :: Streams
+trap = do
+    "target" .= [0] ++ varW32 "target" + 1 
+    "x" .= [0,0] ++ var "y" + varW32 "target" 
+    "y" .= [0,0] ++ var "x" + varW32 "target" 
+    
+
+-- vicious :: Streams
+-- vicious = do 
+--     "varExt" .= extW32 "ext" 5 
+--     "vicious" .= [0,1,2,3] ++ drop 4 (varW32 "varExt") + drop 1 (var "varExt") + var "varExt" 
+
+-- testVicious :: Streams
+-- testVicious = do
+--     "counter" .= [0] ++ varW32 "counter" + 1 
+--     "testVicious" .= [0,0,0,0,0,0,0,0,0,0] ++ drop 8 (varW32 "counter") 
+
+-- -- The issue is when a variable v with a prophecy array of length n deps on
+-- -- an external variable pv with a weight w, and that w > - n + 1 Here, w = 0 and
+-- -- n = 2, so 0 > -1 holds.  That means that it is impossible to fill the last
+-- -- case of the prophecy array, because it is not yet known what the external
+-- -- variable will be worth.  It could be easily forbidden in the analyser.
+-- -- However theoretically, nothing seems to prevent us form compiling it, we
+-- -- would only need a way to say that in these case the middle of the prophecy
+-- -- array should be updated and not the . (it would be safe because if another
+-- -- variable was to dep on the  of it it would dep on the external
+-- -- variable with a weight > 0, which is always forbidden).  It is probably
+-- -- easier for now to just forbid it. But it could become an issue.
+-- isBugged :: Streams
+-- isBugged = do
+--     "v" .= extW16 "ext" 5 
+--     "v2" .= [0,1,3] ++ drop 1 (varW16 "v") 
+    
+
+-- -- The next two examples are currently refused, because they include a
+-- -- non-negative weighted closed path. But they could be compiled.  More
+-- -- generally I think that this restriction could be partially lifted to
+-- -- forbiding non-negative circuits.  However, this would demand longer
+-- -- prophecyArrays than we have for now.  (and probably a slightly different
+-- -- algorithm) So even if we partially lift this restriction, a warning should
+-- -- stay, because it breaks the current easy-to-evaluate bound on the memory
+-- -- requirement of a Copilot monitor.
+-- shouldBeRight :: Streams
+-- shouldBeRight = do
+--     "v1" .= [0] ++ varI32 "v1" + 1 
+--     "v2" .= drop 2 (varI32 "v1") 
+
+-- shouldBeRight2 :: Streams
+-- shouldBeRight2 = do
+--     "loop1" .= [0] ++ varI32 "loop2" + 2 
+--     "loop2" .= [1] ++ varI32 "loop1" - 1 
+--     "other" .= drop 3 (varI32 "loop1") 
