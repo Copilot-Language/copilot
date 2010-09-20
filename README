@@ -1,11 +1,33 @@
 Copilot: A (Haskell DSL) stream language for generating hard real-time C code.
 
-Maintainer          : Lee Pike <leepike@gmail.com>
-Contributors        : Alwyn Goodloe, Robin Morisset, and Sebastian Niller
-LICENSE             : BSD3
-Academic paper      : http://www.cs.indiana.edu/~lepike/pub_pages/rv2010.html
+Can you write a list in Haskell? Then you can write embedded C code using
+Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
+Word 64s) and tests for even numbers:
 
-Getting started: Copilot is a Haskell library, best installed using Cabal. It's
-API is documented Language.Copilot.Help and is run by loading
-Language.Copilot.Interface and running help. There are numerous examples in
-Language.Copilot.Examples/ .
+
+t :: Streams
+t = do
+  "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
+  "t" .= even (var "fib")
+    where even :: Spec Word64 -> Spec Bool
+          even w = w `mod` const 2 == const 0    
+
+Copilot contains an interpreter, a compiler, and uses a model-checker to check
+the correctness of your program. The compiler generates constant time and
+constant space C code via Tom Hawkin's Atom (thanks Tom!). Copilot was
+originally developed to write embedded monitors for more complex embedded
+systems, but it can be used to develop a variety of functional-style embedded
+code.
+
+
+********
+Please visit <http://leepike.github.com/Copilot/> for more information about
+installing and using Copilot.
+
+Also available as index.html in the gh-pages branch of the Copilot repo.  In
+your local repo,
+
+  > git checkout gh-pages 
+
+and you should see index.html.
+********
