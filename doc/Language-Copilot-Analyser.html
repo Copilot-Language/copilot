@@ -1,0 +1,692 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Analyser</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Analyser.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-0.22: A stream DSL for writing embedded C.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Analyser.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Analyser</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+><B
+>Contents</B
+></TD
+></TR
+><TR
+><TD
+><DL
+><DT
+><A HREF="#1"
+>Main error checking functions
+</A
+></DT
+><DT
+><A HREF="#2"
+>Varied other things
+</A
+></DT
+></DL
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+>This module provides a way to check that a <EM
+>Copilot</EM
+> specification is compilable
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Acheck"
+>check</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Analyser.html#t%3AError"
+>Error</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AError"
+>Error</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3ABadSyntax"
+>BadSyntax</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadDrop"
+>BadDrop</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadSamplingPhase"
+>BadSamplingPhase</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadType"
+>BadType</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ANonNegativeWeightedClosedPath"
+>NonNegativeWeightedClosedPath</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] Weight</TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADependsOnClosePast"
+>DependsOnClosePast</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> Weight Weight</TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADependsOnFuture"
+>DependsOnFuture</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> Weight</TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ASpecSet"
+>SpecSet</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AAllSpecSet"
+>AllSpecSet</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3AFunSpecSet"
+>FunSpecSet</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADropSpecSet"
+>DropSpecSet</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetExternalVars"
+>getExternalVars</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [(Type, <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>)]</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetAtomType"
+>getAtomType</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Type</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="1"
+><A NAME="1"
+>Main error checking functions
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:check"
+><A NAME="v%3Acheck"
+></A
+></A
+><B
+>check</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Analyser.html#t%3AError"
+>Error</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Check a <EM
+>Copilot</EM
+> specification. 
+ If it is not compilable, then returns an error describing the issue.
+ Else, returns <TT
+>Nothing</TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Error"
+><A NAME="t%3AError"
+></A
+></A
+><B
+>Error</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+>Used for representing an error in the specification, detected by <TT
+><TT
+><A HREF="Language-Copilot-Analyser.html#v%3Acheck"
+>check</A
+></TT
+></TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadSyntax"
+><A NAME="v%3ABadSyntax"
+></A
+></A
+><B
+>BadSyntax</B
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>the BNF is not respected
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadDrop"
+><A NAME="v%3ABadDrop"
+></A
+></A
+><B
+>BadDrop</B
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>A drop expression of less than 0 is used
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadSamplingPhase"
+><A NAME="v%3ABadSamplingPhase"
+></A
+></A
+><B
+>BadSamplingPhase</B
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+></TD
+><TD CLASS="rdoc"
+>if an external variable is sampled at phase 0 then there is no time for the stream to be updated
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadType"
+><A NAME="v%3ABadType"
+></A
+></A
+><B
+>BadType</B
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>either a variable is not defined, or not with the good type ; there is no implicit conversion of types in <EM
+>Copilot</EM
+>
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:NonNegativeWeightedClosedPath"
+><A NAME="v%3ANonNegativeWeightedClosedPath"
+></A
+></A
+><B
+>NonNegativeWeightedClosedPath</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] Weight</TD
+><TD CLASS="rdoc"
+>The algorithm to compile <EM
+>Copilot</EM
+> specification can only work if there is no negative weighted closed path in the specification, as described in the original research paper
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DependsOnClosePast"
+><A NAME="v%3ADependsOnClosePast"
+></A
+></A
+><B
+>DependsOnClosePast</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> Weight Weight</TD
+><TD CLASS="rdoc"
+>Could be compiled, but would need bigger prophecyArrays
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DependsOnFuture"
+><A NAME="v%3ADependsOnFuture"
+></A
+></A
+><B
+>DependsOnFuture</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> Weight</TD
+><TD CLASS="rdoc"
+>If an output depends of a future of an input it will be hard to compile to say the least
+</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Error')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Error" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> <A HREF="Language-Copilot-Analyser.html#t%3AError"
+>Error</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:SpecSet"
+><A NAME="t%3ASpecSet"
+></A
+></A
+><B
+>SpecSet</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:AllSpecSet"
+><A NAME="v%3AAllSpecSet"
+></A
+></A
+><B
+>AllSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:FunSpecSet"
+><A NAME="v%3AFunSpecSet"
+></A
+></A
+><B
+>FunSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DropSpecSet"
+><A NAME="v%3ADropSpecSet"
+></A
+></A
+><B
+>DropSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:SpecSet')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:SpecSet" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> <A HREF="Language-Copilot-Analyser.html#t%3ASpecSet"
+>SpecSet</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="2"
+><A NAME="2"
+>Varied other things
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getExternalVars"
+><A NAME="v%3AgetExternalVars"
+></A
+></A
+><B
+>getExternalVars</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [(Type, <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>)]</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getAtomType"
+><A NAME="v%3AgetAtomType"
+></A
+></A
+><B
+>getAtomType</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Type</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.1</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

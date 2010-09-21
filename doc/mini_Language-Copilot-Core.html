@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Core</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+></HEAD
+><BODY
+><DIV CLASS="outer"
+><DIV CLASS="mini-topbar"
+>Language.Copilot.Core</DIV
+><DIV CLASS="mini-synopsis"
+><H1
+>Type hierarchy for the copilot language
+</H1
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AVar" TARGET="main"
+>Var</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AName" TARGET="main"
+>Name</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3APeriod" TARGET="main"
+>Period</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3APhase" TARGET="main"
+>Phase</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3APort" TARGET="main"
+>Port</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ASpec" TARGET="main"
+>Spec</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AStreams" TARGET="main"
+>Streams</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AStream" TARGET="main"
+>Stream</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ASends" TARGET="main"
+>Sends</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ASend" TARGET="main"
+>Send</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ADistributedStreams" TARGET="main"
+>DistributedStreams</A
+> </DIV
+> <H1
+>General functions on <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TT
+> and <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+>
+</H1
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AStreamable" TARGET="main"
+>Streamable</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ASendable" TARGET="main"
+>Sendable</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps" TARGET="main"
+>StreamableMaps</A
+> a</DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AemptySM" TARGET="main"
+>emptySM</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AisEmptySM" TARGET="main"
+>isEmptySM</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AgetMaybeElem" TARGET="main"
+>getMaybeElem</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AgetElem" TARGET="main"
+>getElem</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AstreamToUnitValue" TARGET="main"
+>streamToUnitValue</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AfoldStreamableMaps" TARGET="main"
+>foldStreamableMaps</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AfoldSendableMaps" TARGET="main"
+>foldSendableMaps</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AmapStreamableMaps" TARGET="main"
+>mapStreamableMaps</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AmapStreamableMapsM" TARGET="main"
+>mapStreamableMapsM</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AfilterStreamableMaps" TARGET="main"
+>filterStreamableMaps</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AnormalizeVar" TARGET="main"
+>normalizeVar</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AgetVars" TARGET="main"
+>getVars</A
+></DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AVars" TARGET="main"
+>Vars</A
+> </DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Core.html#v%3AnextSt" TARGET="main"
+>nextSt</A
+></DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ABoundedArray" TARGET="main"
+>BoundedArray</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AOutputs" TARGET="main"
+>Outputs</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3ATmpSamples" TARGET="main"
+>TmpSamples</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3APhasedValue" TARGET="main"
+>PhasedValue</A
+> a</DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AProphArrs" TARGET="main"
+>ProphArrs</A
+> </DIV
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+>&nbsp;<A HREF="Language-Copilot-Core.html#t%3AIndexes" TARGET="main"
+>Indexes</A
+> </DIV
+></DIV
+></DIV
+></BODY
+></HTML
+>

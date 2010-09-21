@@ -1,0 +1,836 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Dispatch</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Dispatch.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-0.22: A stream DSL for writing embedded C.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Dispatch.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Dispatch</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+><P
+>The Dispatch module : does all the IO, and offers an unified interface to both
+ the interpreter and the compiler.
+</P
+><P
+>Also communicates with GCC in order to compile the C code, and then transmits
+ the results of the execution of that C code.  This functionnality is mostly
+ used to check automatically the equivalence between the interpreter and the
+ compiler.  The Dispatch module only parses the command-line arguments before
+ calling that module.
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adispatch"
+>dispatch</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVars"
+>Vars</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3ABackEnd"
+>BackEnd</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3AIterations"
+>Iterations</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3AVerbose"
+>Verbose</A
+> -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ABackEnd"
+>BackEnd</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AOpts"
+>Opts</A
+> <A HREF="Language-Copilot-Dispatch.html#t%3AAtomToC"
+>AtomToC</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3AInterpreter"
+>Interpreter</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AAtomToC"
+>AtomToC</A
+>  = <A HREF="#v%3AAtomToC"
+>AtomToC</A
+> {<TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AcName"
+>cName</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AName"
+>Name</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AgccOpts"
+>gccOpts</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AgetPeriod"
+>getPeriod</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Core.html#t%3APeriod"
+>Period</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Ainterpreted"
+>interpreted</A
+> :: <A HREF="Language-Copilot-Dispatch.html#t%3AInterpreted"
+>Interpreted</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AoutputDir"
+>outputDir</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Acompiler"
+>compiler</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AprePostCode"
+>prePostCode</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Atriggers"
+>triggers</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> [(<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)]</TD
+></TR
+></TABLE
+>}</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AInterpreted"
+>Interpreted</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AInterpreted"
+>Interpreted</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ANotInterpreted"
+>NotInterpreted</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AIterations"
+>Iterations</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AVerbose"
+>Verbose</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AOnlyErrors"
+>OnlyErrors</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADefaultVerbose"
+>DefaultVerbose</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3AVerbose"
+>Verbose</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Documentation</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:dispatch"
+><A NAME="v%3Adispatch"
+></A
+></A
+><B
+>dispatch</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVars"
+>Vars</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3ABackEnd"
+>BackEnd</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3AIterations"
+>Iterations</A
+> -&gt; <A HREF="Language-Copilot-Dispatch.html#t%3AVerbose"
+>Verbose</A
+> -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>This function is the core of <EM
+>Copilot</EM
+> :
+ it glues together analyser, interpreter and compiler, and does all the IO.
+ It can be called either from interface (which justs decodes the command-line argument)
+ or directly from the interactive prompt in ghci.
+ <TT
+>streams</TT
+> is a specification, 
+ <TT
+>inputExts</TT
+> allows the user to give at runtime values for
+      the monitored variables. Useful for testing on randomly generated values and specifications,
+      or for the interpreted version.
+ <TT
+>be</TT
+> chooses between compilation or interpretation,
+      and if compilation is chosen (AtomToC) holds a few additionnal informations.
+      see description of <TT
+><TT
+><A HREF="Language-Copilot-Dispatch.html#t%3ABackEnd"
+>BackEnd</A
+></TT
+></TT
+>
+ <TT
+>iterations</TT
+> just gives the number of periods the specification must be executed.
+      If you would rather execute it by hand, then just choose AtomToC for backEnd and 0 for iterations
+ <TT
+>verbose</TT
+> determines what is output.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:BackEnd"
+><A NAME="t%3ABackEnd"
+></A
+></A
+><B
+>BackEnd</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:Opts"
+><A NAME="v%3AOpts"
+></A
+></A
+><B
+>Opts</B
+> <A HREF="Language-Copilot-Dispatch.html#t%3AAtomToC"
+>AtomToC</A
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Interpreter"
+><A NAME="v%3AInterpreter"
+></A
+></A
+><B
+>Interpreter</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:AtomToC"
+><A NAME="t%3AAtomToC"
+></A
+></A
+><B
+>AtomToC</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="5" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:AtomToC"
+><A NAME="v%3AAtomToC"
+></A
+></A
+><B
+>AtomToC</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="body" COLSPAN="2"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:cName"
+><A NAME="v%3AcName"
+></A
+></A
+><B
+>cName</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AName"
+>Name</A
+></TD
+><TD CLASS="rdoc"
+>Name of the C file to generate
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:gccOpts"
+><A NAME="v%3AgccOpts"
+></A
+></A
+><B
+>gccOpts</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+><TD CLASS="rdoc"
+>Options to pass to the compiler
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:getPeriod"
+><A NAME="v%3AgetPeriod"
+></A
+></A
+><B
+>getPeriod</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Core.html#t%3APeriod"
+>Period</A
+></TD
+><TD CLASS="rdoc"
+>The optional period
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:interpreted"
+><A NAME="v%3Ainterpreted"
+></A
+></A
+><B
+>interpreted</B
+> :: <A HREF="Language-Copilot-Dispatch.html#t%3AInterpreted"
+>Interpreted</A
+></TD
+><TD CLASS="rdoc"
+>Interpret the program or not
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:outputDir"
+><A NAME="v%3AoutputDir"
+></A
+></A
+><B
+>outputDir</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+><TD CLASS="rdoc"
+>Where to put the executable
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:compiler"
+><A NAME="v%3Acompiler"
+></A
+></A
+><B
+>compiler</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+><TD CLASS="rdoc"
+>Which compiler to use
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:prePostCode"
+><A NAME="v%3AprePostCode"
+></A
+></A
+><B
+>prePostCode</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)</TD
+><TD CLASS="rdoc"
+>Code to replace the default initialization and main
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:triggers"
+><A NAME="v%3Atriggers"
+></A
+></A
+><B
+>triggers</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> [(<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)]</TD
+><TD CLASS="rdoc"
+>A list of Copilot variable C
+ function name pairs.  The C
+ funciton is called if the
+ Copilot stream becomes True.
+ The Stream must be of Booleans
+ and the C function must be of
+ type void <TT
+>foo(void)</TT
+>.
+</TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Interpreted"
+><A NAME="t%3AInterpreted"
+></A
+></A
+><B
+>Interpreted</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:Interpreted"
+><A NAME="v%3AInterpreted"
+></A
+></A
+><B
+>Interpreted</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:NotInterpreted"
+><A NAME="v%3ANotInterpreted"
+></A
+></A
+><B
+>NotInterpreted</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Iterations"
+><A NAME="t%3AIterations"
+></A
+></A
+><B
+>Iterations</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Verbose"
+><A NAME="t%3AVerbose"
+></A
+></A
+><B
+>Verbose</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:OnlyErrors"
+><A NAME="v%3AOnlyErrors"
+></A
+></A
+><B
+>OnlyErrors</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DefaultVerbose"
+><A NAME="v%3ADefaultVerbose"
+></A
+></A
+><B
+>DefaultVerbose</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Verbose"
+><A NAME="v%3AVerbose"
+></A
+></A
+><B
+>Verbose</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Verbose')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Verbose" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> <A HREF="Language-Copilot-Dispatch.html#t%3AVerbose"
+>Verbose</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.1</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

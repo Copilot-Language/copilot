@@ -1,0 +1,3169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Core</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Core.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-0.22: A stream DSL for writing embedded C.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Core.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Core</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+><B
+>Contents</B
+></TD
+></TR
+><TR
+><TD
+><DL
+><DT
+><A HREF="#1"
+>Type hierarchy for the copilot language
+</A
+></DT
+><DT
+><A HREF="#2"
+>General functions on <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TT
+> and <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+>
+</A
+></DT
+></DL
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+><P
+>Provides basic types and functions for other parts of <EM
+>Copilot</EM
+>.
+</P
+><P
+>If you wish to add a new type, you need to make it an instance of <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+></TT
+></TT
+>,
+ to add it to <TT
+><TT
+><A HREF="Language-Copilot-Core.html#v%3AfoldStreamableMaps"
+>foldStreamableMaps</A
+></TT
+></TT
+>, <TT
+><TT
+><A HREF="Language-Copilot-Core.html#v%3AmapStreamableMaps"
+>mapStreamableMaps</A
+></TT
+></TT
+>, and optionnaly 
+ to add an ext[Type], a [type] and a var[Type]
+ functions in Language.hs to make it easier to use. 
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AVar"
+>Var</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AName"
+>Name</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3APeriod"
+>Period</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3APhase"
+>Phase</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3APort"
+>Port</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ASpec"
+>Spec</A
+> a <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3APVar"
+>PVar</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; Type -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AVar"
+>Var</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AConst"
+>Const</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AF"
+>F</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b) =&gt; (b -&gt; a) -&gt; (E b -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AF2"
+>F2</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> c) =&gt; (b -&gt; c -&gt; a) -&gt; (E b -&gt; E c -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> c -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AF3"
+>F3</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> c, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> d) =&gt; (b -&gt; c -&gt; d -&gt; a) -&gt; (E b -&gt; E c -&gt; E d -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> c -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> d -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AAppend"
+>Append</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; [a] -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3ADrop"
+>Drop</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AStreams"
+>Streams</A
+> = <A HREF="/Library/Frameworks/HaskellPlatform.framework/share/doc/mtl-1.1.0.2/html/Control-Monad-Writer-Lazy.html#t%3AWriter"
+>Writer</A
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+>) <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AStream"
+>Stream</A
+> a = <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; (<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3ASends"
+>Sends</A
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ASend"
+>Send</A
+> a = <A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A HREF="#v%3ASend"
+>Send</A
+> (<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>, <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+>)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3ADistributedStreams"
+>DistributedStreams</A
+> = (<A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+>, <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+>)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (Expr a, Assign a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> a) =&gt; <A HREF="#t%3AStreamable"
+>Streamable</A
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetSubMap"
+>getSubMap</A
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AupdateSubMap"
+>updateSubMap</A
+> ::  (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a) -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a)) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aunit"
+>unit</A
+> :: a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AatomConstructor"
+>atomConstructor</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; a -&gt; Atom (V a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AexternalAtomConstructor"
+>externalAtomConstructor</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; V a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtypeId"
+>typeId</A
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtypeIdPrec"
+>typeIdPrec</A
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AatomType"
+>atomType</A
+> :: a -&gt; Type</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AshowAsC"
+>showAsC</A
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AmakeTrigger"
+>makeTrigger</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> [(<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)] -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AProphArrs"
+>ProphArrs</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ATmpSamples"
+>TmpSamples</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AIndexes"
+>Indexes</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+> -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="#t%3ASendable"
+>Sendable</A
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Asend"
+>send</A
+> :: E a -&gt; <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+> -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AStreamableMaps"
+>StreamableMaps</A
+> a = <A HREF="#v%3ASM"
+>SM</A
+> {<TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AbMap"
+>bMap</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Ai8Map"
+>i8Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Ai16Map"
+>i16Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Ai32Map"
+>i32Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Ai64Map"
+>i64Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Aw8Map"
+>w8Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Aw16Map"
+>w16Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Aw32Map"
+>w32Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3Aw64Map"
+>w64Map</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AfMap"
+>fMap</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+>)</TD
+></TR
+><TR
+><TD CLASS="recfield"
+><A HREF="#v%3AdMap"
+>dMap</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+>)</TD
+></TR
+></TABLE
+>}</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AemptySM"
+>emptySM</A
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AisEmptySM"
+>isEmptySM</A
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> a -&gt; <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetMaybeElem"
+>getMaybeElem</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (b a)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetElem"
+>getElem</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; b a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AstreamToUnitValue"
+>streamToUnitValue</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Atom (V a)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AfoldStreamableMaps"
+>foldStreamableMaps</A
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> b c.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; c a -&gt; b -&gt; b) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; b -&gt; b</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AfoldSendableMaps"
+>foldSendableMaps</A
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> b c.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; c a -&gt; b -&gt; b) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; b -&gt; b</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AmapStreamableMaps"
+>mapStreamableMaps</A
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> s s'.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; s a -&gt; s' a) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s'</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AmapStreamableMapsM"
+>mapStreamableMapsM</A
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> s s' m. <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Control-Monad.html#t%3AMonad"
+>Monad</A
+> m =&gt; (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; s a -&gt; m (s' a)) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s -&gt; m (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s')</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AfilterStreamableMaps"
+>filterStreamableMaps</A
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> c.  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; [(Type, <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>)] -&gt; (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c, <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+>)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AnormalizeVar"
+>normalizeVar</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetVars"
+>getVars</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>]</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AVars"
+>Vars</A
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> []</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AnextSt"
+>nextSt</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AProphArrs"
+>ProphArrs</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ATmpSamples"
+>TmpSamples</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AIndexes"
+>Indexes</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; ArrIndex -&gt; E a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ABoundedArray"
+>BoundedArray</A
+> a = <A HREF="#v%3AB"
+>B</A
+> ArrIndex (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (A a))</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AOutputs"
+>Outputs</A
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> V</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3ATmpSamples"
+>TmpSamples</A
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3APhasedValue"
+>PhasedValue</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3APhasedValue"
+>PhasedValue</A
+> a = <A HREF="#v%3APh"
+>Ph</A
+> <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> (V a)</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AProphArrs"
+>ProphArrs</A
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ABoundedArray"
+>BoundedArray</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A HREF="#t%3AIndexes"
+>Indexes</A
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (V ArrIndex)</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="1"
+><A NAME="1"
+>Type hierarchy for the copilot language
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Var"
+><A NAME="t%3AVar"
+></A
+></A
+><B
+>Var</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Names of the streams or external variables
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Name"
+><A NAME="t%3AName"
+></A
+></A
+><B
+>Name</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>C file name
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Period"
+><A NAME="t%3APeriod"
+></A
+></A
+><B
+>Period</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Atom period
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Phase"
+><A NAME="t%3APhase"
+></A
+></A
+><B
+>Phase</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Phase of an Atom phase
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Port"
+><A NAME="t%3APort"
+></A
+></A
+><B
+>Port</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Port over which to broadcast information
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Spec"
+><A NAME="t%3ASpec"
+></A
+></A
+><B
+>Spec</B
+> a <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+>Specification of a stream, parameterized by the type of the values of the stream.
+ The only requirement on <TT
+>a</TT
+> is that it should be <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+></TT
+>.
+</TD
+></TR
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:PVar"
+><A NAME="v%3APVar"
+></A
+></A
+><B
+>PVar</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; Type -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Var"
+><A NAME="v%3AVar"
+></A
+></A
+><B
+>Var</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Const"
+><A NAME="v%3AConst"
+></A
+></A
+><B
+>Const</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:F"
+><A NAME="v%3AF"
+></A
+></A
+><B
+>F</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b) =&gt; (b -&gt; a) -&gt; (E b -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:F2"
+><A NAME="v%3AF2"
+></A
+></A
+><B
+>F2</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> c) =&gt; (b -&gt; c -&gt; a) -&gt; (E b -&gt; E c -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> c -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:F3"
+><A NAME="v%3AF3"
+></A
+></A
+><B
+>F3</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> c, <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> d) =&gt; (b -&gt; c -&gt; d -&gt; a) -&gt; (E b -&gt; E c -&gt; E d -&gt; E a) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> c -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> d -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Append"
+><A NAME="v%3AAppend"
+></A
+></A
+><B
+>Append</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; [a] -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:Drop"
+><A NAME="v%3ADrop"
+></A
+></A
+><B
+>Drop</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Spec')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Spec" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, NumE a, <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> a) =&gt; <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, NumE a) =&gt; <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Monoid.html#t%3AMonoid"
+>Monoid</A
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+>)</TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Streams"
+><A NAME="t%3AStreams"
+></A
+></A
+><B
+>Streams</B
+> = <A HREF="/Library/Frameworks/HaskellPlatform.framework/share/doc/mtl-1.1.0.2/html/Control-Monad-Writer-Lazy.html#t%3AWriter"
+>Writer</A
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+>) <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Container for mutually recursive streams, whose specifications may be
+ parameterized by different types
+type Streams = StreamableMaps Spec
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Stream"
+><A NAME="t%3AStream"
+></A
+></A
+><B
+>Stream</B
+> a = <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; (<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>A named stream
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Sends"
+><A NAME="t%3ASends"
+></A
+></A
+><B
+>Sends</B
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Container for all the instructions sending data, parameterised by different types
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Send"
+><A NAME="t%3ASend"
+></A
+></A
+><B
+>Send</B
+> a </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+>An instruction to send data on a port at a given phase
+</TD
+></TR
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A NAME="v:Send"
+><A NAME="v%3ASend"
+></A
+></A
+><B
+>Send</B
+> (<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>, <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:DistributedStreams"
+><A NAME="t%3ADistributedStreams"
+></A
+></A
+><B
+>DistributedStreams</B
+> = (<A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+>, <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+>)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Holds the complete specification of a distributed monitor
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="2"
+><A NAME="2"
+>General functions on <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TT
+> and <TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+>
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (Expr a, Assign a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> a) =&gt; <A NAME="t:Streamable"
+><A NAME="t%3AStreamable"
+></A
+></A
+><B
+>Streamable</B
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+><P
+>A type is streamable iff a stream may emit values of that type
+</P
+><P
+>There are very strong links between <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+></TT
+></TT
+> and <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+> :
+ the types aggregated in <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+> are exactly the <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+></TT
+></TT
+> types
+ and that invariant should be kept (see methods)
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Methods</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A NAME="v:getSubMap"
+><A NAME="v%3AgetSubMap"
+></A
+></A
+><B
+>getSubMap</B
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Provides access to the Map in a StreamableMaps which store values
+ of the good type
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:updateSubMap"
+><A NAME="v%3AupdateSubMap"
+></A
+></A
+><B
+>updateSubMap</B
+> ::  (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a) -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (b a)) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Provides a way to modify (mostly used for insertions) the Map in a StreamableMaps
+ which store values of the good type
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:unit"
+><A NAME="v%3Aunit"
+></A
+></A
+><B
+>unit</B
+> :: a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>A default value for the type <TT
+>a</TT
+>. Its value is not important.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:atomConstructor"
+><A NAME="v%3AatomConstructor"
+></A
+></A
+><B
+>atomConstructor</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; a -&gt; Atom (V a)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>A constructor to produce an <TT
+>Atom</TT
+> value
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:externalAtomConstructor"
+><A NAME="v%3AexternalAtomConstructor"
+></A
+></A
+><B
+>externalAtomConstructor</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; V a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>A constructor to get an <TT
+>Atom</TT
+> value from an external variable
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:typeId"
+><A NAME="v%3AtypeId"
+></A
+></A
+><B
+>typeId</B
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+><P
+>The argument only coerces the type, it is discarded.
+ Returns the format for outputting a value of this type with printf in C
+</P
+><P
+>For example <A HREF="%f.html"
+>%f</A
+> for a float
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:typeIdPrec"
+><A NAME="v%3AtypeIdPrec"
+></A
+></A
+><B
+>typeIdPrec</B
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>The same, only adds the wanted precision for floating points.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:atomType"
+><A NAME="v%3AatomType"
+></A
+></A
+><B
+>atomType</B
+> :: a -&gt; Type</TD
+></TR
+><TR
+><TD CLASS="doc"
+>The argument only coerces the type, it is discarded.
+ Returns the corresponding <EM
+>Atom</EM
+> type.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:showAsC"
+><A NAME="v%3AshowAsC"
+></A
+></A
+><B
+>showAsC</B
+> :: a -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Like Show, except that the formatting is exactly the same as the one of C
+ for example the booleans are first converted to 0 or 1, and floats and doubles
+ have the good precision.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:makeTrigger"
+><A NAME="v%3AmakeTrigger"
+></A
+></A
+><B
+>makeTrigger</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> [(<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Char.html#t%3AString"
+>String</A
+>)] -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AProphArrs"
+>ProphArrs</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ATmpSamples"
+>TmpSamples</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AIndexes"
+>Indexes</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+> -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>To make customer C triggers.  Only for Spec Bool (others through an error).
+</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Streamable')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Streamable" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A NAME="t:Sendable"
+><A NAME="t%3ASendable"
+></A
+></A
+><B
+>Sendable</B
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Methods</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A NAME="v:send"
+><A NAME="v%3Asend"
+></A
+></A
+><B
+>send</B
+> :: E a -&gt; <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+> -&gt; Atom <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Sendable')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Sendable" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:StreamableMaps"
+><A NAME="t%3AStreamableMaps"
+></A
+></A
+><B
+>StreamableMaps</B
+> a </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+><P
+>This is a generalization of <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TT
+></TT
+>
+ which is used for storing Maps over values parameterized by different types.
+</P
+><P
+>It is extensively used in the internals of Copilot, in conjunction with
+ <TT
+><TT
+><A HREF="Language-Copilot-Core.html#v%3AfoldStreamableMaps"
+>foldStreamableMaps</A
+></TT
+></TT
+> and <TT
+><TT
+><A HREF="Language-Copilot-Core.html#v%3AmapStreamableMaps"
+>mapStreamableMaps</A
+></TT
+></TT
+>
+</P
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="5" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:SM"
+><A NAME="v%3ASM"
+></A
+></A
+><B
+>SM</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="body" COLSPAN="2"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:bMap"
+><A NAME="v%3AbMap"
+></A
+></A
+><B
+>bMap</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:i8Map"
+><A NAME="v%3Ai8Map"
+></A
+></A
+><B
+>i8Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:i16Map"
+><A NAME="v%3Ai16Map"
+></A
+></A
+><B
+>i16Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:i32Map"
+><A NAME="v%3Ai32Map"
+></A
+></A
+><B
+>i32Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:i64Map"
+><A NAME="v%3Ai64Map"
+></A
+></A
+><B
+>i64Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:w8Map"
+><A NAME="v%3Aw8Map"
+></A
+></A
+><B
+>w8Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:w16Map"
+><A NAME="v%3Aw16Map"
+></A
+></A
+><B
+>w16Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:w32Map"
+><A NAME="v%3Aw32Map"
+></A
+></A
+><B
+>w32Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:w64Map"
+><A NAME="v%3Aw64Map"
+></A
+></A
+><B
+>w64Map</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:fMap"
+><A NAME="v%3AfMap"
+></A
+></A
+><B
+>fMap</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:dMap"
+><A NAME="v%3AdMap"
+></A
+></A
+><B
+>dMap</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+>)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:StreamableMaps')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:StreamableMaps" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>(<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+>), <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (a <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+>)) =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Monoid.html#t%3AMonoid"
+>Monoid</A
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+>)</TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:emptySM"
+><A NAME="v%3AemptySM"
+></A
+></A
+><B
+>emptySM</B
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>An empty streamableMaps. 
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:isEmptySM"
+><A NAME="v%3AisEmptySM"
+></A
+></A
+><B
+>isEmptySM</B
+> ::  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> a -&gt; <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Verifies if its argument is equal to emptySM
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getMaybeElem"
+><A NAME="v%3AgetMaybeElem"
+></A
+></A
+><B
+>getMaybeElem</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (b a)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Lookup into the map of the right type in <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getElem"
+><A NAME="v%3AgetElem"
+></A
+></A
+><B
+>getElem</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> b -&gt; b a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Lookup into the map of the right type in <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+>
+ Launch an exception if the index is not in it
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:streamToUnitValue"
+><A NAME="v%3AstreamToUnitValue"
+></A
+></A
+><B
+>streamToUnitValue</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; Atom (V a)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Just produce an <TT
+>Atom</TT
+> value named after its first argument,
+ with an unspecified value. The second argument only coerces the type, it is discarded
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:foldStreamableMaps"
+><A NAME="v%3AfoldStreamableMaps"
+></A
+></A
+><B
+>foldStreamableMaps</B
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> b c.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; c a -&gt; b -&gt; b) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; b -&gt; b</TD
+></TR
+><TR
+><TD CLASS="doc"
+>This function is used to iterate on all the values in all the maps stored
+ by a <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+>, accumulating a value over time
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:foldSendableMaps"
+><A NAME="v%3AfoldSendableMaps"
+></A
+></A
+><B
+>foldSendableMaps</B
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> b c.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; c a -&gt; b -&gt; b) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; b -&gt; b</TD
+></TR
+><TR
+><TD CLASS="doc"
+>This function is used to iterate on all the values in all the maps stored
+ by a <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+></TT
+></TT
+>, accumulating a value over time
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:mapStreamableMaps"
+><A NAME="v%3AmapStreamableMaps"
+></A
+></A
+><B
+>mapStreamableMaps</B
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> s s'.  (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; s a -&gt; s' a) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s'</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:mapStreamableMapsM"
+><A NAME="v%3AmapStreamableMapsM"
+></A
+></A
+><B
+>mapStreamableMapsM</B
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> s s' m. <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Control-Monad.html#t%3AMonad"
+>Monad</A
+> m =&gt; (<SPAN CLASS="keyword"
+>forall</SPAN
+> a. <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; s a -&gt; m (s' a)) -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s -&gt; m (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> s')</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:filterStreamableMaps"
+><A NAME="v%3AfilterStreamableMaps"
+></A
+></A
+><B
+>filterStreamableMaps</B
+> :: <SPAN CLASS="keyword"
+>forall</SPAN
+> c.  <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c -&gt; [(Type, <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>, <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>)] -&gt; (<A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> c, <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+>)</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Only keeps in <TT
+>sm</TT
+> the values whose key+type are in <TT
+>l</TT
+>.
+ Also returns a bool saying whether all the elements in sm
+ were in l.
+ Works even if some elements in <TT
+>l</TT
+> are not in <TT
+>sm</TT
+>.
+ Not optimised at all
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:normalizeVar"
+><A NAME="v%3AnormalizeVar"
+></A
+></A
+><B
+>normalizeVar</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Replace all accepted special characters by sequences of underscores
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getVars"
+><A NAME="v%3AgetVars"
+></A
+></A
+><B
+>getVars</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>]</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Get the Copilot variables.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Vars"
+><A NAME="t%3AVars"
+></A
+></A
+><B
+>Vars</B
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> []</TD
+></TR
+><TR
+><TD CLASS="doc"
+>For each typed variable, this type holds all its successive values in an infinite list
+ Beware : each element of one of those lists corresponds to a full <TT
+>Atom</TT
+> period, 
+ not to a single clock tick.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:nextSt"
+><A NAME="v%3AnextSt"
+></A
+></A
+><B
+>nextSt</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AProphArrs"
+>ProphArrs</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ATmpSamples"
+>TmpSamples</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AIndexes"
+>Indexes</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; ArrIndex -&gt; E a</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:BoundedArray"
+><A NAME="t%3ABoundedArray"
+></A
+></A
+><B
+>BoundedArray</B
+> a </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:B"
+><A NAME="v%3AB"
+></A
+></A
+><B
+>B</B
+> ArrIndex (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> (A a))</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Outputs"
+><A NAME="t%3AOutputs"
+></A
+></A
+><B
+>Outputs</B
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> V</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:TmpSamples"
+><A NAME="t%3ATmpSamples"
+></A
+></A
+><B
+>TmpSamples</B
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3APhasedValue"
+>PhasedValue</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:PhasedValue"
+><A NAME="t%3APhasedValue"
+></A
+></A
+><B
+>PhasedValue</B
+> a </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:Ph"
+><A NAME="v%3APh"
+></A
+></A
+><B
+>Ph</B
+> <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> (V a)</TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:ProphArrs"
+><A NAME="t%3AProphArrs"
+></A
+></A
+><B
+>ProphArrs</B
+> = <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ABoundedArray"
+>BoundedArray</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>type</SPAN
+> <A NAME="t:Indexes"
+><A NAME="t%3AIndexes"
+></A
+></A
+><B
+>Indexes</B
+> = <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/containers-0.3.0.0/Data-Map.html#t%3AMap"
+>Map</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> (V ArrIndex)</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.1</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

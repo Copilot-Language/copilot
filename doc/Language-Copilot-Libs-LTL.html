@@ -1,0 +1,418 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Libs.LTL</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Libs-LTL.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-0.22: A stream DSL for writing embedded C.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Libs.LTL.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Libs.LTL</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Bounded Linear Temporal Logic (LTL) operators.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aalways"
+>always</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Anext"
+>next</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aeventually"
+>eventually</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Auntil"
+>until</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Arelease"
+>release</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Documentation</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:always"
+><A NAME="v%3Aalways"
+></A
+></A
+><B
+>always</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Property <TT
+>s</TT
+> holds for the next <TT
+>n</TT
+> periods.  If <TT
+>n == 0</TT
+>, then <TT
+>s</TT
+> holds
+ in the current period.  We require <TT
+>n &gt;= 0</TT
+>.
+ E.g., if <TT
+>p = always 2 s</TT
+>, then we have the following relationship between the streams generated:
+ <TT
+>
+ s =&gt; T T T T F F F F ...
+ p =&gt; T T F F F F F F ...
+ </TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:next"
+><A NAME="v%3Anext"
+></A
+></A
+><B
+>next</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Property <TT
+>s</TT
+> holds at the next period.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:eventually"
+><A NAME="v%3Aeventually"
+></A
+></A
+><B
+>eventually</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Property <TT
+>s</TT
+> holds at some period in the next <TT
+>n</TT
+> periods.  If <TT
+>n == 0</TT
+>,
+ then <TT
+>s</TT
+> holds in the current period.  We require <TT
+>n &gt;= 0</TT
+>.
+ E.g., if <TT
+>p = eventually 2 s</TT
+>, then we have the following relationship between the streams generated:
+ <TT
+>
+ s =&gt; F F F F T F T F ...
+ p =&gt; F F T T T T T T ...
+ </TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:until"
+><A NAME="v%3Auntil"
+></A
+></A
+><B
+>until</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+><TT
+>until n s0 s1</TT
+> means that <TT
+>eventually n s1</TT
+>, and up until at least the
+ period before <TT
+>s1</TT
+> holds, <TT
+>s0</TT
+> continuously holds.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:release"
+><A NAME="v%3Arelease"
+></A
+></A
+><B
+>release</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+><TT
+>release n s0 s1</TT
+> means that either <TT
+>always n s1</TT
+>, or <TT
+>s1</TT
+> holds up to and
+ including the period at which <TT
+>s0</TT
+> becomes true.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.1</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

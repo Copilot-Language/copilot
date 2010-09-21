@@ -1,0 +1,4107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Language</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Language.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-0.22: A stream DSL for writing embedded C.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Language.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Language</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+><B
+>Contents</B
+></TD
+></TR
+><TR
+><TD
+><DL
+><DT
+><A HREF="#1"
+>Operators and functions
+</A
+></DT
+><DT
+><A HREF="#2"
+>Boolean constants
+</A
+></DT
+><DT
+><A HREF="#3"
+>Arithmetic operators (derived)
+</A
+></DT
+><DT
+><A HREF="#4"
+>Division
+</A
+></DT
+><DT
+><A HREF="#5"
+>The next functions are used only to coerce the type of their argument
+</A
+></DT
+><DT
+><A HREF="#6"
+>The next functions provide easier access to typed external variables.
+</A
+></DT
+><DT
+><A HREF="#7"
+>Set of operators from which to choose during the generation of random streams
+</A
+></DT
+><DT
+><A HREF="#8"
+>Constructs of the copilot language
+</A
+></DT
+><DT
+><A HREF="#9"
+>The next functions are typed variable declarations to help the type-checker.
+</A
+></DT
+><DT
+><A HREF="#10"
+>The next functions help typing the send operations
+</A
+></DT
+><DT
+><A HREF="#11"
+>Typed constant declarations.
+</A
+></DT
+></DL
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+><P
+>Describes the language <EM
+>Copilot</EM
+>.
+</P
+><P
+>If you wish to add a new operator, the only modification needed is adding it in this module.
+ But if you want it to be used in the random generated streams, add it to either <TT
+><TT
+><A HREF="Language-Copilot-Language.html#v%3AopsF"
+>opsF</A
+></TT
+></TT
+>, <TT
+><TT
+><A HREF="Language-Copilot-Language.html#v%3AopsF2"
+>opsF2</A
+></TT
+></TT
+> or <TT
+><TT
+><A HREF="Language-Copilot-Language.html#v%3AopsF3"
+>opsF3</A
+></TT
+></TT
+>
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Amod"
+>mod</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adiv"
+>div</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Amod0"
+>mod0</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adiv0"
+>div0</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3C"
+>(&lt;)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3C%3D"
+>(&lt;=)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3D%3D"
+>(==)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, EqE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%2F%3D"
+>(/=)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, EqE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3E%3D"
+>(&gt;=)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3E"
+>(&gt;)</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Anot"
+>not</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%7C%7C"
+>(||)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%26%26"
+>(&amp;&amp;)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%5E"
+>(^)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%3D%3D%3E"
+>(==&gt;)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ABool"
+>Bool</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AFalse"
+>False</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ATrue"
+>True</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> a) =&gt; <A HREF="#t%3ANum"
+>Num</A
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%2B"
+>(+)</A
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%2A"
+>(*)</A
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A-"
+>(-)</A
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Anegate"
+>negate</A
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aabs"
+>abs</A
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Asignum"
+>signum</A
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AfromInteger"
+>fromInteger</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AInteger"
+>Integer</A
+> -&gt; a</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> a =&gt; <A HREF="#t%3AFractional"
+>Fractional</A
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%2F"
+>(/)</A
+> :: a -&gt; a -&gt; a</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Amux"
+>mux</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AIntegral"
+>Integral</A
+> a) =&gt; <A HREF="#t%3ACastIntTo"
+>CastIntTo</A
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Acast"
+>cast</A
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, IntegralE b) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Abool"
+>bool</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aint8"
+>int8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aint16"
+>int16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aint32"
+>int32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aint64"
+>int64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aword8"
+>word8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aword16"
+>word16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aword32"
+>word32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aword64"
+>word64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Afloat"
+>float</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adouble"
+>double</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextB"
+>extB</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextI8"
+>extI8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextI16"
+>extI16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextI32"
+>extI32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextI64"
+>extI64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextW8"
+>extW8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextW16"
+>extW16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextW32"
+>extW32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextW64"
+>extW64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextF"
+>extF</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextD"
+>extD</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AopsF"
+>opsF</A
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AopsF2"
+>opsF2</A
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AopsF3"
+>opsF3</A
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Avar"
+>var</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aconst"
+>const</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adrop"
+>drop</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A%2B%2B"
+>(++)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; [a] -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A.%3D"
+>(.=)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3A..%7C"
+>(..|)</A
+> :: <A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarB"
+>varB</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarI8"
+>varI8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarI16"
+>varI16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarI32"
+>varI32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarI64"
+>varI64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarW8"
+>varW8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarW16"
+>varW16</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarW32"
+>varW32</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarW64"
+>varW64</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarF"
+>varF</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarD"
+>varD</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AsendW8"
+>sendW8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; (<A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>, <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+>) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstB"
+>constB</A
+> :: <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstI8"
+>constI8</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstI16"
+>constI16</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstI32"
+>constI32</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstI64"
+>constI64</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstW8"
+>constW8</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstW16"
+>constW16</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstW32"
+>constW32</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstW64"
+>constW64</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstF"
+>constF</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AconstD"
+>constD</A
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="1"
+><A NAME="1"
+>Operators and functions
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:mod"
+><A NAME="v%3Amod"
+></A
+></A
+><B
+>mod</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:div"
+><A NAME="v%3Adiv"
+></A
+></A
+><B
+>div</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Beware : crash without any possible recovery if a division by 0 happens.
+ Same risk with mod. Use div0 and mod0 if unsure.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:mod0"
+><A NAME="v%3Amod0"
+></A
+></A
+><B
+>mod0</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:div0"
+><A NAME="v%3Adiv0"
+></A
+></A
+><B
+>div0</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, IntegralE a) =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>As mod and div, except that if the division would be by 0, it is instead by the first argument.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:<"
+><A NAME="v%3A%3C"
+></A
+></A
+><B
+>(&lt;)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:<="
+><A NAME="v%3A%3C%3D"
+></A
+></A
+><B
+>(&lt;=)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:=="
+><A NAME="v%3A%3D%3D"
+></A
+></A
+><B
+>(==)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, EqE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:/="
+><A NAME="v%3A%2F%3D"
+></A
+></A
+><B
+>(/=)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, EqE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:>="
+><A NAME="v%3A%3E%3D"
+></A
+></A
+><B
+>(&gt;=)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:>"
+><A NAME="v%3A%3E"
+></A
+></A
+><B
+>(&gt;)</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, OrdE a) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:not"
+><A NAME="v%3Anot"
+></A
+></A
+><B
+>not</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:||"
+><A NAME="v%3A%7C%7C"
+></A
+></A
+><B
+>(||)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:&&"
+><A NAME="v%3A%26%26"
+></A
+></A
+><B
+>(&amp;&amp;)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:^"
+><A NAME="v%3A%5E"
+></A
+></A
+><B
+>(^)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:==>"
+><A NAME="v%3A%3D%3D%3E"
+></A
+></A
+><B
+>(==&gt;)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="2"
+><A NAME="2"
+>Boolean constants
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Bool"
+><A NAME="t%3ABool"
+></A
+></A
+><B
+>Bool</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:False"
+><A NAME="v%3AFalse"
+></A
+></A
+><B
+>False</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:True"
+><A NAME="v%3ATrue"
+></A
+></A
+><B
+>True</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Bool')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Bool" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ABounded"
+>Bounded</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AEnum"
+>Enum</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Ord.html#t%3AOrd"
+>Ord</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/random-1.0.0.2/System-Random.html#t%3ARandom"
+>Random</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>EqE <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>Expr <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>Assign <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="3"
+><A NAME="3"
+>Arithmetic operators (derived)
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Eq.html#t%3AEq"
+>Eq</A
+> a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Text-Show.html#t%3AShow"
+>Show</A
+> a) =&gt; <A NAME="t:Num"
+><A NAME="t%3ANum"
+></A
+></A
+><B
+>Num</B
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+><P
+>Basic numeric class.
+</P
+><P
+>Minimal complete definition: all except <TT
+><A HREF="Language-Copilot-Language.html#v%3Anegate"
+>negate</A
+></TT
+> or <TT
+>(-)</TT
+>
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Methods</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A NAME="v:+"
+><A NAME="v%3A%2B"
+></A
+></A
+><B
+>(+)</B
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:*"
+><A NAME="v%3A%2A"
+></A
+></A
+><B
+>(*)</B
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:-"
+><A NAME="v%3A-"
+></A
+></A
+><B
+>(-)</B
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:negate"
+><A NAME="v%3Anegate"
+></A
+></A
+><B
+>negate</B
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Unary negation.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:abs"
+><A NAME="v%3Aabs"
+></A
+></A
+><B
+>abs</B
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Absolute value.
+</TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:signum"
+><A NAME="v%3Asignum"
+></A
+></A
+><B
+>signum</B
+> :: a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="doc"
+><P
+>Sign of a number.
+ The functions <TT
+><A HREF="Language-Copilot-Language.html#v%3Aabs"
+>abs</A
+></TT
+> and <TT
+><A HREF="Language-Copilot-Language.html#v%3Asignum"
+>signum</A
+></TT
+> should satisfy the law: 
+</P
+><TT
+> abs x * signum x == x
+</TT
+><P
+>For real numbers, the <TT
+><A HREF="Language-Copilot-Language.html#v%3Asignum"
+>signum</A
+></TT
+> is either <TT
+>-1</TT
+> (negative), <TT
+>0</TT
+> (zero)
+ or <TT
+>1</TT
+> (positive).
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:fromInteger"
+><A NAME="v%3AfromInteger"
+></A
+></A
+><B
+>fromInteger</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AInteger"
+>Integer</A
+> -&gt; a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Conversion from an <TT
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AInteger"
+>Integer</A
+></TT
+>.
+ An integer literal represents the application of the function
+ <TT
+><A HREF="Language-Copilot-Language.html#v%3AfromInteger"
+>fromInteger</A
+></TT
+> to the appropriate value of type <TT
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AInteger"
+>Integer</A
+></TT
+>,
+ so such literals have type <TT
+>(<TT
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+></TT
+> a) =&gt; a</TT
+>.
+</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Num')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Num" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AInteger"
+>Integer</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord"
+>Word</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AIntegral"
+>Integral</A
+> a =&gt; <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Ratio.html#t%3ARatio"
+>Ratio</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(<A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> a, NumE a, OrdE a) =&gt; <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> (E a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, NumE a) =&gt; <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="4"
+><A NAME="4"
+>Division
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> a =&gt; <A NAME="t:Fractional"
+><A NAME="t%3AFractional"
+></A
+></A
+><B
+>Fractional</B
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+><P
+>Fractional numbers, supporting real division.
+</P
+><P
+>Minimal complete definition: <TT
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#v%3AfromRational"
+>fromRational</A
+></TT
+> and (<TT
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#v%3Arecip"
+>recip</A
+></TT
+> or <TT
+>(<TT
+><A HREF="Language-Copilot-Language.html#v%3A%2F"
+>/</A
+></TT
+>)</TT
+>)
+</P
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Methods</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A NAME="v:/"
+><A NAME="v%3A%2F"
+></A
+></A
+><B
+>(/)</B
+> :: a -&gt; a -&gt; a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>fractional division
+</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:Fractional')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:Fractional" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AIntegral"
+>Integral</A
+> a =&gt; <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> (<A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Ratio.html#t%3ARatio"
+>Ratio</A
+> a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(OrdE a, NumE a, <A HREF="Language-Copilot-Language.html#t%3ANum"
+>Num</A
+> a, <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> a) =&gt; <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> (E a)</TD
+></TR
+><TR
+><TD CLASS="decl"
+>(<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, NumE a, <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> a) =&gt; <A HREF="Language-Copilot-Language.html#t%3AFractional"
+>Fractional</A
+> (<A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a)</TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:mux"
+><A NAME="v%3Amux"
+></A
+></A
+><B
+>mux</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Beware : both sides are executed, even if the result of one is later discarded
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+> (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a, <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AIntegral"
+>Integral</A
+> a) =&gt; <A NAME="t:CastIntTo"
+><A NAME="t%3ACastIntTo"
+></A
+></A
+><B
+>CastIntTo</B
+> a  <SPAN CLASS="keyword"
+>where</SPAN
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+>Methods</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A NAME="v:cast"
+><A NAME="v%3Acast"
+></A
+></A
+><B
+>cast</B
+> :: (<A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> b, IntegralE b) =&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> b -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="section4"
+><IMG SRC="minus.gif" CLASS="coll" ONCLICK="toggle(this,'i:CastIntTo')" ALT="show/hide"
+> Instances</TD
+></TR
+><TR
+><TD CLASS="body"
+><DIV ID="i:CastIntTo" STYLE="display:block;"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="Language-Copilot-Language.html#t%3ACastIntTo"
+>CastIntTo</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+></TABLE
+></DIV
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="5"
+><A NAME="5"
+>The next functions are used only to coerce the type of their argument
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:bool"
+><A NAME="v%3Abool"
+></A
+></A
+><B
+>bool</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:int8"
+><A NAME="v%3Aint8"
+></A
+></A
+><B
+>int8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:int16"
+><A NAME="v%3Aint16"
+></A
+></A
+><B
+>int16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:int32"
+><A NAME="v%3Aint32"
+></A
+></A
+><B
+>int32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:int64"
+><A NAME="v%3Aint64"
+></A
+></A
+><B
+>int64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:word8"
+><A NAME="v%3Aword8"
+></A
+></A
+><B
+>word8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:word16"
+><A NAME="v%3Aword16"
+></A
+></A
+><B
+>word16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:word32"
+><A NAME="v%3Aword32"
+></A
+></A
+><B
+>word32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:word64"
+><A NAME="v%3Aword64"
+></A
+></A
+><B
+>word64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:float"
+><A NAME="v%3Afloat"
+></A
+></A
+><B
+>float</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:double"
+><A NAME="v%3Adouble"
+></A
+></A
+><B
+>double</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="6"
+><A NAME="6"
+>The next functions provide easier access to typed external variables.
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extB"
+><A NAME="v%3AextB"
+></A
+></A
+><B
+>extB</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extI8"
+><A NAME="v%3AextI8"
+></A
+></A
+><B
+>extI8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extI16"
+><A NAME="v%3AextI16"
+></A
+></A
+><B
+>extI16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extI32"
+><A NAME="v%3AextI32"
+></A
+></A
+><B
+>extI32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extI64"
+><A NAME="v%3AextI64"
+></A
+></A
+><B
+>extI64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extW8"
+><A NAME="v%3AextW8"
+></A
+></A
+><B
+>extW8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extW16"
+><A NAME="v%3AextW16"
+></A
+></A
+><B
+>extW16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extW32"
+><A NAME="v%3AextW32"
+></A
+></A
+><B
+>extW32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extW64"
+><A NAME="v%3AextW64"
+></A
+></A
+><B
+>extW64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extF"
+><A NAME="v%3AextF"
+></A
+></A
+><B
+>extF</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extD"
+><A NAME="v%3AextD"
+></A
+></A
+><B
+>extD</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="7"
+><A NAME="7"
+>Set of operators from which to choose during the generation of random streams
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:opsF"
+><A NAME="v%3AopsF"
+></A
+></A
+><B
+>opsF</B
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:opsF2"
+><A NAME="v%3AopsF2"
+></A
+></A
+><B
+>opsF2</B
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>opsF, opsF2 and opsF3 are feeded to Tests.Random.randomStreams.
+ They allows the random generated streams to include lots of operators.
+ If you add a new operator to Copilot, it would be nice to add it to one of those,
+ that way it could be used in the random streams used for testing.
+ opsF holds all the operators of arity 1, opsF2 of arity 2 and opsF3 of arity3
+ They are StreamableMaps, because operators are sorted based on their return type.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:opsF3"
+><A NAME="v%3AopsF3"
+></A
+></A
+><B
+>opsF3</B
+> :: <A HREF="Language-Copilot-Tests-Random.html#t%3AOperators"
+>Operators</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="8"
+><A NAME="8"
+>Constructs of the copilot language
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:var"
+><A NAME="v%3Avar"
+></A
+></A
+><B
+>var</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Stream variable reference
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:const"
+><A NAME="v%3Aconst"
+></A
+></A
+><B
+>const</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>A constant stream
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:drop"
+><A NAME="v%3Adrop"
+></A
+></A
+><B
+>drop</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt"
+>Int</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Drop <TT
+>i</TT
+> elements from a stream.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:++"
+><A NAME="v%3A%2B%2B"
+></A
+></A
+><B
+>(++)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; [a] -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Just a trivial wrapper over the <TT
+><TT
+><A HREF="Language-Copilot-Core.html#v%3AAppend"
+>Append</A
+></TT
+></TT
+> constructor
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:.="
+><A NAME="v%3A.%3D"
+></A
+></A
+><B
+>(.=)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamable"
+>Streamable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Define a stream variable.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:..|"
+><A NAME="v%3A..%7C"
+></A
+></A
+><B
+>(..|)</B
+> :: <A HREF="Language-Copilot-Core.html#t%3ASendable"
+>Sendable</A
+> a =&gt; <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+> a -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Allows to build a <TT
+><TT
+><A HREF="Language-Copilot-Core.html#t%3ASends"
+>Sends</A
+></TT
+></TT
+> from specification
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="9"
+><A NAME="9"
+>The next functions are typed variable declarations to help the type-checker.
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varB"
+><A NAME="v%3AvarB"
+></A
+></A
+><B
+>varB</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varI8"
+><A NAME="v%3AvarI8"
+></A
+></A
+><B
+>varI8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varI16"
+><A NAME="v%3AvarI16"
+></A
+></A
+><B
+>varI16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varI32"
+><A NAME="v%3AvarI32"
+></A
+></A
+><B
+>varI32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varI64"
+><A NAME="v%3AvarI64"
+></A
+></A
+><B
+>varI64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varW8"
+><A NAME="v%3AvarW8"
+></A
+></A
+><B
+>varW8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varW16"
+><A NAME="v%3AvarW16"
+></A
+></A
+><B
+>varW16</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varW32"
+><A NAME="v%3AvarW32"
+></A
+></A
+><B
+>varW32</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varW64"
+><A NAME="v%3AvarW64"
+></A
+></A
+><B
+>varW64</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varF"
+><A NAME="v%3AvarF"
+></A
+></A
+><B
+>varF</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varD"
+><A NAME="v%3AvarD"
+></A
+></A
+><B
+>varD</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="10"
+><A NAME="10"
+>The next functions help typing the send operations
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:sendW8"
+><A NAME="v%3AsendW8"
+></A
+></A
+><B
+>sendW8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> -&gt; (<A HREF="Language-Copilot-Core.html#t%3APhase"
+>Phase</A
+>, <A HREF="Language-Copilot-Core.html#t%3APort"
+>Port</A
+>) -&gt; <A HREF="Language-Copilot-Core.html#t%3ASend"
+>Send</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="11"
+><A NAME="11"
+>Typed constant declarations.
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constB"
+><A NAME="v%3AconstB"
+></A
+></A
+><B
+>constB</B
+> :: <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="Language-Copilot-Language.html#t%3ABool"
+>Bool</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constI8"
+><A NAME="v%3AconstI8"
+></A
+></A
+><B
+>constI8</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt8"
+>Int8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constI16"
+><A NAME="v%3AconstI16"
+></A
+></A
+><B
+>constI16</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt16"
+>Int16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constI32"
+><A NAME="v%3AconstI32"
+></A
+></A
+><B
+>constI32</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt32"
+>Int32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constI64"
+><A NAME="v%3AconstI64"
+></A
+></A
+><B
+>constI64</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Int.html#t%3AInt64"
+>Int64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constW8"
+><A NAME="v%3AconstW8"
+></A
+></A
+><B
+>constW8</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord8"
+>Word8</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constW16"
+><A NAME="v%3AconstW16"
+></A
+></A
+><B
+>constW16</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord16"
+>Word16</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constW32"
+><A NAME="v%3AconstW32"
+></A
+></A
+><B
+>constW32</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord32"
+>Word32</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constW64"
+><A NAME="v%3AconstW64"
+></A
+></A
+><B
+>constW64</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Data-Word.html#t%3AWord64"
+>Word64</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constF"
+><A NAME="v%3AconstF"
+></A
+></A
+><B
+>constF</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3AFloat"
+>Float</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:constD"
+><A NAME="v%3AconstD"
+></A
+></A
+><B
+>constD</B
+> :: <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> <A HREF="/Library/Frameworks/GHC.framework/Versions/612/usr/share/doc/ghc/html/libraries/base-4.2.0.2/Prelude.html#t%3ADouble"
+>Double</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.1</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>
