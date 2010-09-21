@@ -3,10 +3,10 @@ version:             0.22
 cabal-version:       >= 1.2
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike <leepike@gmail.com>, Robin Morisset, Alwyn Goodloe, Sebastian Niller
+author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller
 synopsis:            A stream DSL for writing embedded C.
 build-type:          Simple
-maintainer:          Lee Pike <leepike@gmail.com>
+maintainer:          Lee Pike <leepike@galois.com>
 category:            Language
 homepage:            http://leepike.github.com/Copilot/
 description:         Can you write a list in Haskell? Then you can write embedded C code using
