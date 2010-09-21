@@ -108,8 +108,8 @@ gcd' :: Streams
 gcd' = do 
   a .= alg "n" (sub a b)
   b .= alg "m" (sub b a)
-  "ans" .= varW16 a == varW16 b
-  "init" .= [True] ++ (const False)
+  "ans" .= varW16 a == varW16 b && not (var "init")
+  "init" .= [True] ++ const False
     where sub hi lo = mux (varW16 hi > var lo) (var hi - var lo) (var hi)
           alg ext ex = [0] ++ mux (var "init") (extW16 ext 1) ex
 
