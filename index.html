@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>leepike/Copilot @ GitHub</title>
+	
+	<style type="text/css">
+		body {
+  		margin-top: 1.0em;
+  		background-color: #ffffff;
+		  font-family: "Helvetica,Arial,FreeSans";
+  		color: #000000;
+    }
+    #container {
+      margin: 0 auto;
+      width: 700px;
+    }
+		h1 { font-size: 3.8em; color: #000000; margin-bottom: 3px; }
+		h1 .small { font-size: 0.4em; }
+		h1 a { text-decoration: none }
+		h2 { font-size: 1.5em; color: #000000; }
+    h3 { text-align: center; color: #000000; }
+    a { color: #000000; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    .download { float: right; }
+		pre { background: #000; color: #fff; padding: 15px;}
+    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+    .footer { text-align:center; padding-top:30px; font-style: italic; }
+	</style>
+	
+</head>
+
+<body>
+  <a href="http://github.com/leepike/Copilot"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+
+  <div id="container">
+
+
+    <h1><a href="http://github.com/leepike/Copilot">Copilot</a>   <div class="download">
+<img border="2" width="150" src="figs/install.JPG" ></div>
+
+      </h1>
+
+   
+    <div class="description">    </div>
+     <p>A (Haskell DSL) stream language for generating hard real-time C code.</p>
+
+     <p>Can you write a list in Haskell?  Then you can write embedded C code
+    using Copilot.  Here's a Copilot program that computes the Fibonacci
+    sequence (over Word 64s) and tests for even numbers:</p>
+<pre><code>
+fib :: Streams
+fib = do
+  "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
+  "t" .= even (var "fib")
+    where even :: Spec Word64 -> Spec Bool
+          even w = w `mod` const 2 == const 0    
+</code> </pre>
+</p>
+
+<p>Copilot contains an interpreter, a compiler, and uses a model-checker to check
+    the correctness of your program.  The compiler generates constant time and
+    constant space C code via <a href="http://github.com/tomahawkins/atom" >Tom
+    Hawkin's Atom Language</a> (thanks Tom!).  Copilot is specifically developed to write
+    embedded software monitors for more complex embedded systems, but it can be used to
+    develop a variety of functional-style embedded code.
+</p>
+
+
+<p>
+Executing
+<pre>
+> compile fib "fib" baseOpts
+</pre>
+generates <a href="code/fib.c" >fib.c</a> and <a href="code/fib.h" >fib.h</a> (with a <tt>main()</tt> for simulation---other options
+    change that).  We can then run
+<pre>
+> interpret fib 100 baseOpts
+</pre>
+to check that the Copilot program does what we expect.  Finally, if we have <a href="http://www.cprover.org/cbmc/" >CBMC</a>
+    installed, we can run
+
+<pre>
+> verify "fib.c"
+</pre>
+    to prove a bunch of memory safety properties of the generated program.</p>
+
+    
+
+<h2>Diving In</h2>
+    <p>
+<ul>
+  <li><strong>Installing</strong>: Copilot is a language embedded in Haskell.  So you'll need <a
+    href="http://hackage.haskell.org/platform/" >Haskell</a> to use it.  Copilot
+    is best installed using <a
+    href="http://www.haskell.org/haskellwiki/Cabal-Install">Cabal</a>, which can
+    be done by executing
+    <pre>
+> cabal install copilot
+</pre></li>
+
+<li><strong>Writing Copilot Programs</strong>: check out the <a
+href="http://github.com/leepike/Copilot/tree/master/Language/Copilot/Examples/"
+>examples</a>.  The language is documented 
+
+<li>
+
+        <div class="download">
+      <a href="http://github.com/leepike/Copilot/zipball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+      <a href="http://github.com/leepike/Copilot/tarball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+    </div>
+
+<strong>Source code and documentation</strong>: get the source code on GitHub: <a
+    href="http://github.com/leepike/Copilot">leepike/Copilot</a>.
+Source code documentation (built using Haddock) is available <a
+    href="http://hackage.haskell.org/package/copilot">here</a> on Hackage.
+
+
+     You can download this project in either
+      <a href="http://github.com/leepike/Copilot/zipball/master">zip</a> or
+      <a href="http://github.com/leepike/Copilot/tarball/master">tar</a>
+      formats.  You can also clone the project with <a href="http://git-scm.com">Git</a>
+      by running:
+      <pre>$ git clone git://github.com/leepike/Copilot</pre>
+
+
+</li>
+
+<li><strong>Help/API documentation</strong>: to get help with the interface (e.g., <tt>compile</tt>,
+ <tt>interpret</tt>, etc.), in a context in which <a
+ href="http://github.com/leepike/Copilot/blob/master/Language/Copilot/Interface.hs"
+ >Language/Copilot/Interface.hs</a> is visible, evaluate
+<pre>> help</pre>
+    to get the contents of <a
+ href="http://github.com/leepike/Copilot/blob/master/Language/Copilot/Help.hs"
+ >Language/Copilot/Help.hs</a>.  That'll give you the basic API of the library.</li>
+
+</ul>
+  </p>
+    
+
+      <h2>Other Resources</h2>
+     <p>
+      <ul>
+        <li><strong>Paper</strong> about Copilot: <a href="http://www.cs.indiana.edu/~lepike/pub_pages/rv2010.html" >http://www.cs.indiana.edu/~lepike/pub_pages/rv2010.html</a></li>
+        <li><strong>Pics/videos</strong> from Copilot's maiden voyage monitoring a fault-tolerant
+    pitot tube sensor (partly written in <a href="http://github.com/tomahawkins/atom" >Atom</a>): <a href="http://picasaweb.google.com/105722675808588603973" >http://picasaweb.google.com/105722675808588603973</a></li>
+        <li>Copilot on Hackage: <a
+      href="http://hackage.haskell.org/package/copilot">http://hackage.haskell.org/package/copilot</a></li>
+      <li><strong>Blogging</strong> about Copilot: <a href="http://leepike.wordpress.com/"
+      >http://leepike.wordpress.com/</a> (forthcoming)</li>
+        <li>Other things I do: <a href="http://www.cs.indiana.edu/~lepike/" >http://www.cs.indiana.edu/~lepike/</a></li>
+</ul>
+  </p>
+
+<h2>Acknowledgements</h2>
+ <p>We are grateful for  NASA Contract NNL08AD13T to <a href="http://www.galois.com/" >Galois, Inc.</a> and the <a href="http://www.nianet.org/" >National Institute of Aerospace</a>, which partially
+ supported this work. </p>      
+
+ <h2>License</h2>
+<p>
+BSD3</p>
+
+<h2>The Copilot Team</h2>
+<p>
+<ul>
+  <li><strong>Maintainer</strong>: Lee Pike (leepike@galois.com), Galois, Inc.  Email with any questions, bugs, or cool uses!</li>
+    <li>Alwyn Goodloe, National Institute of Aerospace</li>
+<li>Robin Morisset, &Eacute;cole Normale Sup&eacute;rieure </li>
+<li>Sebastian Niller, Technische Universit&auml;t Ilmenau </li>
+</ul>
+ </p>
+
+ <center>
+<table> 
+  <TD><img hspace="40" width="200" src="figs/galois.png" ></TD><TD><img hspace="40" width="90"
+  src="figs/NIA_LOGO.jpg" ></TD><TD><img hspace="40" width="105" src="figs/nasa.jpg" ></TD>
+</table>
+</center>
+
+  </div>  
+</body>
+</html>
