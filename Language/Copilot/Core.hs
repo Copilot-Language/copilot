@@ -136,7 +136,7 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- have the good precision.
     showAsC :: a -> String
 
-    -- | To make customer C triggers.  Only for Spec Bool (others through an error).
+    -- | To make customer C triggers.  Only for Spec Bool (others throw an error).
     makeTrigger :: Maybe [(Var, String)] -> StreamableMaps Spec 
                 -> ProphArrs -> TmpSamples -> Indexes -> Var -> Spec a 
                 -> A.Atom () -> A.Atom ()

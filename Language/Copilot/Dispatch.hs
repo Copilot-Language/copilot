@@ -81,7 +81,7 @@ dispatch streams sends inputExts backEnd iterations verbose =
                 Interpreter -> 
                     do
                         when (not allInputsPresents) $ error 
-                            "the interpreter don't have the values for some of the external variables"
+                            "the interpreter does not have values for some of the external variables"
                         mapM_ putStrLn interpretedLines
                 Opts opts ->
                     let isInterpreted =
@@ -110,7 +110,7 @@ dispatch streams sends inputExts backEnd iterations verbose =
                         delete ".h"
                         when (prePostCode opts == Nothing) $ gccCall (Opts opts)
                         when ((isInterpreted || isExecuted) && not allInputsPresents) $ error 
-                            "The interpreter doesn't have the values for some of the external variables."
+                            "The interpreter does not have values for some of the external variables."
                         when isExecuted $ execute streams (dirName ++ cName opts) trueInputExts isInterpreted 
                             interpretedLines iterations isSilent
     where

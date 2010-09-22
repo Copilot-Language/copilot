@@ -11,7 +11,7 @@ module Language.Copilot.Analyser(
         Weight, Node(..), DependencyGraph,
         mkDepGraph, showDG -}
     ) where
-    
+
 import Language.Copilot.Core
 
 import qualified Language.Atom as A
@@ -21,7 +21,7 @@ import Data.List
 type Weight = Int
 
 -- | Used for representing an error in the specification, detected by @'check'@
-data Error = 
+data Error =
       BadSyntax String Var -- ^ the BNF is not respected
     | BadDrop Int Var -- ^ A drop expression of less than 0 is used
     | BadSamplingPhase Var Var Phase -- ^ if an external variable is sampled at phase 0 then there is no time for the stream to be updated
@@ -31,21 +31,21 @@ data Error =
     | DependsOnFuture [Var] Var Weight-- ^ If an output depends of a future of an input it will be hard to compile to say the least
 
 instance Show Error where
-    show (BadSyntax s v) = 
-        "Error syntax : " ++ s ++ "is not allowed in that position in stream " ++ v ++ "\n"
-    show (BadDrop i v) = 
-        "Error : a Drop in stream " ++ v ++ "drops the number " ++ show i ++ 
+    show (BadSyntax s v) =
+        "Error syntax : " ++ s ++ " is not allowed in that position in stream " ++ v ++ "\n"
+    show (BadDrop i v) =
+        "Error : a Drop in stream " ++ v ++ " drops the number " ++ show i ++
         "of elements. " ++ show i ++ " is negative, and Drop only accepts positive arguments. \n"
-    show (BadSamplingPhase v v' ph) = 
-        "Error : the external variable " ++ v' ++ " is sampled at phase " ++ show ph ++ 
-            " in the stream" ++ v ++ ". Sampling can only occur from phase 1 onwards. \n"
+    show (BadSamplingPhase v v' ph) =
+        "Error : the external variable " ++ v' ++ " is sampled at phase " ++ show ph ++
+            " in the stream " ++ v ++ ". Sampling can only occur from phase 1 onwards. \n"
     show (BadType v v') =
         "Error : the monitor variable " ++ v ++ ", called in the stream " ++ v' ++
             " either does not exist, or don't have the right type (there is no implicit conversion)\n"
     show (NonNegativeWeightedClosedPath vs w) =
-        "Error : the following path is closed in the dependency graph of this "
-            ++ "specification and have weight " ++ show w ++ " which is positive (append decrease the weight, "
-            ++ "while drop increase it). This is forbidden to avoid streams which could "
+        "Error : the following path is closed in the dependency graph of the "
+            ++ "specification and has weight " ++ show w ++ " which is positive (append decreases the weight, "
+            ++ "while drop increases it). This is forbidden to avoid streams which could "
             ++ "take 0 or several different values.  Try adding some initial elements (e.g., [0,0,0] ++ ...) "
             ++ "to the offending streams. \n"
             ++ "Path : " ++ show (reverse vs) ++ "\n"
@@ -54,7 +54,7 @@ instance Show Error where
             ++ "the external variable " ++ v ++ " while the first variable of that path "
             ++ "has a prophecy array of length " ++ show len ++ ", which is strictly greater "
             ++ "than the weight. This is forbidden. \n"
-            ++ "Path : " ++ show (reverse vs) ++ "\n" 
+            ++ "Path : " ++ show (reverse vs) ++ "\n"
     show (DependsOnFuture vs v w) =
         "Error : the following path is of weight " ++ show w ++ " which is strictly positive. "
             ++ "This means that the first variable depends on the future of the external variable "
@@ -76,11 +76,11 @@ b ||> x =
 infixr 2 ||>
 infixr 1 &&>
 
--- | Check a /Copilot/ specification. 
+-- | Check a /Copilot/ specification.
 -- If it is not compilable, then returns an error describing the issue.
 -- Else, returns @Nothing@
 check :: StreamableMaps Spec -> Maybe Error
-check streams = 
+check streams =
     syntaxCheck streams &&> defCheck streams
 
 -- Represents all the kind of specs that are authorized after a given operator
@@ -107,16 +107,16 @@ syntaxCheck streams =
                         (checkSyntaxSpec FunSpecSet v s0 Nothing) &&>
                         checkSyntaxSpec FunSpecSet v s1 Nothing
                     F3 _ _ s0 s1 s2 -> set /= DropSpecSet ||> BadSyntax "F3" v &&>
-                        (checkSyntaxSpec FunSpecSet v s0 Nothing) &&> 
+                        (checkSyntaxSpec FunSpecSet v s0 Nothing) &&>
                         (checkSyntaxSpec FunSpecSet v s1 Nothing) &&>
-                        checkSyntaxSpec FunSpecSet v s2 Nothing 
-                    Append _ s0 -> set == AllSpecSet ||> BadSyntax "Append" v &&> 
+                        checkSyntaxSpec FunSpecSet v s2 Nothing
+                    Append _ s0 -> set == AllSpecSet ||> BadSyntax "Append" v &&>
                         checkSyntaxSpec AllSpecSet v s0 Nothing
-                    Drop i s0 -> (0 <= i) ||> BadDrop i v &&> 
+                    Drop i s0 -> (0 <= i) ||> BadDrop i v &&>
                                  (checkSyntaxSpec DropSpecSet v s0 Nothing)
 
 -- checks that streams are well defined (ie can be compiled)
--- Currently very inefficient (for simplicity's sake), 
+-- Currently very inefficient (for simplicity's sake),
 -- could probably be optimized if need be
 -- by keeping weights of paths in a matrix and doing some linear algebra
 -- (fast exponentiation could give some nice results)
@@ -182,7 +182,7 @@ getExternalVars streams =
 ---- Dependency graphs (for next version of nNWCP, and for scheduling)
 {-
 type Weight = Int
-data Node = 
+data Node =
     InternalVar Var [(Weight, Node)]
     | ExternalVar Var Phase
     deriving Show -- for debug
