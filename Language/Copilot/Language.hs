@@ -186,17 +186,6 @@ extD :: Var -> Phase -> Spec Double
 extD = PVar A.Double
 
 -- for arrays 
--- inBounds :: (Integral a, Bounded a) => a -> Bool
--- inBounds a = 0 <= toIntger a <= toInteger maxBound
-
--- makeArrayCall :: (Streamable a, Integral a) => (Var, Spec a) -> Var
--- makeArrayCall (v, idx) = v P.++ "[" P.++ show idx P.++ "]"
-
-  -- | let t = atomType idx 
-  --   in t P.== A.Bool P.|| t P.== A.Float P.|| t P.== A.Double 
-  --     = error $ "Copilot: " 
-  -- | otherwise = v P.++ "[" P.++ show idx P.++ "]"
-
 extArrB :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Bool
 extArrB = \(v, idx) ph -> PArr A.Bool (v, idx) ph
 extArrI8 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Int8
