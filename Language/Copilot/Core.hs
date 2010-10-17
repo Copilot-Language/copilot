@@ -13,20 +13,19 @@ module Language.Copilot.Core (
         Spec(..), Streams, Stream, Sends, Send(..), DistributedStreams,
 	-- * General functions on 'Streams' and 'StreamableMaps'
 	Streamable(..), Sendable(..), StreamableMaps(..), emptySM,
-        isEmptySM, getMaybeElem, getElem, streamToUnitValue,
+        isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, foldSendableMaps, mapStreamableMaps, mapStreamableMapsM,
-        filterStreamableMaps, normalizeVar, getVars,
-        Vars
-        -- Compiler
-        , nextSt, BoundedArray(..), Outputs, TmpSamples
-        , PhasedValue(..), ProphArrs, Indexes
+        filterStreamableMaps, normalizeVar, getVars, Vars,
+        -- compiler
+        BoundedArray(..), nextSt, Outputs, TmpSamples(..), emptyTmpSamples, 
+        ProphArrs, Indexes, PhasedValueVar(..), PhasedValueArr(..), PhasedValueIdx(..),
+        tmpVarName, tmpArrName, getAtomType
     ) where
 
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
-import Data.Maybe
-import Data.List
+import Data.List hiding (union)
 import qualified Data.Map as M
 import Text.Printf
 import Control.Monad.Writer 
@@ -47,17 +46,38 @@ type Port = Int
 -- | Specification of a stream, parameterized by the type of the values of the stream.
 -- The only requirement on @a@ is that it should be 'Streamable'.
 data Spec a where
-    PVar :: Streamable a => A.Type -> Var -> Phase -> Spec a
     Var :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
+
+    PVar :: Streamable a => A.Type -> Var -> Phase -> Spec a
+    PArr :: (Streamable a, Streamable b, A.IntegralE b) 
+         => A.Type -> (Var, Spec b) -> Phase -> Spec a
+
     F :: (Streamable a, Streamable b) => 
 	    (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
     F2 :: (Streamable a, Streamable b, Streamable c) => 
         (b -> c -> a) -> (A.E b -> A.E c -> A.E a) -> Spec b -> Spec c -> Spec a
     F3 :: (Streamable a, Streamable b, Streamable c, Streamable d) => 
-        (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a) -> Spec b -> Spec c -> Spec d -> Spec a
+        (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a) 
+                           -> Spec b -> Spec c -> Spec d -> Spec a
+
     Append :: Streamable a => [a] -> Spec a -> Spec a
     Drop :: Streamable a => Int -> Spec a -> Spec a
+
+-- These belong in Language.hs, but we don't want orphan instances.
+instance (Streamable a, A.NumE a) => Num (Spec a) where
+    (+) = F2 (+) (+) -- A.NumE a => E a is an instance of Num
+    (*) = F2 (*) (*)
+    (-) = F2 (-) (-)
+    negate = F negate negate
+    abs = F abs abs
+    signum = F signum signum
+    fromInteger i = Const (fromInteger i)
+
+instance (Streamable a, A.NumE a, Fractional a) => Fractional (Spec a) where
+    (/) = F2 (/) (/)
+    recip = F recip recip
+    fromRational r = Const (fromRational r)
 
 {-# RULES
 "Copilot.Core appendAppend" forall ls1 ls2 s. Append ls1 (Append ls2 s) = Append (ls1 ++ ls2) s
@@ -70,6 +90,8 @@ data Spec a where
 
 instance Eq a => Eq (Spec a) where
     (==) (PVar t v ph) (PVar t' v' ph') = t == t' && v == v' && ph == ph'
+    (==) (PArr t (v, idx) ph) (PArr t' (v', idx') ph') = 
+           t == t' && v == v' && show idx == show idx' && ph == ph'
     (==) (Var v) (Var v') = v == v'
     (==) (Const x) (Const x') = x == x'
     (==) s@(F _ _ _) s'@(F _ _ _) = show s == show s'
@@ -81,7 +103,6 @@ instance Eq a => Eq (Spec a) where
 
 -- | Container for mutually recursive streams, whose specifications may be
 -- parameterized by different types
---type Streams = StreamableMaps Spec
 type Streams = Writer (StreamableMaps Spec) ()
 -- | A named stream
 type Stream a = Streamable a => (Var, Spec a)
@@ -135,12 +156,12 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- for example the booleans are first converted to 0 or 1, and floats and doubles
     -- have the good precision.
     showAsC :: a -> String
-
+ 
     -- | To make customer C triggers.  Only for Spec Bool (others throw an error).
-    makeTrigger :: Maybe [(Var, String)] -> StreamableMaps Spec 
+    -- XXX make them throw errors!
+    makeTrigger :: [(Var, String)] -> StreamableMaps Spec 
                 -> ProphArrs -> TmpSamples -> Indexes -> Var -> Spec a 
                 -> A.Atom () -> A.Atom ()
-
 
 class Streamable a => Sendable a where
     send :: A.E a -> Port -> A.Atom ()
@@ -160,10 +181,8 @@ instance Streamable Bool where
                 A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
                 A.call trig)
         else return ()
-      where trigs = case triggers of
-                      Nothing -> []
-                      Just t -> t
-            trig = case M.lookup v (M.fromList trigs) of
+      where 
+            trig = case M.lookup v (M.fromList triggers) of
                      Nothing -> ""
                      Just fn -> fn
 
@@ -176,7 +195,7 @@ instance Streamable Int8 where
     typeId _ = "%d"
     atomType _ = A.Int8
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int16 where
     getSubMap = i16Map
     updateSubMap f sm = sm {i16Map = f $ i16Map sm}
@@ -186,7 +205,7 @@ instance Streamable Int16 where
     typeId _ = "%d"
     atomType _ = A.Int16
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int32 where
     getSubMap = i32Map
     updateSubMap f sm = sm {i32Map = f $ i32Map sm}
@@ -196,7 +215,7 @@ instance Streamable Int32 where
     typeId _ = "%d"
     atomType _ = A.Int32
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int64 where
     getSubMap = i64Map
     updateSubMap f sm = sm {i64Map = f $ i64Map sm}
@@ -206,7 +225,7 @@ instance Streamable Int64 where
     typeId _ = "%lld"
     atomType _ = A.Int64
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word8 where
     getSubMap = w8Map
     updateSubMap f sm = sm {w8Map = f $ w8Map sm}
@@ -216,7 +235,7 @@ instance Streamable Word8 where
     typeId _ = "%u"
     atomType _ = A.Word8
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word16 where
     getSubMap = w16Map
     updateSubMap f sm = sm {w16Map = f $ w16Map sm}
@@ -226,7 +245,7 @@ instance Streamable Word16 where
     typeId _ = "%u"
     atomType _ = A.Word16
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word32 where
     getSubMap = w32Map
     updateSubMap f sm = sm {w32Map = f $ w32Map sm}
@@ -236,7 +255,7 @@ instance Streamable Word32 where
     typeId _ = "%u"
     atomType _ = A.Word32
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word64 where
     getSubMap = w64Map
     updateSubMap f sm = sm {w64Map = f $ w64Map sm}
@@ -246,7 +265,7 @@ instance Streamable Word64 where
     typeId _ = "%llu"
     atomType _ = A.Word64
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Float where
     getSubMap = fMap
     updateSubMap f sm = sm {fMap = f $ fMap sm}
@@ -257,7 +276,7 @@ instance Streamable Float where
     typeIdPrec _ = "%.5f"
     atomType _ = A.Float
     showAsC x = printf "%.5f" x
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Double where
     getSubMap = dMap
     updateSubMap f sm = sm {dMap = f $ dMap sm}
@@ -268,7 +287,7 @@ instance Streamable Double where
     typeIdPrec _ = "%.10lf"
     atomType _ = A.Double
     showAsC x = printf "%.10f" x
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >> return ()
+    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 
 instance Sendable Word8 where
     send e port =
@@ -284,41 +303,45 @@ getMaybeElem v sm = M.lookup v $ getSubMap sm
 -- Launch an exception if the index is not in it
 {-# INLINE getElem #-}
 getElem :: Streamable a => Var -> StreamableMaps b -> b a
-getElem v sm = fromJust $ getMaybeElem v sm
+getElem v sm = case getMaybeElem v sm of
+                 Nothing -> error "Error in application of getElem from Core.hs."
+                 Just x -> x
 
--- | Just produce an @Atom@ value named after its first argument,
--- with an unspecified value. The second argument only coerces the type, it is discarded
-{-# INLINE streamToUnitValue #-}
-streamToUnitValue :: Streamable a => Var -> Spec a -> A.Atom (A.V a)
-streamToUnitValue v _ = atomConstructor v unit
+getAtomType :: Streamable a => Spec a -> A.Type
+getAtomType s =
+  let unitElem = unit
+      _ = (Const unitElem) `asTypeOf` s -- to help the typechecker
+  in atomType unitElem
 
 -- | This function is used to iterate on all the values in all the maps stored
 -- by a @'StreamableMaps'@, accumulating a value over time
 {-# INLINE foldStreamableMaps #-}
 foldStreamableMaps :: forall b c. 
-    (forall a. Streamable a => Var -> c a -> b -> b) -> 
+    (Streamable a => Var -> c a -> b -> b) -> 
     StreamableMaps c -> b -> b
 foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
-    let acc0 = M.foldWithKey f acc bm
-        acc1 = M.foldWithKey f acc0 i8m        
-        acc2 = M.foldWithKey f acc1 i16m
-        acc3 = M.foldWithKey f acc2 i32m
-        acc4 = M.foldWithKey f acc3 i64m
-        acc5 = M.foldWithKey f acc4 w8m
-        acc6 = M.foldWithKey f acc5 w16m
-        acc7 = M.foldWithKey f acc6 w32m
-        acc8 = M.foldWithKey f acc7 w64m
-        acc9 = M.foldWithKey f acc8 fm      
-        acc10 = M.foldWithKey f acc9 dm
+    let acc0  = M.foldrWithKey f acc  bm
+        acc1  = M.foldrWithKey f acc0 i8m        
+        acc2  = M.foldrWithKey f acc1 i16m
+        acc3  = M.foldrWithKey f acc2 i32m
+        acc4  = M.foldrWithKey f acc3 i64m
+        acc5  = M.foldrWithKey f acc4 w8m
+        acc6  = M.foldrWithKey f acc5 w16m
+        acc7  = M.foldrWithKey f acc6 w32m
+        acc8  = M.foldrWithKey f acc7 w64m
+        acc9  = M.foldrWithKey f acc8 fm      
+        acc10 = M.foldrWithKey f acc9 dm
     in acc10
 
+-- XXX only sends Word8s right now
 -- | This function is used to iterate on all the values in all the maps stored
 -- by a @'StreamableMaps'@, accumulating a value over time
 {-# INLINE foldSendableMaps #-}
 foldSendableMaps :: forall b c. 
     (forall a. Sendable a => Var -> c a -> b -> b) -> 
     StreamableMaps c -> b -> b
-foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
+--foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
+foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
     let acc1 = M.foldWithKey f acc w8m
     in acc1
 
@@ -343,7 +366,7 @@ mapStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
 
 {-# INLINE mapStreamableMapsM #-}
 mapStreamableMapsM :: forall s s' m. Monad m => 
-    (forall a. Streamable a => Var -> s a -> m (s' a)) -> 
+    (Streamable a => Var -> s a -> m (s' a)) -> 
     StreamableMaps s -> m (StreamableMaps s')
 mapStreamableMapsM f sm =
     foldStreamableMaps (
@@ -353,12 +376,11 @@ mapStreamableMapsM f sm =
                     return $ updateSubMap (\ m -> M.insert v s' m) sm'
         ) sm (return emptySM)
 
--- | Only keeps in @sm@ the values whose key+type are in @l@.
--- Also returns a bool saying whether all the elements in sm
--- were in l.
--- Works even if some elements in @l@ are not in @sm@.
--- Not optimised at all
-filterStreamableMaps :: forall c. StreamableMaps c -> [(A.Type, Var, Phase)] -> (StreamableMaps c, Bool)
+-- | Only keeps in @sm@ the values whose key+type are in @l@.  Also returns a
+-- bool saying whether all the elements in sm were in l.  Works even if some
+-- elements in @l@ are not in @sm@.  Not optimised at all.
+filterStreamableMaps :: 
+  forall c b. StreamableMaps c -> [(A.Type, Var, b)] -> (StreamableMaps c, Bool)
 filterStreamableMaps sm l =
     let (sm2, l2) = foldStreamableMaps filterElem sm (emptySM, []) in
     (sm2, (l' \\ nub l2) == [])
@@ -443,10 +465,16 @@ isEmptySM (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
         M.null fm &&
         M.null dm 
 
--- | Replace all accepted special characters by sequences of underscores
+-- | Replace all accepted special characters by sequences of underscores.  
 normalizeVar :: Var -> Var
 normalizeVar v =
-    foldl (\ acc c -> acc ++ case c of '.' -> "__" ; '[' -> "___" ; ']' -> "____" ; _ -> [c]) "" v
+    foldl (\ acc c -> acc ++ case c of 
+                               '.' -> "_" 
+                               '[' -> "_"  
+                               ']' -> "_"  
+                               ' ' -> "_"
+                               _ -> [c]) 
+          "" v
 
 -- | For each typed variable, this type holds all its successive values in an infinite list
 -- Beware : each element of one of those lists corresponds to a full @Atom@ period, 
@@ -465,6 +493,8 @@ showIndented s n =
 
 showRaw :: Spec a -> Int -> String
 showRaw (PVar t v ph) _ = "PVar " ++ show t ++ " " ++ v ++ " " ++ show ph
+showRaw (PArr t (v, idx) ph) _ = 
+  "PArr " ++ show t ++ " (" ++ v ++ " ! (" ++ show idx ++ ")) " ++ show ph
 showRaw (Var v) _ = "Var " ++ v
 showRaw (Const e) _ = "Const " ++ show e
 showRaw (F _ _ s0) n = 
@@ -492,28 +522,57 @@ showRaw (Drop i s0) n =
         (concat $ replicate n "  ") ++ ")"
 
 
--- Compiler: the code below really belongs in Core.hs, but its called by
+
+-- Compiler: the code below really belongs in Compiler.hs, but its called by
 -- makeTrigger, which is a method of the class Streamable.
 
+-- For the prophecy arrays
 type ArrIndex = Word64
-
 type ProphArrs = StreamableMaps BoundedArray
 type Outputs = StreamableMaps A.V
-type TmpSamples = StreamableMaps PhasedValue
 type Indexes = M.Map Var (A.V ArrIndex)
-data PhasedValue a = Ph Phase (A.V a)
--- important invariant : the maybe is Nothing iff the int is 0
-data BoundedArray a = B ArrIndex (Maybe (A.A a))
 
-getValue :: PhasedValue a -> A.V a
-getValue (Ph _ val) = val
+-- External variables
+data PhasedValueVar a = PhV Phase (A.V a)
+--type TmpVarSamples = StreamableMaps PhasedValueVar
+
+tmpVarName :: Var -> Phase -> Var
+tmpVarName v ph = normalizeVar v ++ "_" ++ show ph
+
+
+-- External arrays
+data PhasedValueArr a = PhA Phase (A.V a) -- Array name.
+data PhasedValueIdx a = PhIdx (A.E a) -- variable that gives index. 
+
+data TmpSamples = 
+  TmpSamples { tmpVars :: StreamableMaps PhasedValueVar
+             , tmpArrs :: StreamableMaps PhasedValueArr
+             , tmpIdxs :: StreamableMaps PhasedValueIdx
+             }
+
+emptyTmpSamples :: TmpSamples
+emptyTmpSamples = TmpSamples emptySM emptySM emptySM
+
+tmpArrName :: Var -> Phase -> String -> Var
+tmpArrName v ph idx = (tmpVarName v ph) ++ "_" ++ normalizeVar idx
+
+data BoundedArray a = B ArrIndex (Maybe (A.A a))
 
 nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
        -> Spec a -> ArrIndex -> A.E a
-nextSt streams prophArrs tmpSamples outputIndexes s index =
+nextSt streams prophArrs tmpSamples outputIndexes s index = 
     case s of
-        PVar _ v ph -> A.value . getValue 
-                  $ getElem (normalizeVar v ++ "_" ++ show ph) tmpSamples
+        PVar _ v ph  -> 
+          let PhV _ var = getElem (tmpVarName v ph) (tmpVars tmpSamples) in
+          A.value var
+        PArr _ (v, idx) ph -> 
+          let PhA _ var = e tmp (tmpArrs tmpSamples) 
+              tmp = tmpArrName v ph (show idx) 
+              e a b = case getMaybeElem a b of
+                        Nothing -> 
+                          error "Error in application of getElem in nextSt."
+                        Just x  -> x 
+          in A.value var
         Var v -> let B initLen maybeArr = getElem v prophArrs in
             -- This check is extremely important
             -- It means that if x at time n depends on y at time n
@@ -521,22 +580,31 @@ nextSt streams prophArrs tmpSamples outputIndexes s index =
             -- so it increases the size of code (sadly),
             -- but is the only thing preventing race conditions from occuring
             if index < initLen
-                -- if maybeArr == Nothing, then initLen == 0 and is <= index
-                then
-                    let outputIndex = fromJust $ M.lookup v outputIndexes in
-                    (fromJust maybeArr) A.!. 
-                        ((A.Const index + A.VRef outputIndex) `A.mod_`  
-                        (A.Const (initLen + 1)))
-                else next (getElem v streams) (index - initLen)
+                then getVar v initLen maybeArr 
+                else let s0 = getElem v streams in 
+                     next s0 (index - initLen)
         Const e -> A.Const e
         F _ f s0 -> f $ next s0 index
         F2 _ f s0 s1 ->
-            f (next s0 index) (next s1 index)
+            f (next s0 index) 
+              (next s1 index)
         F3 _ f s0 s1 s2 ->
-            f (next s0 index) (next s1 index) (next s2 index)
-        Append _ s' -> next s' index
-        Drop i s' -> next s' (fromInteger (toInteger i) + index)
+            f (next s0 index) 
+              (next s1 index) 
+              (next s2 index)
+        Append _ s0 -> next s0 index
+        Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
     where
         next :: Streamable b => Spec b -> ArrIndex -> A.E b
-        next = nextSt streams prophArrs tmpSamples outputIndexes
-
+        next = nextSt streams prophArrs tmpSamples outputIndexes 
+        getVar :: Streamable a 
+               => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
+        getVar v initLen maybeArr =
+           let outputIndex = case M.lookup v outputIndexes of
+                               Nothing -> error "Error in function getVar."
+                               Just x -> x
+               arr = case maybeArr of
+                       Nothing -> error "Error in function getVar (maybeArr)."
+                       Just x -> x in 
+           arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
+                       (A.Const (initLen + 1)))

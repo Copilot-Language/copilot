@@ -2,7 +2,7 @@
 
 module Language.Copilot.Libs.ErrorChks(nOneChk, nPosChk, int16Chk) where
 
-import Prelude (Num, Integral, Int, String, error, ($), show, maxBound, toInteger)
+import Prelude (Integral, Int, String, error, ($), show, maxBound, toInteger)
 import qualified Prelude as P 
 import Data.Int (Int16)
 

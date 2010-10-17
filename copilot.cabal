@@ -1,10 +1,10 @@
 name:                copilot
-version:             0.22
+version:             0.23
 cabal-version:       >= 1.2
 license:             BSD3
 license-file:        LICENSE
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller
-synopsis:            A stream DSL for writing embedded C.
+synopsis:            A stream DSL for writing embedded C monitors.
 build-type:          Simple
 maintainer:          Lee Pike <leepike@galois.com>
 category:            Language
@@ -32,7 +32,7 @@ extra-source-files:  README
 library
     ghc-options:     -Wall
     build-depends:     base > 4 && < 5
-                     , atom >= 1.0.5
+                     , atom >= 1.0.7
                      , containers >= 0.2.0.1
                      , process >= 1.0.0.0
                      , random >= 1.0.0.0

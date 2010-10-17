@@ -2,7 +2,7 @@
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
         , help , setS, setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setTriggers,
+        , setDir, setGCC, setTriggers, setArrs,
         module Language.Copilot.Dispatch
     ) where
 
@@ -16,7 +16,6 @@ import Data.Set as Set (fromList, toList)
 import Data.List ((\\))
 import System.Random
 import System.Exit
-import System.FilePath (takeBaseName)
 import System.Cmd
 import Data.Maybe
 import Control.Monad
@@ -36,17 +35,21 @@ data Options = Options {
         optCompiler :: String, -- ^ The C compiler to use, as a path to the executable.
         optOutputDir :: String, -- ^ Where to place the output C files (.c, .h, and binary).
         optPrePostCode :: Maybe (String, String), -- ^ Code to append above and below the C file.
-        optTriggers :: Maybe [(Var, String)] -- ^ A list of Copilot variable C
-                                             -- function name pairs.  The C
-                                             -- funciton is called if the
-                                             -- Copilot stream becomes True.
-                                             -- The Stream must be of Booleans
-                                             -- and the C function must be of
-                                             -- type void @foo(void)@.  There
-                                             -- should be no more than one
-                                             -- function per trigger variable.
-                                             -- Triggers fire in the same phase (1)
-                                             -- that output vars are assigned.
+        optTriggers :: [(Var, String)], -- ^ A list of Copilot variable C
+                                        -- function name pairs.  The C funciton
+                                        -- is called if the Copilot stream
+                                        -- becomes True.  The Stream must be of
+                                        -- Booleans and the C function must be
+                                        -- of type void @foo(void)@.  There
+                                        -- should be no more than one function
+                                        -- per trigger variable.  Triggers fire
+                                        -- in the same phase (1) that output
+                                        -- vars are assigned.
+        optArrs :: [(String, Int)] -- ^ When generating C programs to test, we
+                                   -- don't know how large external arrays are,
+                                   -- so we cannot declare them.  Passing in
+                                   -- pairs containing the name of the array and
+                                   -- it's size allows them to be declared."
     }
 
 baseOpts :: Options
@@ -64,7 +67,8 @@ baseOpts = Options {
         optCompiler = "gcc",
         optOutputDir = "./",
         optPrePostCode = Nothing,
-        optTriggers = Nothing
+        optTriggers = [],
+        optArrs = []
     }
 
 -- Functions for making it easier for configuring copilot in the frequent use cases
@@ -80,8 +84,8 @@ compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
   interface $ setC "-Wall" $ setO fileName $ opts {optStreams = Just streams}
 
-verify :: FilePath -> IO ()
-verify file = do
+verify :: FilePath -> Int -> IO ()
+verify file n = do
   putStrLn "Calling cbmc, developed by Daniel Kroening \& Edmund Clarke "
   putStrLn "<http://www.cprover.org/cbmc/>, with the following checks:"
   putStrLn "  --bounds-check       enable array bounds checks"
@@ -90,7 +94,7 @@ verify file = do
   putStrLn "  --overflow-check     enable arithmetic over- and underflow checks"
   putStrLn "  --nan-check          check floating-point for NaN"
   putStrLn ""
-  putStrLn $ "  assuming " ++ theMain ++ " as the entry point:"
+  putStrLn $ "  assuming main() as the entry point:"
   putStrLn cmd
   code <- system cmd
   case code of
@@ -99,30 +103,30 @@ verify file = do
                       putStrLn "Perhaps cbmc is not installed on your system, is"
                       putStrLn "not in your path, cbmc cannot be called from the"
                       putStrLn $ "command line on your system, or " ++ file 
-                      putStrLn $ "does not exist, or the dispatch function in" ++ file
-                      putStrLn $ "is not called " ++ theMain ++ "."  
-                      putStrLn "See <http://www.cprover.org/cbmc/>"
+                      putStrLn "does not exist.  See <http://www.cprover.org/cbmc/>"
                       putStrLn "for more information on cbmc."
-    where theMain = takeBaseName file
-          cmd = unwords ("cbmc" : args)
+    where cmd = unwords ("cbmc" : args)
           args = ["--div-by-zero-check", "--overflow-check", "--bounds-check"
                  , "--nan-check", "--pointer-check"
-                 , "--function " ++ theMain, file] 
+                 , "--unwind " ++ show n, file] 
                    
-
 
 -- Small functions for easy modification of the Options record
 
 setS :: DistributedStreams -> Options -> Options
 setS (streams, sends)  opts = opts {optStreams = Just streams, optSends = sends}
 
--- | Sets the environment for simulation by giving a mapping of external variables to lists of values. E.g., 
+-- | Sets the environment for simulation by giving a mapping of external
+-- variables to lists of values. E.g.,
 -- 
 -- @ setE (emptySM {w32Map = fromList [(\"ext\", [0,1..])]}) ... @
 -- 
 -- sets the external variable names "ext" to take the natural numbers, up to the limit of Word32.
 setE :: Vars -> Options -> Options
 setE vs opts = opts {optExts = Just vs}
+
+setArrs :: [(String,Int)] -> Options -> Options
+setArrs ls opts = opts {optArrs = ls}
 
 -- | Sets the options for the compiler, e.g.,
 --
@@ -177,12 +181,12 @@ setPP pp opts = opts {optPrePostCode = Just pp}
 -- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
 -- the stream becoms true.
 setTriggers :: [(Var, String)] -> Options -> Options
-setTriggers triggers opts = 
+setTriggers trigs opts = 
   if null repeats 
-    then opts {optTriggers = Just triggers}
+    then opts {optTriggers = trigs}
     else error $ "Error: only one trigger per Copilot variable.  Variables "
                  ++ show (Set.fromList repeats) ++ " are given multiple triggers."
-  where vars = map fst triggers
+  where vars = map fst trigs
         repeats = vars \\ Set.toList (Set.fromList vars)
 
 -- | The "main" function
@@ -236,7 +240,8 @@ getBackend opts seed =
                 outputDir = optOutputDir opts,
                 compiler  = optCompiler opts,
                 prePostCode = optPrePostCode opts,
-                triggers = optTriggers opts
+                triggers = optTriggers opts,
+                arrDecs = optArrs opts
                     }
 
 help :: IO ()

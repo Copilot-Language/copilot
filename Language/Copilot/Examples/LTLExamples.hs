@@ -4,42 +4,39 @@ module Language.Copilot.Examples.LTLExamples () where
 
 import Prelude (replicate, Int)
 
-import Language.Copilot.Core
-import Language.Copilot.Language 
+import Language.Copilot
 import Language.Copilot.Variables
-import Language.Copilot.Libs.LTL
-import Language.Copilot.Libs.Indexes
 
 ----------------
 -- LTL tests ---
 ----------------
 
-test, output :: Var
-test = "test"
+testing, output :: Var
+testing = "test"
 output = "output"
 
 
 -- Can be tested with various values of n.  Use  the interpreter to see the outputs.
 
 tSoonest :: Int -> Streams
-tSoonest n = do test .= (replicate (n+2) False) ++ const True
-                output .= soonest n (var test)
+tSoonest n = do testing .= (replicate (n+2) False) ++ const True
+                output .= soonest n (var testing)
            
 
 tLatest :: Int -> Streams
-tLatest n = do test .= (replicate (n-2) False) ++ const True
-               output .= latest n (var test)
+tLatest n = do testing .= (replicate (n-2) False) ++ const True
+               output .= latest n (var testing)
           
 
 tAlways :: Int -> Streams
-tAlways n = do test .= (replicate (n+3) True) ++ const False
-               output .= always n (varB test)
+tAlways n = do testing .= (replicate (n+3) True) ++ const False
+               output .= always n (varB testing)
           
 
 tFuture :: Int -> Streams
-tFuture n = do test .= (replicate (n+3) False) ++ varB a
+tFuture n = do testing .= (replicate (n+3) False) ++ varB a
                a .= [False] ++ not (var a)
-               output .= eventually n (varB test)
+               output .= eventually n (varB testing)
           
 
 tUntil :: Int -> Streams

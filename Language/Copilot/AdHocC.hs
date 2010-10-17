@@ -1,10 +1,9 @@
--- TODO-Robin : Improve a lot that -> new package in Hackage ?
 -- generate C-Code with combinators, high-level, safe haskell.
 
 -- | Helper functions for writing free-form C code.
 module Language.Copilot.AdHocC (
-        varDecl, includeBracket, includeQuote,
-        printf, printfNewline
+         varDecl, arrDecl, varInit, arrayInit, funcDecl
+       , includeBracket, includeQuote, printf, printfNewline
     ) where
 
 import Data.List (intersperse) 
@@ -14,11 +13,38 @@ import Language.Atom.Code (cType) -- C99
 -- | Takes a type and a list of variable names and declares them.
 varDecl :: Type -> [String] -> String
 varDecl t vars = 
-    cType' t ++ " " ++ (unwords (intersperse "," vars)) ++ ";"
-    where
-        cType' Bool = "int"
-        cType' typ = cType typ
+    cType t ++ " " ++ unwords (intersperse "," vars) ++ ";"
 
+-- | Takes a type and a list of array names and their sizes declares them.
+arrDecl :: Type -> [(String,Int)] -> String
+arrDecl t arrs = 
+    cType t ++ " " ++ unwords (intersperse "," mkArrs) ++ ";"
+  where mkArrs = map (\(a,size) -> a ++ "[" ++ show size ++ "]") arrs
+
+-- | Takes a type and a variable and initializes it.  It is YOUR responsibility
+-- to ensure that @val@ is of type @t@.
+varInit :: Show a => Type -> String -> a -> String
+varInit t var val = cType t ++ " " ++ var ++ " = " ++ show val ++ ";"
+
+-- Show a list with braces {} rather than brackets [].
+bracesListShow :: Show a => [a] -> String
+bracesListShow ls =
+  "{" ++ (foldl (++) "" $ intersperse "," $ map show ls) ++ "}"
+
+-- | Takes a type and an array and initializes it.  It is YOUR responsibility to
+-- ensure that @vals@ is of type @t@.
+arrayInit :: Show a => Type -> String -> [a] -> String
+arrayInit t var vals = 
+  cType t ++ " " ++ var ++ " = " ++ bracesListShow vals ++ ";"
+
+-- | Declare function prototypes, given a return type, a function name, and a
+-- | list of argument types.  Use 'Nothing' for a return type of @void@.
+funcDecl :: Maybe Type -> String -> [Type] -> String
+funcDecl t fn argTs = makeRet t ++ " " ++ fn ++ "(" ++ makeArgTs ++ ");"
+  where makeRet Nothing = "void"
+        makeRet (Just t') = cType t'
+        makeArgTs | null argTs = "void"
+                  | otherwise  = unwords (intersperse "," $ map cType argTs)
 
 -- | Add an include of a library
 includeBracket :: String -> String
@@ -43,3 +69,4 @@ newline = "\\n"
 printf, printfNewline :: String -> [String] -> String
 printfNewline text vars = (printfPre text) ++ newline ++ (printfPost vars)
 printf text vars = (printfPre text) ++ (printfPost vars)
+

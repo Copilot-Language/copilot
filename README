@@ -20,7 +20,7 @@ systems, but it can be used to develop a variety of functional-style embedded
 code.
 
 
-********
+*******************************************************************************
 Please visit <http://leepike.github.com/Copilot/> for more information about
 installing and using Copilot.
 
@@ -30,4 +30,19 @@ your local repo,
   > git checkout gh-pages 
 
 and you should see index.html.
-********
+
+
+*******************************************************************************
+Release notes
+
+* Copilot-0.23
+
+  * All -Wall warnings removed (from importing Copilot.hs).
+  * Added support for sampling external array values.  (See Examples.hs).
+  * Fixed a bug in calling CBMC to ensure it unrolls it's loop.  Updated
+    documentation in Help.hs.
+  * Other minor stylistic changes and fixes.
+
+* Copilot-0.22: initial release
+
+

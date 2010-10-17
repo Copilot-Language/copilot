@@ -23,6 +23,9 @@ module Language.Copilot.Language (
         -- * The next functions provide easier access to typed external variables.
         extB, extI8, extI16, extI32, extI64,
         extW8, extW16, extW32, extW64, extF, extD,
+        -- * The next functions provide easier access to typed external arrays.
+        extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
+        extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
         -- * Set of operators from which to choose during the generation of random streams
         opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
@@ -42,12 +45,10 @@ module Language.Copilot.Language (
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
-import Data.Monoid
-import Data.List(elem)
 import System.Random
 import qualified Data.Map as M
-import Prelude ( Fractional((/)), Bool(..), Num(..), Float, Double
-               , Fractional(..), fromInteger, fail, zip, (>>=), Show(..), error, ($))
+import Prelude ( Bool(..), Num(..), Float, Double
+               , Fractional(..), fromInteger, zip, Show(..), Integer)
 import qualified Prelude as P
 import Control.Monad.Writer
 
@@ -60,19 +61,6 @@ import Language.Copilot.Tests.Random
 not :: Spec Bool -> Spec Bool
 not = F P.not A.not_
 
-instance (Streamable a, A.NumE a) => P.Num (Spec a) where
-    (+) = F2 (P.+) (P.+) -- A.NumE a => E a is an instance of Num
-    (*) = F2 (P.*) (P.*)
-    (-) = F2 (P.-) (P.-)
-    negate = F P.negate P.negate
-    abs = F P.abs P.abs
-    signum = F P.signum P.signum
-    fromInteger i = Const (P.fromInteger i)
-
-instance (Streamable a, A.NumE a, P.Fractional a) => P.Fractional (Spec a) where
-    (/) = F2 (P./) (P./)
-    recip = F P.recip P.recip
-    fromRational r = Const (P.fromRational r)
 
 -- | Beware : crash without any possible recovery if a division by 0 happens.
 -- Same risk with mod. Use div0 and mod0 if unsure.
@@ -80,10 +68,13 @@ mod, div :: (Streamable a, A.IntegralE a) => Spec a -> Spec a -> Spec a
 mod = F2 P.mod A.mod_
 div = F2 P.mod A.div_
 
--- | As mod and div, except that if the division would be by 0, it is instead by the first argument.
+-- | As mod and div, except that if the division would be by 0, the first
+-- argument is used as a default.
 mod0, div0 :: (Streamable a, A.IntegralE a) => a -> Spec a -> Spec a -> Spec a
-mod0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.div` d else x0 `P.div` x1) (\ e0 e1 -> A.mod0_ e0 e1 d)
-div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d else x0 `P.mod` x1) (\ e0 e1 -> A.div0_ e0 e1 d)
+mod0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.div` d 
+                          else x0 `P.div` x1) (\ e0 e1 -> A.mod0_ e0 e1 d)
+div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d 
+                          else x0 `P.mod` x1) (\ e0 e1 -> A.div0_ e0 e1 d)
 
 (<), (<=), (>=), (>) :: (Streamable a, A.OrdE a) => Spec a -> Spec a -> Spec Bool
 (<) = F2 (P.<) (A.<.)
@@ -114,22 +105,27 @@ instance CastIntTo Word16 where
             A.Retype P.. A.ue P.. (`A.mod_` (65536::(A.E Word64))) P.. A.Retype P.. A.ue)
 instance CastIntTo Word32 where
     cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (`A.mod_` ((2 P.^ 32)::(A.E Word64))) P.. A.Retype P.. A.ue)
+            A.Retype P.. A.ue P.. (`A.mod_` ((2 P.^ (32::Integer))::(A.E Word64))) P.. A.Retype P.. A.ue)
 instance CastIntTo Word64 where
     cast = F (P.fromInteger P.. P.toInteger) (A.Retype P.. A.ue)
 
 instance CastIntTo Int8 where
     cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
+            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
+                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
 instance CastIntTo Int16 where
     cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ ((2 P.^15)::(A.E Word64))) `A.mod_` (2 P.^ 16)) P.- (2 P.^ 15)) P.. A.Retype P.. A.ue)
+            A.Retype P.. A.ue P.. (\x -> ((x P.+ ((2 P.^ (15::Integer))::(A.E Word64))) 
+                                          `A.mod_` (2 P.^ (16::Integer))) P.- (2 P.^ (15::Integer))) 
+                                      P.. A.Retype P.. A.ue)
 instance CastIntTo Int32 where
     cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
+            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
+                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
 instance CastIntTo Int64 where
     cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
+            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
+                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
 
 
 -- | Beware : both sides are executed, even if the result of one is later discarded
@@ -164,6 +160,8 @@ float = P.id
 double = P.id
 
 -- Used for easily producing, and coercing PVars
+
+-- for variables
 extB :: Var -> Phase -> Spec Bool
 extB = PVar A.Bool
 extI8 :: Var -> Phase -> Spec Int8
@@ -186,6 +184,42 @@ extF :: Var -> Phase -> Spec Float
 extF = PVar A.Float
 extD :: Var -> Phase -> Spec Double
 extD = PVar A.Double
+
+-- for arrays 
+-- inBounds :: (Integral a, Bounded a) => a -> Bool
+-- inBounds a = 0 <= toIntger a <= toInteger maxBound
+
+-- makeArrayCall :: (Streamable a, Integral a) => (Var, Spec a) -> Var
+-- makeArrayCall (v, idx) = v P.++ "[" P.++ show idx P.++ "]"
+
+  -- | let t = atomType idx 
+  --   in t P.== A.Bool P.|| t P.== A.Float P.|| t P.== A.Double 
+  --     = error $ "Copilot: " 
+  -- | otherwise = v P.++ "[" P.++ show idx P.++ "]"
+
+extArrB :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Bool
+extArrB = \(v, idx) ph -> PArr A.Bool (v, idx) ph
+extArrI8 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Int8
+extArrI8 = \(v, idx) ph -> PArr A.Int8 (v, idx) ph
+extArrI16 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Int16
+extArrI16 = \(v, idx) ph -> PArr A.Int16 (v, idx) ph
+extArrI32 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Int32
+extArrI32 = \(v, idx) ph -> PArr A.Int32 (v, idx) ph
+extArrI64 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Int64
+extArrI64 = \(v, idx) ph -> PArr A.Int64 (v, idx) ph
+extArrW8 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Word8
+extArrW8 = \(v, idx) ph -> PArr A.Word8 (v, idx) ph
+extArrW16 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Word16
+extArrW16 = \(v, idx) ph -> PArr A.Word16 (v, idx) ph
+extArrW32 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Word32
+extArrW32 = \(v, idx) ph -> PArr A.Word32 (v, idx) ph
+extArrW64 :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Word64
+extArrW64 = \(v, idx) ph -> PArr A.Word64 (v, idx) ph
+extArrF :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Float
+extArrF = \(v, idx) ph -> PArr A.Float (v, idx) ph
+extArrD :: (Streamable a, A.IntegralE a) => (Var, Spec a) -> Phase -> Spec Double
+extArrD = \(v, idx) ph -> PArr A.Double (v, idx) ph
+
 
 ---- Sets of operators for Tests.Random.hs -------------------------------------
 

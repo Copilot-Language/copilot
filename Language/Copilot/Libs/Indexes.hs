@@ -5,7 +5,7 @@
 
 module Language.Copilot.Libs.Indexes(soonest, soonestFail, latest, latestFail) where
 
-import Prelude (Integral, Bool(..), id, Int, String, error, fromIntegral, ($), show)
+import Prelude (id, Int, String, fromIntegral, ($))
 import qualified Prelude as P 
 import Data.Int (Int16)
 

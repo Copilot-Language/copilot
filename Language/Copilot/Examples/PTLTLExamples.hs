@@ -4,12 +4,8 @@ module Language.Copilot.Examples.PTLTLExamples where
 
 import Prelude ()
 
-import Language.Copilot.Core
-import Language.Copilot.Language
-import Language.Copilot.Interface 
+import Language.Copilot
 import Language.Copilot.Variables
-import Language.Copilot.PrettyPrinter
-import Language.Copilot.Libs.PTLTL
 
 -- Next examples are for testing of the ptLTL library
 

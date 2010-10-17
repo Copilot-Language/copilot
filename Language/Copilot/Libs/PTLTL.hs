@@ -1,7 +1,6 @@
--- | Provides past-time linear-temporal logic (ptLTL operators).
-
--- XXX won't make unique tmp stream names if you use the same operator twice in
--- one stream definition.
+-- | Provides past-time linear-temporal logic (ptLTL operators).  Currently
+-- won't make unique tmp stream names if you use the same operator twice in one
+-- stream definition.
 
 module Language.Copilot.Libs.PTLTL(previous, alwaysBeen, eventuallyPrev, since) where
 

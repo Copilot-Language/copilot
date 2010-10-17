@@ -1,14 +1,25 @@
 TODOs
 
- * cabal build/install throws lots of warnings
-  
- * Interrupts in Atom
-   * And can be called from Copilot
-
- * Modify atom so that it refuses names that produce invalid C code. See
+* Modify atom so that it refuses names that produce invalid C code. See
    checkname in Language.Atom.Elaboration.hs (still probably bugged) Also see
    normalizeVar in Language.Copilot.Core.hs.
 
  * Add arrays to the language(?)
 
  * Do MC/DC coverage testing(?)
+
+ * AIG-based equivalence checking.
+
+ * Add math.h functions to Language.hs.
+
+ * Give rule expense in verbose?  Random seed msg?
+
+ * Move all the error-checking to one file, instead of "error ..." spread all
+   over.
+
+ * Better error handling/error message for bad options/parameters for interface
+   functions.  Perhaps use hsTidy?  <http://hackage.haskell.org/package/hstidy>
+
+ * Use para <http://hackage.haskell.org/package/para> for pretty-formatting
+   error msgs from Analyzer.hs as well as Help.hs.
+ 

@@ -3,7 +3,6 @@
 module Language.Copilot.Libs.LTL(always, next, eventually, until, release) where
 
 import Prelude (Int, ($))
-import qualified Prelude as P 
 import Data.List (foldl1)
 
 import Language.Copilot.Core

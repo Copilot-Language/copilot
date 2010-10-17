@@ -1,9 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, GADTs, RankNTypes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Generate random specs for testing.  We do not generate external array indexes.
+
 module Language.Copilot.Tests.Random (randomStreams, Operator(..), Operators, fromOp) where
 
-import Language.Copilot.Core
+import Language.Copilot.Core 
 import Language.Copilot.Analyser
 
 import qualified Language.Atom as A
@@ -53,13 +55,17 @@ weightsDropSpecSet = [(1,2),(2,6),(7,1)]
 ---- Tools ---------------------------------------------------------------------
 
 data Operator a = 
-    Operator (forall g . RandomGen g => (forall a' g'. (Streamable a', Random a', RandomGen g') => g' -> SpecSet -> (Spec a', g')) -> 
-    g -> (Spec a, g))
+    Operator (forall g . RandomGen g => 
+       (forall a' g'. (Streamable a', Random a', RandomGen g') => 
+         g' -> SpecSet -> (Spec a', g')) -> 
+             g -> (Spec a, g))
 type Operators = StreamableMaps Operator
 
 fromOp :: Operator a -> 
-    (forall g. RandomGen g => (forall a' g'. (Streamable a', Random a', RandomGen g') => g' -> SpecSet -> (Spec a', g')) -> 
-    g -> (Spec a, g))
+    (forall g. RandomGen g => 
+       (forall a' g'. (Streamable a', Random a', RandomGen g') => 
+          g' -> SpecSet -> (Spec a', g')) -> 
+             g -> (Spec a, g))
 fromOp op =
     case op of
         Operator x -> x
@@ -184,7 +190,8 @@ instance Random A.Type where
 
 ---- Generation of random streams ----------------------------------------------
 
-randomStreams :: RandomGen g => Operators -> Operators -> Operators -> g -> (StreamableMaps Spec, Vars)
+randomStreams :: RandomGen g => Operators -> Operators -> 
+     Operators -> g -> (StreamableMaps Spec, Vars)
 randomStreams opsF opsF2 opsF3 g =
     let (vs, g0) = addRandomVNames weightsContinueVar weightsVarTypes g emptySM
         (exts, g1) = addRandomVNames weightsContinuePVar weightsPVarTypes g0 emptySM
@@ -194,7 +201,8 @@ randomStreams opsF opsF2 opsF3 g =
         then (streams, vars)
         else randomStreams opsF opsF2 opsF3 g3
         
-addRandomVNames :: RandomGen g => [(Bool, Int)] -> [(A.Type, Int)] -> g -> Variables -> (Variables, g)
+addRandomVNames :: RandomGen g => [(Bool, Int)] -> 
+      [(A.Type, Int)] -> g -> Variables -> (Variables, g)
 addRandomVNames wContinue wTypes g vs =
     let (b, g0) = randomWeighted g wContinue
         (t, g1) = randomWeighted g0 wTypes
@@ -229,9 +237,10 @@ randomSpec :: forall a g. (Streamable a, RandomGen g, Random a) =>
     Variables -> Variables -> Operators -> Operators -> Operators -> g -> SpecSet -> (Spec a, g)
 randomSpec vs exts opsF opsF2 opsF3 g set =
     let weights = case set of
-            AllSpecSet -> weightsAllSpecSet
-            FunSpecSet -> weightsFunSpecSet
+            AllSpecSet  -> weightsAllSpecSet
+            FunSpecSet  -> weightsFunSpecSet
             DropSpecSet -> weightsDropSpecSet
+            _           -> weightsAllSpecSet
         (n::Int, g0) = randomWeighted g weights in
     case n of
             0 -> -- PVar
@@ -263,7 +272,8 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
                 (Drop i s', g2)
             _ -> error "Impossible"
     where 
-        randomSpec' :: forall a' g'. (Streamable a', RandomGen g', Random a') => g' -> SpecSet -> (Spec a', g')
+        randomSpec' :: forall a' g'. (Streamable a', RandomGen g', Random a') 
+                    => g' -> SpecSet -> (Spec a', g')
         randomSpec' = randomSpec vs exts opsF opsF2 opsF3
         getOpStream :: Operators -> g -> (Spec a, g)
         getOpStream ops g0 =

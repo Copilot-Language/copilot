@@ -4,8 +4,8 @@ module Language.Copilot.Examples.Examples where
 
 import Data.Word
 import Prelude (($))
-import qualified Prelude as P
 import qualified Prelude as Prelude
+import qualified Prelude as P
 
 -- for specifying options
 import Data.Map (fromList) 
@@ -13,13 +13,8 @@ import Data.Maybe (Maybe (..))
 import System.Random
 import Data.Int
 
-import Language.Copilot.Core
-import Language.Copilot.Language
-import Language.Copilot.Interface
+import Language.Copilot 
 import Language.Copilot.Variables
-import Language.Copilot.PrettyPrinter
-
-import Language.Copilot.Libs.LTL
 
 fib :: Streams
 fib = do
@@ -43,7 +38,7 @@ t2 = do
 t3 :: Streams
 t3 = do
      a .= [0,1] ++ (var a) + extW32 "ext" 8 + extW32 "ext" 8 + extW32 "ext" 1
-     b .= [True, False] ++ 2 + var a < 5 + extW32 "ext" 1
+     b .= [True, False] ++ 2 + var a < 5 + extW32 "_ext" 1
 
 t4 :: Streams
 t4 = do
@@ -186,3 +181,29 @@ trap = do
 --     "loop1" .= [0] ++ varI32 "loop2" + 2 
 --     "loop2" .= [1] ++ varI32 "loop1" - 1 
 --     "other" .= drop 3 (varI32 "loop1") 
+
+-- testing external array references
+testArr :: Streams
+testArr = do 
+  -- a .= [True] ++ extArrB ("ff", varW16 b) 5 && extArrB ("ff", varW16 b) 1 
+  --       && extArrB ("ff", varW16 b) 2
+  -- b .= [7] ++ varW16 b + const 3 + extArrW16 ("gg", varW16 f) 2 
+  -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4 
+  -- c .= [True] ++ var c
+  -- d .= varB c 
+  e .= varW16 g -- + extArrW16 ("gg", varW16 b) 2
+--  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
+  g .= extArrW16 ("gg", varW16 e) 2 
+  -- h .= [0] ++ drop 1 (varW16 g)
+
+
+-- t3 :: use an external variable called ext, typed Word32
+t99 :: Streams
+t99 = do
+     a .= [0,1] ++ (var a) + extW32 "ext" 8 + extW32 "ext" 8 + extW32 "ext" 1
+     b .= [True, False] ++ 2 + var a < 5 + extW32 "_ext" 1
+
+-- test external idx before after and in the stream it references
+-- test multiple defs
+-- test defs in functions
+-- test arrays at different indexes
