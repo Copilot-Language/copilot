@@ -31,9 +31,10 @@ extra-source-files:  README
 
 library
     ghc-options:     -Wall
-    build-depends:     base > 4 && < 5
+    -- These build depends represent my current system.  This will probably
+    -- build on packages outside these constaints.
+    build-depends:     base >=4.2 && <6
                      , atom >= 1.0.7
-                     -- may work for containers below 0.3.0.0; untested.
                      , containers >= 0.3.0.0
                      , process >= 1.0.0.0
                      , random >= 1.0.0.0
