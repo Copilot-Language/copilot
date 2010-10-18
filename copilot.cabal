@@ -33,13 +33,13 @@ library
     ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constaints.
-    build-depends:     base >=4.2 && <6
+    build-depends:     base > 4 && < 6
                      , atom >= 1.0.7
-                     , containers >= 0.3.0.0
+                     , containers >= 0.2.0.1
                      , process >= 1.0.0.0
                      , random >= 1.0.0.0
-                     , directory >= 1.0.1.0
-                     , mtl >= 1.0.0.0                   
+                     , directory >= 1.0.0.0
+                     , mtl >= 1.0.0.0
                      , filepath >= 1.0.0.0
 
     extensions:
