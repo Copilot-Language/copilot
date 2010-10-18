@@ -45,7 +45,8 @@ data AtomToC = AtomToC
                                  -- we cannot declare them.  Passing in pairs
                                  -- containing the name of the array and it's
                                  -- size allows them to be declared."
-
+    , clock :: Maybe A.Clock     -- Use the hardware clock to drive the timing
+                                 -- of the program.
     }
 
 data BackEnd = Opts AtomToC 
@@ -98,9 +99,6 @@ dispatch streams sends inputExts backEnd iterations verbose =
                                      ++  "(if missing)  ..."
                         createDirectoryIfMissing False dirName
                         checkTriggerVars streams (triggers opts) 
-                        -- copilotToC streams sends allExts trueInputExts 
-                        --            (cName opts) (getPeriod opts) (prePostCode opts) 
-                        --            (triggers opts) isVerbose
                         copilotToC streams sends allExts trueInputExts opts isVerbose
                         let copy ext = copyFile (cName opts ++ ext) 
                                         (dirName ++ cName opts ++ ext)
@@ -159,10 +157,12 @@ copilotToC streams sends allExts trueInputExts opts isVerbose =
                   getPrePostCode cFileName streams allExts (arrDecs opts) trueInputExts p'
                 Just (pre, post) -> (pre, post)
         atomConfig = A.defaults 
-            {A.cCode = \_ _ _ -> (preCode, postCode),
-            A.cRuleCoverage = False,
-            A.cAssert = False,
-            A.cStateName = "copilotState" ++ cFileName}
+            { A.cCode = \_ _ _ -> (preCode, postCode)
+            , A.cRuleCoverage = False
+            , A.cAssert = False
+            , A.hardwareClock = clock opts
+            , A.cStateName = "copilotState" ++ cFileName
+            }
     in do
         putStrLn $ "Compiling Copilot specs to C  ..."
         (sched, _, _, _, _) <- A.compile cFileName atomConfig program
@@ -170,24 +170,6 @@ copilotToC streams sends allExts trueInputExts opts isVerbose =
             then putStrLn $ A.reportSchedule sched
             else return ()
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
--- copilotToC streams sends allExts trueInputExts cFileName p prePostC trigs isVerbose =
---     let (p', program) = copilotToAtom streams sends p trigs
---         (preCode, postCode) = 
---             case prePostC of
---                 Nothing ->  getPrePostCode cFileName streams allExts trueInputExts p'
---                 Just (pre, post) -> (pre, post)
---         atomConfig = A.defaults 
---             {A.cCode = \_ _ _ -> (preCode, postCode),
---             A.cRuleCoverage = False,
---             A.cAssert = False,
---             A.cStateName = "copilotState" ++ cFileName}
---     in do
---         putStrLn $ "Compiling Copilot specs to C  ..."
---         (sched, _, _, _, _) <- A.compile cFileName atomConfig program
---         if isVerbose 
---             then putStrLn $ A.reportSchedule sched
---             else return ()
---         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
 gccCall :: BackEnd -> IO ()
 gccCall backend = 

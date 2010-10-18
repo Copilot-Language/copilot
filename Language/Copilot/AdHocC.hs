@@ -16,7 +16,7 @@ varDecl t vars =
     cType t ++ " " ++ unwords (intersperse "," vars) ++ ";"
 
 -- | Takes a type and a list of array names and their sizes declares them.
-arrDecl :: Type -> [(String,Int)] -> String
+arrDecl :: Type -> [(String, Int)] -> String
 arrDecl t arrs = 
     cType t ++ " " ++ unwords (intersperse "," mkArrs) ++ ";"
   where mkArrs = map (\(a,size) -> a ++ "[" ++ show size ++ "]") arrs
@@ -26,16 +26,17 @@ arrDecl t arrs =
 varInit :: Show a => Type -> String -> a -> String
 varInit t var val = cType t ++ " " ++ var ++ " = " ++ show val ++ ";"
 
--- Show a list with braces {} rather than brackets [].
-bracesListShow :: Show a => [a] -> String
-bracesListShow ls =
-  "{" ++ (foldl (++) "" $ intersperse "," $ map show ls) ++ "}"
-
 -- | Takes a type and an array and initializes it.  It is YOUR responsibility to
 -- ensure that @vals@ is of type @t@.
 arrayInit :: Show a => Type -> String -> [a] -> String
 arrayInit t var vals = 
-  cType t ++ " " ++ var ++ " = " ++ bracesListShow vals ++ ";"
+  cType t ++ " " ++ var ++ "[" ++ show (length vals)
+        ++ "] = " ++ bracesListShow ++ ";"
+  where 
+  -- Show a list with braces {} rather than brackets [].
+  bracesListShow :: String
+  bracesListShow =
+    "{" ++ (foldl (++) "" $ intersperse "," $ map show vals) ++ "}"
 
 -- | Declare function prototypes, given a return type, a function name, and a
 -- | list of argument types.  Use 'Nothing' for a return type of @void@.

@@ -191,9 +191,9 @@ testArr = do
   -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4 
   -- c .= [True] ++ var c
   -- d .= varB c 
-  e .= varW16 g -- + extArrW16 ("gg", varW16 b) 2
+  e .= [6,7,8] ++ constW16 3 -- + extArrW16 ("gg", varW16 b) 2
 --  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
-  g .= extArrW16 ("gg", varW16 e) 2 
+  g .= (extArrW16 ("gg", varW16 e) 1) == (extArrW16 ("gg", varW16 e) 1)
   -- h .= [0] ++ drop 1 (varW16 g)
 
 

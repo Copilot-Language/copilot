@@ -196,8 +196,8 @@ makeRule streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r 
 
        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
--- | Find the maximum phase as which an array sampling depends on this stream.
--- | Returns zero by default.
+-- | Find the maximum phase as which an array sampling depends on this stream by
+-- computing it's index in terms of it. Returns zero by default.
 maxSampleDep :: Var -> StreamableMaps Spec -> Int
 maxSampleDep v streams =
   foldStreamableMaps (\_ -> streamDep) streams 0
@@ -281,8 +281,13 @@ getOptimalPeriod streams =
     getMaximumSamplingPhase :: Var -> Spec a -> Period -> Period 
     getMaximumSamplingPhase _ spec n =
       case spec of
-        PVar _ _ p -> max (p + 1) n
-        PArr _ _ p -> max (p + 1) n
+        PVar _ _ ph -> max (ph + 1) n 
+        PArr _ (_, Var _) ph -> max (ph + 2) n -- because this may depend on a
+                                               -- variable, and if that variable
+                                               -- has a prophecy array, it needs
+                                               -- an extra phase to update after
+                                               -- the index is taken.
+        PArr _ _ ph -> max (ph + 1) n
         F _ _ s -> getMaximumSamplingPhase "" s n
         F2 _ _ s0 s1 -> maximum [n,
                 (getMaximumSamplingPhase "" s0 n),

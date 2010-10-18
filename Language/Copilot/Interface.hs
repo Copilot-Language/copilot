@@ -2,7 +2,7 @@
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
         , help , setS, setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setTriggers, setArrs,
+        , setDir, setGCC, setTriggers, setArrs, setClock,
         module Language.Copilot.Dispatch
     ) where
 
@@ -11,6 +11,7 @@ import Language.Copilot.Language (opsF, opsF2, opsF3)
 import Language.Copilot.Tests.Random
 import Language.Copilot.Dispatch
 import Language.Copilot.Help
+import qualified Language.Atom as A (Clock)
 
 import Data.Set as Set (fromList, toList)
 import Data.List ((\\))
@@ -26,7 +27,8 @@ data Options = Options {
         optSends :: Sends, -- ^ For distributed monitors.
         optExts :: Maybe Vars, -- ^ Assign values to external variables.
         optCompile :: Maybe String, -- ^ Set gcc options.
-        optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then the smallest feasible period is computed.
+        optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then
+                                   -- the smallest feasible period is computed.
         optInterpret :: Bool, -- ^ Interpreting?
         optIterations :: Int, -- ^ How many iterations are we simulating for?
         optVerbose :: Verbose, -- ^ Verbosity level: OnlyErrors | DefaultVerbose | Verbose.
@@ -45,11 +47,13 @@ data Options = Options {
                                         -- per trigger variable.  Triggers fire
                                         -- in the same phase (1) that output
                                         -- vars are assigned.
-        optArrs :: [(String, Int)] -- ^ When generating C programs to test, we
-                                   -- don't know how large external arrays are,
-                                   -- so we cannot declare them.  Passing in
-                                   -- pairs containing the name of the array and
-                                   -- it's size allows them to be declared."
+        optArrs :: [(String, Int)], -- ^ When generating C programs to test, we
+                                    -- don't know how large external arrays are,
+                                    -- so we cannot declare them.  Passing in
+                                    -- pairs containing the name of the array
+                                    -- and it's size allows them to be
+                                    -- declared."
+        optClock :: Maybe A.Clock  -- ^ Use the hardware clock to drive the timing of the program?
     }
 
 baseOpts :: Options
@@ -68,7 +72,8 @@ baseOpts = Options {
         optOutputDir = "./",
         optPrePostCode = Nothing,
         optTriggers = [],
-        optArrs = []
+        optArrs = [],
+        optClock = Nothing
     }
 
 -- Functions for making it easier for configuring copilot in the frequent use cases
@@ -125,8 +130,14 @@ setS (streams, sends)  opts = opts {optStreams = Just streams, optSends = sends}
 setE :: Vars -> Options -> Options
 setE vs opts = opts {optExts = Just vs}
 
+-- | Set the external arrays.
 setArrs :: [(String,Int)] -> Options -> Options
 setArrs ls opts = opts {optArrs = ls}
+
+-- | Sets the hardware clock.  See
+-- http://github.com/tomahawkins/atom/blob/master/Language/Atom/Code.hs.
+setClock :: A.Clock -> Options -> Options
+setClock clk opts = opts {optClock = Just clk}
 
 -- | Sets the options for the compiler, e.g.,
 --
@@ -241,7 +252,8 @@ getBackend opts seed =
                 compiler  = optCompiler opts,
                 prePostCode = optPrePostCode opts,
                 triggers = optTriggers opts,
-                arrDecs = optArrs opts
+                arrDecs = optArrs opts,
+                clock = optClock opts
                     }
 
 help :: IO ()

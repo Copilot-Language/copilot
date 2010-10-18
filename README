@@ -35,6 +35,12 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 
+* Copilot-0.24
+
+  * Fixed a bug in external array analysis for computing the minimum period
+    size.
+  * Added the ability to specify a HW clock for Atom.
+
 * Copilot-0.23
 
   * All -Wall warnings removed (from importing Copilot.hs).

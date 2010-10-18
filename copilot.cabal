@@ -1,5 +1,5 @@
 name:                copilot
-version:             0.23
+version:             0.24
 cabal-version:       >= 1.2
 license:             BSD3
 license-file:        LICENSE

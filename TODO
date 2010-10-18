@@ -23,3 +23,7 @@ TODOs
  * Use para <http://hackage.haskell.org/package/para> for pretty-formatting
    error msgs from Analyzer.hs as well as Help.hs.
  
+ * Go through using hlint suggestions.
+
+ * Add to Help.hs documentation on using the setClock function to use the HW
+   clock.
