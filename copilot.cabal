@@ -38,7 +38,7 @@ library
                      , containers >= 0.3.0.0
                      , process >= 1.0.0.0
                      , random >= 1.0.0.0
-                     , directory
+                     , directory >= 1.0.1.0
                      , mtl >= 1.0.0.0                   
                      , filepath >= 1.0.0.0
 
