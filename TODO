@@ -7,14 +7,13 @@ TODOs
  * Add arrays to the language(?)
 
  * Do MC/DC coverage testing(?)
+   * Use the open-source Certification thing?
 
  * AIG-based equivalence checking.
 
  * Add math.h functions to Language.hs.
 
- * Give rule expense in verbose?  Random seed msg?
-
- * Move all the error-checking to one file, instead of "error ..." spread all
+* Move all the error-checking to one file, instead of "error ..." spread all
    over.
 
  * Better error handling/error message for bad options/parameters for interface
@@ -27,3 +26,11 @@ TODOs
 
  * Add to Help.hs documentation on using the setClock function to use the HW
    clock.
+
+ * Fix splint warnings on generated C code 
+
+ * Libs/Indexes return a parameterized type rather than Int16
+
+ * Display external vars when interpreting
+
+

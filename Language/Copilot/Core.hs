@@ -428,7 +428,6 @@ instance Monoid (StreamableMaps Spec) where
                    (M.union w16m w16m') (M.union w32m w32m') (M.union w64m w64m') 
                    (M.union fm fm') (M.union dm dm')
 
-
 -- | Get the Copilot variables.
 getVars :: StreamableMaps Spec -> [Var]
 getVars streams = foldStreamableMaps (\k _ ks -> k:ks) streams []                         

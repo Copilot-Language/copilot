@@ -96,7 +96,7 @@ dispatch streams sends inputExts backEnd iterations verbose =
                         dirName = outputDir opts
                     in do
                         putStrLn $ "Trying to create the directory " ++ dirName 
-                                     ++  "(if missing)  ..."
+                                     ++  " (if missing)  ..."
                         createDirectoryIfMissing False dirName
                         checkTriggerVars streams (triggers opts) 
                         copilotToC streams sends allExts trueInputExts opts isVerbose

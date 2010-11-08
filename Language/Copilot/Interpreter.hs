@@ -18,7 +18,7 @@ interpret inVs moVs s =
     Const c -> repeat c
     Var v -> getElem v inVs
     PVar _ v _ -> getElem v moVs
-    PArr _ (v,s') _ -> map (\i -> (getElem v moVs) !! fromIntegral i) 
+    PArr _ (v,s') _ -> map (\i -> getElem v moVs !! fromIntegral i) 
                            (interpret inVs moVs s')
     Append ls s' -> ls ++ interpret inVs moVs s'
     Drop i s' -> drop i $ interpret inVs moVs s'

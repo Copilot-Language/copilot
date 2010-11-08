@@ -16,7 +16,7 @@ module Language.Copilot.Language (
         -- * Division
         Fractional((/)),
         mux,
-        CastIntTo(..),
+--        CastIntTo(..),
         -- * The next functions are used only to coerce the type of their argument
         bool, int8, int16, int32, int64,
         word8, word16, word32, word64, float, double,
@@ -29,7 +29,7 @@ module Language.Copilot.Language (
         -- * Set of operators from which to choose during the generation of random streams
         opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
-        var, const, drop, (++), (.=), (..|), 
+        var, drop, (++), (.=), (..|), 
         -- * The next functions are typed variable declarations to help the type-checker.
         varB, varI8, varI16, varI32, varI64,
         varW8, varW16, varW32, varW64, varF, varD,
@@ -39,7 +39,12 @@ module Language.Copilot.Language (
         sendW8, -- , sendW16, sendW32, sendW64, sendF, sendD
         -- * Typed constant declarations.
         constB, constI8, constI16, constI32, constI64,
-        constW8, constW16, constW32, constW64, constF, constD
+        constW8, constW16, constW32, constW64, constF, constD,
+        -- * Cast functions (the name tells you what you're casting *into*).
+        castI8, castI16, castI32, castI64,
+        castW8, castW16, castW32, castW64,
+        -- * Constants
+        true, false
     ) where
 
 import qualified Language.Atom as A
@@ -47,8 +52,8 @@ import Data.Int
 import Data.Word
 import System.Random
 import qualified Data.Map as M
-import Prelude ( Bool(..), Num(..), Float, Double
-               , Fractional(..), fromInteger, zip, Show(..), Integer)
+import Prelude ( Bool(..), Num(..), Float, Double, (.), String, error, ($)
+               , Fractional(..), fromInteger, zip, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer
 
@@ -72,9 +77,11 @@ div = F2 P.mod A.div_
 -- argument is used as a default.
 mod0, div0 :: (Streamable a, A.IntegralE a) => a -> Spec a -> Spec a -> Spec a
 mod0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.div` d 
-                          else x0 `P.div` x1) (\ e0 e1 -> A.mod0_ e0 e1 d)
+                          else x0 `P.div` x1) 
+            (\ e0 e1 -> A.mod0_ e0 e1 d)
 div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d 
-                          else x0 `P.mod` x1) (\ e0 e1 -> A.div0_ e0 e1 d)
+                          else x0 `P.mod` x1) 
+            (\ e0 e1 -> A.div0_ e0 e1 d)
 
 (<), (<=), (>=), (>) :: (Streamable a, A.OrdE a) => Spec a -> Spec a -> Spec Bool
 (<) = F2 (P.<) (A.<.)
@@ -94,39 +101,165 @@ div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
     (\ x y -> (x A.&&. A.not_ y) A.||. (y A.&&. A.not_ x))
 (==>) = F2 (\ x y -> y P.|| P.not x) A.imply
 
-class (Streamable a, P.Integral a) => CastIntTo a where
-    cast :: (Streamable b, A.IntegralE b) => Spec b -> Spec a
+-- | Cast 'a' into 'b'.  We only allow "safe casts" to larger types.
+class Streamable a => Castable a where
+  cast :: (Streamable b, A.IntegralE b) => Spec a -> Spec b
 
-instance CastIntTo Word8 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (`A.mod_` (256::(A.E Word64))) P.. A.Retype P.. A.ue)
-instance CastIntTo Word16 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (`A.mod_` (65536::(A.E Word64))) P.. A.Retype P.. A.ue)
-instance CastIntTo Word32 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (`A.mod_` ((2 P.^ (32::Integer))::(A.E Word64))) P.. A.Retype P.. A.ue)
-instance CastIntTo Word64 where
-    cast = F (P.fromInteger P.. P.toInteger) (A.Retype P.. A.ue)
+castErr :: String -> A.Type -> String
+castErr toT fromT = "Error: cannot cast type " P.++ show fromT 
+                    P.++ " into " P.++ toT P.++ ".  Only casts guarnateed \n" 
+                    P.++ "not to change sign and to larger types are allowed."
 
-instance CastIntTo Int8 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
-                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
-instance CastIntTo Int16 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ ((2 P.^ (15::Integer))::(A.E Word64))) 
-                                          `A.mod_` (2 P.^ (16::Integer))) P.- (2 P.^ (15::Integer))) 
-                                      P.. A.Retype P.. A.ue)
-instance CastIntTo Int32 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
-                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
-instance CastIntTo Int64 where
-    cast = F (P.fromInteger P.. P.toInteger) (
-            A.Retype P.. A.ue P.. (\x -> ((x P.+ (128::(A.E Word64))) 
-                                          `A.mod_` 256) P.- 128) P.. A.Retype P.. A.ue)
+instance Castable Bool where
+  cast = F (\b -> if b then 1 else 0)
+           (\b -> A.mux b 1 0)
 
+instance Castable Word8 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Word16 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Word32 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Word64 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Int8 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Int16 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Int32 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+instance Castable Int64 where
+  cast = F (P.fromInteger . P.toInteger) 
+           (A.Retype . A.ue)
+
+castW8 :: (Streamable a, Castable a) => Spec a -> Spec Word8
+castW8 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    t        -> error $ castErr "Word8" t
+
+castW16 :: (Streamable a, Castable a) => Spec a -> Spec Word16
+castW16 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Word8  -> cast x
+    t        -> error $ castErr "Word16" t
+
+castW32 :: (Streamable a, Castable a) => Spec a -> Spec Word32
+castW32 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Word8  -> cast x
+    A.Word16 -> cast x
+    t        -> error $ castErr "Word32" t
+
+castW64 :: (Streamable a, Castable a) => Spec a -> Spec Word64
+castW64 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Word8  -> cast x
+    A.Word16 -> cast x
+    A.Word32 -> cast x
+    t        -> error $ castErr "Word64" t
+
+castI8 :: (Streamable a, Castable a) => Spec a -> Spec Int8
+castI8 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    t        -> error $ castErr "Int8" t
+
+castI16 :: (Streamable a, Castable a) => Spec a -> Spec Int16
+castI16 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Int8   -> cast x
+    A.Word8  -> cast x
+    t        -> error $ castErr "Int16" t
+
+castI32 :: (Streamable a, Castable a) => Spec a -> Spec Int32
+castI32 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Int8  -> cast x
+    A.Int16 -> cast x
+    A.Word8  -> cast x
+    A.Word16  -> cast x
+    t        -> error $ castErr "Int32" t
+
+castI64 :: (Streamable a, Castable a) => Spec a -> Spec Int64
+castI64 x = 
+  case getAtomType x of
+    A.Bool   -> cast x
+    A.Int8  -> cast x
+    A.Int16 -> cast x
+    A.Int32 -> cast x
+    A.Word8  -> cast x
+    A.Word16  -> cast x
+    A.Word32  -> cast x
+    t        -> error $ castErr "Int64" t
+
+-- F (P.fromInteger . P.toInteger) 
+--             (A.Retype . A.ue . (`A.mod_` (size 16))
+--                . A.Retype . A.ue)
+
+
+-- instance CastIntTo Word8 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 8))
+--                  . A.Retype . A.ue)
+-- instance CastIntTo Word16 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 16))
+--                  . A.Retype . A.ue)
+-- instance CastIntTo Word32 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 32))
+--                  . A.Retype . A.ue)
+-- instance CastIntTo Word64 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 64))
+--                  . A.Retype . A.ue)
+
+-- Ints
+
+-- XXX this is how Robin had casts.  Can't we do it more simply?
+-- instance CastIntTo Int8 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . 
+--                  (\x -> ((x P.+ sMinOne) `A.mod_` s) P.-  s)
+--                    . A.Retype . A.ue)
+--       where s = size 8
+--             sMinOne = size 7
+-- instance CastIntTo Int8 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 7)) 
+--                    . A.Retype . A.ue)
+-- instance CastIntTo Int16 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 15)) 
+--                    . A.Retype . A.ue)
+-- instance CastIntTo Int32 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 31)) 
+--                    . A.Retype . A.ue)
+-- instance CastIntTo Int64 where
+--     cast = F (P.fromInteger . P.toInteger) 
+--              (A.Retype . A.ue . (`A.mod_` (size 63))
+--                    . A.Retype . A.ue)
 
 -- | Beware : both sides are executed, even if the result of one is later discarded
 mux :: (Streamable a) => Spec Bool -> Spec a -> Spec a -> Spec a
@@ -451,12 +584,16 @@ sendF v (ph, port) = Send (v, ph, port)
 sendD :: Var -> (Phase, Port) -> Send Double
 sendD v (ph, port) = Send (v, ph, port) -}
 
--- | A constant stream
-const :: Streamable a => a -> Spec a
-const x = Const x
+
 
 constB :: Bool -> Spec Bool
 constB = Const
+
+true, false :: Spec Bool
+true = constB True
+false = constB False
+
+-- | Constant streams
 constI8 :: Int8 -> Spec Int8
 constI8 = Const
 constI16 :: Int16 -> Spec Int16

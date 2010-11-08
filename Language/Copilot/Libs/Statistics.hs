@@ -5,7 +5,7 @@
 module Language.Copilot.Libs.Statistics(max, min, sum, mean) where
 
 import Prelude (Int, ($), foldl1, fromIntegral)
-import qualified Prelude as P 
+--import qualified Prelude as P 
 
 import qualified Language.Atom as A
 
@@ -37,7 +37,7 @@ min n s =
 -- for word size @a@ for streams over which computation is peformed.
 mean :: (Streamable a, Fractional a, A.NumE a) => Int -> Spec a -> Spec a
 mean n s = 
-  nOneChk "mean" n $ (sum n s) / (const $ fromIntegral n)
+  nOneChk "mean" n $ (sum n s) / (fromIntegral n)
 
 -- majority :: (Streamable a, A.NumE a) => Int -> Spec a -> Spec a
 -- majority n s =

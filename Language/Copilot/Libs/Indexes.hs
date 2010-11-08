@@ -16,15 +16,15 @@ import Language.Copilot.Language
 soonestHlp :: String -> (Spec Bool -> Spec Bool) -> Int -> Spec Bool -> Spec Int16
 soonestHlp name f n s = int16Chk name n $ nPosChk name n (buildStr 0)
   where buildStr m = 
-          if m P.> n then const (-1)
-             else mux (f $ drop m s) (const $ fI m) (buildStr (m P.+ 1))
+          if m P.> n then (-1)
+             else mux (f $ drop m s) (fI m) (buildStr (m P.+ 1))
         fI = fromIntegral
 
 latestHlp :: String -> (Spec Bool -> Spec Bool) -> Int -> Spec Bool -> Spec Int16
 latestHlp name f n s = int16Chk name n $ nPosChk name n (buildStr n)
   where buildStr m = 
-          if m P.< 0 then const (-1)
-             else mux (f $ drop m s) (const $ fI m) (buildStr (m P.- 1))
+          if m P.< 0 then (-1)
+             else mux (f $ drop m s) (fI m) (buildStr (m P.- 1))
         fI = fromIntegral
 
 -- | Returns the smallest @m <= n@ such that @drop m s@ is true, and @-1@ if no
@@ -46,7 +46,3 @@ latest = latestHlp "latest" id
 -- such @m@ exists.  
 latestFail :: Int -> Spec Bool -> Spec Int16
 latestFail = latestHlp "latest" not
-
-
-                     
-

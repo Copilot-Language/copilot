@@ -35,6 +35,15 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 
+* Copilot-0.25
+
+  * Added true, false Specs (Spec Bool)
+  * Removed generic const -- unneeded, since Spec instantiates Num.
+  * Change casting to only allow casts that (1) are guaranteed not to change the
+    sign and (2) are to a larger type.
+  * Removed libs from Copilot.hs.  You must import these explicitly.
+  * Fixed buts with LTL and ptLTL libraries and examples and added documentation.
+
 * Copilot-0.24
 
   * Fixed a bug in external array analysis for computing the minimum period

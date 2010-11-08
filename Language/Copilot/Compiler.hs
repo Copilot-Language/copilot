@@ -10,7 +10,6 @@ import Language.Copilot.Core
 import Data.Maybe
 import Data.Map as M
 import Data.List
-import Control.Monad (when)
 
 import qualified Language.Atom as A
 
@@ -96,7 +95,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
         F3 _ _ s0 s1 s2 -> initExtSamples' s0 $ initExtSamples' s1 $
                              initExtSamples' s2 tmpSamples
         PVar _ v ph -> 
-            do  checkVar v 
+            do  -- checkVar v 
                 ts <- tmpSamples
                 let v' = tmpVarName v ph
                     vts = tmpVars ts
@@ -109,7 +108,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                             return $ ts {tmpVars = updateSubMap (\_ -> m') vts}
                     Just _ -> return ts
         PArr _ (arr, idx) ph -> 
-            do  checkVar arr
+            do  --checkVar arr
                 ts <- tmpSamples
                 let arr' = tmpArrName arr ph (show idx)
                     arrts = tmpArrs ts
@@ -137,9 +136,10 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                                      , tmpIdxs = updateSubMap (\_ -> m'') idxts
                                      }
                   Just _ -> return ts
-    where checkVar v = when (normalizeVar v /= v)
-                       (error $ "Copilot: external variable " ++ v ++ " is not "
-                               ++ "a valid C99 variable.")
+    where 
+    --      checkVar v = when (normalizeVar v /= v)
+    --                    (error $ "Copilot: external variable " ++ v ++ " is not "
+    --                            ++ "a valid C99 variable.")
           initExtSamples' :: Streamable b
                           => Spec b -> A.Atom TmpSamples -> A.Atom TmpSamples
           initExtSamples' = initExtSamples streams prophArrs outputIndexes

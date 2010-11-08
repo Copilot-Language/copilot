@@ -21,7 +21,7 @@ fib = do
   "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
   "t"   .= even (var "fib")
     where even :: Spec Word64 -> Spec Bool
-          even w' = w' `mod` const 2 == const 0
+          even w' = w' `mod` 2 == 0
 
 t1 :: Streams
 t1 = do
@@ -71,7 +71,7 @@ xx = do
 engine :: Streams
 engine = do
    "temps" .= [0, 0, 0] ++ extF "temp" 1
-   "overTempRise" .= drop 2 (varF "temps") > const 2.3 + var "temps"
+   "overTempRise" .= drop 2 (varF "temps") > 2.3 + var "temps"
    "trigger" .= (var "overTempRise") ==> (extB "shutoff" 2) 
 
 -- To compile: > let (streams, ss) = dist in interface $ compileOpts streams ss "dist"
@@ -104,30 +104,27 @@ gcd' = do
   a .= alg "n" (sub a b)
   b .= alg "m" (sub b a)
   "ans" .= varW16 a == varW16 b && not (var "init")
-  "init" .= [True] ++ const False
+  "init" .= [True] ++ false
     where sub hi lo = mux (varW16 hi > var lo) (var hi - var lo) (var hi)
           alg ext ex = [0] ++ mux (var "init") (extW16 ext 1) ex
 
 testCoercions :: Streams
 testCoercions = do
-    "short" .= ((cast (varW64 "fib"))::(Spec Word8))  
-    "long" .= ((cast (varW8 "short"))::(Spec Word32))
+    "word" .= [1] ++ (varW8 "word") * (-2)
+    "int"  .= 1 + castI16 (varW8 "word") 
 
-testCoercionsInt :: Streams
-testCoercionsInt = do
-    "counter" .= [0] ++ varW8 "counter" + 1 
-    "int" .= ((cast (varW8 "counter"))::(Spec Int8)) 
+testCoercions2 :: Streams
+testCoercions2 = do
+    b .= [True] ++ not (var b)
+    i .= castI8 (varB b)
 
-testRules :: Streams
-testRules = do
-    "v1" .= (not (Const True)) || Var "v2" 
-    "v2" .= [True, False] ++ [True] ++ Var "v3" < extI8 "v4" 5 
-    "v3" .= 0 + drop 3 (int8 6) 
-    "v4" .= always 5 (Var "v1") 
+testCoercions3 :: Streams
+testCoercions3 = do
+  x .= [True] ++ not (var x)
+  y .= castI32 (varB x) + castI32 (castW8 (varB x)) 
 
 i8 :: Streams
-i8 = do
-    v .=  [0, 1] ++ (varI8 v) + 1 
+i8 = do v .= [0, 1] ++ (varI8 v) + 1 
     
 trap :: Streams
 trap = do
@@ -187,11 +184,11 @@ testArr :: Streams
 testArr = do 
   -- a .= [True] ++ extArrB ("ff", varW16 b) 5 && extArrB ("ff", varW16 b) 1 
   --       && extArrB ("ff", varW16 b) 2
-  -- b .= [7] ++ varW16 b + const 3 + extArrW16 ("gg", varW16 f) 2 
+  -- b .= [7] ++ varW16 b + 3 + extArrW16 ("gg", varW16 f) 2 
   -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4 
   -- c .= [True] ++ var c
   -- d .= varB c 
-  e .= [6,7,8] ++ constW16 3 -- + extArrW16 ("gg", varW16 b) 2
+  e .= [6,7,8] ++ (constW16 3) -- + extArrW16 ("gg", varW16 b) 2
 --  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
   g .= (extArrW16 ("gg", varW16 e) 1) == (extArrW16 ("gg", varW16 e) 1)
   -- h .= [0] ++ drop 1 (varW16 g)
