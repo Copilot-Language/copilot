@@ -4,13 +4,14 @@ Can you write a list in Haskell? Then you can write embedded C code using
 Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
 Word 64s) and tests for even numbers:
 
-
 fib :: Streams
 fib = do
-  "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
-  "t" .= even (var "fib")
+  let fib = varW64 "fib"
+  let t   = varB "t"
+  fib .= [0,1] ++ fib + (drop 1 fib)
+  t   .= even fib
     where even :: Spec Word64 -> Spec Bool
-          even w = w `mod` const 2 == const 0    
+          even w' = w' `mod` 2 == 0
 
 Copilot contains an interpreter, a compiler, and uses a model-checker to check
 the correctness of your program. The compiler generates constant time and
@@ -34,6 +35,11 @@ and you should see index.html.
 
 *******************************************************************************
 Release notes
+
+* Copilot-0.26
+  * Variables are now specs, not strings.  This gives stream expressions a type,
+    so no need for constant functions, monomorphic cast functions, or var
+    annotations in expressions.  Examples updated to reflect the change.
 
 * Copilot-0.25
 

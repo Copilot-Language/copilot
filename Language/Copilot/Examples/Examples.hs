@@ -17,14 +17,13 @@ import Language.Copilot
 -- import Language.Copilot.Variables
 
 fib :: Streams
-fib = 
+fib = do
   let fib = varW64 "fib"
-      t   = varB "t"
-  in do
-    fib .= [0,1] ++ fib + (drop 1 fib)
-    t   .= even fib
-      where even :: Spec Word64 -> Spec Bool
-            even w' = w' `mod` 2 == 0
+  let t   = varB "t"
+  fib .= [0,1] ++ fib + (drop 1 fib)
+  t   .= even fib
+    where even :: Spec Word64 -> Spec Bool
+          even w' = w' `mod` 2 == 0
 
 t1 :: Streams
 t1 = 
