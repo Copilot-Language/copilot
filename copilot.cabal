@@ -1,5 +1,5 @@
 name:                copilot
-version:             0.25
+version:             0.26
 cabal-version:       >= 1.2
 license:             BSD3
 license-file:        LICENSE
@@ -56,7 +56,6 @@ library
                      Language.Copilot.Tests.Random
                      Language.Copilot.Dispatch
                      Language.Copilot.Interface
-                     Language.Copilot.Variables
                      Language.Copilot.Libs.ErrorChks
                      Language.Copilot.Libs.PTLTL
                      Language.Copilot.Libs.LTL

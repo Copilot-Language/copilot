@@ -16,10 +16,8 @@ module Language.Copilot.Language (
         -- * Division
         Fractional((/)),
         mux,
---        CastIntTo(..),
-        -- * The next functions are used only to coerce the type of their argument
-        -- bool, int8, int16, int32, int64,
-        -- word8, word16, word32, word64, float, double,
+        varB, varI8, varI16, varI32, varI64,
+        varW8, varW16, varW32, varW64, varF, varD,
         -- * The next functions provide easier access to typed external variables.
         extB, extI8, extI16, extI32, extI64,
         extW8, extW16, extW32, extW64, extF, extD,
@@ -30,22 +28,13 @@ module Language.Copilot.Language (
         opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
         drop, (++), (.=), (..|), 
-        -- * The next functions are typed variable declarations to help the type-checker.
-        varB, varI8, varI16, varI32, varI64,
-        varW8, varW16, varW32, varW64, varF, varD,
         -- * The next functions help typing the send operations
         -- Warning: there is no typechecking of that yet
         -- sendB, sendI8, sendI16, sendI32, sendI64,
         sendW8, -- , sendW16, sendW32, sendW64, sendF, sendD
-        -- * Typed constant declarations.
---        const,
-        -- constB, constI8, constI16, constI32, constI64,
-        -- constW8, constW16, constW32, constW64, constF, constD,
-        -- * Cast functions (the name tells you what you're casting *into*).
+        -- * Safe casting
         cast,
-        -- castI8, castI16, castI32, castI64,
-        -- castW8, castW16, castW32, castW64,
-        -- * Constants
+        -- * Boolean stream constants
         true, false
     ) where
 
@@ -192,121 +181,6 @@ instance Castable Int64 where
     A.Word32  -> castFrom x
     t        -> error $ castErr "Int64" t
 
--- castW8 :: (Streamable a, Castable a) => Spec a -> Spec Word8
--- castW8 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     t        -> error $ castErr "Word8" t
-
--- castW16 :: (Streamable a, Castable a) => Spec a -> Spec Word16
--- castW16 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Word8  -> castFrom x
---     t        -> error $ castErr "Word16" t
-
--- castW32 :: (Streamable a, Castable a) => Spec a -> Spec Word32
--- castW32 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Word8  -> castFrom x
---     A.Word16 -> castFrom x
---     t        -> error $ castErr "Word32" t
-
--- castW64 :: (Streamable a, Castable a) => Spec a -> Spec Word64
--- castW64 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Word8  -> castFrom x
---     A.Word16 -> castFrom x
---     A.Word32 -> castFrom x
---     t        -> error $ castErr "Word64" t
-
--- castI8 :: (Streamable a, Castable a) => Spec a -> Spec Int8
--- castI8 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     t        -> error $ castErr "Int8" t
-
--- castI16 :: (Streamable a, Castable a) => Spec a -> Spec Int16
--- castI16 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Int8   -> castFrom x
---     A.Word8  -> castFrom x
---     t        -> error $ castErr "Int16" t
-
--- castI32 :: (Streamable a, Castable a) => Spec a -> Spec Int32
--- castI32 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Int8  -> castFrom x
---     A.Int16 -> castFrom x
---     A.Word8  -> castFrom x
---     A.Word16  -> castFrom x
---     t        -> error $ castErr "Int32" t
-
--- castI64 :: (Streamable a, Castable a) => Spec a -> Spec Int64
--- castI64 x = 
---   case getAtomType x of
---     A.Bool   -> castFrom x
---     A.Int8  -> castFrom x
---     A.Int16 -> castFrom x
---     A.Int32 -> castFrom x
---     A.Word8  -> castFrom x
---     A.Word16  -> castFrom x
---     A.Word32  -> castFrom x
---     t        -> error $ castErr "Int64" t
-
--- F (P.fromInteger . P.toInteger) 
---             (A.Retype . A.ue . (`A.mod_` (size 16))
---                . A.Retype . A.ue)
-
-
--- instance CastIntTo Word8 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 8))
---                  . A.Retype . A.ue)
--- instance CastIntTo Word16 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 16))
---                  . A.Retype . A.ue)
--- instance CastIntTo Word32 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 32))
---                  . A.Retype . A.ue)
--- instance CastIntTo Word64 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 64))
---                  . A.Retype . A.ue)
-
--- Ints
-
--- XXX this is how Robin had casts.  Can't we do it more simply?
--- instance CastIntTo Int8 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . 
---                  (\x -> ((x P.+ sMinOne) `A.mod_` s) P.-  s)
---                    . A.Retype . A.ue)
---       where s = size 8
---             sMinOne = size 7
--- instance CastIntTo Int8 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 7)) 
---                    . A.Retype . A.ue)
--- instance CastIntTo Int16 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 15)) 
---                    . A.Retype . A.ue)
--- instance CastIntTo Int32 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 31)) 
---                    . A.Retype . A.ue)
--- instance CastIntTo Int64 where
---     cast = F (P.fromInteger . P.toInteger) 
---              (A.Retype . A.ue . (`A.mod_` (size 63))
---                    . A.Retype . A.ue)
-
 -- | Beware : both sides are executed, even if the result of one is later discarded
 mux :: (Streamable a) => Spec Bool -> Spec a -> Spec a -> Spec a
 mux = F3 (\ b x y -> if b then x else y) A.mux
@@ -314,29 +188,6 @@ mux = F3 (\ b x y -> if b then x else y) A.mux
 infix 5 ==, /=, <, <=, >=, >
 infixr 4 ||, &&, ^, ==>
 
--- -- Used for helping ghc in infering the type of the streams
--- bool :: Spec Bool -> Spec Bool
--- int8 :: Spec Int8 -> Spec Int8
--- int16 :: Spec Int16 -> Spec Int16
--- int32 :: Spec Int32 -> Spec Int32
--- int64 :: Spec Int64 -> Spec Int64
--- word8 :: Spec Word8 -> Spec Word8
--- word16 :: Spec Word16 -> Spec Word16
--- word32 :: Spec Word32 -> Spec Word32
--- word64 :: Spec Word64 -> Spec Word64
--- float :: Spec Float -> Spec Float
--- double :: Spec Double -> Spec Double
--- bool = P.id
--- int8 = P.id
--- int16 = P.id
--- int32 = P.id
--- int64 = P.id
--- word8 = P.id
--- word16 = P.id
--- word32 = P.id
--- word64 = P.id
--- float = P.id
--- double = P.id
 
 -- Used for easily producing, and coercing PVars
 
@@ -633,37 +484,9 @@ sendD :: Var -> (Phase, Port) -> Send Double
 sendD v (ph, port) = Send (v, ph, port) -}
 
 
--- const :: Streamable a => a -> Spec a 
--- const = Const 
--- constB :: Bool -> Spec Bool
--- constB = Const
-
 true, false :: Spec Bool
 true = Const True
 false = Const False
-
--- | Constant streams
--- constI8 :: Int8 -> Spec Int8
--- constI8 = Const
--- constI16 :: Int16 -> Spec Int16
--- constI16 = Const
--- constI32 :: Int32 -> Spec Int32
--- constI32 = Const
--- constI64 :: Int64 -> Spec Int64
--- constI64 = Const
--- constW8 :: Word8 -> Spec Word8
--- constW8 = Const 
--- constW16 :: Word16 -> Spec Word16
--- constW16 = Const
--- constW32 :: Word32 -> Spec Word32
--- constW32 = Const
--- constW64 :: Word64 -> Spec Word64
--- constW64 = Const
--- constF :: Float -> Spec Float
--- constF = Const
--- constD :: Double -> Spec Double
--- constD = Const
-
 
 -- | Drop @i@ elements from a stream.
 drop :: Streamable a => Int -> Spec a -> Spec a

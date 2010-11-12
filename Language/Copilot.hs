@@ -2,7 +2,6 @@ module Language.Copilot
   ( module Language.Copilot.Core
   , module Language.Copilot.Analyser
   , module Language.Copilot.Interpreter
-  -- , module Language.Copilot.Variables
   , module Language.Copilot.Help
   , module Language.Copilot.AtomToC
   , module Language.Copilot.Compiler
@@ -22,7 +21,6 @@ module Language.Copilot
 import Language.Copilot.Core
 import Language.Copilot.Analyser
 import Language.Copilot.Interpreter
--- import Language.Copilot.Variables
 import Language.Copilot.Help
 import Language.Copilot.AtomToC
 import Language.Copilot.Compiler
