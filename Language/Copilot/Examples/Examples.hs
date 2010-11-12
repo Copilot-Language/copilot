@@ -14,82 +14,126 @@ import System.Random
 import Data.Int
 
 import Language.Copilot 
-import Language.Copilot.Variables
+-- import Language.Copilot.Variables
 
 fib :: Streams
-fib = do
-  "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
-  "t"   .= even (var "fib")
-    where even :: Spec Word64 -> Spec Bool
-          even w' = w' `mod` 2 == 0
+fib = 
+  let fib = varW64 "fib"
+      t   = varB "t"
+  in do
+    fib .= [0,1] ++ fib + (drop 1 fib)
+    t   .= even fib
+      where even :: Spec Word64 -> Spec Bool
+            even w' = w' `mod` 2 == 0
 
 t1 :: Streams
-t1 = do
-     x .= [0, 1, 2] ++ var x - (drop 1 $ varI32 x)
-     y .= [True, False] ++ var y ^ var z
-     z .= varI32 "x" <= drop 1 (var x)
+t1 = 
+  let x = varI32 "x"
+      y = varB "y"
+      z = varB "z"
+  in do
+    x .= [0, 1, 2] ++ x - (drop 1 x)
+    y .= [True, False] ++ y ^ z
+    z .= x <= drop 1 x
 
-t2 :: Streams
-t2 = do
-     a .= [True] ++ not (var a) 
-     b .= mux (var a) 2 (int8 3) 
+-- t2 :: Streams
+-- t2 = do
+--      a .= [True] ++ not (var a) 
+--      b .= mux (var a) 2 (int8 3) 
 
 -- t3 :: use an external variable called ext, typed Word32
 t3 :: Streams
-t3 = do
-     a .= [0,1] ++ (var a) + extW32 "ext" 8 + extW32 "ext" 8 + extW32 "ext" 1
-     b .= [True, False] ++ 2 + var a < 5 + extW32 "_ext" 1
+t3 = 
+  let a    = varW32 "a"
+      b    = varB "b"
+      ext8 = extW32 "ext" 8
+      ext1 = extW32 "ext" 1
+  in do
+      a .= [0,1] ++ a + ext8 + ext8 + ext1
+      b .= [True, False] ++ 2 + a < 5 + ext1
 
 t4 :: Streams
-t4 = do
-     a .= [True,False] ++ not (var a)
-     b .= drop 1 (varB a)
+t4 = let
+    a = varB "a"
+    b = varB "b"
+  in do
+    a .= [True,False] ++ not a
+    b .= drop 1 a
 
 t5 :: Streams
-t5 = do
-    x .= drop 3 (varB y)
-    y .= [True, True] ++ not (var z)
-    z .= [False, False] ++ not (var z)
-    w .= varB x || var y
+t5 = 
+  let x = varB "x"
+      y = varB "y"
+      w = varB "w"
+      z = varB "z"
+  in do
+      x .= drop 3 y
+      y .= [True, True] ++ not z
+      z .= [False, False] ++ not z
+      w .= x || y
 
 yy :: Streams
-yy = do a .= constW64 4  
+yy = 
+  let a = varW64 "a"
+  in  do a .= 4  
 
 zz :: Streams
-zz = do --a .= [0..4] ++ drop 4 (varW32 a) + 1
-  a .= (varW32 a) + 1
-  b .= drop 3 (varW32 a)
+zz = 
+  let a = varW32 "a"
+      b = varW32 "b"
+  in do --a .= [0..4] ++ drop 4 (varW32 a) + 1
+      a .= a + 1
+      b .= drop 3 a
 
 xx :: Streams
-xx = do 
-     a .= extW32 "ext" 5 
-     b .= [3] ++ (varW32 a)
-     c .= [0, 1, 3, 4] ++ drop 1 (varW32 b)
+xx = 
+  let a = varW32 "a"
+      b = varW32 "b"
+      c = varW32 "c"
+      ext = extW32 "ext" 1
+  in do 
+      a .= ext
+      b .= [3] ++ a
+      c .= [0, 1, 3, 4] ++ drop 1 b
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
 -- engine is immediately shut off.  From the paper.
 engine :: Streams
 engine = do
-   "temps" .= [0, 0, 0] ++ extF "temp" 1
-   "overTempRise" .= drop 2 (varF "temps") > 2.3 + var "temps"
-   "trigger" .= (var "overTempRise") ==> (extB "shutoff" 2) 
+  let temp = extF "temp" 1      
+  let shutoff = extB "shutoff" 2
+
+  let temps = varF "temps"
+  temps .= [0, 0, 0] ++ temp
+
+  let overTempRise = varB "overTempRise"
+  overTempRise .= drop 2 temps > 2.3 + temps
+
+  let trigger = varB "trigger"
+  trigger .= overTempRise ==> shutoff
 
 -- To compile: > let (streams, ss) = dist in interface $ compileOpts streams ss "dist"
 -- s at phase 2 on port 1.  Not stable.
 dist :: DistributedStreams
 dist = 
-  ( a .= [0,1] ++ (var a) + constW8 1
-  ,     sendW8 a (2, 1)
-    ..| emptySM
-  )
+  let a = varW8 "a"
+  in 
+    ( a .= [0,1] ++ a + 1
+    ,     sendW8 a (2, 1)
+      ..| emptySM
+    )
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams
-gcd n0 n1 = do 
+gcd n0 n1 = do
+  let a = varW16 "a"
+  let b = varW16 "b"
   a .= alg n0 a b
   b .= alg n1 b a
-  "ans" .= varW16 a == var b
-    where alg x0 x1 x2 = [x0] ++ mux (varW16 x1 > var x2) (var x1 - var x2) (var x1)
+
+  let ans = varB "ans"
+  ans .= a == b
+    where alg x0 x1 x2 = [x0] ++ mux (x1 > x2) (x1 - x2) x1
 
 -- greatest common divisor of two external vars.  Compare to
 -- Language.Atom.Example Try 
@@ -101,37 +145,59 @@ gcd n0 n1 = do
 -- sample the external variables.
 gcd' :: Streams
 gcd' = do 
-  a .= alg "n" (sub a b)
-  b .= alg "m" (sub b a)
-  "ans" .= varW16 a == varW16 b && not (var "init")
-  "init" .= [True] ++ false
-    where sub hi lo = mux (varW16 hi > var lo) (var hi - var lo) (var hi)
-          alg ext ex = [0] ++ mux (var "init") (extW16 ext 1) ex
+  let n = extW16 "n" 1
+  let m = extW16 "m" 1
+
+  let a = varW16 "a"
+  let b = varW16 "b"
+  let init = varB "init"
+  a .= alg n (sub a b) init
+  b .= alg m (sub b a) init
+
+  let ans = varB "ans"
+  ans .= a == b && not init
+
+  init .= [True] ++ false
+
+  where sub hi lo = mux (hi > lo) (hi - lo) hi
+        alg ext ex init = [0] ++ mux init ext ex
 
 testCoercions :: Streams
 testCoercions = do
-    "word" .= [1] ++ (varW8 "word") * (-2)
-    "int"  .= 1 + castI16 (varW8 "word") 
+  let word = varW8 "word"
+  word .= [1] ++ word * (-2)
+  let int = varI16 "int"
+  int  .= 1 + cast word
 
 testCoercions2 :: Streams
 testCoercions2 = do
-    b .= [True] ++ not (var b)
-    i .= castI8 (varB b)
+  let b = varB "b"
+  b .= [True] ++ not b
+  let i = varI16 "i"
+  let j = varI16 "j"
+  i .= cast j
+  j .= 3
 
 testCoercions3 :: Streams
 testCoercions3 = do
-  x .= [True] ++ not (var x)
-  y .= castI32 (varB x) + castI32 (castW8 (varB x)) 
+  let x = varB "x"
+  x .= [True] ++ not x
+  let y = varI32 "y"
+  y .= cast x + cast x
 
 i8 :: Streams
-i8 = do v .= [0, 1] ++ (varI8 v) + 1 
+i8 = 
+  let v = varI8 "v" in v .= [0, 1] ++ v + 1 
     
 trap :: Streams
 trap = do
-    "target" .= [0] ++ varW32 "target" + 1 
-    "x" .= [0,0] ++ var "y" + varW32 "target" 
-    "y" .= [0,0] ++ var "x" + varW32 "target" 
-    
+  let target = varW32 "target"
+  target .= [0] ++ target + 1 
+
+  let x = varW32 "x"
+  let y = varW32 "y"
+  x .= [0,0] ++ y + target
+  y .= [0,0] ++ x + target
 
 -- vicious :: Streams
 -- vicious = do 
@@ -188,17 +254,24 @@ testArr = do
   -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4 
   -- c .= [True] ++ var c
   -- d .= varB c 
-  e .= [6,7,8] ++ (constW16 3) -- + extArrW16 ("gg", varW16 b) 2
+  let e = varW16 "e"
+  e .= [6,7,8] ++ 3 -- + extArrW16 ("gg", varW16 b) 2
 --  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
-  g .= (extArrW16 ("gg", varW16 e) 1) == (extArrW16 ("gg", varW16 e) 1)
+  let g = varB "g"
+  let gg = extArrW16 "gg" e 
+  g .= gg 1 == gg 2
   -- h .= [0] ++ drop 1 (varW16 g)
 
 
 -- t3 :: use an external variable called ext, typed Word32
 t99 :: Streams
 t99 = do
-     a .= [0,1] ++ (var a) + extW32 "ext" 8 + extW32 "ext" 8 + extW32 "ext" 1
-     b .= [True, False] ++ 2 + var a < 5 + extW32 "_ext" 1
+  let ext = extW32 "ext"
+  let a = varW32 "a"
+  a .= [0,1] ++ a + ext 8 + ext 8 + ext 1
+
+  let b = varB "b"
+  b .= [True, False] ++ 2 + a < 5 + ext 1
 
 -- test external idx before after and in the stream it references
 -- test multiple defs
