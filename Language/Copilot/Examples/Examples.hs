@@ -100,17 +100,17 @@ xx =
 -- engine is immediately shut off.  From the paper.
 engine :: Streams
 engine = do
-  let temp = extF "temp" 1      
-  let shutoff = extB "shutoff" 2
+  -- external vars
+  let temp     = extF "temp" 1      
+  let shutoff  = extB "shutoff" 2
+  -- Copilot vars
+  let temps    = varF "temps"
+  let overTemp = varB "overTemp"
+  let trigger  = varB "trigger"
 
-  let temps = varF "temps"
-  temps .= [0, 0, 0] ++ temp
-
-  let overTempRise = varB "overTempRise"
-  overTempRise .= drop 2 temps > 2.3 + temps
-
-  let trigger = varB "trigger"
-  trigger .= overTempRise ==> shutoff
+  temps    .= [0, 0, 0] ++ temp
+  overTemp .= drop 2 temps > 2.3 + temps
+  trigger  .= overTemp ==> shutoff
 
 -- To compile: > let (streams, ss) = dist in interface $ compileOpts streams ss "dist"
 -- s at phase 2 on port 1.  Not stable.

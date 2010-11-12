@@ -107,10 +107,8 @@ engine = do
   let cooler     = varB "cooler"
   let off        = varB "off"
   let monitor    = varB "monitor"
-  -- monitor definition
   temp    `ptltl` (alwaysBeen (engineTemp > 250))
-  cnt     .=      [0] ++ 
-                    mux (temp && cnt < 10) (cnt + 1) cnt
+  cnt     .=      [0] ++ mux (temp && cnt < 10) (cnt + 1) cnt
   off     .=      cnt >= 10 ==> engineOff
   cooler  `ptltl` (coolerOn `since` engineOff)
   monitor .=      off && cooler
