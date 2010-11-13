@@ -15,11 +15,12 @@ description:         Can you write a list in Haskell? Then you can write embedde
                      .
                      > fib :: Streams
                      > fib = do
-                     > let 
-                     > "fib" .= [0,1] ++ var "fib" + (drop 1 $ varW64 "fib")
-                     > "t" .= even (var "fib")
-                     >   where even :: Spec Word64 -> Spec Bool
-                     >         even w = w `mod` const 2 == const 0    
+                     >  let fib = varW64 "fib"
+                     >  let t   = varB "t"
+                     >  fib .= [0,1] ++ fib + (drop 1 fib)
+                     >  t   .= even fib
+                     >    where even :: Spaec Word64 -> Spec Bool
+                     >          even w' = w' `mod` 2 == 0
                      .
                      Copilot contains an interpreter, a compiler, and uses a model-checker to check
                      the correctness of your program. The compiler generates constant time and
