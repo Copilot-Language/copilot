@@ -18,10 +18,10 @@ import Language.Copilot
 
 fib :: Streams
 fib = do
-  let fib = varW64 "fib"
+  let f = varW64 "f"
   let t   = varB "t"
-  fib .= [0,1] ++ fib + (drop 1 fib)
-  t   .= even fib
+  f .= [0,1] ++ f + (drop 1 f)
+  t .= even f
     where even :: Spec Word64 -> Spec Bool
           even w' = w' `mod` 2 == 0
 

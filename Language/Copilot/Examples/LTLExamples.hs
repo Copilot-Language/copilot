@@ -16,6 +16,7 @@ import Language.Copilot.Libs.LTL
 -- Can be tested with various values of val.  Use the interpreter to see the
 -- outputs.
 
+testing, output :: Spec Bool
 testing = varB "testing"
 output = varB "output"
 

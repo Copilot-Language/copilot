@@ -15,10 +15,10 @@ description:         Can you write a list in Haskell? Then you can write embedde
                      .
                      > fib :: Streams
                      > fib = do
-                     >  let fib = varW64 "fib"
-                     >  let t   = varB "t"
-                     >  fib .= [0,1] ++ fib + (drop 1 fib)
-                     >  t   .= even fib
+                     >  let f = varW64 "fib"
+                     >  let t = varB "t"
+                     >  f .= [0,1] ++ f + (drop 1 f)
+                     >  t .= even f
                      >    where even :: Spaec Word64 -> Spec Bool
                      >          even w' = w' `mod` 2 == 0
                      .

@@ -2,7 +2,7 @@
 
 module Language.Copilot.Examples.PTLTLExamples where
 
-import Prelude (($), String, repeat, replicate, IO())
+import Prelude (($), repeat, replicate, IO())
 import qualified Prelude as P
 import Data.Map (fromList)
 
