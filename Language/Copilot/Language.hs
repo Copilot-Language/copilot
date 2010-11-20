@@ -464,18 +464,14 @@ varD = Var
 port :: Int -> Port
 port = Port
 
+-- | Takes a function @name@, a port @number@, a Copilot variable @v@, and a
+-- phase @ph@, and constructs a call to the C function @name(x,y)@ where @x@ is
+-- the value of the Copilot stream @v@ and @y@ is the port number.  The sending
+-- of the value on the port occurs at phase @ph@.
 send :: Streamable a => String -> Port -> Spec a -> Phase -> Streams
 send portName port s ph = 
   tell $ Both emptySM (updateSubMap (M.insert (sendKey sending) sending) emptySM)
   where sending = Send s ph port portName
-  -- case s of
-  --   Var v -> 
-  --   _     -> error $ "You provided spec " P.++ show s 
-  --               P.++ " where you needed to give a variable."
-  -- case s of
-  --   Var v -> 
-  --   _     -> error $ "You provided spec " P.++ show s 
-  --               P.++ " where you needed to give a variable."
 
 true, false :: Spec Bool
 true = Const True
@@ -492,21 +488,11 @@ ls ++ s = Append ls s
 -- | Define a stream variable.
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
 v .= s = 
-  notVarErr s (\var -> tell $ Both (updateSubMap (M.insert var s) emptySM) emptySM)
-  -- case v of
-  --   Var var -> 
-  --   _       -> error $ "Copilot error: you tried to use specification " P.++ show v 
-  --                P.++ " where you need to use a variable."
+  notVarErr v (\var -> tell $ Both (updateSubMap (M.insert var s) emptySM) emptySM)
 
--- -- | Allows to build a @'Sends'@ from specification
--- (..|) :: Streamable a => Send a -> Sends -> Sends
--- sendStmt@(Send v ph (Port port) portName) ..| sends = 
---     updateSubMap (M.insert name sendStmt) sends
---     where name = "var_" P.++ v P.++ "_ph_" P.++ show ph P.++ "_port_" P.++ show port
 
 infixr 3 ++
 infixr 2 .=
--- infixr 1 ..|
 
 ---- Optimisation rules --------------------------------------------------------
 

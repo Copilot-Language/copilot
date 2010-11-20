@@ -22,7 +22,8 @@ module Language.Copilot.Core (
         -- compiler
         BoundedArray(..), nextSt, Outputs, TmpSamples(..), emptyTmpSamples, 
         ProphArrs, Indexes, PhasedValueVar(..), PhasedValueArr(..), PhasedValueIdx(..),
-        tmpVarName, tmpArrName, getAtomType
+        tmpVarName, tmpArrName, getAtomType,
+        getSpecs, getSends
     ) where
 
 import qualified Language.Atom as A
@@ -118,6 +119,16 @@ data Both a b = Both a b
 -- parameterized by different types
 type Streams = Writer (Both (StreamableMaps Spec) (StreamableMaps Send)) ()
 
+getSpecs :: Streams -> StreamableMaps Spec
+getSpecs streams = 
+  let (Both strms _) = execWriter streams
+  in  strms
+
+getSends :: Streams -> StreamableMaps Send
+getSends streams = 
+  let (Both _ snds) = execWriter streams
+  in  snds
+
 -- | A named stream
 type Stream a = Streamable a => (Var, Spec a)
 
@@ -187,8 +198,8 @@ notVarErr :: Streamable a => Spec a -> (Var -> b) -> b
 notVarErr s f =
   case s of
     Var v -> f v
-    _     -> error $ "You provided spec " ++ show s 
-                      ++ " where you needed to give a variable."
+    _     -> error $ "You provided specification \n" ++ show s 
+                      ++ "\n where you needed to give a variable."
 
 sendKey :: Streamable a => Send a -> String
 sendKey (Send s ph (Port port) portName) = 

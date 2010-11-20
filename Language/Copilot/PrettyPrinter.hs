@@ -7,7 +7,6 @@ module Language.Copilot.PrettyPrinter () where
 import Data.Int
 import Data.Word
 import Data.Map as M
-import Control.Monad.Writer (execWriter)
 
 import Language.Copilot.Core
 
@@ -32,8 +31,7 @@ instance (Show (a Bool), Show (a Int8), Show (a Int16), Show (a Int32), Show (a 
                 showVal v val string = v ++ " .= " ++ show val ++ "\n" ++ string
 
 instance Show Streams where
-  show s = show (execWriter s)  
+  show s = show (getSpecs s)
 
--- instance Show (StreamableMaps Spec) where
---   show (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
---     show bm
+
+

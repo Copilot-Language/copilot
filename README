@@ -43,8 +43,14 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 *******************************************************************************
+* Copilot-0.27
+
+  * Changed syntax and semantics of the 'send' function (Language.hs) for
+    sending Copilot values on ports.  An example is in Example.hs (grep for
+    'send').
 
 * Copilot-0.26
+
   * Variables are now specs, not strings.  This gives stream expressions a type,
     so no need for constant functions, monomorphic cast functions, or var
     annotations in expressions.  Examples updated to reflect the change.

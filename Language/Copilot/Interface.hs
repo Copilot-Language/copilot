@@ -19,12 +19,13 @@ import System.Random
 import System.Exit
 import System.Cmd
 import Data.Maybe
-import Control.Monad
-import Control.Monad.Writer (execWriter)
+import Control.Monad (when)
 
 data Options = Options {
-        optStreams :: Maybe Streams, -- ^ If there's no Streams, then generate random streams.
-        optSends :: Sends, -- ^ For distributed monitors.
+        optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams,
+                                                   -- then generate random
+                                                   -- streams.
+        optSends :: StreamableMaps Send, -- ^ For distributed monitors.
         optExts :: Maybe Vars, -- ^ Assign values to external variables.
         optCompile :: Maybe String, -- ^ Set gcc options.
         optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then
@@ -83,15 +84,17 @@ test n opts =
   interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts 
 
 interpret :: Streams -> Int -> Options -> IO ()
-interpret streams n opts = interface $ setI $ setN n $ opts {optStreams = Just streams}
+interpret streams n opts = 
+  interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
 
 compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
-  interface $ setC "-Wall" $ setO fileName $ opts {optStreams = Just streams}
+  interface $ setC "-Wall" $ setO fileName $ setS (getSends streams) $
+    opts {optStreams = Just (getSpecs streams)}
 
 verify :: FilePath -> Int -> IO ()
 verify file n = do
-  putStrLn "Calling cbmc, developed by Daniel Kroening \& Edmund Clarke "
+  putStrLn "Calling cbmc, developed by Daniel Kroening \& Edmund Clarke."
   putStrLn "<http://www.cprover.org/cbmc/>, with the following checks:"
   putStrLn "  --bounds-check       enable array bounds checks"
   putStrLn "  --div-by-zero-check  enable division by zero checks"
@@ -119,7 +122,7 @@ verify file n = do
 -- Small functions for easy modification of the Options record
 
 -- | Set the directives for sending stream values on ports.
-setS :: Sends -> Options -> Options
+setS :: StreamableMaps Send -> Options -> Options
 setS sends opts = opts {optSends = sends}
 
 -- | Sets the environment for simulation by giving a mapping of external
@@ -201,7 +204,7 @@ setTriggers trigs opts =
   where vars = map fst trigs
         repeats = vars \\ Set.toList (Set.fromList vars)
 
--- | The "main" function
+-- | The "main" function that dispatches.
 interface :: Options -> IO ()
 interface opts =
     do
@@ -226,15 +229,15 @@ createSeed opts =
                 return . fst . random $ g
         Just i -> return i
 
+-- | Were streams given?  If not, just make random streams.
 getStreamsVars :: Options -> Int -> (StreamableMaps Spec, Vars)
 getStreamsVars opts seed = 
     case optStreams opts of
         Nothing -> randomStreams opsF opsF2 opsF3 (mkStdGen seed)
         Just s ->
             case optExts opts of
-                Nothing -> (s', emptySM)
-                Just vs -> (s', vs)
-         where s' = execWriter s
+                Nothing -> (s, emptySM)
+                Just vs -> (s, vs)
         
 getBackend :: Options -> Int -> BackEnd
 getBackend opts seed =

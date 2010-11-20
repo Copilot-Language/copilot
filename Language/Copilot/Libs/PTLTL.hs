@@ -22,8 +22,8 @@ import Language.Copilot.Language
 tmpName :: Spec Bool -> String -> Spec Bool
 tmpName v name = 
   case v of
-    Var var -> varB (var P.++ "_" P.++ name)
-    _       -> error "Copilot error in tmpName in PTLTL.hs."
+    Var v' -> varB (v' P.++ "_" P.++ name)
+    _     -> error "Copilot error in tmpName in PTLTL.hs."
 
 ptltl :: Spec Bool -> (Spec Bool -> Streams) -> Streams
 ptltl v f = f v

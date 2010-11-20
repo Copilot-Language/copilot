@@ -11,7 +11,6 @@ import qualified Prelude as P
 import Data.Map (fromList) 
 import Data.Maybe (Maybe (..))
 import System.Random
-import Data.Int
 
 import Language.Copilot 
 -- import Language.Copilot.Variables
@@ -111,27 +110,15 @@ engine = do
   overTemp .= drop 2 temps > 2.3 + temps
   trigger  .= overTemp ==> shutoff
 
--- | To compile: 
--- @
--- > interface $ setS dist $ setO "dist" $ setC "-Wall" $ setP 10 baseOpts
--- @ 
--- Compiles at phase 2 on port 1
--- **Distributed compilation is not currently stable. **
--- dist :: DistributedStreams
--- dist = 
---   let a = varW8 "a"
---   in ( a .= [0,1] ++ a + 1
---      ,     send "portF" (port 2) a 1
---        ..| emptySM
---      )
-dist :: Streams
-dist = do
+-- | distributed streams.  
+distrib :: Streams
+distrib = do
   -- vars
   let a = varW8 "a"
   let b = varB "b"
   -- spec
   a .= [0,1] ++ a + 1
-  b .= mod a 2 == 0 :: Word8
+  b .= mod a 2 == 0 
   -- sends
   send "portA" (port 2) a 1
   send "portB" (port 1) b 2

@@ -70,7 +70,8 @@ data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 -- @iterations@ just gives the number of periods the specification must be executed.
 --      If you would rather execute it by hand, then just choose AtomToC for backEnd and 0 for iterations
 -- @verbose@ determines what is output.
-dispatch :: StreamableMaps Spec -> Sends -> Vars -> BackEnd -> Iterations -> Verbose -> IO ()
+dispatch :: StreamableMaps Spec -> StreamableMaps Send -> Vars 
+         -> BackEnd -> Iterations -> Verbose -> IO ()
 dispatch streams sends inputExts backEnd iterations verbose =
     do
         hSetBuffering stdout LineBuffering
@@ -146,8 +147,8 @@ checkTriggerVars streams trigs =
           in  if t /= A.Bool && v `elem` (map fst trigs) then (v, t):ls else ls
         badTypes = foldStreamableMaps listAtomTypes streams []
 
-copilotToC :: StreamableMaps Spec -> Sends -> [(A.Type, Var, ExtVars)] -> Vars 
-           -> AtomToC -> Bool -> IO ()
+copilotToC :: StreamableMaps Spec -> StreamableMaps Send 
+           -> [(A.Type, Var, ExtVars)] -> Vars -> AtomToC -> Bool -> IO ()
 copilotToC streams sends allExts trueInputExts opts isVerbose =
     let (p', program) = copilotToAtom streams sends (getPeriod opts) (triggers opts)
         cFileName = cName opts

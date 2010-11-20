@@ -46,7 +46,7 @@ copilotToAtom streams sends p triggers =
       foldStreamableMaps (\_ -> sampleExts tmpSamples) streams []
     )
   where
-    optP = getOptimalPeriod streams
+    optP = getOptimalPeriod streams sends
     p' = 
       case p of
         Nothing -> optP
@@ -223,11 +223,13 @@ maxSampleDep v streams =
 --         A.exactPhase ph $ A.atom ("__send_" ++ name) $
 --             send ((A.value (getElem v outputs))::(A.E a)) port
 makeSend :: forall a. Streamable a 
-         => Outputs -> Var -> Send a -> A.Atom () -> A.Atom ()
+         => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
 makeSend outputs name (Send v ph port portName) r = do
         r 
         A.exactPhase ph $ A.atom ("__send_" ++ name) $
-            mkSend ((A.value (getElem v outputs))::(A.E a)) port portName
+            mkSend (A.value (notVarErr v (\var -> getElem var outputs)) :: A.E a) 
+                   port 
+                   portName
 
 -- What we really should be doing is just folding over the TmpSamples, since
 -- that data should contain all the info we need to construct external variable
@@ -280,9 +282,11 @@ getIdx arr s ts =
     _       -> error $ "Expecing either a variable or constant for the index "
                  ++ "in the external array access for array " ++ arr ++ "."
 
-getOptimalPeriod :: StreamableMaps Spec -> Period
-getOptimalPeriod streams =
-  foldStreamableMaps getMaximumSamplingPhase streams 2
+-- XXX bound min, max send phases
+getOptimalPeriod :: StreamableMaps Spec -> StreamableMaps Send -> Period
+getOptimalPeriod streams sends =
+  max (foldStreamableMaps getMaximumSamplingPhase streams 2)
+      (foldStreamableMaps getMaxSendPhase sends 0)
   where
     getMaximumSamplingPhase :: Var -> Spec a -> Period -> Period 
     getMaximumSamplingPhase _ spec n =
@@ -305,3 +309,6 @@ getOptimalPeriod streams =
         Drop _ s -> getMaximumSamplingPhase "" s n
         Append _ s -> getMaximumSamplingPhase "" s n
         _ -> n
+
+    getMaxSendPhase :: Var -> Send a -> Period -> Period
+    getMaxSendPhase _ (Send _ ph _ _) n = max (ph+1) n

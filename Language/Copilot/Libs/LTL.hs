@@ -42,8 +42,8 @@ ltl v f = f v
 tmpName :: Spec Bool -> String -> Spec Bool
 tmpName v name = 
   case v of 
-    Var var -> varB (var P.++ "_" P.++ name)
-    _       -> error $ "Copilot: " P.++ "error in tmpName in LTL.hs."
+    Var v' -> varB (v' P.++ "_" P.++ name)
+    _      -> error $ "Copilot: " P.++ "error in tmpName in LTL.hs."
 
 -- | Property @s@ holds for the next @n@ periods.  We require @n >= 0@. If @n ==
 -- 0@, then @s@ holds in the current period.  E.g., if @p = always 2 s@, then we
