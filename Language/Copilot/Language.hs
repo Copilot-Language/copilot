@@ -28,7 +28,7 @@ module Language.Copilot.Language (
         -- * Set of operators from which to choose during the generation of random streams
         opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
-        drop, (++), (.=), (..|), 
+        drop, (++), (.=), -- (..|), 
         -- * The next functions help typing the send operations
         -- Warning: there is no typechecking of that yet
         -- sendB, sendI8, sendI16, sendI32, sendI64,
@@ -464,12 +464,18 @@ varD = Var
 port :: Int -> Port
 port = Port
 
-send :: Streamable a => String -> Port -> Spec a -> Phase -> Send a
+send :: Streamable a => String -> Port -> Spec a -> Phase -> Streams
 send portName port s ph = 
-  case s of
-    Var v -> Send v ph port portName
-    _     -> error $ "You provided spec " P.++ show s 
-                P.++ " where you needed to give a variable."
+  tell $ Both emptySM (updateSubMap (M.insert (sendKey sending) sending) emptySM)
+  where sending = Send s ph port portName
+  -- case s of
+  --   Var v -> 
+  --   _     -> error $ "You provided spec " P.++ show s 
+  --               P.++ " where you needed to give a variable."
+  -- case s of
+  --   Var v -> 
+  --   _     -> error $ "You provided spec " P.++ show s 
+  --               P.++ " where you needed to give a variable."
 
 true, false :: Spec Bool
 true = Const True
@@ -486,20 +492,21 @@ ls ++ s = Append ls s
 -- | Define a stream variable.
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
 v .= s = 
-  case v of
-    Var var -> tell (updateSubMap (M.insert var s) emptySM) 
-    _       -> error $ "Copilot error: you tried to use specification " P.++ show v 
-                 P.++ " where you need to use a variable."
+  notVarErr s (\var -> tell $ Both (updateSubMap (M.insert var s) emptySM) emptySM)
+  -- case v of
+  --   Var var -> 
+  --   _       -> error $ "Copilot error: you tried to use specification " P.++ show v 
+  --                P.++ " where you need to use a variable."
 
--- | Allows to build a @'Sends'@ from specification
-(..|) :: Streamable a => Send a -> Sends -> Sends
-sendStmt@(Send v ph (Port port) portName) ..| sends = 
-    updateSubMap (M.insert name sendStmt) sends
-    where name = "var_" P.++ v P.++ "_ph_" P.++ show ph P.++ "_port_" P.++ show port
+-- -- | Allows to build a @'Sends'@ from specification
+-- (..|) :: Streamable a => Send a -> Sends -> Sends
+-- sendStmt@(Send v ph (Port port) portName) ..| sends = 
+--     updateSubMap (M.insert name sendStmt) sends
+--     where name = "var_" P.++ v P.++ "_ph_" P.++ show ph P.++ "_port_" P.++ show port
 
 infixr 3 ++
 infixr 2 .=
-infixr 1 ..|
+-- infixr 1 ..|
 
 ---- Optimisation rules --------------------------------------------------------
 

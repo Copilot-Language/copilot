@@ -13,7 +13,7 @@ TODOs
 
  * Add math.h functions to Language.hs.
 
-* Move all the error-checking to one file, instead of "error ..." spread all
+ * Move all the error-checking to one file, instead of "error ..." spread all
    over.
 
  * Better error handling/error message for bad options/parameters for interface
@@ -33,4 +33,6 @@ TODOs
 
  * Display external vars when interpreting
 
-
+ * send lets you send stream values on ports at some phase.  Make sure that the
+   stream semantics are preserved by ensuring you don't send at in appropriate
+   times.

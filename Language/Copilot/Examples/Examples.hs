@@ -117,13 +117,24 @@ engine = do
 -- @ 
 -- Compiles at phase 2 on port 1
 -- **Distributed compilation is not currently stable. **
-dist :: DistributedStreams
-dist = 
+-- dist :: DistributedStreams
+-- dist = 
+--   let a = varW8 "a"
+--   in ( a .= [0,1] ++ a + 1
+--      ,     send "portF" (port 2) a 1
+--        ..| emptySM
+--      )
+dist :: Streams
+dist = do
+  -- vars
   let a = varW8 "a"
-  in ( a .= [0,1] ++ a + 1
-     ,     send "portF" (port 2) a 1
-       ..| emptySM
-     )
+  let b = varB "b"
+  -- spec
+  a .= [0,1] ++ a + 1
+  b .= mod a 2 == 0 :: Word8
+  -- sends
+  send "portA" (port 2) a 1
+  send "portB" (port 1) b 2
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams

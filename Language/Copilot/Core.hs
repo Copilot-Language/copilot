@@ -10,9 +10,10 @@
 module Language.Copilot.Core (
         -- * Type hierarchy for the copilot language
         Var, Name, Period, Phase, Port(..),
-        Spec(..), Streams, Stream, Sends, Send(..), DistributedStreams,
+        Spec(..), Streams, Stream, Send(..), --DistributedStreams,
+        notVarErr, Both(..),
 	-- * General functions on 'Streams' and 'StreamableMaps'
-	Streamable(..), mkSend, -- Sendable(..)
+	Streamable(..), sendKey, mkSend, -- Sendable(..)
         StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, --foldSendableMaps, 
@@ -103,26 +104,26 @@ instance Eq a => Eq (Spec a) where
     (==) (Drop i s) (Drop i' s') = i == i' && s == s'
     (==) _ _ = False
 
--- | Container for mutually recursive streams, whose specifications may be
--- parameterized by different types
-type Streams = Writer (StreamableMaps Spec) ()
-
--- | A named stream
-type Stream a = Streamable a => (Var, Spec a)
-
--- | An instruction to send data on a port at a given phase
+-- | An instruction to send data on a port at a given phase.  Uses a phantom type.
 -- data Send a = Sendable a => Send (Var, Phase, Port)
 data Send a =  
-  Send { sendVar  :: Var
+  Send { sendVar  :: Spec a 
        , sendPh   :: Phase
        , sendPort :: Port
        , sendName :: String}
 
--- | Container for all the instructions sending data, parameterised by different types
-type Sends = StreamableMaps Send 
+data Both a b = Both a b
+
+-- | Container for mutually recursive streams, whose specifications may be
+-- parameterized by different types
+type Streams = Writer (Both (StreamableMaps Spec) (StreamableMaps Send)) ()
+
+-- | A named stream
+type Stream a = Streamable a => (Var, Spec a)
+
 
 -- | Holds the complete specification of a distributed monitor
-type DistributedStreams = (Streams, Sends)
+-- type DistributedStreams = (Streams, Sends)
 
 ---- General functions on streams ----------------------------------------------
 
@@ -181,6 +182,19 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
 --     send e port =
 --         A.action (\ [ueString] -> "sendW8_port" ++ show port 
 --                                   ++ "(" ++ ueString ++ ")") [A.ue e]
+
+notVarErr :: Streamable a => Spec a -> (Var -> b) -> b
+notVarErr s f =
+  case s of
+    Var v -> f v
+    _     -> error $ "You provided spec " ++ show s 
+                      ++ " where you needed to give a variable."
+
+sendKey :: Streamable a => Send a -> String
+sendKey (Send s ph (Port port) portName) = 
+  notVarErr 
+    s
+    (\var -> (portName ++ "_port_" ++ show port ++ "_var_" ++ var ++ "_ph_" ++ show ph))
 
 -- | Sending data over ports.
 mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
@@ -439,21 +453,24 @@ data StreamableMaps a =
             dMap   :: M.Map Var (a Double)
         }
 
-instance Monoid (StreamableMaps Spec) where
-  mempty = emptySM
-  mappend x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) 
-          y@(SM bm' i8m' i16m' i32m' i64m' w8m' w16m' w32m' w64m' fm' dm') = overlap
-    where overlap = let multDefs = (getVars x `intersect` getVars y)
-                    in  if null multDefs then union
-                          else error $ "Copilot error: The variables " 
+instance Monoid (Both (StreamableMaps Spec) (StreamableMaps Send)) where
+  mempty = Both emptySM emptySM
+  mappend (Both x y) (Both x' y') = Both (overlap x x') (overlap y y') 
+
+overlap :: StreamableMaps s -> StreamableMaps s -> StreamableMaps s 
+overlap x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) 
+        y@(SM bm' i8m' i16m' i32m' i64m' w8m' w16m' w32m' w64m' fm' dm') =
+  let multDefs = (getVars x `intersect` getVars y)
+  in  if null multDefs then union
+        else error $ "Copilot error: The variables " 
                                    ++ show multDefs ++ " have multiple definitions."
-          union = SM (M.union bm bm') (M.union i8m i8m') (M.union i16m i16m') 
+  where union = SM (M.union bm bm') (M.union i8m i8m') (M.union i16m i16m') 
                    (M.union i32m i32m') (M.union i64m i64m') (M.union w8m w8m') 
                    (M.union w16m w16m') (M.union w32m w32m') (M.union w64m w64m') 
                    (M.union fm fm') (M.union dm dm')
 
 -- | Get the Copilot variables.
-getVars :: StreamableMaps Spec -> [Var]
+getVars :: StreamableMaps s -> [Var]
 getVars streams = foldStreamableMaps (\k _ ks -> k:ks) streams []                         
 
 -- | An empty streamableMaps. 

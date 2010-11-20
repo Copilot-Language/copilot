@@ -118,8 +118,9 @@ verify file n = do
 
 -- Small functions for easy modification of the Options record
 
-setS :: DistributedStreams -> Options -> Options
-setS (streams, sends) opts = opts {optStreams = Just streams, optSends = sends}
+-- | Set the directives for sending stream values on ports.
+setS :: Sends -> Options -> Options
+setS sends opts = opts {optSends = sends}
 
 -- | Sets the environment for simulation by giving a mapping of external
 -- variables to lists of values. E.g.,

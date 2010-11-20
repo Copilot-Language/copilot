@@ -15,7 +15,7 @@ import qualified Language.Atom as A
 
 -- | Compiles an /Copilot/ specification to an /Atom/ one.
 -- The period is given as a Maybe : if it is Nothing, an optimal period will be chosen.
-copilotToAtom :: StreamableMaps Spec -> Sends -> Maybe Period 
+copilotToAtom :: StreamableMaps Spec -> StreamableMaps Send -> Maybe Period 
               -> [(Var, String)] -> (Period, A.Atom ())
 copilotToAtom streams sends p triggers = 
   (p', A.period p' $ do
