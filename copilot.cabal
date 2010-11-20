@@ -19,7 +19,7 @@ description:         Can you write a list in Haskell? Then you can write embedde
                      >  let t = varB "t"
                      >  f .= [0,1] ++ f + (drop 1 f)
                      >  t .= even f
-                     >    where even :: Spaec Word64 -> Spec Bool
+                     >    where even :: Spec Word64 -> Spec Bool
                      >          even w' = w' `mod` 2 == 0
                      .
                      Copilot contains an interpreter, a compiler, and uses a model-checker to check
