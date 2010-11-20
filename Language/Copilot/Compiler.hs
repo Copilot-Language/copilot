@@ -39,7 +39,7 @@ copilotToAtom streams sends p triggers =
                            outputIndexes)
       streams (return ())
 
-    foldSendableMaps (makeSend outputs) sends (return ())
+    foldStreamableMaps (makeSend outputs) sends (return ())
 
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
@@ -217,11 +217,17 @@ maxSampleDep v streams =
         Append _ s0 -> streamDep s0 i
         Drop _ s0 -> streamDep s0 i
 
-makeSend :: forall a. Sendable a => Outputs -> Var -> Send a -> A.Atom () -> A.Atom ()
-makeSend outputs name (Send (v, ph, port)) r = do
+-- makeSend :: forall a. Sendable a => Outputs -> Var -> Send a -> A.Atom () -> A.Atom ()
+-- makeSend outputs name (Send (v, ph, port)) r = do
+--         r 
+--         A.exactPhase ph $ A.atom ("__send_" ++ name) $
+--             send ((A.value (getElem v outputs))::(A.E a)) port
+makeSend :: forall a. Streamable a 
+         => Outputs -> Var -> Send a -> A.Atom () -> A.Atom ()
+makeSend outputs name (Send v ph port portName) r = do
         r 
         A.exactPhase ph $ A.atom ("__send_" ++ name) $
-            send ((A.value (getElem v outputs))::(A.E a)) port
+            mkSend ((A.value (getElem v outputs))::(A.E a)) port portName
 
 -- What we really should be doing is just folding over the TmpSamples, since
 -- that data should contain all the info we need to construct external variable

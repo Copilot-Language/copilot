@@ -9,12 +9,14 @@
 -- functions in Language.hs to make it easier to use. 
 module Language.Copilot.Core (
         -- * Type hierarchy for the copilot language
-        Var, Name, Period, Phase, Port,
+        Var, Name, Period, Phase, Port(..),
         Spec(..), Streams, Stream, Sends, Send(..), DistributedStreams,
 	-- * General functions on 'Streams' and 'StreamableMaps'
-	Streamable(..), Sendable(..), StreamableMaps(..), emptySM,
+	Streamable(..), mkSend, -- Sendable(..)
+        StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
-        foldStreamableMaps, foldSendableMaps, mapStreamableMaps, mapStreamableMapsM,
+        foldStreamableMaps, --foldSendableMaps, 
+        mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
         -- compiler
         BoundedArray(..), nextSt, Outputs, TmpSamples(..), emptyTmpSamples, 
@@ -41,7 +43,7 @@ type Period = Int
 -- | Phase of an Atom phase
 type Phase = Int
 -- | Port over which to broadcast information
-type Port = Int
+data Port = Port Int
 
 -- | Specification of a stream, parameterized by the type of the values of the stream.
 -- The only requirement on @a@ is that it should be 'Streamable'.
@@ -104,12 +106,21 @@ instance Eq a => Eq (Spec a) where
 -- | Container for mutually recursive streams, whose specifications may be
 -- parameterized by different types
 type Streams = Writer (StreamableMaps Spec) ()
+
 -- | A named stream
 type Stream a = Streamable a => (Var, Spec a)
+
 -- | An instruction to send data on a port at a given phase
-data Send a = Sendable a => Send (Var, Phase, Port)
+-- data Send a = Sendable a => Send (Var, Phase, Port)
+data Send a =  
+  Send { sendVar  :: Var
+       , sendPh   :: Phase
+       , sendPort :: Port
+       , sendName :: String}
+
 -- | Container for all the instructions sending data, parameterised by different types
 type Sends = StreamableMaps Send 
+
 -- | Holds the complete specification of a distributed monitor
 type DistributedStreams = (Streams, Sends)
 
@@ -163,8 +174,18 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
                 -> ProphArrs -> TmpSamples -> Indexes -> Var -> Spec a 
                 -> A.Atom () -> A.Atom ()
 
-class Streamable a => Sendable a where
-    send :: A.E a -> Port -> A.Atom ()
+-- class Streamable a => Sendable a where
+--     send :: A.E a -> Port -> A.Atom ()
+
+-- instance Sendable Word8 where
+--     send e port =
+--         A.action (\ [ueString] -> "sendW8_port" ++ show port 
+--                                   ++ "(" ++ ueString ++ ")") [A.ue e]
+
+-- | Sending data over ports.
+mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
+mkSend e (Port port) portName =
+  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") [A.ue e]
 
 instance Streamable Bool where
     getSubMap = bMap
@@ -289,11 +310,6 @@ instance Streamable Double where
     showAsC x = printf "%.10f" x
     makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 
-instance Sendable Word8 where
-    send e port =
-        A.action (\ [ueString] -> "sendW8_port" ++ show port 
-                                  ++ "(" ++ ueString ++ ")") [A.ue e]
-
 -- | Lookup into the map of the right type in @'StreamableMaps'@
 {-# INLINE getMaybeElem #-}
 getMaybeElem :: Streamable a => Var -> StreamableMaps b -> Maybe (b a)
@@ -336,14 +352,22 @@ foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
 -- XXX only sends Word8s right now
 -- | This function is used to iterate on all the values in all the maps stored
 -- by a @'StreamableMaps'@, accumulating a value over time
-{-# INLINE foldSendableMaps #-}
-foldSendableMaps :: forall b c. 
-    (forall a. Sendable a => Var -> c a -> b -> b) -> 
-    StreamableMaps c -> b -> b
---foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
-foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
-    let acc1 = M.foldWithKey f acc w8m
-    in acc1
+-- {-# INLINE foldSendableMaps #-}
+-- foldSendableMaps :: forall b c. 
+--     (forall a. Sendable a => Var -> c a -> b -> b) -> 
+--     StreamableMaps c -> b -> b
+-- --foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
+-- foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
+--     let acc1 = M.foldWithKey f acc w8m
+--     in acc1
+-- foldSendableMaps :: forall b c. 
+--     (forall a. Streamable a => Var -> c a -> b -> b) -> 
+--     StreamableMaps c -> b -> b
+-- --foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
+-- foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
+--     let acc1 = M.foldWithKey f acc w8m
+--     in acc1
+
 
 {-# INLINE mapStreamableMaps #-}
 mapStreamableMaps :: forall s s'. 

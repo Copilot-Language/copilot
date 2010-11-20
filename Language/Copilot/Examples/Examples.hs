@@ -111,16 +111,19 @@ engine = do
   overTemp .= drop 2 temps > 2.3 + temps
   trigger  .= overTemp ==> shutoff
 
--- To compile: > let (streams, ss) = dist in interface $ compileOpts streams ss "dist"
--- s at phase 2 on port 1.  Not stable.
+-- | To compile: 
+-- @
+-- > interface $ setS dist $ setO "dist" $ setC "-Wall" $ setP 10 baseOpts
+-- @ 
+-- Compiles at phase 2 on port 1
+-- **Distributed compilation is not currently stable. **
 dist :: DistributedStreams
 dist = 
   let a = varW8 "a"
-  in 
-    ( a .= [0,1] ++ a + 1
-    ,     sendW8 a (2, 1)
-      ..| emptySM
-    )
+  in ( a .= [0,1] ++ a + 1
+     ,     send "portF" (port 2) a 1
+       ..| emptySM
+     )
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams

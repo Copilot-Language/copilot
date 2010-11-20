@@ -15,8 +15,9 @@ module Language.Copilot.Language (
         Num(..),
         -- * Division
         Fractional((/)),
-        mux,
-        varB, varI8, varI16, varI32, varI64,
+        mux, 
+        -- * Copilot variable declarations.
+        var, varB, varI8, varI16, varI32, varI64,
         varW8, varW16, varW32, varW64, varF, varD,
         -- * The next functions provide easier access to typed external variables.
         extB, extI8, extI16, extI32, extI64,
@@ -31,7 +32,7 @@ module Language.Copilot.Language (
         -- * The next functions help typing the send operations
         -- Warning: there is no typechecking of that yet
         -- sendB, sendI8, sendI16, sendI32, sendI64,
-        sendW8, -- , sendW16, sendW32, sendW64, sendF, sendD
+        send, port, -- , sendW16, sendW32, sendW64, sendF, sendD
         -- * Safe casting
         cast,
         -- * Boolean stream constants
@@ -432,6 +433,11 @@ opsF3 = emptySM {
 
 -- If a generic 'var' declaration is insufficient for the type-checker to
 -- determine the type, a monomorphic var operator can be used.
+
+-- | Useful for writing libraries.
+var :: Streamable a => Var -> Spec a
+var = Var
+
 varB :: Var -> Spec Bool
 varB = Var
 varI8 :: Var -> Spec Int8
@@ -455,34 +461,15 @@ varF = Var
 varD :: Var -> Spec Double
 varD = Var
 
-{-
-sendB :: Var -> (Phase, Port) -> Send Bool
-sendB v (ph, port) = Send (v, ph, port)
-sendI8 :: Var -> (Phase, Port) -> Send Int8
-sendI8 v (ph, port) = Send (v, ph, port)
-sendI16 :: Var -> (Phase, Port) -> Send Int16
-sendI16 v (ph, port) = Send (v, ph, port)
-sendI32 :: Var -> (Phase, Port) -> Send Int32
-sendI32 v (ph, port) = Send (v, ph, port)
-sendI64 :: Var -> (Phase, Port) -> Send Int64
-sendI64 v (ph, port) = Send (v, ph, port) -}
-sendW8 :: Spec Word8 -> (Phase, Port) -> Send Word8
-sendW8 s (ph, port) = 
+port :: Int -> Port
+port = Port
+
+send :: Streamable a => String -> Port -> Spec a -> Phase -> Send a
+send portName port s ph = 
   case s of
-    Var v -> Send (v, ph, port)
+    Var v -> Send v ph port portName
     _     -> error $ "You provided spec " P.++ show s 
                 P.++ " where you needed to give a variable."
-{- sendW16 :: Var -> (Phase, Port) -> Send Word16
-sendW16 v (ph, port) = Send (v, ph, port)
-sendW32 :: Var -> (Phase, Port) -> Send Word32
-sendW32 v (ph, port) = Send (v, ph, port)
-sendW64 :: Var -> (Phase, Port) -> Send Word64
-sendW64 v (ph, port) = Send (v, ph, port)
-sendF :: Var -> (Phase, Port) -> Send Float
-sendF v (ph, port) = Send (v, ph, port)
-sendD :: Var -> (Phase, Port) -> Send Double
-sendD v (ph, port) = Send (v, ph, port) -}
-
 
 true, false :: Spec Bool
 true = Const True
@@ -505,10 +492,10 @@ v .= s =
                  P.++ " where you need to use a variable."
 
 -- | Allows to build a @'Sends'@ from specification
-(..|) :: Sendable a => Send a -> Sends -> Sends
-sendStmt@(Send (v, ph, port)) ..| sends = 
+(..|) :: Streamable a => Send a -> Sends -> Sends
+sendStmt@(Send v ph (Port port) portName) ..| sends = 
     updateSubMap (M.insert name sendStmt) sends
-    where name = v P.++ "_" P.++ show ph P.++ "_" P.++ show port
+    where name = "var_" P.++ v P.++ "_ph_" P.++ show ph P.++ "_port_" P.++ show port
 
 infixr 3 ++
 infixr 2 .=
