@@ -110,7 +110,7 @@ engine = do
   overTemp .= drop 2 temps > 2.3 + temps
   trigger  .= overTemp ==> shutoff
 
--- | distributed streams.  
+-- | Sending over ports.
 distrib :: Streams
 distrib = do
   -- vars
