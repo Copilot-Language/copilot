@@ -196,13 +196,13 @@ setPP pp opts = opts {optPrePostCode = Just pp}
 -- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
 -- the stream becoms true.
 setTriggers :: [(Var, String)] -> Options -> Options
-setTriggers trigs opts = 
-  if null repeats 
-    then opts {optTriggers = trigs}
-    else error $ "Error: only one trigger per Copilot variable.  Variables "
-                 ++ show (Set.fromList repeats) ++ " are given multiple triggers."
-  where vars = map fst trigs
-        repeats = vars \\ Set.toList (Set.fromList vars)
+setTriggers trigs opts = opts {optTriggers = trigs}
+  -- if null repeats 
+  --   then 
+  --   else error $ "Error: only one trigger per Copilot variable.  Variables "
+  --                ++ show (Set.fromList repeats) ++ " are given multiple triggers."
+  -- where vars = map fst trigs
+  --       repeats = vars \\ Set.toList (Set.fromList vars)
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
