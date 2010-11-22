@@ -62,3 +62,5 @@ TODOs
 
    but this leads to overlapping instances.  I think this problem needs to be
    solved with template Haskell(?).
+
+ * Make triggers part of the language?

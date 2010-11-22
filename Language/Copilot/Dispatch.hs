@@ -20,7 +20,7 @@ import Language.Copilot.PrettyPrinter ()
 
 import qualified Language.Atom as A
 import qualified Data.Map as M
-import Data.List ((\\))
+import qualified Data.Set as S 
 
 import System.Directory 
 import System.Process
@@ -131,7 +131,7 @@ dispatch streams sends inputExts backEnd iterations verbose =
 -- Check that each trigger references an actual Copilot variable of type Bool.
 checkTriggerVars :: StreamableMaps Spec -> [(Var, String)] -> IO ()
 checkTriggerVars streams trigs = 
-  if null badDefs
+  if S.null badDefs
     then if null badTypes
            then return ()
            else error $ "Copilot error in defining triggers: the variables " 
@@ -140,7 +140,7 @@ checkTriggerVars streams trigs =
     else error $ "Copilot error in defining triggers: the variables " ++ show badDefs 
                 ++ " are given triggers but "
                 ++ "don't define streams in-scope."
-  where badDefs = map fst trigs \\ getVars streams
+  where badDefs = (S.fromList $ map fst trigs) S.\\ (S.fromList $ getVars streams)
         listAtomTypes :: Streamable a => Var -> Spec a -> [(Var, A.Type)] -> [(Var, A.Type)]
         listAtomTypes v s ls = 
           let t = getAtomType s 
