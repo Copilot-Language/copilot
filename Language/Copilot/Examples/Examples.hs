@@ -25,14 +25,14 @@ fib = do
           even w' = w' `mod` 2 == 0
 
 t1 :: Streams
-t1 = 
+t1 = do
   let x = varI32 "x"
-      y = varB "y"
-      z = varB "z"
-  in do
-    x .= [0, 1, 2] ++ x - (drop 1 x)
-    y .= [True, False] ++ y ^ z
-    z .= x <= drop 1 x
+  let y = varB "y"
+  let z = varB "z"
+  let w = varI32 "w"
+  x .= [0, 1, 2] ++ x - (drop 1 x)
+  y .= [True, False] ++ y ^ z
+  z .= x <= drop 1 x
 
 -- t2 :: Streams
 -- t2 = do

@@ -36,7 +36,7 @@ module Language.Copilot.Language (
         -- * Safe casting
         cast,
         -- * Boolean stream constants
-        true, false
+        const, true, false
     ) where
 
 import qualified Language.Atom as A
@@ -75,6 +75,7 @@ div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
                           else x0 `P.mod` x1) 
             (\ e0 e1 -> A.div0_ e0 e1 d)
 
+  
 (<), (<=), (>=), (>) :: (Streamable a, A.OrdE a) => Spec a -> Spec a -> Spec Bool
 (<) = F2 (P.<) (A.<.)
 (<=) = F2 (P.<=) (A.<=.)
@@ -472,6 +473,9 @@ send :: Streamable a => String -> Port -> Spec a -> Phase -> Streams
 send portName port s ph = 
   tell $ Both emptySM (updateSubMap (M.insert (sendKey sending) sending) emptySM)
   where sending = Send s ph port portName
+
+const :: Streamable a => a -> Spec a
+const = Const
 
 true, false :: Spec Bool
 true = Const True

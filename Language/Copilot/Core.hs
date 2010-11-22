@@ -27,12 +27,13 @@ module Language.Copilot.Core (
     ) where
 
 import qualified Language.Atom as A
+
 import Data.Int
 import Data.Word
 import Data.List hiding (union)
 import qualified Data.Map as M
 import Text.Printf
-import Control.Monad.Writer 
+import Control.Monad.Writer (Writer, Monoid(..), execWriter)
 
 ---- Type hierarchy for the copilot language -----------------------------------
 
