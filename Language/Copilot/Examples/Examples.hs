@@ -29,10 +29,11 @@ t1 = do
   let x = varI32 "x"
   let y = varB "y"
   let z = varB "z"
-  let w = varI32 "w"
+  let w = varB "w"
   x .= [0, 1, 2] ++ x - (drop 1 x)
   y .= [True, False] ++ y ^ z
   z .= x <= drop 1 x
+  w .= 3 == x
 
 -- t2 :: Streams
 -- t2 = do
@@ -41,58 +42,60 @@ t1 = do
 
 -- t3 :: use an external variable called ext, typed Word32
 t3 :: Streams
-t3 = 
+t3 = do
   let a    = varW32 "a"
-      b    = varB "b"
-      ext8 = extW32 "ext" 8
-      ext1 = extW32 "ext" 1
-  in do
-      a .= [0,1] ++ a + ext8 + ext8 + ext1
-      b .= [True, False] ++ 2 + a < 5 + ext1
+  let b    = varB "b"
+  let ext8 = extW32 "ext" 8
+  let ext1 = extW32 "ext" 1
+  a .= [0,1] ++ a + ext8 + ext8 + ext1
+  b .= [True, False] ++ 2 + a < 5 + ext1
 
 t4 :: Streams
-t4 = let
-    a = varB "a"
-    b = varB "b"
-  in do
-    a .= [True,False] ++ not a
-    b .= drop 1 a
+t4 = do
+  let a = varB "a"
+  let b = varB "b"
+  a .= [True,False] ++ not a
+  b .= drop 1 a
 
 t5 :: Streams
-t5 = 
-  let x = varB "x"
-      y = varB "y"
-      w = varB "w"
-      z = varB "z"
-  in do
-      x .= drop 3 y
-      y .= [True, True] ++ not z
-      z .= [False, False] ++ not z
-      w .= x || y
-
+t5 = do
+  let x = varW16 "x"
+  let t = varF "t"
+  let y = varB "y"
+  let w = varB "w"
+  let z = varB "z"
+  x .= cast (drop 3 y)
+  t .= [0] ++ t
+  y .= [True, True] ++ not z
+  z .= [False] ++ false
+  w .= z || y
+  -- triggers
+  trigger y "w_trigger" (w <> x <> x <>> t) -- XXX wrong arg seem generated for x
+  trigger z "y_trigger" void
+  trigger w "z_trigger" (x <> y <> z <>> x)
+  
 yy :: Streams
 yy = 
   let a = varW64 "a"
   in  do a .= 4  
 
 zz :: Streams
-zz = 
+zz = do
   let a = varW32 "a"
-      b = varW32 "b"
-  in do --a .= [0..4] ++ drop 4 (varW32 a) + 1
-      a .= a + 1
-      b .= drop 3 a
+  let b = varW32 "b"
+  --a .= [0..4] ++ drop 4 (varW32 a) + 1
+  a .= a + 1
+  b .= drop 3 a
 
 xx :: Streams
-xx = 
+xx = do
   let a = varW32 "a"
-      b = varW32 "b"
-      c = varW32 "c"
-      ext = extW32 "ext" 1
-  in do 
-      a .= ext
-      b .= [3] ++ a
-      c .= [0, 1, 3, 4] ++ drop 1 b
+  let b = varW32 "b"
+  let c = varW32 "c"
+  let ext = extW32 "ext" 1
+  a .= ext
+  b .= [3] ++ a
+  c .= [0, 1, 3, 4] ++ drop 1 b
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
 -- engine is immediately shut off.  From the paper.

@@ -140,4 +140,4 @@ outputVars cName streams =
              => Var -> Spec a -> [String] -> [String]
         decl v _ ls =
             ("    " ++ printf (v ++ ": " ++ typeIdPrec (unit::a) ++ "   ") 
-            [vPre cName ++ "outputVal__" ++ v]) : ls
+            [vPre cName ++ v]) : ls

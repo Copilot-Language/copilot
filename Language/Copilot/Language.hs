@@ -33,6 +33,8 @@ module Language.Copilot.Language (
         -- Warning: there is no typechecking of that yet
         -- sendB, sendI8, sendI16, sendI32, sendI64,
         send, port, -- , sendW16, sendW32, sendW64, sendF, sendD
+        -- * Triggers
+        trigger, void, (<>), (<>>),
         -- * Safe casting
         cast,
         -- * Boolean stream constants
@@ -76,6 +78,9 @@ div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
             (\ e0 e1 -> A.div0_ e0 e1 d)
 
   
+-- class (Streamable a, A.OrdE a) => SpecOrd a where
+--   (<)
+
 (<), (<=), (>=), (>) :: (Streamable a, A.OrdE a) => Spec a -> Spec a -> Spec Bool
 (<) = F2 (P.<) (A.<.)
 (<=) = F2 (P.<=) (A.<=.)
@@ -106,19 +111,19 @@ castErr toT fromT = "Error: cannot cast type " P.++ show fromT
 
 instance Castable Bool where
   castFrom = F (\b -> if b then 1 else 0)
-           (\b -> A.mux b 1 0)
+               (\b -> A.mux b 1 0)
   cast x =  error $ castErr "Bool" (getAtomType x)
 
 instance Castable Word8 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     t        -> error $ castErr "Word8" t
 
 instance Castable Word16 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     A.Word8  -> castFrom x
@@ -126,7 +131,7 @@ instance Castable Word16 where
 
 instance Castable Word32 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     A.Word8  -> castFrom x
@@ -135,7 +140,7 @@ instance Castable Word32 where
 
 instance Castable Word64 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =   case getAtomType x of
     A.Bool   -> castFrom x
     A.Word8  -> castFrom x
@@ -145,14 +150,14 @@ instance Castable Word64 where
 
 instance Castable Int8 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     t        -> error $ castErr "Int8" t
 
 instance Castable Int16 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x = case getAtomType x of
     A.Bool   -> castFrom x
     A.Int8   -> castFrom x
@@ -161,7 +166,7 @@ instance Castable Int16 where
 
 instance Castable Int32 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     A.Int8  -> castFrom x
@@ -172,7 +177,7 @@ instance Castable Int32 where
 
 instance Castable Int64 where
   castFrom = F (P.fromInteger . P.toInteger) 
-           (A.Retype . A.ue)
+               (A.Retype . A.ue)
   cast x =  case getAtomType x of
     A.Bool   -> castFrom x
     A.Int8  -> castFrom x
@@ -462,6 +467,14 @@ varF = Var
 varD :: Var -> Spec Double
 varD = Var
 
+-- | Define a stream variable.
+(.=) :: Streamable a => Spec a -> Spec a -> Streams
+v .= s = 
+  notVarErr v (\var -> tell $ LangElems 
+                               (updateSubMap (M.insert var s) emptySM) 
+                               emptySM 
+                               M.empty)
+
 port :: Int -> Port
 port = Port
 
@@ -471,9 +484,40 @@ port = Port
 -- of the value on the port occurs at phase @ph@.
 send :: Streamable a => String -> Port -> Spec a -> Phase -> Streams
 send portName port s ph = 
-  tell $ Both emptySM (updateSubMap (M.insert (sendKey sending) sending) emptySM)
+  tell $ LangElems 
+           emptySM 
+           (updateSubMap (M.insert (show sending) sending) emptySM) 
+           M.empty
   where sending = Send s ph port portName
 
+type TriggerLst = ([Var], StreamableMaps Spec)
+
+-- | No C arguments 
+void :: TriggerLst
+void = ([],emptySM)
+
+-- | Turn a @Spec Var@ into an arguement for a C function.
+(<>) :: Streamable a => Spec a -> TriggerLst -> TriggerLst
+s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
+
+-- | Turn a @Spec Var@ into an arguement for a C function.
+(<>>) :: (Streamable a, Streamable b) => Spec a -> Spec b 
+      -> TriggerLst
+s <>> s' = (update s (update s' void))
+  where update x (vars,sm) = 
+          notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
+
+-- | Takes a Boolean stream, 
+trigger :: Spec Bool -> String -> TriggerLst -> Streams
+trigger var fnName args =
+  tell $ LangElems 
+           emptySM 
+           emptySM 
+--           (updateSubMap (M.insert (show trigger) trigger) emptySM) 
+           (M.insert (show trigger) trigger M.empty)
+  where trigger = Trigger var fnName args
+
+-- | Coerces a type that is 'Streamable' into a Copilot constant.
 const :: Streamable a => a -> Spec a
 const = Const
 
@@ -489,14 +533,10 @@ drop i s = Drop i s
 (++) :: Streamable a => [a] -> Spec a -> Spec a
 ls ++ s = Append ls s
 
--- | Define a stream variable.
-(.=) :: Streamable a => Spec a -> Spec a -> Streams
-v .= s = 
-  notVarErr v (\var -> tell $ Both (updateSubMap (M.insert var s) emptySM) emptySM)
-
 
 infixr 3 ++
 infixr 2 .=
+infixr 1 <>
 
 ---- Optimisation rules --------------------------------------------------------
 

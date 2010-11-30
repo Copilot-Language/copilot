@@ -1,8 +1,8 @@
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
-        , help , setS, setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setTriggers, setArrs, setClock,
+        , help , setE, setC, setO, setP, setI, setPP, setN, setV, setR
+        , setDir, setGCC, setArrs, setClock,
         module Language.Copilot.Dispatch
     ) where
 
@@ -13,12 +13,11 @@ import Language.Copilot.Dispatch
 import Language.Copilot.Help
 import qualified Language.Atom as A (Clock)
 
-import Data.Set as Set (fromList, toList)
-import Data.List ((\\))
 import System.Random
 import System.Exit
 import System.Cmd
 import Data.Maybe
+import qualified Data.Map as M (empty)
 import Control.Monad (when)
 
 data Options = Options {
@@ -38,16 +37,14 @@ data Options = Options {
         optCompiler :: String, -- ^ The C compiler to use, as a path to the executable.
         optOutputDir :: String, -- ^ Where to place the output C files (.c, .h, and binary).
         optPrePostCode :: Maybe (String, String), -- ^ Code to append above and below the C file.
-        optTriggers :: [(Var, String)], -- ^ A list of Copilot variable C
-                                        -- function name pairs.  The C funciton
-                                        -- is called if the Copilot stream
-                                        -- becomes True.  The Stream must be of
-                                        -- Booleans and the C function must be
-                                        -- of type void @foo(void)@.  There
-                                        -- should be no more than one function
-                                        -- per trigger variable.  Triggers fire
-                                        -- in the same phase (1) that output
-                                        -- vars are assigned.
+        optTriggers :: Triggers, -- ^ A list of Copilot variable C function name
+                                 -- pairs.  The C funciton is called if the
+                                 -- Copilot stream becomes True.  The Stream
+                                 -- must be of Booleans and the C function must
+                                 -- be of type void @foo(void)@.  There should
+                                 -- be no more than one function per trigger
+                                 -- variable.  Triggers fire in the same phase
+                                 -- (1) that output vars are assigned.
         optArrs :: [(String, Int)], -- ^ When generating C programs to test, we
                                     -- don't know how large external arrays are,
                                     -- so we cannot declare them.  Passing in
@@ -72,7 +69,7 @@ baseOpts = Options {
         optCompiler = "gcc",
         optOutputDir = "./",
         optPrePostCode = Nothing,
-        optTriggers = [],
+        optTriggers = M.empty,
         optArrs = [],
         optClock = Nothing
     }
@@ -89,8 +86,9 @@ interpret streams n opts =
 
 compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
-  interface $ setC "-Wall" $ setO fileName $ setS (getSends streams) $
-    opts {optStreams = Just (getSpecs streams)}
+  interface $ setC "-Wall" $ setO fileName $ setS (getSends streams)
+    $ setTriggers (getTriggers streams) 
+      $ opts {optStreams = Just (getSpecs streams)}
 
 verify :: FilePath -> Int -> IO ()
 verify file n = do
@@ -124,6 +122,10 @@ verify file n = do
 -- | Set the directives for sending stream values on ports.
 setS :: StreamableMaps Send -> Options -> Options
 setS sends opts = opts {optSends = sends}
+
+-- | Set the directives for sending stream values on ports.
+setTriggers :: Triggers -> Options -> Options
+setTriggers triggers opts = opts {optTriggers = triggers}
 
 -- | Sets the environment for simulation by giving a mapping of external
 -- variables to lists of values. E.g.,
@@ -193,16 +195,16 @@ setDir dir opts = opts {optOutputDir = dir}
 setPP :: (String, String) -> Options -> Options
 setPP pp opts = opts {optPrePostCode = Just pp}
 
--- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
--- the stream becoms true.
-setTriggers :: [(Var, String)] -> Options -> Options
-setTriggers trigs opts = opts {optTriggers = trigs}
-  -- if null repeats 
-  --   then 
-  --   else error $ "Error: only one trigger per Copilot variable.  Variables "
-  --                ++ show (Set.fromList repeats) ++ " are given multiple triggers."
-  -- where vars = map fst trigs
-  --       repeats = vars \\ Set.toList (Set.fromList vars)
+-- -- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
+-- -- the stream becoms true.
+-- setTriggers :: [(Var, String)] -> Options -> Options
+-- setTriggers trigs opts = opts {optTriggers = trigs}
+--   -- if null repeats 
+--   --   then 
+--   --   else error $ "Error: only one trigger per Copilot variable.  Variables "
+--   --                ++ show (Set.fromList repeats) ++ " are given multiple triggers."
+--   -- where vars = map fst trigs
+--   --       repeats = vars \\ Set.toList (Set.fromList vars)
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
@@ -211,6 +213,7 @@ interface opts =
         seed <- createSeed opts 
         let (streams, vars) = getStreamsVars opts seed
             sends = optSends opts
+            triggers = optTriggers opts
             backEnd = getBackend opts seed
             iterations = optIterations opts
             verbose = optVerbose opts
@@ -218,7 +221,7 @@ interface opts =
             putStrLn $ "Random seed :" ++ show seed
         -- dispatch is doing all the heavy plumbing between 
         -- analyser, compiler, interpreter, gcc and the generated program
-        dispatch streams sends vars backEnd iterations verbose 
+        dispatch (LangElems streams sends triggers) vars backEnd iterations verbose 
 
 createSeed :: Options -> IO Int
 createSeed opts =
@@ -255,7 +258,7 @@ getBackend opts seed =
                 outputDir = optOutputDir opts,
                 compiler  = optCompiler opts,
                 prePostCode = optPrePostCode opts,
-                triggers = optTriggers opts,
+--                triggers = optTriggers opts,
                 arrDecs = optArrs opts,
                 clock = optClock opts
                     }

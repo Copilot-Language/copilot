@@ -11,9 +11,9 @@ module Language.Copilot.Core (
         -- * Type hierarchy for the copilot language
         Var, Name, Period, Phase, Port(..),
         Spec(..), Streams, Stream, Send(..), --DistributedStreams,
-        notVarErr, Both(..),
+        Trigger(..), Triggers, notVarErr, LangElems(..),
 	-- * General functions on 'Streams' and 'StreamableMaps'
-	Streamable(..), sendKey, mkSend, -- Sendable(..)
+	Streamable(..), mkSend, -- Sendable(..)
         StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, --foldSendableMaps, 
@@ -23,7 +23,7 @@ module Language.Copilot.Core (
         BoundedArray(..), nextSt, Outputs, TmpSamples(..), emptyTmpSamples, 
         ProphArrs, Indexes, PhasedValueVar(..), PhasedValueArr(..), PhasedValueIdx(..),
         tmpVarName, tmpArrName, getAtomType,
-        getSpecs, getSends
+        getSpecs, getSends, getTriggers, makeTrigger -- XXX compiler
     ) where
 
 import qualified Language.Atom as A
@@ -114,21 +114,54 @@ data Send a =
        , sendPort :: Port
        , sendName :: String}
 
-data Both a b = Both a b
+instance Streamable a => Show (Send a) where 
+  show (Send s ph (Port port) portName) = 
+    notVarErr s (\var -> (portName ++ "_port_" ++ show port ++ "_var_" 
+                            ++ var ++ "_ph_" ++ show ph))
+data Trigger =
+  Trigger { trigVar  :: Spec Bool
+          , trigName :: String
+          -- We carry around both the value and the vars of the arguments to be
+          -- passed to the trigger.  The vars are used to put the arguments in
+          -- the correct order, since the values are stored in a map, destroying
+          -- their order.
+          , trigArgs :: ([Var], StreamableMaps Spec)} 
+
+type Triggers = M.Map String Trigger
+
+instance Show Trigger where 
+  show (Trigger s fnName _) =
+    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args
+--                            ++ map (\x -> if x == ' ' then '_' else x) 
+--                                   (concatMap show args)))
+
+-- | Holds all the different kinds of language elements that are pushed into the
+-- Writer monad.  This currently includes the actual specs, "send" directives,
+-- and trigger directives. (Use the functions in Language.hs to make sends and
+-- triggers.)
+data LangElems = LangElems 
+       { strms :: StreamableMaps Spec
+       , snds  :: StreamableMaps Send
+       , trigs :: Triggers}
 
 -- | Container for mutually recursive streams, whose specifications may be
 -- parameterized by different types
-type Streams = Writer (Both (StreamableMaps Spec) (StreamableMaps Send)) ()
+type Streams = Writer LangElems ()
 
 getSpecs :: Streams -> StreamableMaps Spec
 getSpecs streams = 
-  let (Both strms _) = execWriter streams
+  let (LangElems strms _ _) = execWriter streams
   in  strms
 
 getSends :: Streams -> StreamableMaps Send
 getSends streams = 
-  let (Both _ snds) = execWriter streams
+  let (LangElems _ snds _) = execWriter streams
   in  snds
+
+getTriggers :: Streams -> Triggers
+getTriggers streams = 
+  let (LangElems _ _ triggers) = execWriter streams
+  in  triggers
 
 -- | A named stream
 type Stream a = Streamable a => (Var, Spec a)
@@ -142,16 +175,17 @@ type Stream a = Streamable a => (Var, Spec a)
 -- | A type is streamable iff a stream may emit values of that type
 -- 
 -- There are very strong links between @'Streamable'@ and @'StreamableMaps'@ :
--- the types aggregated in @'StreamableMaps'@ are exactly the @'Streamable'@ types
--- and that invariant should be kept (see methods)
+-- the types aggregated in @'StreamableMaps'@ are exactly the @'Streamable'@
+-- types and that invariant should be kept (see methods)
 class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- | Provides access to the Map in a StreamableMaps which store values
     -- of the good type
     getSubMap :: StreamableMaps b -> M.Map Var (b a)
 
-    -- | Provides a way to modify (mostly used for insertions) the Map in a StreamableMaps
-    -- which store values of the good type
-    updateSubMap :: (M.Map Var (b a) -> M.Map Var (b a)) -> StreamableMaps b -> StreamableMaps b
+    -- | Provides a way to modify (mostly used for insertions) the Map in a
+    -- StreamableMaps which store values of the good type
+    updateSubMap :: (M.Map Var (b a) -> M.Map Var (b a)) 
+                 -> StreamableMaps b -> StreamableMaps b
 
     -- | A default value for the type @a@. Its value is not important.
     unit :: a
@@ -162,8 +196,8 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- | A constructor to get an @Atom@ value from an external variable
     externalAtomConstructor :: Var -> A.V a
 
-    -- | The argument only coerces the type, it is discarded.
-    -- Returns the format for outputting a value of this type with printf in C
+    -- | The argument only coerces the type, it is discarded.  Returns the
+    -- format for outputting a value of this type with printf in C
     --
     -- For example "%f" for a float
     typeId :: a -> String
@@ -176,25 +210,13 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- Returns the corresponding /Atom/ type.
     atomType :: a -> A.Type
     
-    -- | Like Show, except that the formatting is exactly the same as the one of C
-    -- for example the booleans are first converted to 0 or 1, and floats and doubles
-    -- have the good precision.
+    -- | Like Show, except that the formatting is exactly the same as the one of
+    -- C for example the booleans are first converted to 0 or 1, and floats and
+    -- doubles have the good precision.
     showAsC :: a -> String
  
-    -- | To make customer C triggers.  Only for Spec Bool (others throw an error).
-    -- XXX make them throw errors!
-    makeTrigger :: [(Var, String)] -> StreamableMaps Spec 
-                -> ProphArrs -> TmpSamples -> Indexes -> Var -> Spec a 
-                -> A.Atom () -> A.Atom ()
-
--- class Streamable a => Sendable a where
---     send :: A.E a -> Port -> A.Atom ()
-
--- instance Sendable Word8 where
---     send e port =
---         A.action (\ [ueString] -> "sendW8_port" ++ show port 
---                                   ++ "(" ++ ueString ++ ")") [A.ue e]
-
+-- | If the 'Spec' isn't a 'Var', then throw an error; otherwise, apply the
+-- function.
 notVarErr :: Streamable a => Spec a -> (Var -> b) -> b
 notVarErr s f =
   case s of
@@ -202,16 +224,11 @@ notVarErr s f =
     _     -> error $ "You provided specification \n" ++ show s 
                       ++ "\n where you needed to give a variable."
 
-sendKey :: Streamable a => Send a -> String
-sendKey (Send s ph (Port port) portName) = 
-  notVarErr 
-    s
-    (\var -> (portName ++ "_port_" ++ show port ++ "_var_" ++ var ++ "_ph_" ++ show ph))
-
 -- | Sending data over ports.
 mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
 mkSend e (Port port) portName =
-  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") [A.ue e]
+  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") 
+           [A.ue e]
 
 instance Streamable Bool where
     getSubMap = bMap
@@ -222,17 +239,6 @@ instance Streamable Bool where
     typeId _ = "%i"
     atomType _ = A.Bool
     showAsC x = printf "%u" (if x then 1::Int else 0)
-    makeTrigger triggers streams prophArrs tmpSamples outputIndexes v s r = r >>
-      if trig /= ""
-        then (A.exactPhase 0 $ A.atom ("trigger__" ++ normalizeVar v) $ do
-                A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
-                A.call trig)
-        else return ()
-      where 
-            trig = case M.lookup v (M.fromList triggers) of
-                     Nothing -> ""
-                     Just fn -> fn
-
 instance Streamable Int8 where
     getSubMap = i8Map
     updateSubMap f sm = sm {i8Map = f $ i8Map sm}
@@ -242,7 +248,6 @@ instance Streamable Int8 where
     typeId _ = "%d"
     atomType _ = A.Int8
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int16 where
     getSubMap = i16Map
     updateSubMap f sm = sm {i16Map = f $ i16Map sm}
@@ -252,7 +257,6 @@ instance Streamable Int16 where
     typeId _ = "%d"
     atomType _ = A.Int16
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int32 where
     getSubMap = i32Map
     updateSubMap f sm = sm {i32Map = f $ i32Map sm}
@@ -262,7 +266,6 @@ instance Streamable Int32 where
     typeId _ = "%d"
     atomType _ = A.Int32
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Int64 where
     getSubMap = i64Map
     updateSubMap f sm = sm {i64Map = f $ i64Map sm}
@@ -272,7 +275,6 @@ instance Streamable Int64 where
     typeId _ = "%lld"
     atomType _ = A.Int64
     showAsC x = printf "%d" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word8 where
     getSubMap = w8Map
     updateSubMap f sm = sm {w8Map = f $ w8Map sm}
@@ -282,7 +284,6 @@ instance Streamable Word8 where
     typeId _ = "%u"
     atomType _ = A.Word8
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word16 where
     getSubMap = w16Map
     updateSubMap f sm = sm {w16Map = f $ w16Map sm}
@@ -292,7 +293,6 @@ instance Streamable Word16 where
     typeId _ = "%u"
     atomType _ = A.Word16
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word32 where
     getSubMap = w32Map
     updateSubMap f sm = sm {w32Map = f $ w32Map sm}
@@ -302,7 +302,6 @@ instance Streamable Word32 where
     typeId _ = "%u"
     atomType _ = A.Word32
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Word64 where
     getSubMap = w64Map
     updateSubMap f sm = sm {w64Map = f $ w64Map sm}
@@ -312,7 +311,6 @@ instance Streamable Word64 where
     typeId _ = "%llu"
     atomType _ = A.Word64
     showAsC x = printf "%u" (toInteger x)
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Float where
     getSubMap = fMap
     updateSubMap f sm = sm {fMap = f $ fMap sm}
@@ -323,7 +321,6 @@ instance Streamable Float where
     typeIdPrec _ = "%.5f"
     atomType _ = A.Float
     showAsC x = printf "%.5f" x
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 instance Streamable Double where
     getSubMap = dMap
     updateSubMap f sm = sm {dMap = f $ dMap sm}
@@ -334,7 +331,6 @@ instance Streamable Double where
     typeIdPrec _ = "%.10lf"
     atomType _ = A.Double
     showAsC x = printf "%.10f" x
-    makeTrigger _ _ _ _ _ _ _ r = r >> return ()
 
 -- | Lookup into the map of the right type in @'StreamableMaps'@
 {-# INLINE getMaybeElem #-}
@@ -374,26 +370,6 @@ foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
         acc9  = M.foldWithKey f acc8 fm      
         acc10 = M.foldWithKey f acc9 dm
     in acc10
-
--- XXX only sends Word8s right now
--- | This function is used to iterate on all the values in all the maps stored
--- by a @'StreamableMaps'@, accumulating a value over time
--- {-# INLINE foldSendableMaps #-}
--- foldSendableMaps :: forall b c. 
---     (forall a. Sendable a => Var -> c a -> b -> b) -> 
---     StreamableMaps c -> b -> b
--- --foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
--- foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
---     let acc1 = M.foldWithKey f acc w8m
---     in acc1
--- foldSendableMaps :: forall b c. 
---     (forall a. Streamable a => Var -> c a -> b -> b) -> 
---     StreamableMaps c -> b -> b
--- --foldSendableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
--- foldSendableMaps f (SM _ _ _ _ _ w8m _ _ _ _ _) acc =
---     let acc1 = M.foldWithKey f acc w8m
---     in acc1
-
 
 {-# INLINE mapStreamableMaps #-}
 mapStreamableMaps :: forall s s'. 
@@ -465,10 +441,14 @@ data StreamableMaps a =
             dMap   :: M.Map Var (a Double)
         }
 
-instance Monoid (Both (StreamableMaps Spec) (StreamableMaps Send)) where
-  mempty = Both emptySM emptySM
-  mappend (Both x y) (Both x' y') = Both (overlap x x') (overlap y y') 
+instance Monoid (StreamableMaps Spec) where
+  mempty = emptySM
+  mappend x y = overlap x y
 
+instance Monoid LangElems where
+  mempty = LangElems emptySM emptySM M.empty
+  mappend (LangElems x y z) (LangElems x' y' z') = 
+    LangElems (overlap x x') (overlap y y') (M.union z z') -- XXX should we test for the same key? 
 overlap :: StreamableMaps s -> StreamableMaps s -> StreamableMaps s 
 overlap x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) 
         y@(SM bm' i8m' i16m' i32m' i64m' w8m' w16m' w32m' w64m' fm' dm') =
@@ -575,8 +555,52 @@ showRaw (Drop i s0) n =
 
 
 
+-- XXX
 -- Compiler: the code below really belongs in Compiler.hs, but its called by
 -- makeTrigger, which is a method of the class Streamable.
+
+-- XXX
+-- Check that a trigger references a Copilot variable of type 'Spec' 'Bool'.
+-- checkTrigger :: forall a m. (Monad m, Streamable a) 
+--              => Trigger a -> StreamableMaps Spec -> m ()
+-- checkTrigger (Trigger var _ args) streams =
+--   if null badDefs
+--     then if getAtomType var == A.Bool
+--            then return ()
+--            else error $ "Copilot error in defining triggers: the variable " 
+--                           ++ show var ++ " are of a type other than Bool."
+--     else error $ "Copilot error in defining triggers: the variables " ++ show badDefs 
+--                    ++ "don't define streams in-scope."
+--   where varChk v = case getMaybeElem v streams :: Maybe (Spec a) of
+--                      Nothing -> [v]
+--                      Just _  -> []
+--         badDefs = notVarErr var varChk ++ concatMap varChk args
+
+
+-- | To make customer C triggers.  Only for Spec Bool (others throw an
+-- error).  XXX make them throw errors!
+makeTrigger :: StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
+            -> Trigger -> A.Atom () -> A.Atom ()
+
+makeTrigger streams prophArrs tmpSamples outputIndexes 
+            trigger@(Trigger s fnName (vars,args)) r = 
+  do r 
+     A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
+--         checkTrigger trigger streams
+     (A.exactPhase 0 $ A.atom (show trigger) $ 
+        do A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
+           A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
+              (reorder vars []
+                (foldStreamableMaps 
+                  (\v argSpec ls -> (v,next argSpec):ls) args [])))
+     where next a = A.ue $ nextSt streams prophArrs 
+                             tmpSamples outputIndexes a 0
+           reorder [] acc _ = reverse $ snd (unzip acc)
+           reorder (v:vs) acc ls = 
+               case lookup v ls of
+                 Nothing -> error "Error in makeTrigger in Core.hs."
+                 Just x  -> let n = (v,x)
+                            in reorder vs (n:acc) ls
 
 -- For the prophecy arrays
 type ArrIndex = Word64

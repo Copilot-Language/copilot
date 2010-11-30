@@ -43,6 +43,10 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 *******************************************************************************
+* Copilot-0.28
+  
+  * Make triggers part of the Copilot language (see example t5 in Examples.hs).
+ 
 * Copilot-0.27
 
   * Changed syntax and semantics of the 'send' function (Language.hs) for

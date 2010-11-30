@@ -41,26 +41,7 @@ TODOs
    function.  So you don't have to set up extra C vars to get the function
    values.
 
- * Right now, you can't have a spec with 3 == a or 3 < a, where a is a var of
-   the right type, since the constant '3' isn't lifted automatically.  For
-   something like 3 + a, it is, because Spec a can be an instance of Num (see
-   Core.hs).  This is because operators like + are of type a -> a -> a.  But
-   Spec can't be an instance of Ord, since < returns a Bool, not a Spec Bool.
-   Furthermore, classes won't work, since you want something like this:
-
-   class MyEq a b where
-     (==) :: a -> b -> Spec Bool
-     (/=) :: a -> b -> Spec Bool
-
-   instance (Streamable a, A.EqE a) => MyEq (Spec a) (Spec a) where
-     (==) = F2 (P.==) (A.==.)
-     (/=) = F2 (P./=) (A./=.)
-
-   instance (Streamable a, A.EqE a, P.Eq a) => MyEq a a where
-     (==) x y = F2 (P.==) (A.==.) (Const x) (Const y)
-     (/=) x y = F2 (P./=) (A./=.) (Const x) (Const y)
-
-   but this leads to overlapping instances.  I think this problem needs to be
-   solved with template Haskell(?).
-
  * Make triggers part of the language?
+ 
+ * We might want to put triggers at phase 1 and draw on the output vars so as to
+   avoid computing so many next-states.

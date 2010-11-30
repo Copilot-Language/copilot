@@ -15,9 +15,8 @@ import qualified Language.Atom as A
 
 -- | Compiles an /Copilot/ specification to an /Atom/ one.
 -- The period is given as a Maybe : if it is Nothing, an optimal period will be chosen.
-copilotToAtom :: StreamableMaps Spec -> StreamableMaps Send -> Maybe Period 
-              -> [(Var, String)] -> (Period, A.Atom ())
-copilotToAtom streams sends p triggers = 
+copilotToAtom :: LangElems -> Maybe Period -> (Period, A.Atom ())
+copilotToAtom (LangElems streams sends triggers) p = 
   (p', A.period p' $ do
 
     prophArrs <- mapStreamableMapsM initProphArr streams
@@ -35,9 +34,12 @@ copilotToAtom streams sends p triggers =
                            updateIndexes outputIndexes) 
       streams (return ())
 
-    foldStreamableMaps (makeTrigger triggers streams prophArrs tmpSamples
-                           outputIndexes)
-      streams (return ())
+    -- foldStreamableMaps (makeTrigger streams prophArrs tmpSamples
+    --                        outputIndexes)
+    --  triggers (return ())
+
+    M.fold (makeTrigger streams prophArrs tmpSamples outputIndexes) 
+           (return ()) triggers
 
     foldStreamableMaps (makeSend outputs) sends (return ())
 
@@ -75,7 +77,7 @@ initProphArr v s =
 
 initOutput :: forall a. Streamable a => Var -> Spec a -> A.Atom (A.V a)
 initOutput v _ = do
-  atomConstructor ("outputVal__" ++ normalizeVar v) (unit::a)
+  atomConstructor (normalizeVar v) (unit::a)
 
 tmpSampleStr :: String
 tmpSampleStr = "tmpSampleVal__"

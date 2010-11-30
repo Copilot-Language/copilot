@@ -35,11 +35,11 @@ data AtomToC = AtomToC
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
     , prePostCode :: Maybe (String, String) -- ^ Code to replace the default initialization and main
-    , triggers :: [(Var, String)] -- ^ A list of Copilot variable C function
-                                  -- name pairs.  The C funciton is called if
-                                  -- the Copilot stream becomes True.  The
-                                  -- Stream must be of Booleans and the C
-                                  -- function must be of type void @foo(void)@.
+    -- , triggers :: [(Var, String)] -- ^ A list of Copilot variable C function
+    --                               -- name pairs.  The C funciton is called if
+    --                               -- the Copilot stream becomes True.  The
+    --                               -- Stream must be of Booleans and the C
+    --                               -- function must be of type void @foo(void)@.
     , arrDecs :: [(String, Int)] -- ^ When generating C programs to test, we
                                  -- don't know how large external arrays are, so
                                  -- we cannot declare them.  Passing in pairs
@@ -70,19 +70,18 @@ data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 -- @iterations@ just gives the number of periods the specification must be executed.
 --      If you would rather execute it by hand, then just choose AtomToC for backEnd and 0 for iterations
 -- @verbose@ determines what is output.
-dispatch :: StreamableMaps Spec -> StreamableMaps Send -> Vars 
-         -> BackEnd -> Iterations -> Verbose -> IO ()
-dispatch streams sends inputExts backEnd iterations verbose =
+dispatch :: LangElems -> Vars -> BackEnd -> Iterations -> Verbose -> IO ()
+dispatch elems inputExts backEnd iterations verbose =
     do
         hSetBuffering stdout LineBuffering
         mapM_ putStrLn preludeText 
         isValid <-
-            case check streams of
+            case check (strms elems) of
                 Just x -> putStrLn (show x) >> return False
                 Nothing -> return True
         when isValid $
             -- because haskell is lazy, will only get computed if later used
-            let interpretedLines = showVars (interpretStreams streams trueInputExts) 
+            let interpretedLines = showVars (interpretStreams (strms elems) trueInputExts) 
                                      iterations 
             in case backEnd of
                 Interpreter -> 
@@ -99,8 +98,8 @@ dispatch streams sends inputExts backEnd iterations verbose =
                         putStrLn $ "Trying to create the directory " ++ dirName 
                                      ++  " (if missing)  ..."
                         createDirectoryIfMissing False dirName
-                        checkTriggerVars streams (triggers opts) 
-                        copilotToC streams sends allExts trueInputExts opts isVerbose
+--                        checkTriggerVars streams (triggers opts) 
+                        copilotToC elems allExts trueInputExts opts isVerbose
                         let copy ext = copyFile (cName opts ++ ext) 
                                         (dirName ++ cName opts ++ ext)
                         let delete ext = do 
@@ -117,7 +116,7 @@ dispatch streams sends inputExts backEnd iterations verbose =
                         when (prePostCode opts == Nothing) $ gccCall (Opts opts)
                         when ((isInterpreted || isExecuted) && not allInputsPresents) $ 
                             error errMsg
-                        when isExecuted $ execute streams (dirName ++ cName opts) 
+                        when isExecuted $ execute (strms elems) (dirName ++ cName opts) 
                                              trueInputExts isInterpreted 
                             interpretedLines iterations isSilent
     where
@@ -125,32 +124,12 @@ dispatch streams sends inputExts backEnd iterations verbose =
         isVerbose = verbose == Verbose
         isSilent = verbose == OnlyErrors
         isExecuted = iterations /= 0
-        allExts = getExternalVars streams
+        allExts = getExternalVars (strms elems)
         (trueInputExts, allInputsPresents) = filterStreamableMaps inputExts allExts
 
--- Check that each trigger references an actual Copilot variable of type Bool.
-checkTriggerVars :: StreamableMaps Spec -> [(Var, String)] -> IO ()
-checkTriggerVars streams trigs = 
-  if S.null badDefs
-    then if null badTypes
-           then return ()
-           else error $ "Copilot error in defining triggers: the variables " 
-                    ++ show (map fst badTypes)
-                    ++ " are of a type other than Bool."
-    else error $ "Copilot error in defining triggers: the variables " ++ show badDefs 
-                ++ " are given triggers but "
-                ++ "don't define streams in-scope."
-  where badDefs = (S.fromList $ map fst trigs) S.\\ (S.fromList $ getVars streams)
-        listAtomTypes :: Streamable a => Var -> Spec a -> [(Var, A.Type)] -> [(Var, A.Type)]
-        listAtomTypes v s ls = 
-          let t = getAtomType s 
-          in  if t /= A.Bool && v `elem` (map fst trigs) then (v, t):ls else ls
-        badTypes = foldStreamableMaps listAtomTypes streams []
-
-copilotToC :: StreamableMaps Spec -> StreamableMaps Send 
-           -> [(A.Type, Var, ExtVars)] -> Vars -> AtomToC -> Bool -> IO ()
-copilotToC streams sends allExts trueInputExts opts isVerbose =
-    let (p', program) = copilotToAtom streams sends (getPeriod opts) (triggers opts)
+copilotToC :: LangElems -> [(A.Type, Var, ExtVars)] -> Vars -> AtomToC -> Bool -> IO ()
+copilotToC elems@(LangElems streams sends triggers) allExts trueInputExts opts isVerbose =
+    let (p', program) = copilotToAtom elems (getPeriod opts)
         cFileName = cName opts
         (preCode, postCode) = 
             case (prePostCode opts) of
