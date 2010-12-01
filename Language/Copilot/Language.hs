@@ -49,7 +49,7 @@ import qualified Data.Map as M
 import Prelude ( Bool(..), Num(..), Float, Double, (.), String, error, ($)
                , Fractional(..), fromInteger, zip, Show(..))
 import qualified Prelude as P
-import Control.Monad.Writer
+import Control.Monad.Writer (tell)
 
 import Language.Copilot.Core
 import Language.Copilot.Analyser
@@ -566,4 +566,7 @@ infixr 1 <>
 "Copilot.Language MuxF" forall s0 s1. mux (Const False) s0 s1 = s1
 "Copilot.Language MuxT" forall s0 s1. mux (Const True) s0 s1 = s0
 "Copilot.Language ImpliesDef" forall s0 s1. (||) s1 (not s0) = s0 ==> s1
-    #-}
+      #-}
+
+-- "Copilot.Language CastLift" forall s i. drop i (cast s) = cast (drop i s)
+

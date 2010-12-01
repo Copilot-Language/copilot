@@ -593,7 +593,8 @@ makeTrigger streams prophArrs tmpSamples outputIndexes
               (reorder vars []
                 (foldStreamableMaps 
                   (\v argSpec ls -> (v,next argSpec):ls) args [])))
-     where next a = A.ue $ nextSt streams prophArrs 
+     where next :: Streamable a => Spec a -> A.UE 
+           next a = A.ue $ nextSt streams prophArrs 
                              tmpSamples outputIndexes a 0
            reorder [] acc _ = reverse $ snd (unzip acc)
            reorder (v:vs) acc ls = 

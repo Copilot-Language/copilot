@@ -7,7 +7,7 @@ author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller
 synopsis:            A stream DSL for writing embedded C monitors.
 build-type:          Simple
 maintainer:          Lee Pike <leepike@galois.com>
-category:            Language
+category:            Language, Embedded
 homepage:            http://leepike.github.com/Copilot/
 description:         Can you write a list in Haskell? Then you can write embedded C code using
                      Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
@@ -35,8 +35,9 @@ library
     ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constaints.
-    build-depends:     base >= 4.2 && < 6
-                     , atom >= 1.0.7
+    build-depends:     
+                       base >= 4.2 && < 6
+                     , atom >= 1.0.8
                      , containers >= 0.2.0.1
                      , process >= 1.0.0.0
                      , random >= 1.0.0.0

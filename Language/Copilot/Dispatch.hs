@@ -20,7 +20,6 @@ import Language.Copilot.PrettyPrinter ()
 
 import qualified Language.Atom as A
 import qualified Data.Map as M
-import qualified Data.Set as S 
 
 import System.Directory 
 import System.Process
@@ -98,7 +97,6 @@ dispatch elems inputExts backEnd iterations verbose =
                         putStrLn $ "Trying to create the directory " ++ dirName 
                                      ++  " (if missing)  ..."
                         createDirectoryIfMissing False dirName
---                        checkTriggerVars streams (triggers opts) 
                         copilotToC elems allExts trueInputExts opts isVerbose
                         let copy ext = copyFile (cName opts ++ ext) 
                                         (dirName ++ cName opts ++ ext)
@@ -128,13 +126,14 @@ dispatch elems inputExts backEnd iterations verbose =
         (trueInputExts, allInputsPresents) = filterStreamableMaps inputExts allExts
 
 copilotToC :: LangElems -> [(A.Type, Var, ExtVars)] -> Vars -> AtomToC -> Bool -> IO ()
-copilotToC elems@(LangElems streams sends triggers) allExts trueInputExts opts isVerbose =
+copilotToC elems allExts trueInputExts opts isVerbose =
     let (p', program) = copilotToAtom elems (getPeriod opts)
         cFileName = cName opts
         (preCode, postCode) = 
             case (prePostCode opts) of
                 Nothing ->  
-                  getPrePostCode cFileName streams allExts (arrDecs opts) trueInputExts p'
+                  getPrePostCode cFileName (strms elems) allExts 
+                                 (arrDecs opts) trueInputExts p'
                 Just (pre, post) -> (pre, post)
         atomConfig = A.defaults 
             { A.cCode = \_ _ _ -> (preCode, postCode)
