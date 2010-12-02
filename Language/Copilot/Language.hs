@@ -47,7 +47,7 @@ import Data.Word
 import System.Random
 import qualified Data.Map as M
 import Prelude ( Bool(..), Num(..), Float, Double, (.), String, error, ($)
-               , Fractional(..), fromInteger, zip, Show(..))
+               , Fractional(..), fromInteger, zip, Show(..), (>>=), fail)
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
 
