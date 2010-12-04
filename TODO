@@ -1,8 +1,12 @@
 TODOs
 
+* Fix 'XXX's through the code.
+
 * Modify atom so that it refuses names that produce invalid C code. See
    checkname in Language.Atom.Elaboration.hs (still probably bugged) Also see
-   normalizeVar in Language.Copilot.Core.hs.
+   normalizeVar in Language.Copilot.Core.hs. (Actually, should Copilot worry
+   about it?  It'll just fail during compilation, so there's nothing dangerous
+   about it.)
 
  * Add arrays to the language(?)
 
@@ -21,11 +25,11 @@ TODOs
 
  * Use para <http://hackage.haskell.org/package/para> for pretty-formatting
    error msgs from Analyzer.hs as well as Help.hs.
- 
- * Go through using hlint suggestions.
 
  * Add to Help.hs documentation on using the setClock function to use the HW
    clock.
+ 
+ * Go through using hlint suggestions.
 
  * Fix splint warnings on generated C code 
 
@@ -41,7 +45,26 @@ TODOs
    function.  So you don't have to set up extra C vars to get the function
    values.
 
- * Make triggers part of the language?
- 
  * We might want to put triggers at phase 1 and draw on the output vars so as to
    avoid computing so many next-states.
+
+ * Make showing better---don't show with constructors but something more
+   user-friendly.  ShowRaw in Core.hs.
+
+ * Generate random arrays?
+
+ * Compare some sample specs to Lustre and Esterel.
+
+ * Try the cast operation in Core.hs.
+
+ * Revisit: why no sampling in phase 0?
+
+ * Move triggers to Compile.hs.
+
+ * Define a clocks library.
+
+ * Remove the notion of a phase!!  To low-level.  As the programmer, you should
+   JUST manipulate clocks.  The period is the smallest unit of time, as far as
+   you're concerned.
+
+ * Lots of debugging with sampling functions (both array and var return types).

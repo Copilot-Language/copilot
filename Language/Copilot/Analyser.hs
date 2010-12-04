@@ -6,7 +6,7 @@ module Language.Copilot.Analyser(
         -- * Main error checking functions
         check, Error(..), SpecSet(..),
         -- * Varied other things
-        getExternalVars, ExtVars(..)
+        getExternalVars
         {-
         -- * Dependency Graphs (experimental)
         Weight, Node(..), DependencyGraph,
@@ -25,17 +25,20 @@ type Weight = Int
 data Error =
       BadSyntax String Var -- ^ the BNF is not respected
     | BadDrop Int Var -- ^ A drop expression of less than 0 is used
-    | BadSamplingPhase Var Var Phase -- ^ if an external variable is sampled at
+    | BadSamplingPhase Var Ext Phase -- ^ if an external variable is sampled at
                                      -- phase 0 then there is no time for the
                                      -- stream to be updated
-    | BadSamplingArrPhase Var Var Phase -- ^ if an external variable is sampled at
+    | BadSamplingArrPhase Var Ext Phase -- ^ if an external variable is sampled at
                                         -- phase 0 then there is no time for the
                                         -- stream to be updated
-    | BadPArrSpec Var Var String -- ^ External array indexes can only take
+    | BadPArrSpec Var Ext String -- ^ External array indexes can only take
                                  -- variables or constants as indexes.
     | BadType Var Var -- ^ either a variable is not defined, or not with the
                       -- good type ; there is no implicit conversion of types in
                       -- /Copilot/
+    | BadTypeExt Ext Var -- ^ either an external variable is not defined, or not
+                         -- with the good type; there is no implicit conversion
+                         -- of types in /Copilot/
     | NonNegativeWeightedClosedPath [Var] Weight -- ^ The algorithm to compile
                                                  -- /Copilot/ specification can
                                                  -- only work if there is no
@@ -43,10 +46,10 @@ data Error =
                                                  -- path in the specification,
                                                  -- as described in the original
                                                  -- research paper
-    | DependsOnClosePast [Var] Var Weight Weight -- ^ Could be compiled, but
+    | DependsOnClosePast [Var] Ext Weight Weight -- ^ Could be compiled, but
                                                  -- would need bigger
                                                  -- prophecyArrays
-    | DependsOnFuture [Var] Var Weight -- ^ If an output depends of a future of
+    | DependsOnFuture [Var] Ext Weight -- ^ If an output depends of a future of
                                        -- an input it will be hard to compile to
                                        -- say the least
 
@@ -63,13 +66,13 @@ instance Show Error where
         ]
     show (BadSamplingPhase v v' ph) =
        unlines
-        [ "Error : the external variable " ++ v' ++ " is sampled at phase " ++ 
+        [ "Error : the external variable " ++ show v' ++ " is sampled at phase " ++ 
           show ph ++ " in the stream " ++ v ++ "." 
         , "Sampling can only occur from phase 1 onwards.\n"
         ]
     show (BadSamplingArrPhase v arr ph) =
        unlines
-        [ "Error : the external array " ++ arr ++ " is sampled at phase " ++ 
+        [ "Error : the external array " ++ show arr ++ " is sampled at phase " ++ 
           show ph ++ " in the stream " ++ v ++ "."
         , " Sampling can only occur from phase 1 onwards.\n"
         ]
@@ -78,12 +81,19 @@ instance Show Error where
         [ "Error : the index into an external array can only take a "
             ++ "variable or a constant.  The index\n"  
         ,   idx ++ "\n\n in external array "
-            ++ arr ++ "in the definition of stream " ++ v ++ " is not of that "
+            ++ show arr ++ "in the definition of stream " ++ v ++ " is not of that "
             ++ "form.\n"
         ]
     show (BadType v v') =
        unlines
         [ "Error : the monitor variable " ++ v ++ ", called in the stream " 
+          ++ v' ++ ", either"
+        , "does not exist, or don't have the right type (there is no implicit " 
+          ++ "conversion).\n"
+        ]
+    show (BadTypeExt v v') =
+       unlines
+        [ "Error : the external call " ++ show v ++ ", called in the stream " 
           ++ v' ++ ", either"
         , "does not exist, or don't have the right type (there is no implicit " 
           ++ "conversion).\n"
@@ -103,7 +113,7 @@ instance Show Error where
     show (DependsOnClosePast vs v w len) =
        unlines
         [ "Error : the following path is of weight " ++ show w ++ " ending in "
-          ++ "the external variable " ++ v 
+          ++ "the external variable " ++ show v 
         , "while the first variable of that path has a prophecy array of length " 
           ++ show len ++ "," 
         , "which is strictly greater than the weight. This is forbidden."
@@ -114,7 +124,7 @@ instance Show Error where
         [ "Error : the following path is of weight " ++ show w 
           ++ " which is strictly positive."
         , "This means that the first variable depends on the future of the "
-          ++ "external variable " ++ v 
+          ++ "external variable " ++ show v 
         , "which is quoted in the last variable of the path.  This is "
           ++ "obviously impossible."
         , "Path : " ++ show (reverse vs) ++ "\n"
@@ -201,19 +211,22 @@ defCheck streams =
                                    | n > negate (prophecyArrayLength s0) -> 
                                            Just $ DependsOnClosePast vs v n 
                                                     (prophecyArrayLength s0)
-                                   | t /= getAtomType s -> Just $ BadType v (head vs)
+                                   | t /= getAtomType s -> 
+                                            Just $ BadTypeExt v (head vs)
                                 _ -> Nothing
                         PArr t (arr, idx) _ 
                                    | n > 0 -> Just $ DependsOnFuture vs arr n
                                    | n > negate (prophecyArrayLength idx) -> 
                                            Just $ DependsOnClosePast vs arr n 
                                                     (prophecyArrayLength idx)
-                                   | t /= getAtomType s -> Just $ BadType arr (head vs)
+                                   | t /= getAtomType s -> 
+                                       Just $ BadTypeExt arr (head vs)
                                    | otherwise -> 
                                        case idx of
                                          Const _ -> checkPath n vs idx
                                          Var _   -> checkPath n vs idx
-                                         _       -> Just $ BadPArrSpec v0 arr (show idx)
+                                         _       -> 
+                                           Just $ BadPArrSpec v0 arr (show idx)
                         Var v -> 
                             if elem v vs
                                 then if n >= 0
@@ -233,12 +246,6 @@ defCheck streams =
                         Drop i s' -> checkPath (n + i) vs s'
     in foldStreamableMaps checkPathsFromSpec streams Nothing
 
-type Exs = (A.Type, Var, ExtVars)
-
-data ExtVars = ExtV Phase 
-             | ExtA Phase String
-  deriving Eq
-
 getExternalVars :: StreamableMaps Spec -> [Exs]
 getExternalVars streams =
     nub $ foldStreamableMaps decl streams []
@@ -247,8 +254,8 @@ getExternalVars streams =
              => Var -> Spec a -> [Exs] -> [Exs]
         decl _ s ls =
             case s of
-                PVar t v ph -> (t, v, ExtV ph) : ls
-                PArr t (arr, s0) ph -> (t, arr, ExtA ph (show s0)) : ls
+                PVar t v ph -> (t, v, ExtRetV ph) : ls
+                PArr t (arr, s0) ph -> (t, arr, ExtRetA ph (show s0)) : ls
                 F _ _ s0 -> decl undefined s0 ls
                 F2 _ _ s0 s1 -> decl undefined s0 $ decl undefined s1 ls
                 F3 _ _ s0 s1 s2 -> decl undefined s0 $ decl undefined s1 

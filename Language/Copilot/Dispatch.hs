@@ -12,7 +12,7 @@ module Language.Copilot.Dispatch
   (dispatch, BackEnd(..), AtomToC(..), Interpreted(..), Iterations, Verbose(..)) where
 
 import Language.Copilot.Core
-import Language.Copilot.Analyser
+import Language.Copilot.Analyser (check, getExternalVars)
 import Language.Copilot.Interpreter
 import Language.Copilot.AtomToC
 import Language.Copilot.Compiler
@@ -33,12 +33,8 @@ data AtomToC = AtomToC
     , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
-    , prePostCode :: Maybe (String, String) -- ^ Code to replace the default initialization and main
-    -- , triggers :: [(Var, String)] -- ^ A list of Copilot variable C function
-    --                               -- name pairs.  The C funciton is called if
-    --                               -- the Copilot stream becomes True.  The
-    --                               -- Stream must be of Booleans and the C
-    --                               -- function must be of type void @foo(void)@.
+    , prePostCode :: Maybe (String, String) -- ^ Code to replace the default
+                                            -- initialization and main
     , arrDecs :: [(String, Int)] -- ^ When generating C programs to test, we
                                  -- don't know how large external arrays are, so
                                  -- we cannot declare them.  Passing in pairs
@@ -123,9 +119,10 @@ dispatch elems inputExts backEnd iterations verbose =
         isSilent = verbose == OnlyErrors
         isExecuted = iterations /= 0
         allExts = getExternalVars (strms elems)
-        (trueInputExts, allInputsPresents) = filterStreamableMaps inputExts allExts
+        (trueInputExts :: StreamableMaps [] , allInputsPresents :: Bool) = 
+          filterStreamableMaps inputExts (map (\(a,v,r) -> (a, show v, r)) allExts)
 
-copilotToC :: LangElems -> [(A.Type, Var, ExtVars)] -> Vars -> AtomToC -> Bool -> IO ()
+copilotToC :: LangElems -> [Exs] -> Vars -> AtomToC -> Bool -> IO ()
 copilotToC elems allExts trueInputExts opts isVerbose =
     let (p', program) = copilotToAtom elems (getPeriod opts)
         cFileName = cName opts
@@ -133,7 +130,8 @@ copilotToC elems allExts trueInputExts opts isVerbose =
             case (prePostCode opts) of
                 Nothing ->  
                   getPrePostCode cFileName (strms elems) allExts 
-                                 (arrDecs opts) trueInputExts p'
+                                 (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
+                                 trueInputExts p'
                 Just (pre, post) -> (pre, post)
         atomConfig = A.defaults 
             { A.cCode = \_ _ _ -> (preCode, postCode)

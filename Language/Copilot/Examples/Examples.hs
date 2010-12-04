@@ -45,8 +45,8 @@ t3 :: Streams
 t3 = do
   let a    = varW32 "a"
   let b    = varB "b"
-  let ext8 = extW32 "ext" 8
-  let ext1 = extW32 "ext" 1
+  let ext8 = extW32 (global "ext") 8
+  let ext1 = extW32 (global "ext") 1
   a .= [0,1] ++ a + ext8 + ext8 + ext1
   b .= [True, False] ++ 2 + a < 5 + ext1
 
@@ -70,9 +70,10 @@ t5 = do
   z .= [False] ++ false
   w .= z || y
   -- triggers
-  trigger y "w_trigger" (w <> x <> x <>> t) -- XXX wrong arg seem generated for x
-  trigger z "y_trigger" void
-  trigger w "z_trigger" (x <> y <> z <>> x)
+  -- trigger w "w_trigger" (w <> x <> x <>> t) 
+  -- trigger y "y_trigger" void
+  trigger z "z_trigger" (x <> y <> z <>> x)
+  trigger z "Z1_trigger" (y <> z <>> x)
   
 yy :: Streams
 yy = 
@@ -92,18 +93,22 @@ xx = do
   let a = varW32 "a"
   let b = varW32 "b"
   let c = varW32 "c"
-  let ext = extW32 "ext" 1
-  a .= ext
+  let d = varB "d"
+  let e = extW32 (global "ext") 1
+  let f = extW32 (fun "f" void) 1
+  let g = extArrW16 (fun "g" (a <> b <>> c)) a 1
+  a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
+  d .= g
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
 -- engine is immediately shut off.  From the paper.
 engine :: Streams
 engine = do
   -- external vars
-  let temp     = extF "temp" 1      
-  let shutoff  = extB "shutoff" 2
+  let temp     = extF (global "temp") 1      
+  let shutoff  = extB (global "shutoff") 2
   -- Copilot vars
   let temps    = varF "temps"
   let overTemp = varB "overTemp"
@@ -148,18 +153,18 @@ gcd n0 n1 = do
 -- sample the external variables.
 gcd' :: Streams
 gcd' = do 
-  let n = extW16 "n" 1
-  let m = extW16 "m" 1
-
+  -- externals
+  let n = extW16 (global "n") 1
+  let m = extW16 (global "m") 1
+  -- copilot vars
   let a = varW16 "a"
   let b = varW16 "b"
   let init = varB "init"
+  let ans  = varB "ans"
+  
   a .= alg n (sub a b) init
   b .= alg m (sub b a) init
-
-  let ans = varB "ans"
   ans .= a == b && not init
-
   init .= [True] ++ false
 
   where sub hi lo = mux (hi > lo) (hi - lo) hi
@@ -261,7 +266,7 @@ testArr = do
   e .= [6,7,8] ++ 3 -- + extArrW16 ("gg", varW16 b) 2
 --  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
   let g = varB "g"
-  let gg = extArrW16 "gg" e 
+  let gg = extArrW16 (global "gg") e 
   g .= gg 1 == gg 2
   -- h .= [0] ++ drop 1 (varW16 g)
 
@@ -269,7 +274,7 @@ testArr = do
 -- t3 :: use an external variable called ext, typed Word32
 t99 :: Streams
 t99 = do
-  let ext = extW32 "ext"
+  let ext = extW32 (global "ext")
   let a = varW32 "a"
   a .= [0,1] ++ a + ext 8 + ext 8 + ext 1
 

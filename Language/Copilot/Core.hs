@@ -9,7 +9,8 @@
 -- functions in Language.hs to make it easier to use. 
 module Language.Copilot.Core (
         -- * Type hierarchy for the copilot language
-        Var, Name, Period, Phase, Port(..),
+        Var, Name, Period, Phase, Port(..), Ext(..),
+        Exs, ExtRet(..),
         Spec(..), Streams, Stream, Send(..), --DistributedStreams,
         Trigger(..), Triggers, notVarErr, LangElems(..),
 	-- * General functions on 'Streams' and 'StreamableMaps'
@@ -54,9 +55,9 @@ data Spec a where
     Var :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
 
-    PVar :: Streamable a => A.Type -> Var -> Phase -> Spec a
+    PVar :: Streamable a => A.Type -> Ext -> Phase -> Spec a
     PArr :: (Streamable a, Streamable b, A.IntegralE b) 
-         => A.Type -> (Var, Spec b) -> Phase -> Spec a
+         => A.Type -> (Ext, Spec b) -> Phase -> Spec a
 
     F :: (Streamable a, Streamable b) => 
 	    (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
@@ -68,6 +69,30 @@ data Spec a where
 
     Append :: Streamable a => [a] -> Spec a -> Spec a
     Drop :: Streamable a => Int -> Spec a -> Spec a
+
+-- | Arguments to be passed to a C function.
+type Args = ([Var], StreamableMaps Spec)
+
+-- XXX change the constructors to SimpleVar and Function (or something like that)
+-- | Holds external variables or external functions to call.
+data Ext = ExtV Var
+         | Fun String Args
+
+-- XXX are these necessary (redundant)?  Used in Analysis and AtomToC
+type Exs = (A.Type, Ext, ExtRet)
+
+data ExtRet = ExtRetV Phase 
+            | ExtRetA Phase String
+  deriving Eq
+
+instance Show Ext where
+  show (ExtV v) = v
+  show (Fun f (args, _)) = f ++ "(" ++ unwords args ++ ")"
+
+instance Eq Ext where
+  (==) (ExtV v0) (ExtV v1) = v0 == v1
+  (==) (Fun f0 (l0, _)) (Fun f1 (l1, _)) = f0 == f1 && l0 == l1  
+  (==) _ _ = False
 
 -- These belong in Language.hs, but we don't want orphan instances.
 instance (Streamable a, A.NumE a) => Num (Spec a) where
@@ -150,8 +175,8 @@ type Streams = Writer LangElems ()
 
 getSpecs :: Streams -> StreamableMaps Spec
 getSpecs streams = 
-  let (LangElems strms _ _) = execWriter streams
-  in  strms
+  let (LangElems ss _ _) = execWriter streams
+  in  ss
 
 getSends :: Streams -> StreamableMaps Send
 getSends streams = 
@@ -524,9 +549,9 @@ showIndented s n =
     tabs ++ showRaw s n
 
 showRaw :: Spec a -> Int -> String
-showRaw (PVar t v ph) _ = "PVar " ++ show t ++ " " ++ v ++ " " ++ show ph
+showRaw (PVar t v ph) _ = "PVar " ++ show t ++ " " ++ show v ++ " " ++ show ph
 showRaw (PArr t (v, idx) ph) _ = 
-  "PArr " ++ show t ++ " (" ++ v ++ " ! (" ++ show idx ++ ")) " ++ show ph
+  "PArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ ")) " ++ show ph
 showRaw (Var v) _ = "Var " ++ v
 showRaw (Const e) _ = "Const " ++ show e
 showRaw (F _ _ s0) n = 
@@ -559,34 +584,14 @@ showRaw (Drop i s0) n =
 -- Compiler: the code below really belongs in Compiler.hs, but its called by
 -- makeTrigger, which is a method of the class Streamable.
 
--- XXX
--- Check that a trigger references a Copilot variable of type 'Spec' 'Bool'.
--- checkTrigger :: forall a m. (Monad m, Streamable a) 
---              => Trigger a -> StreamableMaps Spec -> m ()
--- checkTrigger (Trigger var _ args) streams =
---   if null badDefs
---     then if getAtomType var == A.Bool
---            then return ()
---            else error $ "Copilot error in defining triggers: the variable " 
---                           ++ show var ++ " are of a type other than Bool."
---     else error $ "Copilot error in defining triggers: the variables " ++ show badDefs 
---                    ++ "don't define streams in-scope."
---   where varChk v = case getMaybeElem v streams :: Maybe (Spec a) of
---                      Nothing -> [v]
---                      Just _  -> []
---         badDefs = notVarErr var varChk ++ concatMap varChk args
-
-
 -- | To make customer C triggers.  Only for Spec Bool (others throw an
--- error).  XXX make them throw errors!
+-- error).  
 makeTrigger :: StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
             -> Trigger -> A.Atom () -> A.Atom ()
-
 makeTrigger streams prophArrs tmpSamples outputIndexes 
             trigger@(Trigger s fnName (vars,args)) r = 
   do r 
      A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
---         checkTrigger trigger streams
      (A.exactPhase 0 $ A.atom (show trigger) $ 
         do A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
            A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
@@ -613,9 +618,8 @@ type Indexes = M.Map Var (A.V ArrIndex)
 data PhasedValueVar a = PhV Phase (A.V a)
 --type TmpVarSamples = StreamableMaps PhasedValueVar
 
-tmpVarName :: Var -> Phase -> Var
-tmpVarName v ph = normalizeVar v ++ "_" ++ show ph
-
+tmpVarName :: Ext -> Phase -> Var
+tmpVarName v ph = show v ++ "_" ++ show ph
 
 -- External arrays
 data PhasedValueArr a = PhA Phase (A.V a) -- Array name.
@@ -630,7 +634,7 @@ data TmpSamples =
 emptyTmpSamples :: TmpSamples
 emptyTmpSamples = TmpSamples emptySM emptySM emptySM
 
-tmpArrName :: Var -> Phase -> String -> Var
+tmpArrName :: Ext -> Phase -> String -> Var
 tmpArrName v ph idx = (tmpVarName v ph) ++ "_" ++ normalizeVar idx
 
 data BoundedArray a = B ArrIndex (Maybe (A.A a))

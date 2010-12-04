@@ -25,6 +25,8 @@ module Language.Copilot.Language (
         -- * The next functions provide easier access to typed external arrays.
         extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
         extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
+        -- * Construct a global or function to sample
+        global, fun,
         -- * Set of operators from which to choose during the generation of random streams
         opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
@@ -47,7 +49,7 @@ import Data.Word
 import System.Random
 import qualified Data.Map as M
 import Prelude ( Bool(..), Num(..), Float, Double, (.), String, error, ($)
-               , Fractional(..), fromInteger, zip, Show(..))
+               , Fractional(..), fromInteger, zip, Show(..), (>>=), fail)
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
 
@@ -195,60 +197,68 @@ mux = F3 (\ b x y -> if b then x else y) A.mux
 infix 5 ==, /=, <, <=, >=, >
 infixr 4 ||, &&, ^, ==>
 
+-- | Create a global variable to sample.
+global :: Var -> Ext
+global = ExtV
+
+-- | Create a function to sample.
+fun :: String -> Args -> Ext
+fun = Fun
 
 -- Used for easily producing, and coercing PVars
-
 -- for variables
-extB :: Var -> Phase -> Spec Bool
+extB :: Ext -> Phase -> Spec Bool
 extB = PVar A.Bool
-extI8 :: Var -> Phase -> Spec Int8
+extI8 :: Ext -> Phase -> Spec Int8
 extI8 = PVar A.Int8
-extI16 :: Var -> Phase -> Spec Int16
+extI16 :: Ext -> Phase -> Spec Int16
 extI16 = PVar A.Int16
-extI32 :: Var -> Phase -> Spec Int32
+extI32 :: Ext -> Phase -> Spec Int32
 extI32 = PVar A.Int32
-extI64 :: Var -> Phase -> Spec Int64
+extI64 :: Ext -> Phase -> Spec Int64
 extI64 = PVar A.Int64
-extW8 :: Var -> Phase -> Spec Word8
+extW8 :: Ext -> Phase -> Spec Word8
 extW8 = PVar A.Word8
-extW16 :: Var -> Phase -> Spec Word16
+extW16 :: Ext -> Phase -> Spec Word16
 extW16 = PVar A.Word16
-extW32 :: Var -> Phase -> Spec Word32
+extW32 :: Ext -> Phase -> Spec Word32
 extW32 = PVar A.Word32
-extW64 :: Var -> Phase -> Spec Word64
+extW64 :: Ext -> Phase -> Spec Word64
 extW64 = PVar A.Word64
-extF :: Var -> Phase -> Spec Float
+extF :: Ext -> Phase -> Spec Float
 extF = PVar A.Float
-extD :: Var -> Phase -> Spec Double
+extD :: Ext -> Phase -> Spec Double
 extD = PVar A.Double
 
 -- for arrays 
-extArrB ::  (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Bool
+extArrB ::  (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Bool
 extArrB = \v idx ph -> PArr A.Bool (v, idx) ph
-extArrI8 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Int8
+extArrI8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int8
 extArrI8 = \v idx ph -> PArr A.Int8 (v, idx) ph
-extArrI16 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Int16
+extArrI16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int16
 extArrI16 = \v idx ph -> PArr A.Int16 (v, idx) ph
-extArrI32 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Int32
+extArrI32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int32
 extArrI32 = \v idx ph -> PArr A.Int32 (v, idx) ph
-extArrI64 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Int64
+extArrI64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int64
 extArrI64 = \v idx ph -> PArr A.Int64 (v, idx) ph
-extArrW8 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Word8
+extArrW8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word8
 extArrW8 = \v idx ph -> PArr A.Word8 (v, idx) ph
-extArrW16 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Word16
+extArrW16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word16
 extArrW16 = \v idx ph -> PArr A.Word16 (v, idx) ph
-extArrW32 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Word32
+extArrW32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word32
 extArrW32 = \v idx ph -> PArr A.Word32 (v, idx) ph
-extArrW64 :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Word64
+extArrW64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word64
 extArrW64 = \v idx ph -> PArr A.Word64 (v, idx) ph
-extArrF :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Float
+extArrF :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Float
 extArrF = \v idx ph -> PArr A.Float (v, idx) ph
-extArrD :: (Streamable a, A.IntegralE a) => Var -> Spec a -> Phase -> Spec Double
+extArrD :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Double
 extArrD = \v idx ph -> PArr A.Double (v, idx) ph
 
 
 ---- Sets of operators for Tests.Random.hs -------------------------------------
 
+-- XXX move these somewhere better?  Also, import of Analysis.hs is because of
+-- this (SpecSet).
 ---- Helper functions
 
 mkOp :: (Random arg1, Streamable arg1) =>
@@ -288,14 +298,14 @@ mkOp2Coerce op c0 c1 =
             (op (s0 `P.asTypeOf` (Const c0)) (s1 `P.asTypeOf` (Const c1)), g1)
         )
 
-mkOp2Ord :: forall r. (forall arg. 
-    (Random arg, A.OrdE arg, Streamable arg) =>
-    (Spec arg -> Spec arg -> Spec r)) 
-    -> Operator r
+mkOp2Ord :: forall r. 
+              (forall arg. (Random arg, A.OrdE arg, Streamable arg) 
+              => (Spec arg -> Spec arg -> Spec r)) -> Operator r
 mkOp2Ord op =
     let opI8, opI16, opI32, opI64, opW8, opW16, opW32, opW64, opF, opD :: 
-            RandomGen g => 
-            (forall a' g'. (Streamable a', Random a', RandomGen g') => g' -> SpecSet -> (Spec a', g')) -> g -> (Spec r, g)
+            RandomGen g 
+            => (forall a' g'. (Streamable a', Random a', RandomGen g') 
+               => g' -> SpecSet -> (Spec a', g')) -> g -> (Spec r, g)
         opI8 = fromOp P.$ mkOp2Coerce op (unit::Int8) (unit::Int8)
         opI16 = fromOp P.$ mkOp2Coerce op (unit::Int16) (unit::Int16)
         opI32 = fromOp P.$ mkOp2Coerce op (unit::Int32) (unit::Int32)
@@ -490,30 +500,27 @@ send portName port s ph =
            M.empty
   where sending = Send s ph port portName
 
-type TriggerLst = ([Var], StreamableMaps Spec)
-
 -- | No C arguments 
-void :: TriggerLst
+void :: Args
 void = ([],emptySM)
 
 -- | Turn a @Spec Var@ into an arguement for a C function.
-(<>) :: Streamable a => Spec a -> TriggerLst -> TriggerLst
+(<>) :: Streamable a => Spec a -> Args -> Args
 s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
 
 -- | Turn a @Spec Var@ into an arguement for a C function.
 (<>>) :: (Streamable a, Streamable b) => Spec a -> Spec b 
-      -> TriggerLst
+      -> Args
 s <>> s' = (update s (update s' void))
   where update x (vars,sm) = 
           notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
 
 -- | Takes a Boolean stream, 
-trigger :: Spec Bool -> String -> TriggerLst -> Streams
+trigger :: Spec Bool -> String -> Args -> Streams
 trigger var fnName args =
   tell $ LangElems 
            emptySM 
            emptySM 
---           (updateSubMap (M.insert (show trigger) trigger) emptySM) 
            (M.insert (show trigger) trigger M.empty)
   where trigger = Trigger var fnName args
 

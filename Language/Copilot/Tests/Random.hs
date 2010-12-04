@@ -3,7 +3,8 @@
 
 -- | Generate random specs for testing.  We do not generate external array indexes.
 
-module Language.Copilot.Tests.Random (randomStreams, Operator(..), Operators, fromOp) where
+module Language.Copilot.Tests.Random 
+  (randomStreams, Operator(..), Operators, fromOp) where
 
 import Language.Copilot.Core 
 import Language.Copilot.Analyser
@@ -233,8 +234,9 @@ addRandomSpec opsF opsF2 opsF3 vs exts v _ (streams, g) =
     let (spec::(Spec a), g') = randomSpec vs exts opsF opsF2 opsF3 g AllSpecSet in
     (updateSubMap (\m -> M.insert v spec m) streams, g')
 
-randomSpec :: forall a g. (Streamable a, RandomGen g, Random a) => 
-    Variables -> Variables -> Operators -> Operators -> Operators -> g -> SpecSet -> (Spec a, g)
+randomSpec :: forall a g. (Streamable a, RandomGen g, Random a) 
+           => Variables -> Variables -> Operators -> Operators 
+              -> Operators -> g -> SpecSet -> (Spec a, g)
 randomSpec vs exts opsF opsF2 opsF3 g set =
     let weights = case set of
             AllSpecSet  -> weightsAllSpecSet
@@ -247,7 +249,7 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
                 case getVar g0 exts of
                     (Just v, g1) -> 
                         let (ph, g2) = randomR (1, maxSamplePhase)  g1 in
-                        (PVar (atomType (unit::a)) v ph, g2)
+                        (PVar (atomType (unit::a)) (ExtV v) ph, g2)
                     (Nothing, g1) -> randomSpec' g1 set
             1 -> -- Var
                 case getVar g0 vs of

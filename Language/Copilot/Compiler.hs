@@ -18,31 +18,21 @@ import qualified Language.Atom as A
 copilotToAtom :: LangElems -> Maybe Period -> (Period, A.Atom ())
 copilotToAtom (LangElems streams sends triggers) p = 
   (p', A.period p' $ do
-
     prophArrs <- mapStreamableMapsM initProphArr streams
     outputs <- mapStreamableMapsM initOutput streams
-
     updateIndexes <- foldStreamableMaps makeUpdateIndex prophArrs (return M.empty)
     outputIndexes <- foldStreamableMaps makeOutputIndex prophArrs (return M.empty)
-
-    tmpSamples <- foldStreamableMaps (\_ -> initExtSamples streams prophArrs outputIndexes) 
+    tmpSamples <- foldStreamableMaps 
+                    (\_ -> initExtSamples streams prophArrs outputIndexes) 
                     streams 
                     (return emptyTmpSamples)
-
     -- One atom rule for each stream
     foldStreamableMaps (makeRule streams outputs prophArrs tmpSamples 
                            updateIndexes outputIndexes) 
       streams (return ())
-
-    -- foldStreamableMaps (makeTrigger streams prophArrs tmpSamples
-    --                        outputIndexes)
-    --  triggers (return ())
-
     M.fold (makeTrigger streams prophArrs tmpSamples outputIndexes) 
            (return ()) triggers
-
     foldStreamableMaps (makeSend outputs) sends (return ())
-
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
       foldStreamableMaps (\_ -> sampleExts tmpSamples) streams []
@@ -188,13 +178,15 @@ makeRule streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r 
             
             A.exactPhase 1 $ A.atom ("output__" ++ normalizeVar v) $ do
                 ((getElem v outputs)::(A.V a)) A.<== arr A.!. (A.VRef outputIndex)
-                outputIndex A.<== (A.VRef outputIndex + A.Const 1) `A.mod_` A.Const (n + 1)
+                outputIndex A.<==          (A.VRef outputIndex + A.Const 1) 
+                                  `A.mod_` A.Const (n + 1)
             
             -- Spread these out evenly accross the remaining phases, staring no
             -- earlier than phase 1.
             A.phase ((maxSampleDep v streams) + 1)
               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
-                updateIndex A.<== (A.VRef updateIndex + A.Const 1) `A.mod_` A.Const (n + 1)
+                updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
+                                  `A.mod_` A.Const (n + 1)
 
        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
@@ -250,21 +242,25 @@ sampleExts ts s a = do
          PhV _ var = getElem v' (tmpVars ts)::PhasedValueVar a in
      (v', A.exactPhase ph $ 
             A.atom ("sample__" ++ v') $ 
-              var A.<== (A.value $ externalAtomConstructor v)
+              var A.<== (A.value $ case v of
+                                     ExtV extV -> externalAtomConstructor extV
+                                     Fun _ _ -> error "Still need to implement in sampleExts in Compiler.hs." -- XXX
+                        )
      ) : a
-
     PArr _ (arr, idx) ph -> 
          let arr' = tmpArrName arr ph (show idx)
              PhIdx i = getIdx arr' idx (tmpIdxs ts)
---             PhA _ arrV = getElem arr' (tmpArrs ts)::PhasedValueArr a in
-             PhA _ arrV = case getMaybeElem arr' (tmpArrs ts)::Maybe (PhasedValueArr a) of
-                            Nothing -> error "Error in fucntion sampleExts."
-                            Just x -> x
-         in 
-     (arr', A.exactPhase ph $ 
+             PhA _ arrV = 
+               case getMaybeElem arr' (tmpArrs ts)::Maybe (PhasedValueArr a) of
+                 Nothing -> error "Error in fucntion sampleExts."
+                 Just x -> x
+         in (arr', A.exactPhase ph $ 
               A.atom ("sample__" ++ arr') $ 
-                arrV A.<== A.array' arr (atomType (unit::a)) A.!. i
-     ) : a
+                arrV A.<== A.array' (case arr of
+                                       ExtV extV -> extV
+                                       Fun _ _ -> error "Still need to implement in sampleExts in Compiler.hs." -- XXX
+                                    ) (atomType (unit::a)) A.!. i
+            ) : a
     F _ _ s0 -> sampleExts ts s0 a
     F2 _ _ s0 s1 -> sampleExts ts s0 $ sampleExts ts s1 a
     F3 _ _ s0 s1 s2 -> sampleExts ts s0 $ sampleExts ts s1 $
