@@ -10,7 +10,7 @@
 module Language.Copilot.Core (
         -- * Type hierarchy for the copilot language
         Var, Name, Period, Phase, Port(..), Ext(..),
-        Exs, ExtRet(..),
+        Exs, ExtRet(..), Args,
         Spec(..), Streams, Stream, Send(..), --DistributedStreams,
         Trigger(..), Triggers, notVarErr, LangElems(..),
 	-- * General functions on 'Streams' and 'StreamableMaps'

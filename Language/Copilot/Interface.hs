@@ -2,7 +2,7 @@
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
         , help , setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setArrs, setClock,
+        , setDir, setGCC, setArrs, setClock, noOpts,
         module Language.Copilot.Dispatch
     ) where
 
@@ -76,19 +76,22 @@ baseOpts = Options {
 
 -- Functions for making it easier for configuring copilot in the frequent use cases
 
-test :: Int -> Options -> IO ()
+noOpts :: Options -> Options
+noOpts = id
+
+test :: Int -> (Options -> Options) -> IO ()
 test n opts = 
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts 
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts $ baseOpts
 
-interpret :: Streams -> Int -> Options -> IO ()
+interpret :: Streams -> Int -> (Options -> Options) -> IO ()
 interpret streams n opts = 
-  interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
+  interface $ setI $ setN n $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
 
-compile :: Streams -> Name -> Options -> IO ()
+compile :: Streams -> Name -> (Options -> Options) -> IO ()
 compile streams fileName opts = 
   interface $ setC "-Wall" $ setO fileName $ setS (getSends streams)
     $ setTriggers (getTriggers streams) 
-      $ opts {optStreams = Just (getSpecs streams)}
+      $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
 
 verify :: FilePath -> Int -> IO ()
 verify file n = do

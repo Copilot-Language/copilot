@@ -100,7 +100,7 @@ xx = do
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
-  d .= g
+  d .= g < 20
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
 -- engine is immediately shut off.  From the paper.
