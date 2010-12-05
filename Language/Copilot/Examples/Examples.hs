@@ -281,6 +281,11 @@ t99 = do
   let b = varB "b"
   b .= [True, False] ++ 2 + a < 5 + ext 1
 
+t11 :: Streams
+t11 = do
+  let v = varB "v"
+  v .= [False, True, False] ++ v
+
 -- test external idx before after and in the stream it references
 -- test multiple defs
 -- test defs in functions

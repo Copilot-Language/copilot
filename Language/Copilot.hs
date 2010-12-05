@@ -12,6 +12,7 @@ module Language.Copilot
   -- , module Language.Copilot.Libs.Indexes
   -- , module Language.Copilot.Libs.LTL
   -- , module Language.Copilot.Libs.PTLTL
+  -- , module Language.Copilot.Libs.Clocks
   -- , module Language.Copilot.AdHocC
   -- , module Language.Copilot.Examples.Examples
   -- , module Language.Copilot.Examples.LTLExamples
@@ -32,6 +33,7 @@ import Language.Copilot.Interface
 -- import Language.Copilot.Libs.Indexes
 -- import Language.Copilot.Libs.LTL
 -- import Language.Copilot.Libs.PTLTL
+-- import Language.Copilot.Libs.Clocks
 -- import Language.Copilot.AdHocC
 -- import Language.Copilot.Examples.Examples
 -- import Language.Copilot.Examples.LTLExamples
