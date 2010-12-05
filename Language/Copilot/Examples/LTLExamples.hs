@@ -75,9 +75,9 @@ testRules = do
   let v2 = varB "v2"
   let v3 = varI16 "v3"
   let v4 = varB "v4"
-  let ext = extI8 "ext" 5 
+  let ex = extI8 (global "ex") 5 
   v1 .=    (not true) || v2
-  v2 .=    [True, False] ++ [True] ++ v3 < cast ext
+  v2 .=    [True, False] ++ [True] ++ v3 < cast ex
   v3 .=    0 + drop 3 6
   v4 `ltl` always 5 v1
 

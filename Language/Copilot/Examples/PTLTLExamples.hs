@@ -73,14 +73,14 @@ tSince = do
 -- interface $ setE (emptySM {bMap = fromList [("e1", [True,True ..]), ("e2", [False,False ..])]}) $ interpretOpts tSinExt 20
 tSinExt :: Streams 
 tSinExt = do
-  let e1 = extB "e1" 2
-  let e2 = extB "e2" 3
+  let e1 = extB (global "e1") 2
+  let e2 = extB (global "e2") 3
   z `ptltl` (e1 `since` e2)
 
 tSinExt2 :: Streams 
 tSinExt2 = do
-  let e1 = extB "e1" 2
-  let e2 = extB "e2" 2
+  let e1 = extB (global "e1") 2
+  let e2 = extB (global "e2") 2
   let a = varB "a"
   let s = varB "s"
   let d = varB "d"
@@ -98,9 +98,9 @@ tSinExt2 = do
 engine :: Streams
 engine = do
   -- external vars
-  let engineTemp = extW8 "engineTemp" 1
-  let engineOff  = extB "engineOff" 1
-  let coolerOn   = extB "coolerOn" 1
+  let engineTemp = extW8 (global "engineTemp") 1
+  let engineOff  = extB (global "engineOff") 1
+  let coolerOn   = extB (global "coolerOn") 1
   -- Copilot vars
   let cnt        = varW8 "cnt"
   let temp       = varB "temp"
@@ -122,5 +122,5 @@ engineRun =
                             , ("coolerOn", replicate 9 False P.++ repeat True)
                             ]
                   , w8Map = fromList [("engineTemp", [99,100..])]
-                  }) baseOpts
+                  }) 
 
