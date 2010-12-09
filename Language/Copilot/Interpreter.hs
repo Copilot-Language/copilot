@@ -19,8 +19,8 @@ interpret inVs moVs s =
   case s of
     Const c -> repeat c
     Var v -> getElem v inVs
-    PVar _ v _ -> checkV v (\v' -> (getElem v' moVs))
-    PArr _ (v,s') _ -> checkV v (\v' -> map (\i ->    getElem v' moVs 
+    PVar _ v -> checkV v (\v' -> (getElem v' moVs))
+    PArr _ (v,s') -> checkV v (\v' -> map (\i ->    getElem v' moVs 
                                                    !! fromIntegral i)
                                             (interpret inVs moVs s'))
     Append ls s' -> ls ++ interpret inVs moVs s'

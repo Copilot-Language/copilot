@@ -1,15 +1,16 @@
 {-# LANGUAGE ScopedTypeVariables, Rank2Types #-}
 
--- Note : for now, the initial state is computed during the first tick
+-- XXX Clean this mess up!
 
 -- | Transform the copilot specification in an atom one, and then compile that one.
-module Language.Copilot.Compiler(copilotToAtom, tmpSampleStr) where
+module Language.Copilot.Compiler(copilotToAtom, tmpSampleStr, tmpArrName, tmpVarName) where
 
 import Language.Copilot.Core
 
 import Data.Maybe
-import Data.Map as M
+import qualified Data.Map as M
 import Data.List
+import Data.Word (Word64)
 
 import qualified Language.Atom as A
 
@@ -27,25 +28,101 @@ copilotToAtom (LangElems streams sends triggers) p =
                     streams 
                     (return emptyTmpSamples)
     -- One atom rule for each stream
-    foldStreamableMaps (makeRule streams outputs prophArrs tmpSamples 
+    foldStreamableMaps (makeRule p' streams outputs prophArrs tmpSamples 
                            updateIndexes outputIndexes) 
       streams (return ())
-    M.fold (makeTrigger streams prophArrs tmpSamples outputIndexes) 
-           (return ()) triggers
+
+    M.fold (makeTrigger outputs) (return ()) triggers
+           
     foldStreamableMaps (makeSend outputs) sends (return ())
+
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
       foldStreamableMaps (\_ -> sampleExts tmpSamples) streams []
     )
-  where
-    optP = getOptimalPeriod streams sends
-    p' = 
-      case p of
-        Nothing -> optP
-        Just i -> if i >= optP 
-            then i 
-            else error $ "Copilot error: the period is too short, " 
-                     ++ "it should be at least " ++ show optP ++ " ticks."
+  where p' = period p
+--  where
+--    optP = getOptimalPeriod streams sends
+
+-- | For period of length n:
+-- Phase 0: state update.
+-- Phase 1: Compute output variables.
+-- Phase 2 - n-2: send values (if any).
+-- Phase 2 - n-2: Sample external vars (if any).
+-- Phase n-1: update indexes.
+period :: Maybe Int -> Int
+period p = 
+  case p of
+    Nothing -> minPeriod
+    Just i -> if i >= minPeriod
+                then i 
+                else error $ "Copilot error: the period is too short, " 
+                       ++ "it should be at least " ++ show minPeriod ++ " ticks."
+  where minPeriod :: Int
+        minPeriod = 4
+
+-- For the prophecy arrays
+type ArrIndex = Word64
+type ProphArrs = StreamableMaps BoundedArray
+type Outputs = StreamableMaps A.V
+type Indexes = M.Map Var (A.V ArrIndex)
+
+-- External variables
+data PhasedValueVar a = PhV (A.V a)
+--type TmpVarSamples = StreamableMaps PhasedValueVar
+
+data BoundedArray a = B ArrIndex (Maybe (A.A a))
+
+nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
+       -> Spec a -> ArrIndex -> A.E a
+nextSt streams prophArrs tmpSamples outputIndexes s index = 
+    case s of
+        PVar _ v  -> 
+          let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
+          A.value var
+        PArr _ (v, idx) -> 
+          let PhA var = e tmp (tmpArrs tmpSamples) 
+              tmp = tmpArrName v (show idx) 
+              e a b = case getMaybeElem a b of
+                        Nothing -> 
+                          error "Error in application of getElem in nextSt."
+                        Just x  -> x 
+          in A.value var
+        Var v -> let B initLen maybeArr = getElem v prophArrs in
+            -- This check is extremely important
+            -- It means that if x at time n depends on y at time n
+            -- then x is obtained not by y, but by inlining the definition of y
+            -- so it increases the size of code (sadly),
+            -- but is the only thing preventing race conditions from occuring
+            if index < initLen
+                then getVar v initLen maybeArr 
+                else let s0 = getElem v streams in 
+                     next s0 (index - initLen)
+        Const e -> A.Const e
+        F _ f s0 -> f $ next s0 index
+        F2 _ f s0 s1 ->
+            f (next s0 index) 
+              (next s1 index)
+        F3 _ f s0 s1 s2 ->
+            f (next s0 index) 
+              (next s1 index) 
+              (next s2 index)
+        Append _ s0 -> next s0 index
+        Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
+    where
+        next :: Streamable b => Spec b -> ArrIndex -> A.E b
+        next = nextSt streams prophArrs tmpSamples outputIndexes 
+        getVar :: Streamable a 
+               => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
+        getVar v initLen maybeArr =
+           let outputIndex = case M.lookup v outputIndexes of
+                               Nothing -> error "Error in function getVar."
+                               Just x -> x
+               arr = case maybeArr of
+                       Nothing -> error "Error in function getVar (maybeArr)."
+                       Just x -> x in 
+           arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
+                       (A.Const (initLen + 1)))
 
 initProphArr :: forall a. Streamable a => Var -> Spec a -> A.Atom (BoundedArray a)
 initProphArr v s =
@@ -64,6 +141,26 @@ initProphArr v s =
             case s' of
                 Append ls s'' -> ls ++ initState s''
                 _ -> []
+
+
+-- External arrays
+data PhasedValueArr a = PhA (A.V a) -- Array name.
+data PhasedValueIdx a = PhIdx (A.E a) -- variable that gives index. 
+
+data TmpSamples = 
+  TmpSamples { tmpVars :: StreamableMaps PhasedValueVar
+             , tmpArrs :: StreamableMaps PhasedValueArr
+             , tmpIdxs :: StreamableMaps PhasedValueIdx
+             }
+
+emptyTmpSamples :: TmpSamples
+emptyTmpSamples = TmpSamples emptySM emptySM emptySM
+
+tmpVarName :: Ext -> Var
+tmpVarName v = show v -- ++ "_" ++ show ph
+
+tmpArrName :: Ext -> String -> Var
+tmpArrName v idx = (tmpVarName v) ++ "_" ++ normalizeVar idx
 
 initOutput :: forall a. Streamable a => Var -> Spec a -> A.Atom (A.V a)
 initOutput v _ = do
@@ -86,23 +183,23 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                            initExtSamples' s1 tmpSamples
         F3 _ _ s0 s1 s2 -> initExtSamples' s0 $ initExtSamples' s1 $
                              initExtSamples' s2 tmpSamples
-        PVar _ v ph -> 
+        PVar _ v -> 
             do  -- checkVar v 
                 ts <- tmpSamples
-                let v' = tmpVarName v ph
+                let v' = tmpVarName v 
                     vts = tmpVars ts
                     maybeElem = getMaybeElem v' vts::Maybe (PhasedValueVar a)
                     name = tmpSampleStr ++ normalizeVar v'
                 case maybeElem of
                     Nothing -> 
                         do  val <- atomConstructor name (unit::a)
-                            let m' = M.insert v' (PhV ph val) (getSubMap vts)
+                            let m' = M.insert v' (PhV val) (getSubMap vts)
                             return $ ts {tmpVars = updateSubMap (\_ -> m') vts}
                     Just _ -> return ts
-        PArr _ (arr, idx) ph -> 
+        PArr _ (arr, idx) -> 
             do  --checkVar arr
                 ts <- tmpSamples
-                let arr' = tmpArrName arr ph (show idx)
+                let arr' = tmpArrName arr (show idx)
                     arrts = tmpArrs ts
                     idxts = tmpIdxs ts
                     maybeElem = getMaybeElem arr' arrts::Maybe (PhasedValueArr a)
@@ -122,7 +219,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                                      PhIdx $ nextSt streams prophArrs 
                                                 undefined outputIndexes idx 0
                                    _    -> error "Unexpected Spec in initExtSamples."
-                         let m' = M.insert arr' (PhA ph val) (getSubMap arrts)
+                         let m' = M.insert arr' (PhA val) (getSubMap arrts)
                          let m'' = M.insert arr' i (getSubMap idxts)
                          return $ ts { tmpArrs = updateSubMap (\_ -> m') arrts
                                      , tmpIdxs = updateSubMap (\_ -> m'') idxts
@@ -157,9 +254,9 @@ makeOutputIndex v (B _ arr) indexes =
                 return $ M.insert v index mindexes
 
 makeRule :: forall a. Streamable a => 
-    StreamableMaps Spec -> Outputs -> ProphArrs -> TmpSamples -> 
+    Period -> StreamableMaps Spec -> Outputs -> ProphArrs -> TmpSamples -> 
     Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
-makeRule streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r = do
+makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r = do
     r 
     let B n maybeArr = getElem v prophArrs::BoundedArray a
     case maybeArr of
@@ -181,49 +278,51 @@ makeRule streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r 
                 outputIndex A.<==          (A.VRef outputIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
             
-            -- Spread these out evenly accross the remaining phases, staring no
-            -- earlier than phase 1.
-            A.phase ((maxSampleDep v streams) + 1)
+            -- XXX For now, we put these all in the last phase.  We want better
+            -- distribution though at some point.
+            A.phase (p - 1)
               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
 
        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
--- | Find the maximum phase as which an array sampling depends on this stream by
--- computing it's index in terms of it. Returns zero by default.
-maxSampleDep :: Var -> StreamableMaps Spec -> Int
-maxSampleDep v streams =
-  foldStreamableMaps (\_ -> streamDep) streams 0
-  where 
-    streamDep :: Streamable b => Spec b -> Int -> Int
-    streamDep s i = 
-      case s of
-        Var _ -> i
-        Const _  -> i
-        PVar _ _ _ -> i
-        PArr _ (_, Var v') ph | v == v'   -> max ph i
-                              | otherwise -> i
-        PArr _ _ _ -> i
-        F _ _ s0 -> streamDep s0 i
-        F2 _ _ s0 s1 -> streamDep s0 $ streamDep s1 i
-        F3 _ _ s0 s1 s2 -> streamDep s0 $ streamDep s1 $ streamDep s2 i
-        Append _ s0 -> streamDep s0 i
-        Drop _ s0 -> streamDep s0 i
+-- -- | Find the maximum phase as which an array sampling depends on this stream by
+-- -- computing it's index in terms of it. Returns zero by default.
+-- maxSampleDep :: Var -> StreamableMaps Spec -> Int
+-- maxSampleDep v streams =
+--   foldStreamableMaps (\_ -> streamDep) streams 0
+--   where 
+--     streamDep :: Streamable b => Spec b -> Int -> Int
+--     streamDep s i = 
+--       case s of
+--         Var _ -> i
+--         Const _  -> i
+--         PVar _ _ _ -> i
+--         PArr _ (_, Var v') | v == v'   -> max ph i
+--                            | otherwise -> i
+--         PArr _ _ _ -> i
+--         F _ _ s0 -> streamDep s0 i
+--         F2 _ _ s0 s1 -> streamDep s0 $ streamDep s1 i
+--         F3 _ _ s0 s1 s2 -> streamDep s0 $ streamDep s1 $ streamDep s2 i
+--         Append _ s0 -> streamDep s0 i
+--         Drop _ s0 -> streamDep s0 i
 
--- makeSend :: forall a. Sendable a => Outputs -> Var -> Send a -> A.Atom () -> A.Atom ()
--- makeSend outputs name (Send (v, ph, port)) r = do
---         r 
---         A.exactPhase ph $ A.atom ("__send_" ++ name) $
---             send ((A.value (getElem v outputs))::(A.E a)) port
+-- Do sends in phase 2.
 makeSend :: forall a. Streamable a 
          => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
-makeSend outputs name (Send v ph port portName) r = do
+makeSend outputs name (Send v port portName) r = do
         r 
-        A.exactPhase ph $ A.atom ("__send_" ++ name) $
+        A.exactPhase 2 $ A.atom ("__send_" ++ name) $
             mkSend (A.value (notVarErr v (\var -> getElem var outputs)) :: A.E a) 
                    port 
                    portName
+
+-- | Sending data over ports.
+mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
+mkSend e (Port port) portName =
+  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") 
+           [A.ue e]
 
 -- What we really should be doing is just folding over the TmpSamples, since
 -- that data should contain all the info we need to construct external variable
@@ -237,24 +336,24 @@ sampleExts ts s a = do
   case s of
     Var _ -> a
     Const _ -> a
-    PVar _ v ph -> 
-     let v' = tmpVarName v ph 
-         PhV _ var = getElem v' (tmpVars ts)::PhasedValueVar a in
-     (v', A.exactPhase ph $ 
+    PVar _ v -> 
+     let v' = tmpVarName v
+         PhV var = getElem v' (tmpVars ts)::PhasedValueVar a in
+     (v', A.exactPhase minSampPh $ 
             A.atom ("sample__" ++ v') $ 
               var A.<== (A.value $ case v of
                                      ExtV extV -> externalAtomConstructor extV
                                      Fun _ _ -> error "Still need to implement in sampleExts in Compiler.hs." -- XXX
                         )
      ) : a
-    PArr _ (arr, idx) ph -> 
-         let arr' = tmpArrName arr ph (show idx)
+    PArr _ (arr, idx) -> 
+         let arr' = tmpArrName arr (show idx)
              PhIdx i = getIdx arr' idx (tmpIdxs ts)
-             PhA _ arrV = 
+             PhA arrV = 
                case getMaybeElem arr' (tmpArrs ts)::Maybe (PhasedValueArr a) of
                  Nothing -> error "Error in fucntion sampleExts."
                  Just x -> x
-         in (arr', A.exactPhase ph $ 
+         in (arr', A.exactPhase minSampPh $ 
               A.atom ("sample__" ++ arr') $ 
                 arrV A.<== A.array' (case arr of
                                        ExtV extV -> extV
@@ -267,6 +366,8 @@ sampleExts ts s a = do
                          sampleExts ts s2 a
     Append _ s0 -> sampleExts ts s0 a
     Drop _ s0 -> sampleExts ts s0 a
+  where minSampPh :: Int
+        minSampPh = 1
 
 -- lookup the idx for external array accesses in the map.
 getIdx :: forall a. (Streamable a, A.IntegralE a) 
@@ -280,33 +381,79 @@ getIdx arr s ts =
     _       -> error $ "Expecing either a variable or constant for the index "
                  ++ "in the external array access for array " ++ arr ++ "."
 
--- XXX bound min, max send phases
-getOptimalPeriod :: StreamableMaps Spec -> StreamableMaps Send -> Period
-getOptimalPeriod streams sends =
-  max (foldStreamableMaps getMaximumSamplingPhase streams 2)
-      (foldStreamableMaps getMaxSendPhase sends 0)
-  where
-    getMaximumSamplingPhase :: Var -> Spec a -> Period -> Period 
-    getMaximumSamplingPhase _ spec n =
-      case spec of
-        PVar _ _ ph -> max (ph + 1) n 
-        PArr _ (_, Var _) ph -> max (ph + 2) n -- because this may depend on a
-                                               -- variable, and if that variable
-                                               -- has a prophecy array, it needs
-                                               -- an extra phase to update after
-                                               -- the index is taken.
-        PArr _ _ ph -> max (ph + 1) n
-        F _ _ s -> getMaximumSamplingPhase "" s n
-        F2 _ _ s0 s1 -> maximum [n,
-                (getMaximumSamplingPhase "" s0 n),
-                (getMaximumSamplingPhase "" s1 n)]
-        F3 _ _ s0 s1 s2 -> maximum [n,
-                (getMaximumSamplingPhase "" s0 n), 
-                (getMaximumSamplingPhase "" s1 n), 
-                (getMaximumSamplingPhase "" s2 n)]
-        Drop _ s -> getMaximumSamplingPhase "" s n
-        Append _ s -> getMaximumSamplingPhase "" s n
-        _ -> n
+-- TRIGGERS -----------------------------
 
-    getMaxSendPhase :: Var -> Send a -> Period -> Period
-    getMaxSendPhase _ (Send _ ph _ _) n = max (ph+1) n
+-- | To make customer C triggers.  Only for Spec Bool (others throw an
+-- error).  
+makeTrigger :: Outputs -> Trigger -> A.Atom () -> A.Atom ()
+makeTrigger outputs trigger@(Trigger s fnName (vars,args)) r = 
+  do r 
+--     A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
+     (A.exactPhase 2 $ A.atom (show trigger) $ 
+        do A.cond (getOutput s)
+           A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
+              (reorder vars []
+                (foldStreamableMaps 
+                  (\v argSpec ls -> (v, A.ue $ getOutput argSpec):ls) args [])))
+     where getOutput :: Streamable a => Spec a -> A.E a
+           getOutput v = A.value (notVarErr v (\var -> getElem var outputs))
+           reorder [] acc _ = reverse $ snd (unzip acc)
+           reorder (v:vs) acc ls = 
+               case lookup v ls of
+                 Nothing -> error "Error in makeTrigger in Core.hs."
+                 Just x  -> let n = (v,x)
+                            in reorder vs (n:acc) ls
+-- makeTrigger :: StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
+--             -> Trigger -> A.Atom () -> A.Atom ()
+-- makeTrigger streams prophArrs tmpSamples outputIndexes 
+--             trigger@(Trigger s fnName (vars,args)) r = 
+--   do r 
+--      A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
+--      (A.exactPhase 0 $ A.atom (show trigger) $ 
+--         do A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
+--            A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
+--               (reorder vars []
+--                 (foldStreamableMaps 
+--                   (\v argSpec ls -> (v,next argSpec):ls) args [])))
+--      where next :: Streamable a => Spec a -> A.UE 
+--            next a = A.ue $ nextSt streams prophArrs 
+--                              tmpSamples outputIndexes a 0
+--            reorder [] acc _ = reverse $ snd (unzip acc)
+--            reorder (v:vs) acc ls = 
+--                case lookup v ls of
+--                  Nothing -> error "Error in makeTrigger in Core.hs."
+--                  Just x  -> let n = (v,x)
+--                             in reorder vs (n:acc) ls
+
+
+
+-- bound min, max send phases
+-- getOptimalPeriod :: StreamableMaps Spec -> StreamableMaps Send -> Period
+-- getOptimalPeriod streams sends =
+--   max (foldStreamableMaps getMaximumSamplingPhase streams 2)
+-- --      (foldStreamableMaps getMaxSendPhase sends 0)
+--   where
+--     getMaximumSamplingPhase :: Var -> Spec a -> Period -> Period 
+--     getMaximumSamplingPhase _ spec n =
+--       case spec of
+--         PVar _ _ -> n -- max (ph + 1) n 
+--         PArr _ (_, Var _) -> max (ph + 2) n -- because this may depend on a
+--                                             -- variable, and if that variable
+--                                             -- has a prophecy array, it needs an
+--                                             -- extra phase to update after the
+--                                             -- index is taken.
+--         PArr _ _ ph -> max (ph + 1) n
+--         F _ _ s -> getMaximumSamplingPhase "" s n
+--         F2 _ _ s0 s1 -> maximum [n,
+--                 (getMaximumSamplingPhase "" s0 n),
+--                 (getMaximumSamplingPhase "" s1 n)]
+--         F3 _ _ s0 s1 s2 -> maximum [n,
+--                 (getMaximumSamplingPhase "" s0 n), 
+--                 (getMaximumSamplingPhase "" s1 n), 
+--                 (getMaximumSamplingPhase "" s2 n)]
+--         Drop _ s -> getMaximumSamplingPhase "" s n
+--         Append _ s -> getMaximumSamplingPhase "" s n
+--         _ -> n
+
+--     -- getMaxSendPhase :: Var -> Send a -> Period -> Period
+--     -- getMaxSendPhase _ (Send _ ph _ _) n = max (ph+1) n

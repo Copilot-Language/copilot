@@ -15,8 +15,6 @@ module Language.Copilot.Analyser(
 
 import Language.Copilot.Core
 
-import qualified Language.Atom as A
-
 import Data.List
 
 type Weight = Int
@@ -25,12 +23,12 @@ type Weight = Int
 data Error =
       BadSyntax String Var -- ^ the BNF is not respected
     | BadDrop Int Var -- ^ A drop expression of less than 0 is used
-    | BadSamplingPhase Var Ext Phase -- ^ if an external variable is sampled at
-                                     -- phase 0 then there is no time for the
-                                     -- stream to be updated
-    | BadSamplingArrPhase Var Ext Phase -- ^ if an external variable is sampled at
-                                        -- phase 0 then there is no time for the
-                                        -- stream to be updated
+    -- | BadSamplingPhase Var Ext -- ^ if an external variable is sampled at phase
+    --                            -- 0 then there is no time for the stream to be
+    --                            -- updated
+    -- | BadSamplingArrPhase Var Ext -- ^ if an external variable is sampled at
+    --                               -- phase 0 then there is no time for the
+    --                               -- stream to be updated
     | BadPArrSpec Var Ext String -- ^ External array indexes can only take
                                  -- variables or constants as indexes.
     | BadType Var Var -- ^ either a variable is not defined, or not with the
@@ -64,18 +62,18 @@ instance Show Error where
           "of elements.\n" 
         , show i ++ " is negative, and Drop only accepts positive arguments.\n"
         ]
-    show (BadSamplingPhase v v' ph) =
-       unlines
-        [ "Error : the external variable " ++ show v' ++ " is sampled at phase " ++ 
-          show ph ++ " in the stream " ++ v ++ "." 
-        , "Sampling can only occur from phase 1 onwards.\n"
-        ]
-    show (BadSamplingArrPhase v arr ph) =
-       unlines
-        [ "Error : the external array " ++ show arr ++ " is sampled at phase " ++ 
-          show ph ++ " in the stream " ++ v ++ "."
-        , " Sampling can only occur from phase 1 onwards.\n"
-        ]
+    -- show (BadSamplingPhase v v' ph) =
+    --    unlines
+    --     [ "Error : the external variable " ++ show v' ++ " is sampled at phase " ++ 
+    --       show ph ++ " in the stream " ++ v ++ "." 
+    --     , "Sampling can only occur from phase 1 onwards.\n"
+    --     ]
+    -- show (BadSamplingArrPhase v arr ph) =
+    --    unlines
+    --     [ "Error : the external array " ++ show arr ++ " is sampled at phase " ++ 
+    --       show ph ++ " in the stream " ++ v ++ "."
+    --     , " Sampling can only occur from phase 1 onwards.\n"
+    --     ]
     show (BadPArrSpec v arr idx) = 
        unlines
         [ "Error : the index into an external array can only take a "
@@ -171,9 +169,9 @@ syntaxCheck streams =
                 case s of
                     Var _ -> Nothing
                     Const _ -> Nothing
-                    PVar _ v' ph -> ph > 0 ||> BadSamplingPhase v v' ph
-                    PArr _ (arr,s0) ph -> checkIndex v arr s0 
-                      &&> ph > 0 ||> BadSamplingArrPhase v arr ph 
+                    PVar _ _ -> Nothing -- ph > 0 ||> BadSamplingPhase v v' ph
+                    PArr _ (arr,s0) -> checkIndex v arr s0 
+--                      &&> ph > 0 ||> BadSamplingArrPhase v arr ph 
                       &&> checkSyntaxSpec PArrSet v s0 Nothing
                     F _ _ s0 -> set /= DropSpecSet ||> BadSyntax "F" v 
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
@@ -206,7 +204,7 @@ defCheck streams =
                 checkPath :: Streamable a => Int -> [Var] -> Spec a -> Maybe Error
                 checkPath n vs s =
                     case s of
-                        PVar t v _ -> case () of
+                        PVar t v -> case () of
                                 () | n > 0 -> Just $ DependsOnFuture vs v n
                                    | n > negate (prophecyArrayLength s0) -> 
                                            Just $ DependsOnClosePast vs v n 
@@ -214,7 +212,7 @@ defCheck streams =
                                    | t /= getAtomType s -> 
                                             Just $ BadTypeExt v (head vs)
                                 _ -> Nothing
-                        PArr t (arr, idx) _ 
+                        PArr t (arr, idx) 
                                    | n > 0 -> Just $ DependsOnFuture vs arr n
                                    | n > negate (prophecyArrayLength idx) -> 
                                            Just $ DependsOnClosePast vs arr n 
@@ -254,8 +252,8 @@ getExternalVars streams =
              => Var -> Spec a -> [Exs] -> [Exs]
         decl _ s ls =
             case s of
-                PVar t v ph -> (t, v, ExtRetV ph) : ls
-                PArr t (arr, s0) ph -> (t, arr, ExtRetA ph (show s0)) : ls
+                PVar t v -> (t, v, ExtRetV) : ls
+                PArr t (arr, s0) -> (t, arr, ExtRetA (show s0)) : ls
                 F _ _ s0 -> decl undefined s0 ls
                 F2 _ _ s0 s1 -> decl undefined s0 $ decl undefined s1 ls
                 F3 _ _ s0 s1 s2 -> decl undefined s0 $ decl undefined s1 

@@ -71,3 +71,6 @@ TODOs
 
  * Add a 'when' operator to the Clocks lib: when clk foo means update foo if clk
    is true.
+
+ * The scheduling is completely unoptimized...  All sampling in phase 1, and all
+   next-state computation in phase 0.  Spread out as room permits across phases?

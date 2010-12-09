@@ -7,7 +7,8 @@ module Language.Copilot.Interface (
     ) where
 
 import Language.Copilot.Core
-import Language.Copilot.Language (opsF, opsF2, opsF3)
+--import Language.Copilot.Language (opsF, opsF2, opsF3)
+import Language.Copilot.Language.RandomOps (opsF, opsF2, opsF3)
 import Language.Copilot.Tests.Random
 import Language.Copilot.Dispatch
 import Language.Copilot.Help

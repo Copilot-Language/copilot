@@ -1,9 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, Rank2Types, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Describes the language /Copilot/.
 --
--- If you wish to add a new operator, the only modification needed is adding it in this module.
--- But if you want it to be used in the random generated streams, add it to either @'opsF'@, @'opsF2'@ or @'opsF3'@
+-- If you wish to add a new operator, the only modification needed is adding it
+-- in this module.  But if you want it to be used in the random generated
+-- streams, add it to either @'opsF'@, @'opsF2'@ or @'opsF3'@
 module Language.Copilot.Language (
         -- * Operators and functions
         mod, div, mod0, div0,
@@ -19,16 +21,17 @@ module Language.Copilot.Language (
         -- * Copilot variable declarations.
         var, varB, varI8, varI16, varI32, varI64,
         varW8, varW16, varW32, varW64, varF, varD,
-        -- * The next functions provide easier access to typed external variables.
-        extB, extI8, extI16, extI32, extI64,
-        extW8, extW16, extW32, extW64, extF, extD,
-        -- * The next functions provide easier access to typed external arrays.
-        extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
-        extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
-        -- * Construct a global or function to sample
-        global, fun,
-        -- * Set of operators from which to choose during the generation of random streams
-        opsF, opsF2, opsF3,
+        module Language.Copilot.Language.Sampling,
+        -- -- * The next functions provide easier access to typed external variables.
+        -- extB, extI8, extI16, extI32, extI64,
+        -- extW8, extW16, extW32, extW64, extF, extD,
+        -- -- * The next functions provide easier access to typed external arrays.
+        -- extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
+        -- extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
+        -- -- * Construct a function to sample
+        -- fun,
+        -- -- * Set of operators from which to choose during the generation of random streams
+        -- opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
         drop, (++), (.=), -- (..|), 
         -- * The next functions help typing the send operations
@@ -38,7 +41,8 @@ module Language.Copilot.Language (
         -- * Triggers
         trigger, void, (<>), (<>>),
         -- * Safe casting
-        cast,
+        module Language.Copilot.Language.Casting,
+--        cast,
         -- * Boolean stream constants
         const, true, false
     ) where
@@ -46,16 +50,16 @@ module Language.Copilot.Language (
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
-import System.Random
 import qualified Data.Map as M
-import Prelude ( Bool(..), Num(..), Float, Double, (.), String, error, ($)
-               , Fractional(..), fromInteger, zip, Show(..), (>>=), fail)
+import Prelude ( Bool(..), Num(..), Float, Double, (.), String, ($)
+               , Fractional(..), fromInteger, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
 
 import Language.Copilot.Core
-import Language.Copilot.Analyser
-import Language.Copilot.Tests.Random
+import Language.Copilot.Language.Sampling
+import Language.Copilot.Language.Casting
+--import Language.Copilot.Language.RandomOps
 
 ---- Operators and functions ---------------------------------------------------
 
@@ -101,95 +105,6 @@ div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
     (\ x y -> (x A.&&. A.not_ y) A.||. (y A.&&. A.not_ x))
 (==>) = F2 (\ x y -> y P.|| P.not x) A.imply
 
--- | Cast 'a' into 'b'.  We only allow "safe casts" to larger types.
-class Streamable a => Castable a where
-  castFrom :: (Streamable b, A.IntegralE b) => Spec a -> Spec b
-  cast :: (Castable b, Streamable b) => Spec b -> Spec a
-
-castErr :: String -> A.Type -> String
-castErr toT fromT = "Error: cannot cast type " P.++ show fromT 
-                    P.++ " into " P.++ toT P.++ ".  Only casts guarnateed \n" 
-                    P.++ "not to change sign and to larger types are allowed."
-
-instance Castable Bool where
-  castFrom = F (\b -> if b then 1 else 0)
-               (\b -> A.mux b 1 0)
-  cast x =  error $ castErr "Bool" (getAtomType x)
-
-instance Castable Word8 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    t        -> error $ castErr "Word8" t
-
-instance Castable Word16 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Word8  -> castFrom x
-    t        -> error $ castErr "Word16" t
-
-instance Castable Word32 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Word8  -> castFrom x
-    A.Word16 -> castFrom x
-    t        -> error $ castErr "Word32" t
-
-instance Castable Word64 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =   case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Word8  -> castFrom x
-    A.Word16 -> castFrom x
-    A.Word32 -> castFrom x
-    t        -> error $ castErr "Word64" t
-
-instance Castable Int8 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    t        -> error $ castErr "Int8" t
-
-instance Castable Int16 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x = case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Int8   -> castFrom x
-    A.Word8  -> castFrom x
-    t        -> error $ castErr "Int16" t
-
-instance Castable Int32 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Int8  -> castFrom x
-    A.Int16 -> castFrom x
-    A.Word8  -> castFrom x
-    A.Word16  -> castFrom x
-    t        -> error $ castErr "Int32" t
-
-instance Castable Int64 where
-  castFrom = F (P.fromInteger . P.toInteger) 
-               (A.Retype . A.ue)
-  cast x =  case getAtomType x of
-    A.Bool   -> castFrom x
-    A.Int8  -> castFrom x
-    A.Int16 -> castFrom x
-    A.Int32 -> castFrom x
-    A.Word8  -> castFrom x
-    A.Word16  -> castFrom x
-    A.Word32  -> castFrom x
-    t        -> error $ castErr "Int64" t
-
 -- | Beware : both sides are executed, even if the result of one is later discarded
 mux :: (Streamable a) => Spec Bool -> Spec a -> Spec a -> Spec a
 mux = F3 (\ b x y -> if b then x else y) A.mux
@@ -197,252 +112,6 @@ mux = F3 (\ b x y -> if b then x else y) A.mux
 infix 5 ==, /=, <, <=, >=, >
 infixr 4 ||, &&, ^, ==>
 
--- | Create a global variable to sample.
-global :: Var -> Ext
-global = ExtV
-
--- | Create a function to sample.
-fun :: String -> Args -> Ext
-fun = Fun
-
--- Used for easily producing, and coercing PVars
--- for variables
-extB :: Ext -> Phase -> Spec Bool
-extB = PVar A.Bool
-extI8 :: Ext -> Phase -> Spec Int8
-extI8 = PVar A.Int8
-extI16 :: Ext -> Phase -> Spec Int16
-extI16 = PVar A.Int16
-extI32 :: Ext -> Phase -> Spec Int32
-extI32 = PVar A.Int32
-extI64 :: Ext -> Phase -> Spec Int64
-extI64 = PVar A.Int64
-extW8 :: Ext -> Phase -> Spec Word8
-extW8 = PVar A.Word8
-extW16 :: Ext -> Phase -> Spec Word16
-extW16 = PVar A.Word16
-extW32 :: Ext -> Phase -> Spec Word32
-extW32 = PVar A.Word32
-extW64 :: Ext -> Phase -> Spec Word64
-extW64 = PVar A.Word64
-extF :: Ext -> Phase -> Spec Float
-extF = PVar A.Float
-extD :: Ext -> Phase -> Spec Double
-extD = PVar A.Double
-
--- for arrays 
-extArrB ::  (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Bool
-extArrB = \v idx ph -> PArr A.Bool (v, idx) ph
-extArrI8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int8
-extArrI8 = \v idx ph -> PArr A.Int8 (v, idx) ph
-extArrI16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int16
-extArrI16 = \v idx ph -> PArr A.Int16 (v, idx) ph
-extArrI32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int32
-extArrI32 = \v idx ph -> PArr A.Int32 (v, idx) ph
-extArrI64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Int64
-extArrI64 = \v idx ph -> PArr A.Int64 (v, idx) ph
-extArrW8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word8
-extArrW8 = \v idx ph -> PArr A.Word8 (v, idx) ph
-extArrW16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word16
-extArrW16 = \v idx ph -> PArr A.Word16 (v, idx) ph
-extArrW32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word32
-extArrW32 = \v idx ph -> PArr A.Word32 (v, idx) ph
-extArrW64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Word64
-extArrW64 = \v idx ph -> PArr A.Word64 (v, idx) ph
-extArrF :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Float
-extArrF = \v idx ph -> PArr A.Float (v, idx) ph
-extArrD :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Phase -> Spec Double
-extArrD = \v idx ph -> PArr A.Double (v, idx) ph
-
-
----- Sets of operators for Tests.Random.hs -------------------------------------
-
--- XXX move these somewhere better?  Also, import of Analysis.hs is because of
--- this (SpecSet).
----- Helper functions
-
-mkOp :: (Random arg1, Streamable arg1) =>
-    (Spec arg1 -> Spec r) -> Operator r
-mkOp op =
-    Operator (\ rand g ->
-            let (s0, g0) = rand g FunSpecSet in
-            (op s0, g0)
-        )
-
-mkOp2 :: (Random arg1, Random arg2, Streamable arg1, Streamable arg2) =>
-    (Spec arg1 -> Spec arg2 -> Spec r) -> Operator r
-mkOp2 op =
-    Operator (\ rand g ->
-            let (s0, g0) = rand g FunSpecSet 
-                (s1, g1) = rand g0 FunSpecSet in
-            (op s0 s1, g1)
-        )
-        
-mkOp3 :: (Random arg1, Random arg2, Random arg3, 
-    Streamable arg1, Streamable arg2, Streamable arg3) =>
-    (Spec arg1 -> Spec arg2 -> Spec arg3 -> Spec r) -> Operator r
-mkOp3 op =
-    Operator (\ rand g ->
-            let (s0, g0) = rand g FunSpecSet
-                (s1, g1) = rand g0 FunSpecSet
-                (s2, g2) = rand g1 FunSpecSet in
-            (op s0 s1 s2, g2)
-        )
-
-mkOp2Coerce :: (Random arg1, Random arg2, Streamable arg1, Streamable arg2) =>
-    (Spec arg1 -> Spec arg2 -> Spec r) -> arg1 -> arg2 -> Operator r
-mkOp2Coerce op c0 c1 =
-    Operator (\ rand g ->
-            let (s0, g0) = rand g FunSpecSet
-                (s1, g1) = rand g0 FunSpecSet in
-            (op (s0 `P.asTypeOf` (Const c0)) (s1 `P.asTypeOf` (Const c1)), g1)
-        )
-
-mkOp2Ord :: forall r. 
-              (forall arg. (Random arg, A.OrdE arg, Streamable arg) 
-              => (Spec arg -> Spec arg -> Spec r)) -> Operator r
-mkOp2Ord op =
-    let opI8, opI16, opI32, opI64, opW8, opW16, opW32, opW64, opF, opD :: 
-            RandomGen g 
-            => (forall a' g'. (Streamable a', Random a', RandomGen g') 
-               => g' -> SpecSet -> (Spec a', g')) -> g -> (Spec r, g)
-        opI8 = fromOp P.$ mkOp2Coerce op (unit::Int8) (unit::Int8)
-        opI16 = fromOp P.$ mkOp2Coerce op (unit::Int16) (unit::Int16)
-        opI32 = fromOp P.$ mkOp2Coerce op (unit::Int32) (unit::Int32)
-        opI64 = fromOp P.$ mkOp2Coerce op (unit::Int64) (unit::Int64)
-        opW8 = fromOp P.$ mkOp2Coerce op (unit::Word8) (unit::Word8)
-        opW16 = fromOp P.$ mkOp2Coerce op (unit::Word16) (unit::Word16)
-        opW32 = fromOp P.$ mkOp2Coerce op (unit::Word32) (unit::Word32)
-        opW64 = fromOp P.$ mkOp2Coerce op (unit::Word64) (unit::Word64)
-        opF = fromOp P.$ mkOp2Coerce op (unit::Float) (unit::Float)
-        opD = fromOp P.$ mkOp2Coerce op (unit::Double) (unit::Double) in
-    Operator (\ rand g ->
-            let (t, g0) = randomR (A.Int8, A.Double) g in
-            case t of
-                A.Int8 -> opI8 rand g0
-                A.Int16 -> opI16 rand g0
-                A.Int32 -> opI32 rand g0
-                A.Int64 -> opI64 rand g0
-                A.Word8 -> opW8 rand g0
-                A.Word16 -> opW16 rand g0
-                A.Word32 -> opW32 rand g0
-                A.Word64 -> opW64 rand g0
-                A.Float -> opF rand g0
-                A.Double -> opD rand g0
-                _ -> P.error "Impossible"
-        )
-
-mkOp2Eq :: forall r. (forall arg. 
-    (Random arg, A.EqE arg, Streamable arg) =>
-    (Spec arg -> Spec arg -> Spec r)) 
-    -> Operator r
-mkOp2Eq op =
-    let opB, opI8, opI16, opI32, opI64, opW8, opW16, opW32, opW64, opF, opD :: 
-            RandomGen g => 
-            (forall a' g'. (Streamable a', Random a', RandomGen g') => g' -> SpecSet -> (Spec a', g')) -> g -> (Spec r, g)
-        opB = fromOp P.$ mkOp2Coerce op (unit::Bool) (unit::Bool)
-        opI8 = fromOp P.$ mkOp2Coerce op (unit::Int8) (unit::Int8)
-        opI16 = fromOp P.$ mkOp2Coerce op (unit::Int16) (unit::Int16)
-        opI32 = fromOp P.$ mkOp2Coerce op (unit::Int32) (unit::Int32)
-        opI64 = fromOp P.$ mkOp2Coerce op (unit::Int64) (unit::Int64)
-        opW8 = fromOp P.$ mkOp2Coerce op (unit::Word8) (unit::Word8)
-        opW16 = fromOp P.$ mkOp2Coerce op (unit::Word16) (unit::Word16)
-        opW32 = fromOp P.$ mkOp2Coerce op (unit::Word32) (unit::Word32)
-        opW64 = fromOp P.$ mkOp2Coerce op (unit::Word64) (unit::Word64)
-        opF = fromOp P.$ mkOp2Coerce op (unit::Float) (unit::Float)
-        opD = fromOp P.$ mkOp2Coerce op (unit::Double) (unit::Double) in
-    Operator (\ rand g ->
-            let (t, g0) = random g in
-            case t of
-                A.Bool -> opB rand g0
-                A.Int8 -> opI8 rand g0
-                A.Int16 -> opI16 rand g0
-                A.Int32 -> opI32 rand g0
-                A.Int64 -> opI64 rand g0
-                A.Word8 -> opW8 rand g0
-                A.Word16 -> opW16 rand g0
-                A.Word32 -> opW32 rand g0
-                A.Word64 -> opW64 rand g0
-                A.Float -> opF rand g0
-                A.Double -> opD rand g0
-        )
-
----- Definition of each operator
-
-not_ :: Operator Bool
-not_ = mkOp not    
-    
-(+$), (-$), (*$) :: (Streamable a, A.NumE a, Random a) => Operator a
-(+$) = mkOp2 (P.+)
-(-$) = mkOp2 (P.-)
-(*$) = mkOp2 (P.*)
-
-(/$) :: (Streamable a, A.NumE a, Fractional a, Random a) => Operator a
-(/$) = mkOp2 (P./)
-
-(<$), (<=$), (>=$), (>$) :: Operator Bool
-(<$) = mkOp2Ord (<)
-(<=$) = mkOp2Ord (<=)
-(>=$) = mkOp2Ord (>=)
-(>$) = mkOp2Ord (>)
-
-(==$), (/=$) :: Operator Bool
-(==$) = mkOp2Eq (==)
-(/=$) = mkOp2Eq (/=)
-
-(||$), (&&$), (^$), (==>$) :: Operator Bool
-(||$) = mkOp2 (||)
-(&&$) = mkOp2 (&&)
-(^$) = mkOp2 (^)
-(==>$) = mkOp2 (==>)
-
-mux_ :: (Streamable a, Random a) => Operator a
-mux_ = mkOp3 mux
-
--- Packing of the operators in StreamableMaps
-
-createMapFromElems :: [val] -> M.Map Var val
-createMapFromElems vals =
-    let ks = [[x] | x <- ['a'..]]
-        l = zip ks vals in
-    M.fromAscList l
-
--- | opsF, opsF2 and opsF3 are feeded to Tests.Random.randomStreams.
--- They allows the random generated streams to include lots of operators.
--- If you add a new operator to Copilot, it would be nice to add it to one of those,
--- that way it could be used in the random streams used for testing.
--- opsF holds all the operators of arity 1, opsF2 of arity 2 and opsF3 of arity3
--- They are StreamableMaps, because operators are sorted based on their return type.
-opsF, opsF2, opsF3 :: Operators
-opsF = emptySM {bMap = createMapFromElems [not_]}
-
-opsF2 = emptySM {
-        bMap = createMapFromElems [(<$), (<=$), (>=$), (>$), (==$), (/=$), (||$), (&&$), (^$), (==>$)],
-        i8Map = createMapFromElems [(+$), (-$), (*$)],
-        i16Map = createMapFromElems [(+$), (-$), (*$)],
-        i32Map = createMapFromElems [(+$), (-$), (*$)],
-        i64Map = createMapFromElems [(+$), (-$), (*$)],
-        w8Map = createMapFromElems [(+$), (-$), (*$)],
-        w16Map = createMapFromElems [(+$), (-$), (*$)],
-        w32Map = createMapFromElems [(+$), (-$), (*$)],
-        w64Map = createMapFromElems [(+$), (-$), (*$)],
-        fMap = createMapFromElems [(+$), (-$), (*$), (/$)],
-        dMap = createMapFromElems [(+$), (-$), (*$), (/$)]
-    }
-
-opsF3 = emptySM {
-        bMap = createMapFromElems [mux_],
-        i8Map = createMapFromElems [mux_],
-        i16Map = createMapFromElems [mux_],
-        i32Map = createMapFromElems [mux_],
-        i64Map = createMapFromElems [mux_],
-        w8Map = createMapFromElems [mux_],
-        w16Map = createMapFromElems [mux_],
-        w32Map = createMapFromElems [mux_],
-        w64Map = createMapFromElems [mux_],
-        fMap = createMapFromElems [mux_],
-        dMap = createMapFromElems [mux_]
-    }
 
 ---- Constructs of the language ------------------------------------------------
 
@@ -480,25 +149,24 @@ varD = Var
 -- | Define a stream variable.
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
 v .= s = 
-  notVarErr v (\var -> tell $ LangElems 
-                               (updateSubMap (M.insert var s) emptySM) 
+  notVarErr v (\v' -> tell $ LangElems 
+                               (updateSubMap (M.insert v' s) emptySM) 
                                emptySM 
                                M.empty)
 
 port :: Int -> Port
 port = Port
 
--- | Takes a function @name@, a port @number@, a Copilot variable @v@, and a
--- phase @ph@, and constructs a call to the C function @name(x,y)@ where @x@ is
--- the value of the Copilot stream @v@ and @y@ is the port number.  The sending
--- of the value on the port occurs at phase @ph@.
-send :: Streamable a => String -> Port -> Spec a -> Phase -> Streams
-send portName port s ph = 
+-- | Takes a function @name@, a port @number@, and a Copilot variable @v@ and
+-- constructs a call to the C function @name(x,y)@ where @x@ is the value of the
+-- Copilot stream @v@ and @y@ is the port number.
+send :: Streamable a => String -> Port -> Spec a -> Streams
+send portName thePort s = 
   tell $ LangElems 
            emptySM 
            (updateSubMap (M.insert (show sending) sending) emptySM) 
            M.empty
-  where sending = Send s ph port portName
+  where sending = Send s thePort portName
 
 -- | No C arguments 
 void :: Args
@@ -517,12 +185,12 @@ s <>> s' = (update s (update s' void))
 
 -- | Takes a Boolean stream, 
 trigger :: Spec Bool -> String -> Args -> Streams
-trigger var fnName args =
+trigger v fnName args =
   tell $ LangElems 
            emptySM 
            emptySM 
-           (M.insert (show trigger) trigger M.empty)
-  where trigger = Trigger var fnName args
+           (M.insert (show trig) trig M.empty)
+  where trig = Trigger v fnName args
 
 -- | Coerces a type that is 'Streamable' into a Copilot constant.
 const :: Streamable a => a -> Spec a
@@ -575,5 +243,4 @@ infixr 1 <>
 "Copilot.Language ImpliesDef" forall s0 s1. (||) s1 (not s0) = s0 ==> s1
       #-}
 
--- "Copilot.Language CastLift" forall s i. drop i (cast s) = cast (drop i s)
-
+-- "Copilot.Core CastLift" forall s i. drop i (cast s) = cast (drop i s)

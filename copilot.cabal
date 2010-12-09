@@ -50,6 +50,8 @@ library
                      Language.Copilot.AdHocC
                      Language.Copilot.Core
                      Language.Copilot.Language
+                     Language.Copilot.Language.Sampling
+                     Language.Copilot.Language.Casting
                      Language.Copilot.AtomToC
                      Language.Copilot.Compiler
                      Language.Copilot.Interpreter

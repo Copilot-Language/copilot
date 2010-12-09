@@ -20,9 +20,9 @@ import Data.Maybe
 
 ---- Parameters of the random generation ---------------------------------------
 
-maxDrop, maxSamplePhase :: Int
+maxDrop :: Int
 maxDrop = 4 -- The maximum value for i in Drop i _
-maxSamplePhase = 8 -- The maximum value for ph in PVar _ _ ph
+-- maxSamplePhase = 8 -- The maximum value for ph in PVar _ _ ph
 
 -- These determines the number of streams and of monitored variables.
 -- Bools are drawn each time with the following weights, until a False is drawn
@@ -248,8 +248,8 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
             0 -> -- PVar
                 case getVar g0 exts of
                     (Just v, g1) -> 
-                        let (ph, g2) = randomR (1, maxSamplePhase)  g1 in
-                        (PVar (atomType (unit::a)) (ExtV v) ph, g2)
+--                        let (ph, g2) = randomR (1, maxSamplePhase)  g1 in
+                        (PVar (atomType (unit::a)) (ExtV v), g1)
                     (Nothing, g1) -> randomSpec' g1 set
             1 -> -- Var
                 case getVar g0 vs of

@@ -10,7 +10,7 @@ import qualified Prelude as P
 -- for specifying options
 import Data.Map (fromList) 
 import Data.Maybe (Maybe (..))
-import System.Random
+--import System.Random
 
 import Language.Copilot 
 -- import Language.Copilot.Variables
@@ -45,8 +45,8 @@ t3 :: Streams
 t3 = do
   let a    = varW32 "a"
   let b    = varB "b"
-  let ext8 = extW32 (global "ext") 8
-  let ext1 = extW32 (global "ext") 1
+  let ext8 = extW32 "ext"
+  let ext1 = extW32 "ext"
   a .= [0,1] ++ a + ext8 + ext8 + ext1
   b .= [True, False] ++ 2 + a < 5 + ext1
 
@@ -60,20 +60,14 @@ t4 = do
 t5 :: Streams
 t5 = do
   let x = varW16 "x"
-  let t = varF "t"
   let y = varB "y"
-  let w = varB "w"
   let z = varB "z"
-  x .= cast (drop 3 y)
-  t .= [0] ++ t
-  y .= [True, True] ++ not z
-  z .= [False] ++ false
-  w .= z || y
+  x .= [0] ++ x + 1
+  y .= [True, True] ++ y
+  z .= [False] ++ not z
   -- triggers
-  -- trigger w "w_trigger" (w <> x <> x <>> t) 
-  -- trigger y "y_trigger" void
-  trigger z "z_trigger" (x <> y <> z <>> x)
-  trigger z "Z1_trigger" (y <> z <>> x)
+  trigger z "z0_trigger" (x <> y <> z <>> x)
+  trigger z "z1_trigger" (y <> z <>> x)
   
 yy :: Streams
 yy = 
@@ -94,9 +88,9 @@ xx = do
   let b = varW32 "b"
   let c = varW32 "c"
   let d = varB "d"
-  let e = extW32 (global "ext") 1
-  let f = extW32 (fun "f" void) 1
-  let g = extArrW16 (fun "g" (a <> b <>> c)) a 1
+  let e = extW32 "ext"
+  let f = extW32 (fun "f" void) 
+  let g = extArrW16 (fun "g" (a <> b <>> c)) a 
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
@@ -107,16 +101,16 @@ xx = do
 engine :: Streams
 engine = do
   -- external vars
-  let temp     = extF (global "temp") 1      
-  let shutoff  = extB (global "shutoff") 2
+  let temp     = extF "temp"
+  let shutoff  = extB "shutoff"
   -- Copilot vars
   let temps    = varF "temps"
   let overTemp = varB "overTemp"
-  let trigger  = varB "trigger"
+  let err  = varB "trigger"
 
   temps    .= [0, 0, 0] ++ temp
   overTemp .= drop 2 temps > 2.3 + temps
-  trigger  .= overTemp ==> shutoff
+  err  .= overTemp ==> shutoff
 
 -- | Sending over ports.
 distrib :: Streams
@@ -128,8 +122,8 @@ distrib = do
   a .= [0,1] ++ a + 1
   b .= mod a 2 == 0 
   -- sends
-  send "portA" (port 2) a 1
-  send "portB" (port 1) b 2
+  send "portA" (port 2) a 
+  send "portB" (port 1) b 
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams
@@ -154,8 +148,8 @@ gcd n0 n1 = do
 gcd' :: Streams
 gcd' = do 
   -- externals
-  let n = extW16 (global "n") 1
-  let m = extW16 (global "m") 1
+  let n = extW16 "n"
+  let m = extW16 "m"
   -- copilot vars
   let a = varW16 "a"
   let b = varW16 "b"
@@ -266,20 +260,20 @@ testArr = do
   e .= [6,7,8] ++ 3 -- + extArrW16 ("gg", varW16 b) 2
 --  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
   let g = varB "g"
-  let gg = extArrW16 (global "gg") e 
-  g .= gg 1 == gg 2
+  let gg = extArrW16 "gg" e 
+  g .= gg < 13
   -- h .= [0] ++ drop 1 (varW16 g)
 
 
 -- t3 :: use an external variable called ext, typed Word32
 t99 :: Streams
 t99 = do
-  let ext = extW32 (global "ext")
+  let ext = extW32 "ext"
   let a = varW32 "a"
-  a .= [0,1] ++ a + ext 8 + ext 8 + ext 1
+  a .= [0,1] ++ a + ext + ext + ext 
 
   let b = varB "b"
-  b .= [True, False] ++ 2 + a < 5 + ext 1
+  b .= [True, False] ++ 2 + a < 5 + ext 
 
 t11 :: Streams
 t11 = do

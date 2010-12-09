@@ -6,6 +6,8 @@ module Language.Copilot
   , module Language.Copilot.AtomToC
   , module Language.Copilot.Compiler
   , module Language.Copilot.Language
+  --  , module Language.Copilot.Sampling
+  --  , module Language.Copilot.Casting
   -- , module Language.Copilot.Dispatch
   , module Language.Copilot.Interface
   , module Language.Copilot.Tests.Random
@@ -25,9 +27,11 @@ import Language.Copilot.Interpreter
 import Language.Copilot.Help
 import Language.Copilot.AtomToC
 import Language.Copilot.Compiler
-import Language.Copilot.Language -- (opsF, opsF2, opsF3)
-import Language.Copilot.PrettyPrinter()
 import Language.Copilot.Tests.Random
+import Language.Copilot.Language
+--import Language.Copilot.Language.Sampling
+--import Language.Copilot.Language.Casting
+import Language.Copilot.PrettyPrinter()
 -- import Language.Copilot.Dispatch
 import Language.Copilot.Interface
 -- import Language.Copilot.Libs.Indexes

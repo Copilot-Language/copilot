@@ -8,23 +8,20 @@
 -- to add an ext[Type], a [type] and a var[Type]
 -- functions in Language.hs to make it easier to use. 
 module Language.Copilot.Core (
+        Period,
         -- * Type hierarchy for the copilot language
-        Var, Name, Period, Phase, Port(..), Ext(..),
+        Var, Name, Port(..), Ext(..),
         Exs, ExtRet(..), Args,
         Spec(..), Streams, Stream, Send(..), --DistributedStreams,
         Trigger(..), Triggers, notVarErr, LangElems(..),
 	-- * General functions on 'Streams' and 'StreamableMaps'
-	Streamable(..), mkSend, -- Sendable(..)
+	Streamable(..), -- Sendable(..)
         StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, --foldSendableMaps, 
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
-        -- compiler
-        BoundedArray(..), nextSt, Outputs, TmpSamples(..), emptyTmpSamples, 
-        ProphArrs, Indexes, PhasedValueVar(..), PhasedValueArr(..), PhasedValueIdx(..),
-        tmpVarName, tmpArrName, getAtomType,
-        getSpecs, getSends, getTriggers, makeTrigger -- XXX compiler
+        getAtomType, getSpecs, getSends, getTriggers
     ) where
 
 import qualified Language.Atom as A
@@ -42,10 +39,10 @@ import Control.Monad.Writer (Writer, Monoid(..), execWriter)
 type Var = String
 -- | C file name
 type Name = String
--- | Atom period
+-- | Atom period -- used as an option to control the duration of a Copilot "tick".
 type Period = Int
--- | Phase of an Atom phase
-type Phase = Int
+-- -- | Phase of an Atom phase
+-- type Phase = Int
 -- | Port over which to broadcast information
 data Port = Port Int
 
@@ -55,9 +52,9 @@ data Spec a where
     Var :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
 
-    PVar :: Streamable a => A.Type -> Ext -> Phase -> Spec a
+    PVar :: Streamable a => A.Type -> Ext  -> Spec a
     PArr :: (Streamable a, Streamable b, A.IntegralE b) 
-         => A.Type -> (Ext, Spec b) -> Phase -> Spec a
+         => A.Type -> (Ext, Spec b) -> Spec a
 
     F :: (Streamable a, Streamable b) => 
 	    (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
@@ -81,8 +78,8 @@ data Ext = ExtV Var
 -- XXX are these necessary (redundant)?  Used in Analysis and AtomToC
 type Exs = (A.Type, Ext, ExtRet)
 
-data ExtRet = ExtRetV Phase 
-            | ExtRetA Phase String
+data ExtRet = ExtRetV 
+            | ExtRetA String
   deriving Eq
 
 instance Show Ext where
@@ -119,9 +116,9 @@ instance (Streamable a, A.NumE a, Fractional a) => Fractional (Spec a) where
     #-}
 
 instance Eq a => Eq (Spec a) where
-    (==) (PVar t v ph) (PVar t' v' ph') = t == t' && v == v' && ph == ph'
-    (==) (PArr t (v, idx) ph) (PArr t' (v', idx') ph') = 
-           t == t' && v == v' && show idx == show idx' && ph == ph'
+    (==) (PVar t v) (PVar t' v') = t == t' && v == v' -- && ph == ph'
+    (==) (PArr t (v, idx)) (PArr t' (v', idx')) = 
+           t == t' && v == v' && show idx == show idx' -- && ph == ph'
     (==) (Var v) (Var v') = v == v'
     (==) (Const x) (Const x') = x == x'
     (==) s@(F _ _ _) s'@(F _ _ _) = show s == show s'
@@ -131,18 +128,17 @@ instance Eq a => Eq (Spec a) where
     (==) (Drop i s) (Drop i' s') = i == i' && s == s'
     (==) _ _ = False
 
--- | An instruction to send data on a port at a given phase.  Uses a phantom type.
+-- | An instruction to send data on a port at a given phase.  
 -- data Send a = Sendable a => Send (Var, Phase, Port)
 data Send a =  
   Send { sendVar  :: Spec a 
-       , sendPh   :: Phase
        , sendPort :: Port
        , sendName :: String}
 
 instance Streamable a => Show (Send a) where 
-  show (Send s ph (Port port) portName) = 
-    notVarErr s (\var -> (portName ++ "_port_" ++ show port ++ "_var_" 
-                            ++ var ++ "_ph_" ++ show ph))
+  show (Send s (Port port) portName) = 
+    notVarErr s (\var -> (portName ++ "_port_" ++ show port ++ "_var_" ++ var)) -- ++ show ph))
+                            
 data Trigger =
   Trigger { trigVar  :: Spec Bool
           , trigName :: String
@@ -180,8 +176,8 @@ getSpecs streams =
 
 getSends :: Streams -> StreamableMaps Send
 getSends streams = 
-  let (LangElems _ snds _) = execWriter streams
-  in  snds
+  let (LangElems _ sendMap _) = execWriter streams
+  in  sendMap
 
 getTriggers :: Streams -> Triggers
 getTriggers streams = 
@@ -248,12 +244,6 @@ notVarErr s f =
     Var v -> f v
     _     -> error $ "You provided specification \n" ++ show s 
                       ++ "\n where you needed to give a variable."
-
--- | Sending data over ports.
-mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
-mkSend e (Port port) portName =
-  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") 
-           [A.ue e]
 
 instance Streamable Bool where
     getSubMap = bMap
@@ -549,9 +539,9 @@ showIndented s n =
     tabs ++ showRaw s n
 
 showRaw :: Spec a -> Int -> String
-showRaw (PVar t v ph) _ = "PVar " ++ show t ++ " " ++ show v ++ " " ++ show ph
-showRaw (PArr t (v, idx) ph) _ = 
-  "PArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ ")) " ++ show ph
+showRaw (PVar t v) _ = "PVar " ++ show t ++ " " ++ show v -- ++ " " ++ show ph
+showRaw (PArr t (v, idx)) _ = 
+  "PArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ "))" -- ++ show ph
 showRaw (Var v) _ = "Var " ++ v
 showRaw (Const e) _ = "Const " ++ show e
 showRaw (F _ _ s0) n = 
@@ -580,112 +570,3 @@ showRaw (Drop i s0) n =
 
 
 
--- XXX
--- Compiler: the code below really belongs in Compiler.hs, but its called by
--- makeTrigger, which is a method of the class Streamable.
-
--- | To make customer C triggers.  Only for Spec Bool (others throw an
--- error).  
-makeTrigger :: StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
-            -> Trigger -> A.Atom () -> A.Atom ()
-makeTrigger streams prophArrs tmpSamples outputIndexes 
-            trigger@(Trigger s fnName (vars,args)) r = 
-  do r 
-     A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
-     (A.exactPhase 0 $ A.atom (show trigger) $ 
-        do A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
-           A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
-              (reorder vars []
-                (foldStreamableMaps 
-                  (\v argSpec ls -> (v,next argSpec):ls) args [])))
-     where next :: Streamable a => Spec a -> A.UE 
-           next a = A.ue $ nextSt streams prophArrs 
-                             tmpSamples outputIndexes a 0
-           reorder [] acc _ = reverse $ snd (unzip acc)
-           reorder (v:vs) acc ls = 
-               case lookup v ls of
-                 Nothing -> error "Error in makeTrigger in Core.hs."
-                 Just x  -> let n = (v,x)
-                            in reorder vs (n:acc) ls
-
--- For the prophecy arrays
-type ArrIndex = Word64
-type ProphArrs = StreamableMaps BoundedArray
-type Outputs = StreamableMaps A.V
-type Indexes = M.Map Var (A.V ArrIndex)
-
--- External variables
-data PhasedValueVar a = PhV Phase (A.V a)
---type TmpVarSamples = StreamableMaps PhasedValueVar
-
-tmpVarName :: Ext -> Phase -> Var
-tmpVarName v ph = show v ++ "_" ++ show ph
-
--- External arrays
-data PhasedValueArr a = PhA Phase (A.V a) -- Array name.
-data PhasedValueIdx a = PhIdx (A.E a) -- variable that gives index. 
-
-data TmpSamples = 
-  TmpSamples { tmpVars :: StreamableMaps PhasedValueVar
-             , tmpArrs :: StreamableMaps PhasedValueArr
-             , tmpIdxs :: StreamableMaps PhasedValueIdx
-             }
-
-emptyTmpSamples :: TmpSamples
-emptyTmpSamples = TmpSamples emptySM emptySM emptySM
-
-tmpArrName :: Ext -> Phase -> String -> Var
-tmpArrName v ph idx = (tmpVarName v ph) ++ "_" ++ normalizeVar idx
-
-data BoundedArray a = B ArrIndex (Maybe (A.A a))
-
-nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
-       -> Spec a -> ArrIndex -> A.E a
-nextSt streams prophArrs tmpSamples outputIndexes s index = 
-    case s of
-        PVar _ v ph  -> 
-          let PhV _ var = getElem (tmpVarName v ph) (tmpVars tmpSamples) in
-          A.value var
-        PArr _ (v, idx) ph -> 
-          let PhA _ var = e tmp (tmpArrs tmpSamples) 
-              tmp = tmpArrName v ph (show idx) 
-              e a b = case getMaybeElem a b of
-                        Nothing -> 
-                          error "Error in application of getElem in nextSt."
-                        Just x  -> x 
-          in A.value var
-        Var v -> let B initLen maybeArr = getElem v prophArrs in
-            -- This check is extremely important
-            -- It means that if x at time n depends on y at time n
-            -- then x is obtained not by y, but by inlining the definition of y
-            -- so it increases the size of code (sadly),
-            -- but is the only thing preventing race conditions from occuring
-            if index < initLen
-                then getVar v initLen maybeArr 
-                else let s0 = getElem v streams in 
-                     next s0 (index - initLen)
-        Const e -> A.Const e
-        F _ f s0 -> f $ next s0 index
-        F2 _ f s0 s1 ->
-            f (next s0 index) 
-              (next s1 index)
-        F3 _ f s0 s1 s2 ->
-            f (next s0 index) 
-              (next s1 index) 
-              (next s2 index)
-        Append _ s0 -> next s0 index
-        Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
-    where
-        next :: Streamable b => Spec b -> ArrIndex -> A.E b
-        next = nextSt streams prophArrs tmpSamples outputIndexes 
-        getVar :: Streamable a 
-               => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
-        getVar v initLen maybeArr =
-           let outputIndex = case M.lookup v outputIndexes of
-                               Nothing -> error "Error in function getVar."
-                               Just x -> x
-               arr = case maybeArr of
-                       Nothing -> error "Error in function getVar (maybeArr)."
-                       Just x -> x in 
-           arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
-                       (A.Const (initLen + 1)))

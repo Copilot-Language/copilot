@@ -19,7 +19,7 @@
 -- The phase must be less than the period.
 
 module Language.Copilot.Libs.Clocks
-  ( clock, period, phase
+  ( clock, period
   ) where
 
 import Prelude (Int, error, String, show)

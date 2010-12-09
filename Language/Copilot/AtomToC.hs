@@ -3,11 +3,10 @@
 -- | Defines a main() and print statements to easily execute generated Copilot specs.
 module Language.Copilot.AtomToC(getPrePostCode) where
 
-import Language.Copilot.Compiler (tmpSampleStr)
+import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
 import Language.Copilot.AdHocC
-import Language.Copilot.Core
 
-import qualified Language.Atom as A
+import Language.Copilot.Core
 
 import Data.List
 
@@ -26,8 +25,8 @@ extDecls allExtVars arrDecs =
     let uniqueExtVars = nubBy (\ (x, y, _) (x', y', _) -> x == x' && y == y') 
                               allExtVars 
         getDec :: Exs -> String
-        getDec (t, v, ExtRetV _) = varDecl t [show v]
-        getDec (t, arr, ExtRetA _ _) = 
+        getDec (t, v, ExtRetV) = varDecl t [show v]
+        getDec (t, arr, ExtRetA _) = 
           case getIdx arr of 
             Nothing -> error $ "Please use the setArrs option to provide a list of " ++
                           "pairs (a,idx) where a is the name of an external array and idx " ++
@@ -131,8 +130,8 @@ sampleExtVars allExts cName =
         allExts
     where 
         sample :: Exs -> (Var, String)
-        sample (_, v, ExtRetV ph) = (show v, tmpVarName v ph)
-        sample (_, v, ExtRetA ph idx) = (show v ++ "[0]", tmpArrName v ph idx)
+        sample (_, v, ExtRetV) = (show v, tmpVarName v)
+        sample (_, v, ExtRetA idx) = (show v ++ "[0]", tmpArrName v idx)
 
 outputVars :: Name -> StreamableMaps Spec -> [String]
 outputVars cName streams =
