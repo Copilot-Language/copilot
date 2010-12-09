@@ -74,3 +74,8 @@ TODOs
 
  * The scheduling is completely unoptimized...  All sampling in phase 1, and all
    next-state computation in phase 0.  Spread out as room permits across phases?
+
+ * Allow constants to be passed to functions.
+
+ * Normalize variables just once and then pass those around instead of doing it
+   ad-hoc throughout the compiler.

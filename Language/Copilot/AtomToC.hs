@@ -25,7 +25,8 @@ extDecls allExtVars arrDecs =
     let uniqueExtVars = nubBy (\ (x, y, _) (x', y', _) -> x == x' && y == y') 
                               allExtVars 
         getDec :: Exs -> String
-        getDec (t, v, ExtRetV) = varDecl t [show v]
+        getDec (t, (ExtV v), ExtRetV) = varDecl t [v]
+        getDec (t, (Fun f _), ExtRetV) = ""
         getDec (t, arr, ExtRetA _) = 
           case getIdx arr of 
             Nothing -> error $ "Please use the setArrs option to provide a list of " ++
@@ -48,9 +49,6 @@ preCode extDeclarations = unlines $
   ]
   ++ extDeclarations
   
-vPre :: Name -> String
-vPre cName = "copilotState" ++ cName ++ "." ++ cName ++ "."
-
 postCode :: Name -> StreamableMaps Spec -> [Exs] -> Vars -> Period -> String
 postCode cName streams allExts inputExts p = 
   unlines $
@@ -58,8 +56,7 @@ postCode cName streams allExts inputExts p =
     then []
     else cleanString)
   ++
-  [ "// #pragma GCC diagnostic ignored \"-Wformat\""
-  , "int main(int argc, char *argv[]) {"
+  [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
   , "    " ++ printfNewline 
          "Please pass a single argument to the simulator containing the number of rounds to execute it." 
@@ -125,12 +122,15 @@ inputExtVars exts indent =
 sampleExtVars :: [Exs] -> Name -> [String]
 sampleExtVars allExts cName =
     map (\ext -> let (v,e) = sample ext in
-           "  " ++ vPre cName ++ tmpSampleStr ++ e
+           "  " ++ vPre cName ++ tmpSampleStr ++ (normalizeVar e)
            ++ " = " ++ v ++ ";") 
         allExts
     where 
         sample :: Exs -> (Var, String)
-        sample (_, v, ExtRetV) = (show v, tmpVarName v)
+        sample (_, v, ExtRetV) = ( case v of 
+                                     ExtV var -> var
+                                     Fun fname args -> funcShow cName fname args
+                                  , tmpVarName v)
         sample (_, v, ExtRetA idx) = (show v ++ "[0]", tmpArrName v idx)
 
 outputVars :: Name -> StreamableMaps Spec -> [String]

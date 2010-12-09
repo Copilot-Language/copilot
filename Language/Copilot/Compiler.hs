@@ -3,7 +3,9 @@
 -- XXX Clean this mess up!
 
 -- | Transform the copilot specification in an atom one, and then compile that one.
-module Language.Copilot.Compiler(copilotToAtom, tmpSampleStr, tmpArrName, tmpVarName) where
+module Language.Copilot.Compiler
+  (copilotToAtom, tmpSampleStr, tmpArrName, tmpVarName
+  ) where
 
 import Language.Copilot.Core
 
@@ -16,8 +18,8 @@ import qualified Language.Atom as A
 
 -- | Compiles an /Copilot/ specification to an /Atom/ one.
 -- The period is given as a Maybe : if it is Nothing, an optimal period will be chosen.
-copilotToAtom :: LangElems -> Maybe Period -> (Period, A.Atom ())
-copilotToAtom (LangElems streams sends triggers) p = 
+copilotToAtom :: LangElems -> Maybe Period -> Name -> (Period, A.Atom ()) 
+copilotToAtom (LangElems streams sends triggers) p cFileName = 
   (p', A.period p' $ do
     prophArrs <- mapStreamableMapsM initProphArr streams
     outputs <- mapStreamableMapsM initOutput streams
@@ -38,7 +40,7 @@ copilotToAtom (LangElems streams sends triggers) p =
 
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
-      foldStreamableMaps (\_ -> sampleExts tmpSamples) streams []
+      foldStreamableMaps (\_ -> sampleExts outputs tmpSamples cFileName) streams []
     )
   where p' = period p
 --  where
@@ -157,7 +159,7 @@ emptyTmpSamples :: TmpSamples
 emptyTmpSamples = TmpSamples emptySM emptySM emptySM
 
 tmpVarName :: Ext -> Var
-tmpVarName v = show v -- ++ "_" ++ show ph
+tmpVarName v = show v
 
 tmpArrName :: Ext -> String -> Var
 tmpArrName v idx = (tmpVarName v) ++ "_" ++ normalizeVar idx
@@ -324,6 +326,9 @@ mkSend e (Port port) portName =
   A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") 
            [A.ue e]
 
+sampleStr :: String
+sampleStr = "sample__"
+
 -- What we really should be doing is just folding over the TmpSamples, since
 -- that data should contain all the info we need to construct external variable
 -- and external array samples.  However, there is the issue that for array
@@ -331,8 +336,9 @@ mkSend e (Port port) portName =
 -- having the spec available provides typing coercion.  We could fold over the
 -- TmpSamples, passing streams in, and extract the appropriate Spec a.
 sampleExts :: forall a. Streamable a 
-           => TmpSamples -> Spec a -> [(Var, A.Atom ())] -> [(Var, A.Atom ())]
-sampleExts ts s a = do
+           => Outputs -> TmpSamples -> Name -> Spec a 
+              -> [(Var, A.Atom ())] -> [(Var, A.Atom ())]
+sampleExts outputs ts cFileName s a = do
   case s of
     Var _ -> a
     Const _ -> a
@@ -340,11 +346,16 @@ sampleExts ts s a = do
      let v' = tmpVarName v
          PhV var = getElem v' (tmpVars ts)::PhasedValueVar a in
      (v', A.exactPhase minSampPh $ 
-            A.atom ("sample__" ++ v') $ 
-              var A.<== (A.value $ case v of
-                                     ExtV extV -> externalAtomConstructor extV
-                                     Fun nm args -> undefined
-                        )
+            A.atom (sampleStr ++ normalizeVar v') $ 
+                (case v of
+                     ExtV extV -> var A.<== (A.value $ externalAtomConstructor extV)
+                     -- XXX A bit of a hack.  Atom should be changed to allow
+                     -- "out-of-Atom" assignments.  But this works for now.
+                     Fun nm (vs,args) -> 
+                       var A.<== 
+                         (A.value $ externalAtomConstructor 
+                            (nm ++ "(" ++ (unwords $ intersperse "," 
+                                             $ map (\arg -> vPre cFileName ++ arg) vs)  ++ ")")))
      ) : a
     PArr _ (arr, idx) -> 
          let arr' = tmpArrName arr (show idx)
@@ -354,20 +365,21 @@ sampleExts ts s a = do
                  Nothing -> error "Error in fucntion sampleExts."
                  Just x -> x
          in (arr', A.exactPhase minSampPh $ 
-              A.atom ("sample__" ++ arr') $ 
+              A.atom (sampleStr ++ normalizeVar arr') $ 
                 arrV A.<== A.array' (case arr of
                                        ExtV extV -> extV
-                                       Fun _ _ -> error "Still need to implement in sampleExts in Compiler.hs." -- XXX
+                                       Fun nm args -> undefined
                                     ) (atomType (unit::a)) A.!. i
             ) : a
-    F _ _ s0 -> sampleExts ts s0 a
-    F2 _ _ s0 s1 -> sampleExts ts s0 $ sampleExts ts s1 a
-    F3 _ _ s0 s1 s2 -> sampleExts ts s0 $ sampleExts ts s1 $
-                         sampleExts ts s2 a
-    Append _ s0 -> sampleExts ts s0 a
-    Drop _ s0 -> sampleExts ts s0 a
+    F _ _ s0 -> sampleExts' s0 a
+    F2 _ _ s0 s1 -> sampleExts' s0 $ sampleExts' s1 a
+    F3 _ _ s0 s1 s2 -> sampleExts' s0 $ sampleExts' s1 $
+                         sampleExts' s2 a
+    Append _ s0 -> sampleExts' s0 a
+    Drop _ s0 -> sampleExts' s0 a
   where minSampPh :: Int
-        minSampPh = 1
+        minSampPh = 2
+        sampleExts' s a = sampleExts outputs ts cFileName s a 
 
 -- lookup the idx for external array accesses in the map.
 getIdx :: forall a. (Streamable a, A.IntegralE a) 
@@ -386,74 +398,25 @@ getIdx arr s ts =
 -- | To make customer C triggers.  Only for Spec Bool (others throw an
 -- error).  
 makeTrigger :: Outputs -> Trigger -> A.Atom () -> A.Atom ()
-makeTrigger outputs trigger@(Trigger s fnName (vars,args)) r = 
+makeTrigger outputs trigger@(Trigger s fnName args) r = 
   do r 
---     A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
      (A.exactPhase 2 $ A.atom (show trigger) $ 
-        do A.cond (getOutput s)
-           A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
-              (reorder vars []
-                (foldStreamableMaps 
-                  (\v argSpec ls -> (v, A.ue $ getOutput argSpec):ls) args [])))
-     where getOutput :: Streamable a => Spec a -> A.E a
-           getOutput v = A.value (notVarErr v (\var -> getElem var outputs))
-           reorder [] acc _ = reverse $ snd (unzip acc)
-           reorder (v:vs) acc ls = 
-               case lookup v ls of
-                 Nothing -> error "Error in makeTrigger in Core.hs."
-                 Just x  -> let n = (v,x)
-                            in reorder vs (n:acc) ls
--- makeTrigger :: StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
---             -> Trigger -> A.Atom () -> A.Atom ()
--- makeTrigger streams prophArrs tmpSamples outputIndexes 
---             trigger@(Trigger s fnName (vars,args)) r = 
---   do r 
---      A.liftIO $ putStrLn ("len" ++ (show $ length vars)) 
---      (A.exactPhase 0 $ A.atom (show trigger) $ 
---         do A.cond (nextSt streams prophArrs tmpSamples outputIndexes s 0)
---            A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
---               (reorder vars []
---                 (foldStreamableMaps 
---                   (\v argSpec ls -> (v,next argSpec):ls) args [])))
---      where next :: Streamable a => Spec a -> A.UE 
---            next a = A.ue $ nextSt streams prophArrs 
---                              tmpSamples outputIndexes a 0
---            reorder [] acc _ = reverse $ snd (unzip acc)
---            reorder (v:vs) acc ls = 
---                case lookup v ls of
---                  Nothing -> error "Error in makeTrigger in Core.hs."
---                  Just x  -> let n = (v,x)
---                             in reorder vs (n:acc) ls
+        do A.cond (getOutput outputs s)
+           fnCall outputs s fnName args)
 
+-- | Building an external function call in Atom.
+fnCall :: Streamable a => Outputs -> Spec a -> String -> Args -> A.Atom ()
+fnCall outputs s fnName (vars,args) = 
+  A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
+       (reorder vars []
+         (foldStreamableMaps 
+           (\v argSpec ls -> (v, A.ue $ getOutput outputs argSpec):ls) args []))
+  where reorder [] acc _ = reverse $ snd (unzip acc)
+        reorder (v:vs) acc ls = 
+          case lookup v ls of
+            Nothing -> error "Error in makeTrigger in Core.hs."
+            Just x  -> let n = (v,x) in
+                       reorder vs (n:acc) ls
 
-
--- bound min, max send phases
--- getOptimalPeriod :: StreamableMaps Spec -> StreamableMaps Send -> Period
--- getOptimalPeriod streams sends =
---   max (foldStreamableMaps getMaximumSamplingPhase streams 2)
--- --      (foldStreamableMaps getMaxSendPhase sends 0)
---   where
---     getMaximumSamplingPhase :: Var -> Spec a -> Period -> Period 
---     getMaximumSamplingPhase _ spec n =
---       case spec of
---         PVar _ _ -> n -- max (ph + 1) n 
---         PArr _ (_, Var _) -> max (ph + 2) n -- because this may depend on a
---                                             -- variable, and if that variable
---                                             -- has a prophecy array, it needs an
---                                             -- extra phase to update after the
---                                             -- index is taken.
---         PArr _ _ ph -> max (ph + 1) n
---         F _ _ s -> getMaximumSamplingPhase "" s n
---         F2 _ _ s0 s1 -> maximum [n,
---                 (getMaximumSamplingPhase "" s0 n),
---                 (getMaximumSamplingPhase "" s1 n)]
---         F3 _ _ s0 s1 s2 -> maximum [n,
---                 (getMaximumSamplingPhase "" s0 n), 
---                 (getMaximumSamplingPhase "" s1 n), 
---                 (getMaximumSamplingPhase "" s2 n)]
---         Drop _ s -> getMaximumSamplingPhase "" s n
---         Append _ s -> getMaximumSamplingPhase "" s n
---         _ -> n
-
---     -- getMaxSendPhase :: Var -> Send a -> Period -> Period
---     -- getMaxSendPhase _ (Send _ ph _ _) n = max (ph+1) n
+getOutput :: Streamable a => Outputs -> Spec a -> A.E a
+getOutput outputs v = A.value (notVarErr v (\var -> getElem var outputs))

@@ -90,11 +90,13 @@ xx = do
   let c = varW32 "c"
   let d = varB "d"
   let e = extW32 "ext"
-  let f = extW32 (fun "f" void) 
-  let g = extArrW16 (fun "g" (a <> b <> c)) a 
+  let f = extW32 (fun "fun1" void) 
+--  let g = extArrW16 (fun "g" (a <> b <> c)) a 
+  let g = extW16 (fun "fun2" (a <> b <> c)) 
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
+--  d .= g < 20
   d .= g < 20
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the

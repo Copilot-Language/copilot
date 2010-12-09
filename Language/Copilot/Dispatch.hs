@@ -124,8 +124,8 @@ dispatch elems inputExts backEnd iterations verbose =
 
 copilotToC :: LangElems -> [Exs] -> Vars -> AtomToC -> Bool -> IO ()
 copilotToC elems allExts trueInputExts opts isVerbose =
-    let (p', program) = copilotToAtom elems (getPeriod opts)
-        cFileName = cName opts
+    let cFileName = cName opts
+        (p', program) = copilotToAtom elems (getPeriod opts) cFileName
         (preCode, postCode) = 
             case (prePostCode opts) of
                 Nothing ->  

@@ -8,20 +8,16 @@
 -- to add an ext[Type], a [type] and a var[Type]
 -- functions in Language.hs to make it easier to use. 
 module Language.Copilot.Core (
-        Period,
-        -- * Type hierarchy for the copilot language
-        Var, Name, Port(..), Ext(..),
+        Period, Var, Name, Port(..), Ext(..),
         Exs, ExtRet(..), Args,
-        Spec(..), Streams, Stream, Send(..), --DistributedStreams,
+        Spec(..), Streams, Stream, Send(..), 
         Trigger(..), Triggers, notVarErr, LangElems(..),
-	-- * General functions on 'Streams' and 'StreamableMaps'
-	Streamable(..), -- Sendable(..)
-        StreamableMaps(..), emptySM,
+	Streamable(..), StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
-        foldStreamableMaps, --foldSendableMaps, 
+        foldStreamableMaps, 
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
-        getAtomType, getSpecs, getSends, getTriggers
+        getAtomType, getSpecs, getSends, getTriggers, vPre, funcShow
     ) where
 
 import qualified Language.Atom as A
@@ -70,11 +66,6 @@ data Spec a where
 -- | Arguments to be passed to a C function.
 type Args = ([Var], StreamableMaps Spec)
 
--- XXX change the constructors to SimpleVar and Function (or something like that)
--- | Holds external variables or external functions to call.
-data Ext = ExtV Var
-         | Fun String Args
-
 data Trigger =
   Trigger { trigVar  :: Spec Bool
           , trigName :: String
@@ -88,11 +79,16 @@ type Triggers = M.Map String Trigger
 
 instance Show Trigger where 
   show (Trigger s fnName _) =
-    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args
---                            ++ map (\x -> if x == ' ' then '_' else x) 
---                                   (concatMap show args)))
+    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args ?
 
--- XXX are these necessary (redundant)?  Used in Analysis and AtomToC
+-- XXX change the constructors to SimpleVar and Function (or something like that)
+-- XXX in Ext, we throw away the type info for Args.  This is because we're just
+-- making external calls, and we don't know anything about the types anyway (we
+-- just make strings).  Remove from the datatype.
+-- | Holds external variables or external functions to call.
+data Ext = ExtV Var
+         | Fun String Args
+
 type Exs = (A.Type, Ext, ExtRet)
 
 data ExtRet = ExtRetV 
@@ -101,7 +97,11 @@ data ExtRet = ExtRetV
 
 instance Show Ext where
   show (ExtV v) = v
-  show (Fun f (args, _)) = f ++ "(" ++ unwords args ++ ")"
+  show (Fun f (args, _)) = normalizeVar (f ++ unwords args)
+
+funcShow :: Name -> String -> Args -> String
+funcShow cName fname (args,_) = 
+  fname ++ "(" ++ (unwords $ intersperse "," (map (\arg -> vPre cName ++ arg) args)) ++ ")"
 
 instance Eq Ext where
   (==) (ExtV v0) (ExtV v1) = v0 == v1
@@ -144,6 +144,10 @@ instance Eq a => Eq (Spec a) where
     (==) (Append ls s) (Append ls' s') = ls == ls' && s == s'
     (==) (Drop i s) (Drop i' s') = i == i' && s == s'
     (==) _ _ = False
+
+-- | Copilot variable reference, taking the name of the generated C file.
+vPre :: Name -> String
+vPre cName = "copilotState" ++ cName ++ "." ++ cName ++ "."
 
 -- | An instruction to send data on a port at a given phase.  
 -- data Send a = Sendable a => Send (Var, Phase, Port)
@@ -514,14 +518,9 @@ isEmptySM (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
 
 -- | Replace all accepted special characters by sequences of underscores.  
 normalizeVar :: Var -> Var
-normalizeVar v =
-    foldl (\ acc c -> acc ++ case c of 
-                               '.' -> "_" 
-                               '[' -> "_"  
-                               ']' -> "_"  
-                               ' ' -> "_"
-                               _ -> [c]) 
-          "" v
+normalizeVar v = 
+  map (\c -> if (c `elem` ".[]()") then '_' else c)
+      (filter (\c -> c /= ',' && c /= ' ') v) 
 
 -- | For each typed variable, this type holds all its successive values in an infinite list
 -- Beware : each element of one of those lists corresponds to a full @Atom@ period, 
