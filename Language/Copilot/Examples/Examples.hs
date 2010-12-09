@@ -66,8 +66,9 @@ t5 = do
   y .= [True, True] ++ y
   z .= [False] ++ not z
   -- triggers
-  trigger z "z0_trigger" (x <> y <> z <>> x)
-  trigger z "z1_trigger" (y <> z <>> x)
+  trigger y "y_trigger" void
+  trigger z "z0_trigger" (x <> y <> z <> x)
+  trigger z "z1_trigger" (y <> z <> x)
   
 yy :: Streams
 yy = 
@@ -90,7 +91,7 @@ xx = do
   let d = varB "d"
   let e = extW32 "ext"
   let f = extW32 (fun "f" void) 
-  let g = extArrW16 (fun "g" (a <> b <>> c)) a 
+  let g = extArrW16 (fun "g" (a <> b <> c)) a 
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b

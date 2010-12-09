@@ -343,7 +343,7 @@ sampleExts ts s a = do
             A.atom ("sample__" ++ v') $ 
               var A.<== (A.value $ case v of
                                      ExtV extV -> externalAtomConstructor extV
-                                     Fun _ _ -> error "Still need to implement in sampleExts in Compiler.hs." -- XXX
+                                     Fun nm args -> undefined
                         )
      ) : a
     PArr _ (arr, idx) -> 

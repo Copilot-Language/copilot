@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleContexts, TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Describes the language /Copilot/.
@@ -39,7 +39,7 @@ module Language.Copilot.Language (
         -- sendB, sendI8, sendI16, sendI32, sendI64,
         send, port, -- , sendW16, sendW32, sendW64, sendF, sendD
         -- * Triggers
-        trigger, void, (<>), (<>>),
+        trigger, void, (<>), -- (<>>), 
         -- * Safe casting
         module Language.Copilot.Language.Casting,
 --        cast,
@@ -168,22 +168,32 @@ send portName thePort s =
            M.empty
   where sending = Send s thePort portName
 
+class ArgCl a where 
+  (<>) :: Streamable b => Spec b -> a -> Args
+
+instance ArgCl Args where 
+  s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
+
+instance Streamable b => ArgCl (Spec b) where 
+  s <> s' = (update s (update s' void))
+    where update x (vars,sm) = 
+            notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
+
 -- | No C arguments 
 void :: Args
 void = ([],emptySM)
 
--- | Turn a @Spec Var@ into an arguement for a C function.
-(<>) :: Streamable a => Spec a -> Args -> Args
-s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
+-- -- | Turn a @Spec Var@ into an arguement for a C function.
+-- (<>) :: Streamable a => Spec a -> Args -> Args
+-- s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
 
--- | Turn a @Spec Var@ into an arguement for a C function.
-(<>>) :: (Streamable a, Streamable b) => Spec a -> Spec b 
-      -> Args
-s <>> s' = (update s (update s' void))
-  where update x (vars,sm) = 
-          notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
+-- -- | Turn a @Spec Var@ into an arguement for a C function.
+-- (<>>) :: (Streamable a, Streamable b) => Spec a -> Spec b -> Args
+-- s <>> s' = (update s (update s' void))
+--   where update x (vars,sm) = 
+--           notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
 
--- | Takes a Boolean stream, 
+-- | XXX document
 trigger :: Spec Bool -> String -> Args -> Streams
 trigger v fnName args =
   tell $ LangElems 

@@ -75,6 +75,23 @@ type Args = ([Var], StreamableMaps Spec)
 data Ext = ExtV Var
          | Fun String Args
 
+data Trigger =
+  Trigger { trigVar  :: Spec Bool
+          , trigName :: String
+          -- We carry around both the value and the vars of the arguments to be
+          -- passed to the trigger.  The vars are used to put the arguments in
+          -- the correct order, since the values are stored in a map, destroying
+          -- their order.
+          , trigArgs :: Args} 
+
+type Triggers = M.Map String Trigger
+
+instance Show Trigger where 
+  show (Trigger s fnName _) =
+    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args
+--                            ++ map (\x -> if x == ' ' then '_' else x) 
+--                                   (concatMap show args)))
+
 -- XXX are these necessary (redundant)?  Used in Analysis and AtomToC
 type Exs = (A.Type, Ext, ExtRet)
 
@@ -139,23 +156,6 @@ instance Streamable a => Show (Send a) where
   show (Send s (Port port) portName) = 
     notVarErr s (\var -> (portName ++ "_port_" ++ show port ++ "_var_" ++ var)) -- ++ show ph))
                             
-data Trigger =
-  Trigger { trigVar  :: Spec Bool
-          , trigName :: String
-          -- We carry around both the value and the vars of the arguments to be
-          -- passed to the trigger.  The vars are used to put the arguments in
-          -- the correct order, since the values are stored in a map, destroying
-          -- their order.
-          , trigArgs :: ([Var], StreamableMaps Spec)} 
-
-type Triggers = M.Map String Trigger
-
-instance Show Trigger where 
-  show (Trigger s fnName _) =
-    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args
---                            ++ map (\x -> if x == ' ' then '_' else x) 
---                                   (concatMap show args)))
-
 -- | Holds all the different kinds of language elements that are pushed into the
 -- Writer monad.  This currently includes the actual specs, "send" directives,
 -- and trigger directives. (Use the functions in Language.hs to make sends and
