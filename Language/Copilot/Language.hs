@@ -51,7 +51,7 @@ import qualified Language.Atom as A
 import Data.Int
 import Data.Word
 import qualified Data.Map as M
-import Prelude ( Bool(..), Num(..), Float, Double, (.), String, ($)
+import Prelude ( Bool(..), Num(..), Float, Double, String, ($)
                , Fractional(..), fromInteger, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer (tell)

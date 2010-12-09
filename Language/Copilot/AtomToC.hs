@@ -26,7 +26,7 @@ extDecls allExtVars arrDecs =
                               allExtVars 
         getDec :: Exs -> String
         getDec (t, (ExtV v), ExtRetV) = varDecl t [v]
-        getDec (t, (Fun f _), ExtRetV) = ""
+        getDec (_, (Fun _ _), ExtRetV) = ""
         getDec (t, arr, ExtRetA _) = 
           case getIdx arr of 
             Nothing -> error $ "Please use the setArrs option to provide a list of " ++

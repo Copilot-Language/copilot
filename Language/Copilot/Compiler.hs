@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, Rank2Types #-}
 
--- XXX Clean this mess up!
+-- XXX Clean this up!
 
 -- | Transform the copilot specification in an atom one, and then compile that one.
 module Language.Copilot.Compiler
@@ -351,7 +351,7 @@ sampleExts outputs ts cFileName s a = do
                      ExtV extV -> var A.<== (A.value $ externalAtomConstructor extV)
                      -- XXX A bit of a hack.  Atom should be changed to allow
                      -- "out-of-Atom" assignments.  But this works for now.
-                     Fun nm (vs,args) -> 
+                     Fun nm (vs,_) -> 
                        var A.<== 
                          (A.value $ externalAtomConstructor 
                             (nm ++ "(" ++ (unwords $ intersperse "," 
@@ -379,7 +379,7 @@ sampleExts outputs ts cFileName s a = do
     Drop _ s0 -> sampleExts' s0 a
   where minSampPh :: Int
         minSampPh = 2
-        sampleExts' s a = sampleExts outputs ts cFileName s a 
+        sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
 
 -- lookup the idx for external array accesses in the map.
 getIdx :: forall a. (Streamable a, A.IntegralE a) 
@@ -402,11 +402,11 @@ makeTrigger outputs trigger@(Trigger s fnName args) r =
   do r 
      (A.exactPhase 2 $ A.atom (show trigger) $ 
         do A.cond (getOutput outputs s)
-           fnCall outputs s fnName args)
+           fnCall outputs fnName args)
 
 -- | Building an external function call in Atom.
-fnCall :: Streamable a => Outputs -> Spec a -> String -> Args -> A.Atom ()
-fnCall outputs s fnName (vars,args) = 
+fnCall :: Outputs -> String -> Args -> A.Atom ()
+fnCall outputs fnName (vars,args) = 
   A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
        (reorder vars []
          (foldStreamableMaps 
