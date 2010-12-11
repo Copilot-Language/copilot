@@ -21,6 +21,12 @@ module Language.Copilot.Language (
         -- * Copilot variable declarations.
         var, varB, varI8, varI16, varI32, varI64,
         varW8, varW16, varW32, varW64, varF, varD,
+        -- * Copilot constant declarations.  For the most part, these are
+        -- unnecessary, as constants are automatically lifted in into the *
+        -- Copilot types.  They are useful though for specifying triggers and *
+        -- function samplings.
+        const, constB, constI8, constI16, constI32, constI64,
+        constW8, constW16, constW32, constW64, constF, constD,
         module Language.Copilot.Language.Sampling,
         -- -- * The next functions provide easier access to typed external variables.
         -- extB, extI8, extI16, extI32, extI64,
@@ -205,6 +211,28 @@ trigger v fnName args =
 -- | Coerces a type that is 'Streamable' into a Copilot constant.
 const :: Streamable a => a -> Spec a
 const = Const
+
+constI8 :: Int8 -> Spec Int8
+constI8 = Const
+constI16 :: Int16 -> Spec Int16
+constI16 = Const
+constI32 :: Int32 -> Spec Int32
+constI32 = Const
+constI64 :: Int64 -> Spec Int64
+constI64 = Const
+constW8 :: Word8 -> Spec Word8
+constW8 = Const 
+constW16 :: Word16 -> Spec Word16
+constW16 = Const
+constW32 :: Word32 -> Spec Word32
+constW32 = Const
+constW64 :: Word64 -> Spec Word64
+constW64 = Const
+constF :: Float -> Spec Float
+constF = Const
+constD :: Double -> Spec Double
+constD = Const
+
 
 true, false :: Spec Bool
 true = Const True
