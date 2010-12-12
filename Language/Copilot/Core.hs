@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables, FlexibleContexts, 
-    FlexibleInstances #-}
+    FlexibleInstances, TypeSynonymInstances #-}
 
 -- | Provides basic types and functions for other parts of /Copilot/.
 --
@@ -9,15 +9,16 @@
 -- functions in Language.hs to make it easier to use. 
 module Language.Copilot.Core (
         Period, Var, Name, Port(..), Ext(..),
-        Exs, ExtRet(..), Args,
+        Exs, ExtRet(..), Args, ArgConstVar(..),
         Spec(..), Streams, Stream, Send(..), 
-        Trigger(..), Triggers, notVarErr, LangElems(..),
+        Trigger(..), Triggers, LangElems(..),
 	Streamable(..), StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, 
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
-        getAtomType, getSpecs, getSends, getTriggers, vPre, funcShow
+        getAtomType, getSpecs, getSends, getTriggers, vPre, funcShow,
+        getMaybeVar
     ) where
 
 import qualified Language.Atom as A
@@ -63,8 +64,18 @@ data Spec a where
     Append :: Streamable a => [a] -> Spec a -> Spec a
     Drop :: Streamable a => Int -> Spec a -> Spec a
 
--- | Arguments to be passed to a C function.
-type Args = ([Var], StreamableMaps Spec)
+-- | Arguments to be passed to a C function.  Either a Copilot variable or a
+-- constant.
+data ArgConstVar = V Var
+                 | C String
+  deriving Eq
+
+instance Show ArgConstVar where 
+  show args = case args of
+                V v -> normalizeVar v
+                C c -> "_const_" ++ c ++ "_"
+
+type Args = [ArgConstVar]
 
 data Trigger =
   Trigger { trigVar  :: Spec Bool
@@ -78,8 +89,8 @@ data Trigger =
 type Triggers = M.Map String Trigger
 
 instance Show Trigger where 
-  show (Trigger s fnName _) =
-    notVarErr s (\var -> ("trigger_" ++ var ++ "_" ++ fnName ++ "_")) -- XXX add args ?
+  show (Trigger s fnName args) =
+    "trigger_" ++ getMaybeVar s ++ "_" ++ fnName ++ "_" ++ normalizeVar (show args)
 
 -- XXX change the constructors to SimpleVar and Function (or something like that)
 -- XXX in Ext, we throw away the type info for Args.  This is because we're just
@@ -97,15 +108,20 @@ data ExtRet = ExtRetV
 
 instance Show Ext where
   show (ExtV v) = v
-  show (Fun f (args, _)) = normalizeVar (f ++ unwords args)
+  show (Fun f args) = normalizeVar f ++ show args
 
+-- | For calling a function with Atom variables.
 funcShow :: Name -> String -> Args -> String
-funcShow cName fname (args,_) = 
-  fname ++ "(" ++ (unwords $ intersperse "," (map (\arg -> vPre cName ++ arg) args)) ++ ")"
+funcShow cName fname args = 
+  fname ++ "(" ++ (unwords $ intersperse "," 
+    (map (\arg -> case arg of
+                    v@(V _) -> vPre cName ++ show v
+                    C c -> c
+         ) args)) ++ ")"
 
 instance Eq Ext where
   (==) (ExtV v0) (ExtV v1) = v0 == v1
-  (==) (Fun f0 (l0, _)) (Fun f1 (l1, _)) = f0 == f1 && l0 == l1  
+  (==) (Fun f0 l0) (Fun f1 l1) = f0 == f1 && l0 == l1  
   (==) _ _ = False
 
 -- These belong in Language.hs, but we don't want orphan instances.
@@ -145,6 +161,11 @@ instance Eq a => Eq (Spec a) where
     (==) (Drop i s) (Drop i' s') = i == i' && s == s'
     (==) _ _ = False
 
+-- | Get a variable name from a spec; throw an error otherwise.
+getMaybeVar :: Streamable a => Spec a -> Var
+getMaybeVar (Var v) = v
+getMaybeVar s = error $ "Expected a Copilot variable but provided " ++ show s ++ " instead."
+
 -- | Copilot variable reference, taking the name of the generated C file.
 vPre :: Name -> String
 vPre cName = "copilotState" ++ cName ++ "." ++ cName ++ "."
@@ -158,7 +179,7 @@ data Send a =
 
 instance Streamable a => Show (Send a) where 
   show (Send s (Port port) portName) = 
-    notVarErr s (\var -> (portName ++ "_port_" ++ show port ++ "_var_" ++ var)) -- ++ show ph))
+    portName ++ "_port_" ++ show port ++ "_var_" ++ getMaybeVar s
                             
 -- | Holds all the different kinds of language elements that are pushed into the
 -- Writer monad.  This currently includes the actual specs, "send" directives,
@@ -240,15 +261,6 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- doubles have the good precision.
     showAsC :: a -> String
  
--- | If the 'Spec' isn't a 'Var', then throw an error; otherwise, apply the
--- function.
-notVarErr :: Streamable a => Spec a -> (Var -> b) -> b
-notVarErr s f =
-  case s of
-    Var v -> f v
-    _     -> error $ "You provided specification \n" ++ show s 
-                      ++ "\n where you needed to give a variable."
-
 instance Streamable Bool where
     getSubMap = bMap
     updateSubMap f sm = sm {bMap = f $ bMap sm}

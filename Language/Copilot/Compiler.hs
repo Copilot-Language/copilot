@@ -8,6 +8,7 @@ module Language.Copilot.Compiler
   ) where
 
 import Language.Copilot.Core
+import Language.Copilot.Language (notConstVarErr)
 
 import Data.Maybe
 import qualified Data.Map as M
@@ -34,7 +35,7 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
                            updateIndexes outputIndexes) 
       streams (return ())
 
-    M.fold (makeTrigger outputs) (return ()) triggers
+    M.fold (makeTrigger outputs cFileName) (return ()) triggers
            
     foldStreamableMaps (makeSend outputs) sends (return ())
 
@@ -316,7 +317,7 @@ makeSend :: forall a. Streamable a
 makeSend outputs name (Send v port portName) r = do
         r 
         A.exactPhase 2 $ A.atom ("__send_" ++ name) $
-            mkSend (A.value (notVarErr v (\var -> getElem var outputs)) :: A.E a) 
+            mkSend (A.value $ getElem (getMaybeVar v) outputs :: A.E a) 
                    port 
                    portName
 
@@ -351,11 +352,9 @@ sampleExts outputs ts cFileName s a = do
                      ExtV extV -> var A.<== (A.value $ externalAtomConstructor extV)
                      -- XXX A bit of a hack.  Atom should be changed to allow
                      -- "out-of-Atom" assignments.  But this works for now.
-                     Fun nm (vs,_) -> 
+                     Fun nm args -> 
                        var A.<== 
-                         (A.value $ externalAtomConstructor 
-                            (nm ++ "(" ++ (unwords $ intersperse "," 
-                                             $ map (\arg -> vPre cFileName ++ arg) vs)  ++ ")")))
+                         (A.value $ externalAtomConstructor (funcShow cFileName nm args)))
      ) : a
     PArr _ (arr, idx) -> 
          let arr' = tmpArrName arr (show idx)
@@ -397,26 +396,21 @@ getIdx arr s ts =
 
 -- | To make customer C triggers.  Only for Spec Bool (others throw an
 -- error).  
-makeTrigger :: Outputs -> Trigger -> A.Atom () -> A.Atom ()
-makeTrigger outputs trigger@(Trigger s fnName args) r = 
+makeTrigger :: Outputs -> Name -> Trigger -> A.Atom () -> A.Atom ()
+makeTrigger outputs cFileName trigger@(Trigger s fnName args) r = 
   do r 
      (A.exactPhase 2 $ A.atom (show trigger) $ 
         do A.cond (getOutput outputs s)
-           fnCall outputs fnName args)
+           fnCall outputs cFileName fnName args)
 
 -- | Building an external function call in Atom.
-fnCall :: Outputs -> String -> Args -> A.Atom ()
-fnCall outputs fnName (vars,args) = 
-  A.action (\ues -> fnName ++ "(" ++ unwords (intersperse "," ues) ++ ")")
-       (reorder vars []
-         (foldStreamableMaps 
-           (\v argSpec ls -> (v, A.ue $ getOutput outputs argSpec):ls) args []))
-  where reorder [] acc _ = reverse $ snd (unzip acc)
-        reorder (v:vs) acc ls = 
-          case lookup v ls of
-            Nothing -> error "Error in makeTrigger in Core.hs."
-            Just x  -> let n = (v,x) in
-                       reorder vs (n:acc) ls
+fnCall :: Outputs -> Name -> String -> Args -> A.Atom ()
+fnCall outputs cFileName fnName args = 
+  A.action (\ues -> funcShow cFileName fnName args) []
 
 getOutput :: Streamable a => Outputs -> Spec a -> A.E a
-getOutput outputs v = A.value (notVarErr v (\var -> getElem var outputs))
+getOutput outputs s = 
+  case s of
+    (Var v) -> A.value (getElem v outputs)
+    (Const c) -> A.Const c
+    _ -> error "Impossible error in getOutput in Compiler.hs."

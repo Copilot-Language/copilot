@@ -25,39 +25,27 @@ module Language.Copilot.Language (
         -- unnecessary, as constants are automatically lifted in into the *
         -- Copilot types.  They are useful though for specifying triggers and *
         -- function samplings.
-        const, constB, constI8, constI16, constI32, constI64,
+        const, constI8, constI16, constI32, constI64,
         constW8, constW16, constW32, constW64, constF, constD,
+        -- * Boolean stream constants
+        true, false,
         module Language.Copilot.Language.Sampling,
-        -- -- * The next functions provide easier access to typed external variables.
-        -- extB, extI8, extI16, extI32, extI64,
-        -- extW8, extW16, extW32, extW64, extF, extD,
-        -- -- * The next functions provide easier access to typed external arrays.
-        -- extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
-        -- extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
-        -- -- * Construct a function to sample
-        -- fun,
-        -- -- * Set of operators from which to choose during the generation of random streams
-        -- opsF, opsF2, opsF3,
         -- * Constructs of the copilot language
         drop, (++), (.=), -- (..|), 
         -- * The next functions help typing the send operations
-        -- Warning: there is no typechecking of that yet
-        -- sendB, sendI8, sendI16, sendI32, sendI64,
-        send, port, -- , sendW16, sendW32, sendW64, sendF, sendD
+        send, port, 
         -- * Triggers
-        trigger, void, (<>), -- (<>>), 
+        trigger, void, (<>), 
         -- * Safe casting
         module Language.Copilot.Language.Casting,
---        cast,
-        -- * Boolean stream constants
-        const, true, false
+        notConstVarErr
     ) where
 
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
 import qualified Data.Map as M
-import Prelude ( Bool(..), Num(..), Float, Double, String, ($)
+import Prelude ( Bool(..), Num(..), Float, Double, String, ($), error
                , Fractional(..), fromInteger, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
@@ -155,10 +143,12 @@ varD = Var
 -- | Define a stream variable.
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
 v .= s = 
-  notVarErr v (\v' -> tell $ LangElems 
-                               (updateSubMap (M.insert v' s) emptySM) 
-                               emptySM 
-                               M.empty)
+  case v of
+    (Var v) -> tell $ LangElems 
+                 (updateSubMap (M.insert v s) emptySM) 
+                   emptySM 
+                   M.empty
+    _ -> error $ "Given spec " P.++ show v P.++ " but expected a variable in a Copilot definition (.=)."
 
 port :: Int -> Port
 port = Port
@@ -172,32 +162,36 @@ send portName thePort s =
            emptySM 
            (updateSubMap (M.insert (show sending) sending) emptySM) 
            M.empty
-  where sending = Send s thePort portName
+  where sending = case s of 
+                    v@(Var _) -> Send v thePort portName
+                    _ -> error $ "Expected a Copilot variable but given " 
+                           P.++ show s P.++ " instead."
+
+-- | If the 'Spec' isn't a 'Var' or 'Const', then throw an error; otherwise,
+-- apply the function.
+notConstVarErr :: Streamable a => Spec a -> (ArgConstVar -> b) -> b
+notConstVarErr s f =
+  case s of
+    Var v -> f (V v)
+    Const c -> f (C (showAsC c))
+    _     -> error $ "You provided specification \n" P.++ "  " P.++ show s 
+                      P.++ "\n where you needed to give a Copilot variable or constant."
 
 class ArgCl a where 
   (<>) :: Streamable b => Spec b -> a -> Args
 
 instance ArgCl Args where 
-  s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
+  s <> args = argUpdate s args
 
 instance Streamable b => ArgCl (Spec b) where 
-  s <> s' = (update s (update s' void))
-    where update x (vars,sm) = 
-            notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
+  s <> s' = (argUpdate s (argUpdate s' void))
+
+argUpdate :: Streamable a => Spec a -> Args -> Args
+argUpdate s args = notConstVarErr s (\v -> v:args)
 
 -- | No C arguments 
 void :: Args
-void = ([],emptySM)
-
--- -- | Turn a @Spec Var@ into an arguement for a C function.
--- (<>) :: Streamable a => Spec a -> Args -> Args
--- s <> (vars,sm) = notVarErr s (\v -> (v:vars, updateSubMap (\m -> M.insert v s m) sm))
-
--- -- | Turn a @Spec Var@ into an arguement for a C function.
--- (<>>) :: (Streamable a, Streamable b) => Spec a -> Spec b -> Args
--- s <>> s' = (update s (update s' void))
---   where update x (vars,sm) = 
---           notVarErr x (\v -> (v:vars,updateSubMap (\m -> M.insert v x m) sm))
+void = []
 
 -- | XXX document
 trigger :: Spec Bool -> String -> Args -> Streams
