@@ -144,11 +144,11 @@ varD = Var
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
 v .= s = 
   case v of
-    (Var v) -> tell $ LangElems 
-                 (updateSubMap (M.insert v s) emptySM) 
-                   emptySM 
-                   M.empty
-    _ -> error $ "Given spec " P.++ show v P.++ " but expected a variable in a Copilot definition (.=)."
+    (Var v') -> tell $ LangElems (updateSubMap (M.insert v' s) emptySM) 
+                                    emptySM 
+                                    M.empty
+    _ -> error $ "Given spec " P.++ show v 
+                   P.++ " but expected a variable in a Copilot definition (.=)."
 
 port :: Int -> Port
 port = Port

@@ -8,7 +8,6 @@ module Language.Copilot.Compiler
   ) where
 
 import Language.Copilot.Core
-import Language.Copilot.Language (notConstVarErr)
 
 import Data.Maybe
 import qualified Data.Map as M
@@ -401,12 +400,12 @@ makeTrigger outputs cFileName trigger@(Trigger s fnName args) r =
   do r 
      (A.exactPhase 2 $ A.atom (show trigger) $ 
         do A.cond (getOutput outputs s)
-           fnCall outputs cFileName fnName args)
+           fnCall cFileName fnName args)
 
 -- | Building an external function call in Atom.
-fnCall :: Outputs -> Name -> String -> Args -> A.Atom ()
-fnCall outputs cFileName fnName args = 
-  A.action (\ues -> funcShow cFileName fnName args) []
+fnCall :: Name -> String -> Args -> A.Atom ()
+fnCall cFileName fnName args = 
+  A.action (\_ -> funcShow cFileName fnName args) []
 
 getOutput :: Streamable a => Outputs -> Spec a -> A.E a
 getOutput outputs s = 
