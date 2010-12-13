@@ -72,10 +72,10 @@ tRelease1 i1 i2 = do
 testRules :: Streams
 testRules = do
   let v1 = varB "v1"
-  let v2 = varB "v2"
-  let v3 = varI16 "v3"
-  let v4 = varB "v4"
-  let ex = extI8 "ex" 
+      v2 = varB "v2"
+      v3 = varI16 "v3"
+      v4 = varB "v4"
+      ex = extI8 "ex" 
   v1 .=    (not true) || v2
   v2 .=    [True, False] ++ [True] ++ v3 < cast ex
   v3 .=    0 + drop 3 6

@@ -10,9 +10,9 @@ import Language.Copilot.Libs.Statistics
 t0 :: Streams
 t0 = do
   let minV = varW16 "min"
-  let maxV = varW16 "max"
-  let sumV = varW16 "sum"
-  let a = varW16 "a"
+      maxV = varW16 "max"
+      sumV = varW16 "sum"
+      a = varW16 "a"
 
   a .= [0..5] ++ a + 6
   minV .= min 3 a
@@ -22,7 +22,7 @@ t0 = do
 tMean :: Streams
 tMean = do
   let a = varD "a"
-  let out = varD "out"
+      out = varD "out"
 
   a .= [0..5] ++ a + 6
   out .= mean 4 a

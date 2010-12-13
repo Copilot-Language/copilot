@@ -65,7 +65,9 @@ data Spec a where
     Drop :: Streamable a => Int -> Spec a -> Spec a
 
 -- | Arguments to be passed to a C function.  Either a Copilot variable or a
--- constant.
+-- constant.  A little hacky that I store constants as strings so we don't have
+-- to pass around types.  However, these data are just used to make external C
+-- calls, for which we have no type info anyway, so it's a bit of a moot point.
 data ArgConstVar = V Var
                  | C String
   deriving Eq

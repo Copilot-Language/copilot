@@ -29,24 +29,11 @@ TODOs
  * Add to Help.hs documentation on using the setClock function to use the HW
    clock.
  
- * Go through using hlint suggestions.
-
  * Fix splint warnings on generated C code 
 
  * Libs/Indexes return a parameterized type rather than Int16
 
  * Display external vars when interpreting
-
- * send lets you send stream values on ports at some phase.  Make sure that the
-   stream semantics are preserved by ensuring you don't send at in appropriate
-   times.
-
- * Allow for sampling functions; i.e., you get the return value of the
-   function.  So you don't have to set up extra C vars to get the function
-   values.
-
- * We might want to put triggers at phase 1 and draw on the output vars so as to
-   avoid computing so many next-states.
 
  * Make showing better---don't show with constructors but something more
    user-friendly.  ShowRaw in Core.hs.
@@ -83,3 +70,7 @@ TODOs
    compile/add main.  Do we really want to have an option to set array index
    sizes?  What if we're sampling a function that returns an array?  Also, we
    don't declare functions in general...  We could, but do we want to?
+
+ * Rename options to things more memorable. :)
+
+ * Allow for external variables to be used as function args.

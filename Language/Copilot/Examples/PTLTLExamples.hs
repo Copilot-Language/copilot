@@ -20,7 +20,7 @@ tstdatprv = do
 tprv :: Streams
 tprv = do
   let c = varB "c"
-  let a = varB "a"
+      a = varB "a"
   tstdatprv 
   c `ptltl` previous a
 
@@ -33,7 +33,7 @@ tstdatAB = do
 tAB :: Streams
 tAB = do
    let f = varB "f"
-   let d = varB "d"
+      d = varB "d"
    tstdatAB 
    f `ptltl` alwaysBeen d
 
@@ -46,7 +46,7 @@ tstdatEP = do
 tEP :: Streams
 tEP = do
     let h = varB "h"
-    let g = varB "g"
+      g = varB "g"
     tstdatEP 
     h `ptltl` eventuallyPrev g
 
@@ -61,7 +61,6 @@ tstdat1Sin = q1 .= [False, False, False, False, True] ++ true --varB "q1"
 
 tstdat2Sin :: Streams
 tstdat2Sin = q2 .= [False, False, True, False, False, False, False ] ++ q2
-
                   
 tSince :: Streams 
 tSince = do
@@ -74,18 +73,18 @@ tSince = do
 tSinExt :: Streams 
 tSinExt = do
   let e1 = extB "e1"
-  let e2 = extB "e2"
+      e2 = extB "e2"
   z `ptltl` (e1 `since` e2)
 
 tSinExt2 :: Streams 
 tSinExt2 = do
   let e1 = extB "e1"
-  let e2 = extB "e2"
-  let a = varB "a"
-  let s = varB "s"
-  let d = varB "d"
-  let t = varB "t"
-  let e = varB "e"
+      e2 = extB "e2"
+      a = varB "a"
+      s = varB "s"
+      d = varB "d"
+      t = varB "t"
+      e = varB "e"
 
   a .= not e1
   s `ptltl` (e2 `since` d)
@@ -99,14 +98,14 @@ engine :: Streams
 engine = do
   -- external vars
   let engineTemp = extW8 "engineTemp"
-  let engineOff  = extB "engineOff"
-  let coolerOn   = extB "coolerOn"
+      engineOff  = extB "engineOff"
+      coolerOn   = extB "coolerOn"
   -- Copilot vars
-  let cnt        = varW8 "cnt"
-  let temp       = varB "temp"
-  let cooler     = varB "cooler"
-  let off        = varB "off"
-  let monitor    = varB "monitor"
+      cnt        = varW8 "cnt"
+      temp       = varB "temp"
+      cooler     = varB "cooler"
+      off        = varB "off"
+      monitor    = varB "monitor"
 
   temp    `ptltl` (alwaysBeen (engineTemp > 250))
   cnt     .=      [0] ++ mux (temp && cnt < 10) (cnt + 1) cnt

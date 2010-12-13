@@ -18,7 +18,7 @@ import Language.Copilot
 fib :: Streams
 fib = do
   let f = varW64 "f"
-  let t   = varB "t"
+      t   = varB "t"
   f .= [0,1] ++ f + (drop 1 f)
   t .= even f
     where even :: Spec Word64 -> Spec Bool
@@ -27,9 +27,9 @@ fib = do
 t1 :: Streams
 t1 = do
   let x = varI32 "x"
-  let y = varB "y"
-  let z = varB "z"
-  let w = varB "w"
+      y = varB "y"
+      z = varB "z"
+      w = varB "w"
   x .= [0, 1, 2] ++ x - (drop 1 x)
   y .= [True, False] ++ y ^ z
   z .= x <= drop 1 x
@@ -44,24 +44,24 @@ t1 = do
 t3 :: Streams
 t3 = do
   let a    = varW32 "a"
-  let b    = varB "b"
-  let ext8 = extW32 "ext"
-  let ext1 = extW32 "ext"
+      b    = varB "b"
+      ext8 = extW32 "ext"
+      ext1 = extW32 "ext"
   a .= [0,1] ++ a + ext8 + ext8 + ext1
   b .= [True, False] ++ 2 + a < 5 + ext1
 
 t4 :: Streams
 t4 = do
   let a = varB "a"
-  let b = varB "b"
+      b = varB "b"
   a .= [True,False] ++ not a
   b .= drop 1 a
 
 t5 :: Streams
 t5 = do
   let x = varW16 "x"
-  let y = varB "y"
-  let z = varB "z"
+      y = varB "y"
+      z = varB "z"
   x .= [0] ++ x + 1
   y .= [True, True] ++ y
   z .= [False] ++ not z
@@ -78,7 +78,7 @@ yy =
 zz :: Streams
 zz = do
   let a = varW32 "a"
-  let b = varW32 "b"
+      b = varW32 "b"
   --a .= [0..4] ++ drop 4 (varW32 a) + 1
   a .= a + 1
   b .= drop 3 a
@@ -86,13 +86,13 @@ zz = do
 xx :: Streams
 xx = do
   let a = varW32 "a"
-  let b = varW32 "b"
-  let c = varW32 "c"
-  let d = varB "d"
-  let e = extW32 "ext"
-  let f = extW32 (fun "fun1" void) 
-  let h = extArrW16 (fun "g" (a <> b <> c)) a 
-  let g = extW16 (fun "fun2" (true <> b <> constW16 3))
+      b = varW32 "b"
+      c = varW32 "c"
+      e = extW32 "ext"
+      d = extB "ext"
+      f = extW32 (fun "fun1" void) 
+      h = extArrW16 (fun "g" (a <> b <> c)) a 
+      g = extW16 (fun "fun2" (true <> b <> constW16 3))
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
@@ -104,11 +104,11 @@ engine :: Streams
 engine = do
   -- external vars
   let temp     = extF "temp"
-  let shutoff  = extB "shutoff"
+      shutoff  = extB "shutoff"
   -- Copilot vars
-  let temps    = varF "temps"
-  let overTemp = varB "overTemp"
-  let err  = varB "trigger"
+      temps    = varF "temps"
+      overTemp = varB "overTemp"
+      err  = varB "trigger"
 
   temps    .= [0, 0, 0] ++ temp
   overTemp .= drop 2 temps > 2.3 + temps
@@ -119,7 +119,7 @@ distrib :: Streams
 distrib = do
   -- vars
   let a = varW8 "a"
-  let b = varB "b"
+      b = varB "b"
   -- spec
   a .= [0,1] ++ a + 1
   b .= mod a 2 == 0 
@@ -131,7 +131,7 @@ distrib = do
 gcd :: Word16 -> Word16 -> Streams
 gcd n0 n1 = do
   let a = varW16 "a"
-  let b = varW16 "b"
+      b = varW16 "b"
   a .= alg n0 a b
   b .= alg n1 b a
 
@@ -151,12 +151,12 @@ gcd' :: Streams
 gcd' = do 
   -- externals
   let n = extW16 "n"
-  let m = extW16 "m"
+      m = extW16 "m"
   -- copilot vars
-  let a = varW16 "a"
-  let b = varW16 "b"
-  let init = varB "init"
-  let ans  = varB "ans"
+      a = varW16 "a"
+      b = varW16 "b"
+      init = varB "init"
+      ans  = varB "ans"
   
   a .= alg n (sub a b) init
   b .= alg m (sub b a) init
@@ -190,8 +190,7 @@ testCoercions3 = do
   y .= cast x + cast x
 
 i8 :: Streams
-i8 = 
-  let v = varI8 "v" in v .= [0, 1] ++ v + 1 
+i8 = let v = varI8 "v" in v .= [0, 1] ++ v + 1 
     
 trap :: Streams
 trap = do
@@ -271,7 +270,7 @@ testArr = do
 t99 :: Streams
 t99 = do
   let ext = extW32 "ext"
-  let a = varW32 "a"
+      a = varW32 "a"
   a .= [0,1] ++ a + ext + ext + ext 
 
   let b = varB "b"
