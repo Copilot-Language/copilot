@@ -74,8 +74,12 @@ TODOs
 
  * The scheduling is completely unoptimized...  All sampling in phase 1, and all
    next-state computation in phase 0.  Spread out as room permits across phases?
-
- * Allow constants to be passed to functions.
+   (Need to add a "beforePhase" to Atom.)
 
  * Normalize variables just once and then pass those around instead of doing it
    ad-hoc throughout the compiler.
+
+ * Make a constant for the setPP option of ("","") meaning don't try to
+   compile/add main.  Do we really want to have an option to set array index
+   sizes?  What if we're sampling a function that returns an array?  Also, we
+   don't declare functions in general...  We could, but do we want to?

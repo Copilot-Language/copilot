@@ -43,6 +43,11 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 *******************************************************************************
+
+* Copilot-1.0
+  * Language frozen. 
+  * Added sampling functions and returning arrays.
+
 * Copilot-0.29
 
   * Refactor Language.hs into submodules.

@@ -26,7 +26,7 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
     updateIndexes <- foldStreamableMaps makeUpdateIndex prophArrs (return M.empty)
     outputIndexes <- foldStreamableMaps makeOutputIndex prophArrs (return M.empty)
     tmpSamples <- foldStreamableMaps 
-                    (\_ -> initExtSamples streams prophArrs outputIndexes) 
+                    (\_ -> initExtSamples streams outputs prophArrs outputIndexes) 
                     streams 
                     (return emptyTmpSamples)
     -- One atom rule for each stream
@@ -71,7 +71,6 @@ type Indexes = M.Map Var (A.V ArrIndex)
 
 -- External variables
 data PhasedValueVar a = PhV (A.V a)
---type TmpVarSamples = StreamableMaps PhasedValueVar
 
 data BoundedArray a = B ArrIndex (Maybe (A.A a))
 
@@ -172,9 +171,9 @@ tmpSampleStr :: String
 tmpSampleStr = "tmpSampleVal__"
 
 initExtSamples :: forall a. Streamable a 
-               => StreamableMaps Spec -> ProphArrs -> Indexes -> Spec a 
+               => StreamableMaps Spec -> Outputs -> ProphArrs -> Indexes -> Spec a 
                   -> A.Atom TmpSamples -> A.Atom TmpSamples
-initExtSamples streams prophArrs outputIndexes s tmpSamples = do
+initExtSamples streams outputs prophArrs outputIndexes s tmpSamples = do
     case s of
         Const _ -> tmpSamples
         Var _ ->   tmpSamples
@@ -186,8 +185,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
         F3 _ _ s0 s1 s2 -> initExtSamples' s0 $ initExtSamples' s1 $
                              initExtSamples' s2 tmpSamples
         PVar _ v -> 
-            do  -- checkVar v 
-                ts <- tmpSamples
+            do  ts <- tmpSamples
                 let v' = tmpVarName v 
                     vts = tmpVars ts
                     maybeElem = getMaybeElem v' vts::Maybe (PhasedValueVar a)
@@ -199,8 +197,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                             return $ ts {tmpVars = updateSubMap (\_ -> m') vts}
                     Just _ -> return ts
         PArr _ (arr, idx) -> 
-            do  --checkVar arr
-                ts <- tmpSamples
+            do  ts <- tmpSamples
                 let arr' = tmpArrName arr (show idx)
                     arrts = tmpArrs ts
                     idxts = tmpIdxs ts
@@ -211,15 +208,7 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                       do val <- atomConstructor name (unit::a)
                          let i = case idx of
                                    Const e -> PhIdx $ A.Const e
-                                   Var _ -> 
---                                     let B initLen maybeArr = getElem v prophArrs 
---                                     let B initLen maybeArr = 
---                                           case getMaybeElem v prophArrs of
---                                             Nothing -> 
---                                               error "Error in function initExtSamples."
---                                             Just x -> x
-                                     PhIdx $ nextSt streams prophArrs 
-                                                undefined outputIndexes idx 0
+                                   Var v   -> PhIdx $ A.value (getElem v outputs)
                                    _    -> error "Unexpected Spec in initExtSamples."
                          let m' = M.insert arr' (PhA val) (getSubMap arrts)
                          let m'' = M.insert arr' i (getSubMap idxts)
@@ -227,13 +216,9 @@ initExtSamples streams prophArrs outputIndexes s tmpSamples = do
                                      , tmpIdxs = updateSubMap (\_ -> m'') idxts
                                      }
                   Just _ -> return ts
-    where 
-    --      checkVar v = when (normalizeVar v /= v)
-    --                    (error $ "Copilot: external variable " ++ v ++ " is not "
-    --                            ++ "a valid C99 variable.")
-          initExtSamples' :: Streamable b
+    where initExtSamples' :: Streamable b
                           => Spec b -> A.Atom TmpSamples -> A.Atom TmpSamples
-          initExtSamples' = initExtSamples streams prophArrs outputIndexes
+          initExtSamples' = initExtSamples streams outputs prophArrs outputIndexes
 
 makeUpdateIndex :: Var -> BoundedArray a -> A.Atom Indexes -> A.Atom Indexes
 makeUpdateIndex v (B n arr) indexes =
@@ -289,27 +274,6 @@ makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s 
 
        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
--- -- | Find the maximum phase as which an array sampling depends on this stream by
--- -- computing it's index in terms of it. Returns zero by default.
--- maxSampleDep :: Var -> StreamableMaps Spec -> Int
--- maxSampleDep v streams =
---   foldStreamableMaps (\_ -> streamDep) streams 0
---   where 
---     streamDep :: Streamable b => Spec b -> Int -> Int
---     streamDep s i = 
---       case s of
---         Var _ -> i
---         Const _  -> i
---         PVar _ _ _ -> i
---         PArr _ (_, Var v') | v == v'   -> max ph i
---                            | otherwise -> i
---         PArr _ _ _ -> i
---         F _ _ s0 -> streamDep s0 i
---         F2 _ _ s0 s1 -> streamDep s0 $ streamDep s1 i
---         F3 _ _ s0 s1 s2 -> streamDep s0 $ streamDep s1 $ streamDep s2 i
---         Append _ s0 -> streamDep s0 i
---         Drop _ s0 -> streamDep s0 i
-
 -- Do sends in phase 2.
 makeSend :: forall a. Streamable a 
          => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
@@ -347,27 +311,19 @@ sampleExts outputs ts cFileName s a = do
          PhV var = getElem v' (tmpVars ts)::PhasedValueVar a in
      (v', A.exactPhase minSampPh $ 
             A.atom (sampleStr ++ normalizeVar v') $ 
-                (case v of
-                     ExtV extV -> var A.<== (A.value $ externalAtomConstructor extV)
-                     -- XXX A bit of a hack.  Atom should be changed to allow
-                     -- "out-of-Atom" assignments.  But this works for now.
-                     Fun nm args -> 
-                       var A.<== 
-                         (A.value $ externalAtomConstructor (funcShow cFileName nm args)))
+               var A.<== (A.value $ externalAtomConstructor $ getSampleFuncVar v)
      ) : a
     PArr _ (arr, idx) -> 
          let arr' = tmpArrName arr (show idx)
              PhIdx i = getIdx arr' idx (tmpIdxs ts)
              PhA arrV = 
-               case getMaybeElem arr' (tmpArrs ts)::Maybe (PhasedValueArr a) of
+               case getMaybeElem arr' (tmpArrs ts) :: Maybe (PhasedValueArr a) of
                  Nothing -> error "Error in fucntion sampleExts."
-                 Just x -> x
-         in (arr', A.exactPhase minSampPh $ 
-              A.atom (sampleStr ++ normalizeVar arr') $ 
-                arrV A.<== A.array' (case arr of
-                                       ExtV extV -> extV
-                                       Fun nm args -> undefined
-                                    ) (atomType (unit::a)) A.!. i
+                 Just x -> x in
+         (arr', A.exactPhase minSampPh $ 
+            A.atom (sampleStr ++ normalizeVar arr') $ 
+               arrV A.<== A.array' (getSampleFuncVar arr)
+                                   (atomType (unit::a)) A.!. i
             ) : a
     F _ _ s0 -> sampleExts' s0 a
     F2 _ _ s0 s1 -> sampleExts' s0 $ sampleExts' s1 a
@@ -378,6 +334,12 @@ sampleExts outputs ts cFileName s a = do
   where minSampPh :: Int
         minSampPh = 2
         sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
+        getSampleFuncVar v = case v of
+                               ExtV extV -> extV
+                               -- XXX A bit of a hack.  Atom should be changed to allow
+                               -- "out-of-Atom" assignments.  But this works for now.
+                               Fun nm args -> funcShow cFileName nm args
+
 
 -- lookup the idx for external array accesses in the map.
 getIdx :: forall a. (Streamable a, A.IntegralE a) 
