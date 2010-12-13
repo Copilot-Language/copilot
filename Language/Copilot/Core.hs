@@ -374,9 +374,11 @@ getMaybeElem v sm = M.lookup v $ getSubMap sm
 -- Launch an exception if the index is not in it
 {-# INLINE getElem #-}
 getElem :: Streamable a => Var -> StreamableMaps b -> b a
-getElem v sm = case getMaybeElem v sm of
-                 Nothing -> error "Error in application of getElem from Core.hs."
-                 Just x -> x
+getElem v sm = 
+  case getMaybeElem v sm of
+    Nothing -> error $ "Error in application of getElem from Core.hs for variable "
+                 ++ v ++ "."
+    Just x -> x
 
 getAtomType :: Streamable a => Spec a -> A.Type
 getAtomType s =

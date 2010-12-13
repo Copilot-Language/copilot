@@ -308,7 +308,11 @@ sampleExts outputs ts cFileName s a = do
     Const _ -> a
     PVar _ v -> 
      let v' = tmpVarName v
-         PhV var = getElem v' (tmpVars ts)::PhasedValueVar a in
+--         PhV var = getElem v' (tmpVars ts) :: PhasedValueVar a in
+         PhV var = case getMaybeElem v' (tmpVars ts) :: Maybe (PhasedValueVar a) of 
+                     Nothing ->  error $ "Copilot error: variable " ++ v' 
+                                   ++ " was not defined!."
+                     Just (PhV var') -> PhV var' in
      (v', A.exactPhase minSampPh $ 
             A.atom (sampleStr ++ normalizeVar v') $ 
                var A.<== (A.value $ externalAtomConstructor $ getSampleFuncVar v)
@@ -372,6 +376,10 @@ fnCall cFileName fnName args =
 getOutput :: Streamable a => Outputs -> Spec a -> A.E a
 getOutput outputs s = 
   case s of
-    (Var v) -> A.value (getElem v outputs)
+    (Var v) -> A.value 
+      (case getMaybeElem v outputs of
+         Nothing -> error $ "Copilot error in trigger specification: variable " 
+                      ++ v ++ " was not defined!."
+         Just v' -> v')
     (Const c) -> A.Const c
     _ -> error "Impossible error in getOutput in Compiler.hs."

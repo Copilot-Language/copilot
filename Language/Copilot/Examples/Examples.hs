@@ -89,14 +89,19 @@ xx = do
       b = varW32 "b"
       c = varW32 "c"
       e = extW32 "ext"
-      d = extB "ext"
+      d = varB "d"
       f = extW32 (fun "fun1" void) 
       h = extArrW16 (fun "g" (a <> b <> c)) a 
       g = extW16 (fun "fun2" (true <> b <> constW16 3))
+      w = varB "w"
   a .= e + f
   b .= [3] ++ a
   c .= [0, 1, 3, 4] ++ drop 1 b
   d .= h < g
+  -- triggers
+  trigger d "y_trigger" void
+  trigger w "z0_trigger" (a <> b <> true)
+  trigger w "z1_trigger" (d <> constW16 3 <> w)
 
 -- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
 -- engine is immediately shut off.  From the paper.
