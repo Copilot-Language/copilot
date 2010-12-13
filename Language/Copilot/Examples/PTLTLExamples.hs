@@ -33,7 +33,7 @@ tstdatAB = do
 tAB :: Streams
 tAB = do
    let f = varB "f"
-      d = varB "d"
+       d = varB "d"
    tstdatAB 
    f `ptltl` alwaysBeen d
 
@@ -46,7 +46,7 @@ tstdatEP = do
 tEP :: Streams
 tEP = do
     let h = varB "h"
-      g = varB "g"
+        g = varB "g"
     tstdatEP 
     h `ptltl` eventuallyPrev g
 
