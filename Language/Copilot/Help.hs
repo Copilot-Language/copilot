@@ -166,6 +166,7 @@ helpStr =
   , "   Compare the compiler and interpreter on 100 randomly-generated Copilot"
   , "   specs, for 100 iterations each."
   , ""
-  , " > verify \"foo.c\""
-  , "   Calls cbmc on foo.c (where foo.c is in the current directory)."
+  , " > verify \"foo.c\" n"
+  , "   Calls cbmc on foo.c (where foo.c is in the current directory) and"
+  , "   unrolls the program n times."
   ]
