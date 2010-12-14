@@ -111,7 +111,9 @@ verify file n = do
   code <- system cmd
   case code of
     ExitSuccess -> return ()
-    _           -> do putStrLn $ "cbmc could not be called on file " ++ file ++ "."
+    _           -> do putStrLn ""
+                      putStrLn $ "An error was returned by cbmc.  This may have be" 
+                      putStrLn $ "due to cbmc not finding the file " ++ file ++ "."
                       putStrLn "Perhaps cbmc is not installed on your system, is"
                       putStrLn "not in your path, cbmc cannot be called from the"
                       putStrLn $ "command line on your system, or " ++ file 
