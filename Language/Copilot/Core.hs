@@ -18,7 +18,7 @@ module Language.Copilot.Core (
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
         getAtomType, getSpecs, getSends, getTriggers, vPre, funcShow,
-        getMaybeVar
+        getMaybeVar, notConstVarErr
     ) where
 
 import qualified Language.Atom as A
@@ -213,6 +213,16 @@ getTriggers streams =
 
 -- | A named stream
 type Stream a = Streamable a => (Var, Spec a)
+
+-- | If the 'Spec' isn't a 'Var' or 'Const', then throw an error; otherwise,
+-- apply the function.
+notConstVarErr :: Streamable a => Spec a -> (ArgConstVar -> b) -> b
+notConstVarErr s f =
+  case s of
+    Var v -> f (V v)
+    Const c -> f (C (showAsC c))
+    _     -> error $ "You provided specification \n" ++ "  " ++ show s 
+                        ++ "\n where you needed to give a Copilot variable or constant."
 
 
 -- | Holds the complete specification of a distributed monitor

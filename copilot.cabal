@@ -48,18 +48,19 @@ library
     extensions:
     exposed-modules: Language.Copilot
                      Language.Copilot.AdHocC
---                     Language.Copilot.Core
+                     Language.Copilot.Core
                      Language.Copilot.Language
---                     Language.Copilot.Language.Sampling
---                     Language.Copilot.Language.Casting
---                     Language.Copilot.AtomToC
---                     Language.Copilot.Compiler
+                     Language.Copilot.Language.Sampling
+                     Language.Copilot.Language.FunctionCalls
+                     Language.Copilot.Language.Casting
+                     Language.Copilot.AtomToC
+                     Language.Copilot.Compiler
                      Language.Copilot.Interpreter
                      Language.Copilot.Help
---                     Language.Copilot.Analyser
+                     Language.Copilot.Analyser
                      Language.Copilot.PrettyPrinter
                      Language.Copilot.Tests.Random
---                     Language.Copilot.Dispatch
+                     Language.Copilot.Dispatch
                      Language.Copilot.Interface
                      Language.Copilot.Libs.ErrorChks
                      Language.Copilot.Libs.PTLTL

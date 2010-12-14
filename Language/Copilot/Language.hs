@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, FlexibleContexts, TypeSynonymInstances #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Describes the language /Copilot/.
@@ -35,7 +35,8 @@ module Language.Copilot.Language (
         -- * The next functions help typing the send operations
         send, port, 
         -- * Triggers
-        trigger, void, (<>), 
+        module Language.Copilot.Language.FunctionCalls,
+--        trigger, (<>), void,
         -- * Safe casting
         module Language.Copilot.Language.Casting,
         notConstVarErr
@@ -44,15 +45,16 @@ module Language.Copilot.Language (
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
-import qualified Data.Map as M
 import Prelude ( Bool(..), Num(..), Float, Double, String, ($), error
                , Fractional(..), fromInteger, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
+import qualified Data.Map as M
 
 import Language.Copilot.Core
 import Language.Copilot.Language.Sampling
 import Language.Copilot.Language.Casting
+import Language.Copilot.Language.FunctionCalls
 --import Language.Copilot.Language.RandomOps
 
 ---- Operators and functions ---------------------------------------------------
@@ -167,41 +169,6 @@ send portName thePort s =
                     _ -> error $ "Expected a Copilot variable but given " 
                            P.++ show s P.++ " instead."
 
--- | If the 'Spec' isn't a 'Var' or 'Const', then throw an error; otherwise,
--- apply the function.
-notConstVarErr :: Streamable a => Spec a -> (ArgConstVar -> b) -> b
-notConstVarErr s f =
-  case s of
-    Var v -> f (V v)
-    Const c -> f (C (showAsC c))
-    _     -> error $ "You provided specification \n" P.++ "  " P.++ show s 
-                      P.++ "\n where you needed to give a Copilot variable or constant."
-
-class ArgCl a where 
-  (<>) :: Streamable b => Spec b -> a -> Args
-
-instance ArgCl Args where 
-  s <> args = argUpdate s args
-
-instance Streamable b => ArgCl (Spec b) where 
-  s <> s' = (argUpdate s (argUpdate s' void))
-
-argUpdate :: Streamable a => Spec a -> Args -> Args
-argUpdate s args = notConstVarErr s (\v -> v:args)
-
--- | No C arguments 
-void :: Args
-void = []
-
--- | XXX document
-trigger :: Spec Bool -> String -> Args -> Streams
-trigger v fnName args =
-  tell $ LangElems 
-           emptySM 
-           emptySM 
-           (M.insert (show trig) trig M.empty)
-  where trig = Trigger v fnName args
-
 -- | Coerces a type that is 'Streamable' into a Copilot constant.
 const :: Streamable a => a -> Spec a
 const = Const
@@ -243,7 +210,6 @@ ls ++ s = Append ls s
 
 infixr 3 ++
 infixr 2 .=
-infixr 1 <>
 
 ---- Optimisation rules --------------------------------------------------------
 

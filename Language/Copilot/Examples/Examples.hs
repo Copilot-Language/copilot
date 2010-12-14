@@ -67,7 +67,7 @@ t5 = do
   z .= [False] ++ not z
   -- triggers
   trigger y "y_trigger" void
-  trigger z "z0_trigger" (x <> y <> z <> true)
+  trigger z "z0_trigger" x
   trigger z "z1_trigger" (y <> constW16 3 <> x)
   
 yy :: Streams
@@ -91,7 +91,7 @@ xx = do
       e = extW32 "ext"
       d = varB "d"
       f = extW32 (fun "fun1" void) 
-      h = extArrW16 (fun "g" (a <> b <> c)) a 
+      h = extArrW16 (fun "g" b) a 
       g = extW16 (fun "fun2" (true <> b <> constW16 3))
       w = varB "w"
   a .= e + f

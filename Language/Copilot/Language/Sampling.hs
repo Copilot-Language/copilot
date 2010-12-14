@@ -10,23 +10,15 @@ module Language.Copilot.Language.Sampling (
         extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
         extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
         fun
-                                 ) where
+                                          ) where
 
 
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
 
+import Language.Copilot.Language.FunctionCalls
 import Language.Copilot.Core
-
-
--- -- | Create a global variable to sample.
--- global :: Var -> Ext
--- global = ExtV
-
--- | Create a function to sample.
-fun :: String -> Args -> Ext
-fun = Fun
 
 class ExtCl a where 
   extB :: a -> Spec Bool
@@ -107,51 +99,3 @@ instance ExtCl Ext where
   extArrF = \fn idx -> PArr A.Float (fn, idx)
   extArrD = \fn idx -> PArr A.Double (fn, idx)
 
--- -- Used for easily producing, and coercing PVars
--- -- for variables
--- extB :: Ext -> Spec Bool
--- extB = PVar A.Bool
--- extI8 :: Ext -> Spec Int8
--- gextI8 = PVar A.Int8
--- extI16 :: Ext -> Spec Int16
--- extI16 = PVar A.Int16
--- extI32 :: Ext -> Spec Int32
--- extI32 = PVar A.Int32
--- extI64 :: Ext -> Spec Int64
--- extI64 = PVar A.Int64
--- extW8 :: Ext -> Spec Word8
--- extW8 = PVar A.Word8
--- -- extW16 :: Ext -> Spec Word16
--- -- extW16 = PVar A.Word16
--- extW32 :: Ext -> Spec Word32
--- extW32 = PVar A.Word32
--- extW64 :: Ext -> Spec Word64
--- extW64 = PVar A.Word64
--- extF :: Ext -> Spec Float
--- extF = PVar A.Float
--- extD :: Ext -> Spec Double
--- extD = PVar A.Double
-
--- -- for arrays 
--- extArrB ::  (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Bool
--- extArrB = \v idx -> PArr A.Bool (v, idx)
--- extArrI8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Int8
--- extArrI8 = \v idx -> PArr A.Int8 (v, idx)
--- extArrI16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Int16
--- extArrI16 = \v idx -> PArr A.Int16 (v, idx)
--- extArrI32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Int32
--- extArrI32 = \v idx -> PArr A.Int32 (v, idx)
--- extArrI64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Int64
--- extArrI64 = \v idx -> PArr A.Int64 (v, idx)
--- extArrW8 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Word8
--- extArrW8 = \v idx -> PArr A.Word8 (v, idx)
--- extArrW16 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Word16
--- extArrW16 = \v idx -> PArr A.Word16 (v, idx)
--- extArrW32 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Word32
--- extArrW32 = \v idx -> PArr A.Word32 (v, idx)
--- extArrW64 :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Word64
--- extArrW64 = \v idx -> PArr A.Word64 (v, idx)
--- extArrF :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Float
--- extArrF = \v idx -> PArr A.Float (v, idx)
--- extArrD :: (Streamable a, A.IntegralE a) => Ext -> Spec a -> Spec Double
--- extArrD = \v idx -> PArr A.Double (v, idx)
