@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
@@ -80,16 +82,31 @@ baseOpts = Options {
 noOpts :: Options -> Options
 noOpts = id
 
-test :: Int -> (Options -> Options) -> IO ()
-test n opts = 
+class OptCl a where
+  test :: Int -> a -> IO ()
+  interpret :: Streams -> Int -> a -> IO ()
+  compile :: Streams -> Name -> a -> IO ()
+
+instance OptCl (Options -> Options) where
+  test = test'
+  interpret = interpret'
+  compile = compile'
+
+instance OptCl Options where
+  test i opts = test' i (\o -> opts)
+  interpret s n opts = interpret' s n (\o -> opts)
+  compile s f opts = compile' s f (\o -> opts)
+
+test' :: Int -> (Options -> Options) -> IO ()
+test' n opts = 
   interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts $ baseOpts
 
-interpret :: Streams -> Int -> (Options -> Options) -> IO ()
-interpret streams n opts = 
+interpret' :: Streams -> Int -> (Options -> Options) -> IO ()
+interpret' streams n opts = 
   interface $ setI $ setN n $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
 
-compile :: Streams -> Name -> (Options -> Options) -> IO ()
-compile streams fileName opts = 
+compile' :: Streams -> Name -> (Options -> Options) -> IO ()
+compile' streams fileName opts = 
   interface $ setC "-Wall" $ setO fileName $ setS (getSends streams)
     $ setTriggers (getTriggers streams) 
       $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
