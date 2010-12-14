@@ -82,34 +82,19 @@ baseOpts = Options {
 noOpts :: Options -> Options
 noOpts = id
 
-class OptCl a where
-  test :: Int -> a -> IO ()
-  interpret :: Streams -> Int -> a -> IO ()
-  compile :: Streams -> Name -> a -> IO ()
+test :: Int -> Options -> IO ()
+test n opts = 
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts 
 
-instance OptCl (Options -> Options) where
-  test = test'
-  interpret = interpret'
-  compile = compile'
+interpret :: Streams -> Int -> Options -> IO ()
+interpret streams n opts = 
+  interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
 
-instance OptCl Options where
-  test i opts = test' i (\o -> opts)
-  interpret s n opts = interpret' s n (\o -> opts)
-  compile s f opts = compile' s f (\o -> opts)
-
-test' :: Int -> (Options -> Options) -> IO ()
-test' n opts = 
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts $ baseOpts
-
-interpret' :: Streams -> Int -> (Options -> Options) -> IO ()
-interpret' streams n opts = 
-  interface $ setI $ setN n $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
-
-compile' :: Streams -> Name -> (Options -> Options) -> IO ()
-compile' streams fileName opts = 
+compile :: Streams -> Name -> Options -> IO ()
+compile streams fileName opts = 
   interface $ setC "-Wall" $ setO fileName $ setS (getSends streams)
     $ setTriggers (getTriggers streams) 
-      $ opts $ baseOpts {optStreams = Just (getSpecs streams)}
+      $ opts {optStreams = Just (getSpecs streams)}
 
 verify :: FilePath -> Int -> IO ()
 verify file n = do
@@ -144,7 +129,7 @@ verify file n = do
 setS :: StreamableMaps Send -> Options -> Options
 setS sends opts = opts {optSends = sends}
 
--- | Set the directives for sending stream values on ports.
+-- -- | Set the directives for sending stream values on ports.
 setTriggers :: Triggers -> Options -> Options
 setTriggers triggers opts = opts {optTriggers = triggers}
 
@@ -215,17 +200,6 @@ setDir dir opts = opts {optOutputDir = dir}
 -- If nothing, then code appropriate for communication with the interpreter is generated
 setPP :: (String, String) -> Options -> Options
 setPP pp opts = opts {optPrePostCode = Just pp}
-
--- -- | Give C function triggers for Copilot Boolean streams.  The tiggers fire if
--- -- the stream becoms true.
--- setTriggers :: [(Var, String)] -> Options -> Options
--- setTriggers trigs opts = opts {optTriggers = trigs}
---   -- if null repeats 
---   --   then 
---   --   else error $ "Error: only one trigger per Copilot variable.  Variables "
---   --                ++ show (Set.fromList repeats) ++ " are given multiple triggers."
---   -- where vars = map fst trigs
---   --       repeats = vars \\ Set.toList (Set.fromList vars)
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()

@@ -122,4 +122,5 @@ engineRun =
                             ]
                   , w8Map = fromList [("engineTemp", [99,100..])]
                   }) 
+    baseOpts
 
