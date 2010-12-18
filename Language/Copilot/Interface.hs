@@ -96,8 +96,8 @@ compile streams fileName opts =
     $ setTriggers (getTriggers streams) 
       $ opts {optStreams = Just (getSpecs streams)}
 
-verify :: FilePath -> Int -> IO ()
-verify file n = do
+verify :: FilePath -> Int -> String -> IO ()
+verify file n opts = do
   putStrLn "Calling cbmc, developed by Daniel Kroening \& Edmund Clarke."
   putStrLn "<http://www.cprover.org/cbmc/>, with the following checks:"
   putStrLn "  --bounds-check       enable array bounds checks"
@@ -106,23 +106,17 @@ verify file n = do
   putStrLn "  --overflow-check     enable arithmetic over- and underflow checks"
   putStrLn "  --nan-check          check floating-point for NaN"
   putStrLn ""
-  putStrLn $ "  assuming main() as the entry point:"
+  putStrLn "Assuming main() as the entry point unless specified otherwise (--function f)"
   putStrLn cmd
   code <- system cmd
   case code of
     ExitSuccess -> return ()
     _           -> do putStrLn ""
-                      putStrLn $ "An error was returned by cbmc.  This may have be" 
-                      putStrLn $ "due to cbmc not finding the file " ++ file ++ "."
-                      putStrLn "Perhaps cbmc is not installed on your system, is"
-                      putStrLn "not in your path, cbmc cannot be called from the"
-                      putStrLn $ "command line on your system, or " ++ file 
-                      putStrLn "does not exist.  See <http://www.cprover.org/cbmc/>"
-                      putStrLn "for more information on cbmc."
+                      putStrLn $ "An error was returned by cbmc.  This may have be due to cbmc not finding the file " ++ file ++ ".  Perhaps cbmc is not installed on your system, is not in your path, cbmc cannot be called from the command line on your system, or " ++ file ++ " does not exist.  See <http://www.cprover.org/cbmc/>  for more information on cbmc."
     where cmd = unwords ("cbmc" : args)
           args = ["--div-by-zero-check", "--overflow-check", "--bounds-check"
                  , "--nan-check", "--pointer-check"
-                 , "--unwind " ++ show n, file] 
+                 , "--unwind " ++ show n, opts, file] 
                    
 
 -- Small functions for easy modification of the Options record
