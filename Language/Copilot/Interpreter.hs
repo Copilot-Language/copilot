@@ -1,7 +1,8 @@
 {-# LANGUAGE Rank2Types #-}
 
 -- | The Copilot interpreter.
-module Language.Copilot.Interpreter(interpretStreams) where
+module Language.Copilot.Interpreter
+    (interpretStreams) where
 
 import Language.Copilot.Core
 
@@ -38,6 +39,6 @@ interpret inVs moVs s =
           case v of
             ExtV v' -> f v'
             -- XXX support this?  
-            Fun _ _ -> error $ "Sampling functions is not supported"
+            Fun _ _ -> error $ "Sampling functions is not currently supported"
                                ++ " in the Copilot interpreter."
                           

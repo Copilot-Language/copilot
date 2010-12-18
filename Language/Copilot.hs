@@ -21,7 +21,7 @@ module Language.Copilot
   -- , module Language.Copilot.Examples.PTLTLExamples
   ) where
 
-import Language.Copilot.Core (Streams, Spec, emptySM, bMap, w8Map) -- XXX for libs, probably need to export all the maps.  Maybe put in a different file?
+import Language.Copilot.Core (Streams, Spec, emptySM, StreamableMaps(..)) -- XXX for libs, probably need to export all the maps.  Maybe put in a different file?
 import Language.Copilot.Analyser
 import Language.Copilot.Interpreter
 import Language.Copilot.Help
