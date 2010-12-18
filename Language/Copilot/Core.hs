@@ -568,7 +568,7 @@ showRaw (PVar t v) _ = "PVar " ++ show t ++ " " ++ show v -- ++ " " ++ show ph
 showRaw (PArr t (v, idx)) _ = 
   "PArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ "))" -- ++ show ph
 showRaw (Var v) _ = "Var " ++ v
-showRaw (Const e) _ = "Const " ++ show e
+showRaw (Const e) _ = show e
 showRaw (F _ _ s0) n = 
     "F op? (\n" ++ 
         showIndented s0 (n + 1) ++ "\n" ++ 
