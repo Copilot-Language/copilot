@@ -9,7 +9,6 @@ module Language.Copilot.Language.Sampling (
         -- * The next functions provide easier access to typed external arrays.
         extArrB, extArrI8, extArrI16, extArrI32, extArrI64,
         extArrW8, extArrW16, extArrW32, extArrW64, extArrF, extArrD,
-        fun
                                           ) where
 
 
@@ -17,7 +16,6 @@ import qualified Language.Atom as A
 import Data.Int
 import Data.Word
 
-import Language.Copilot.Language.FunctionCalls
 import Language.Copilot.Core
 
 class ExtCl a where 

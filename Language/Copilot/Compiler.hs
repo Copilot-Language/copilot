@@ -287,7 +287,7 @@ makeSend outputs name (Send v port portName) r = do
 -- | Sending data over ports.
 mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
 mkSend e (Port port) portName =
-  A.action (\[ueStr] -> portName ++ "(" ++ ueStr ++ "," ++ show port ++ ")") 
+  A.action (\ueStr -> portName ++ "(" ++ head ueStr ++ "," ++ show port ++ ")") 
            [A.ue e]
 
 sampleStr :: String
