@@ -2,9 +2,10 @@
 -- the number of periods over which to compute the statistic (@n == 1@ computes
 -- it only over the current period). 
 
-module Language.Copilot.Libs.Statistics(max, min, sum, mean) where
+module Language.Copilot.Libs.Statistics
+    (max, min, sum, mean, meanNow) where
 
-import Prelude (Int, ($), foldl1, fromIntegral)
+import Prelude (Int, ($), foldl1, fromIntegral, foldl, error, length)
 --import qualified Prelude as P 
 
 import qualified Language.Atom as A
@@ -39,5 +40,11 @@ mean :: (Streamable a, Fractional a, A.NumE a) => Int -> Spec a -> Spec a
 mean n s = 
   nOneChk "mean" n $ (sum n s) / (fromIntegral n)
 
--- majority :: (Streamable a, A.NumE a) => Int -> Spec a -> Spec a
--- majority n s =
+-- | Mean value over the current set of specs passed in.
+meanNow :: (Streamable a, A.IntegralE a) => [Spec a] -> Spec a
+meanNow [] = error 
+    "Error in majority: list of arguments must be nonempty."
+meanNow ls = 
+  (foldl (+) 0 ls) `div` (fromIntegral $ length ls)
+
+
