@@ -174,25 +174,28 @@ gcd' = do
 testCoercions :: Streams
 testCoercions = do
   let word = varW8 "word"
+      int = varI16 "int"
   word .= [1] ++ word * (-2)
-  let int = varI16 "int"
   int  .= 1 + cast word
 
 testCoercions2 :: Streams
 testCoercions2 = do
   let b = varB "b"
+      i = varI16 "i"
+      j = varI16 "j"
   b .= [True] ++ not b
-  let i = varI16 "i"
-  let j = varI16 "j"
   i .= cast j
   j .= 3
 
 testCoercions3 :: Streams
 testCoercions3 = do
   let x = varB "x"
-  x .= [True] ++ not x
-  let y = varI32 "y"
+      y = varI32 "y"
+      z = varI32 "z"
+  x .= [True, True] ++ not x
   y .= cast x + cast x
+--  z .= drop 1 (cast x)
+  z .= cast (not true)
 
 i8 :: Streams
 i8 = let v = varI8 "v" in v .= [0, 1] ++ v + 1 
@@ -285,6 +288,13 @@ t11 :: Streams
 t11 = do
   let v = varB "v"
   v .= [False, True, False] ++ v
+
+tdiv :: Streams
+tdiv = do
+  let a = varW16 "a"
+      b = varW16 "b"
+  a .= [3] ++ a `div` 5
+  b .= [3] ++ a `mod` 5
 
 -- test external idx before after and in the stream it references
 -- test multiple defs
