@@ -4,7 +4,7 @@
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
         , help , setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setArrs, setClock, noOpts,
+        , setDir, setGCC, setArrs, setClock,
         module Language.Copilot.Dispatch
     ) where
 
@@ -78,9 +78,6 @@ baseOpts = Options {
     }
 
 -- Functions for making it easier for configuring copilot in the frequent use cases
-
-noOpts :: Options -> Options
-noOpts = id
 
 test :: Int -> Options -> IO ()
 test n opts = 
