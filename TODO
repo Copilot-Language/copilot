@@ -73,4 +73,13 @@ TODOs
 
  * Rename options to things more memorable. :)
 
- * Allow for external variables to be used as function args.
+ * Allow for external variables to be used as function args.  (Not sure if this
+   should be done.  Will require some rewiring, and passing "through" Copilot
+   vars gives extra typechecking.)
+
+ * Make assignment of input vars easier.  Just give var names and values, and
+   look up their type in the Interface to assign the maps.  
+
+ * Make the assignment of input vars in compiled testing better.  Fix Help.hs.
+   Something like setE-C ("x", "y") and let the compiler figure out the
+   appropriate input types.
