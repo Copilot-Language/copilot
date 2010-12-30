@@ -49,5 +49,3 @@ ft0 = do
       ls = [8, 3, 7, 6, 5, 4, 2, 4, 1, 0]
   v3 .= ftAvg ls 3
   v2 .= ftAvg ls 2
-
-
