@@ -296,6 +296,12 @@ tdiv = do
   a .= [3] ++ a `div` 5
   b .= [3] ++ a `mod` 5
 
+extT :: Streams
+extT = do
+  let x = extW16 "x"
+  let y = varW16 "y"
+  y .= x 
+
 -- test external idx before after and in the stream it references
 -- test multiple defs
 -- test defs in functions
