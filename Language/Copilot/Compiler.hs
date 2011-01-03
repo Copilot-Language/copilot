@@ -46,12 +46,14 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
 --  where
 --    optP = getOptimalPeriod streams sends
 
--- | For period of length n:
--- Phase 0: state update.
--- Phase 1: Compute output variables.
--- Phase 2 - n-2: send values (if any).
--- Phase 2 - n-2: Sample external vars (if any).
--- Phase n-1: update indexes.
+
+-- | For period n >= 5:
+-- Phase 0: Sample external vars (if any).
+-- Phase 1: state update.
+-- Phase 2: Compute output variables.
+-- Phase 3: Fire triggers (if any).
+-- Phase 3: send values (if any).
+-- Phase 4 up to n: update indexes.
 period :: Maybe Int -> Int
 period p = 
   case p of
@@ -61,7 +63,7 @@ period p =
                 else error $ "Copilot error: the period is too short, " 
                        ++ "it should be at least " ++ show minPeriod ++ " ticks."
   where minPeriod :: Int
-        minPeriod = 4
+        minPeriod = 5
 
 -- For the prophecy arrays
 type ArrIndex = Word64
@@ -250,36 +252,33 @@ makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s 
         Nothing ->
             -- Fusing together the update and the output if the prophecy array doesn't exist 
             -- (ie if it would only have hold the output value)
-            A.exactPhase 0 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
+            A.exactPhase 2 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
                 ((getElem v outputs)::(A.V a)) A.<== nextSt'
 
         Just arr -> do
             let updateIndex = fromJust $ M.lookup v updateIndexes
                 outputIndex = fromJust $ M.lookup v outputIndexes
 
-            A.exactPhase 0 $ A.atom ("update__" ++ normalizeVar v) $ do
+            A.exactPhase 1 $ A.atom ("update__" ++ normalizeVar v) $ do
                 arr A.! (A.VRef updateIndex) A.<== nextSt'
             
-            A.exactPhase 1 $ A.atom ("output__" ++ normalizeVar v) $ do
+            A.exactPhase 2 $ A.atom ("output__" ++ normalizeVar v) $ do
                 ((getElem v outputs)::(A.V a)) A.<== arr A.!. (A.VRef outputIndex)
                 outputIndex A.<==          (A.VRef outputIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
             
-            -- XXX For now, we put these all in the last phase.  We want better
-            -- distribution though at some point.
-            A.phase (p - 1)
+            A.phase 4
               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
 
        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
--- Do sends in phase 2.
 makeSend :: forall a. Streamable a 
          => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
 makeSend outputs name (Send v port portName) r = do
         r 
-        A.exactPhase 2 $ A.atom ("__send_" ++ name) $
+        A.exactPhase 3 $ A.atom ("__send_" ++ name) $
             mkSend (A.value $ getElem (getMaybeVar v) outputs :: A.E a) 
                    port 
                    portName
@@ -313,7 +312,7 @@ sampleExts outputs ts cFileName s a = do
                      Nothing ->  error $ "Copilot error: variable " ++ v' 
                                    ++ " was not defined!."
                      Just (PhV var') -> PhV var' in
-     (v', A.exactPhase minSampPh $ 
+     (v', A.exactPhase 0 $ 
             A.atom (sampleStr ++ normalizeVar v') $ 
                var A.<== (A.value $ externalAtomConstructor $ getSampleFuncVar v)
      ) : a
@@ -324,7 +323,7 @@ sampleExts outputs ts cFileName s a = do
                case getMaybeElem arr' (tmpArrs ts) :: Maybe (PhasedValueArr a) of
                  Nothing -> error "Error in fucntion sampleExts."
                  Just x -> x in
-         (arr', A.exactPhase minSampPh $ 
+         (arr', A.exactPhase 0 $ 
             A.atom (sampleStr ++ normalizeVar arr') $ 
                arrV A.<== A.array' (getSampleFuncVar arr)
                                    (atomType (unit::a)) A.!. i
@@ -335,8 +334,8 @@ sampleExts outputs ts cFileName s a = do
                          sampleExts' s2 a
     Append _ s0 -> sampleExts' s0 a
     Drop _ s0 -> sampleExts' s0 a
-  where minSampPh :: Int
-        minSampPh = 2
+  where -- minSampPh :: Int
+        --minSampPh = 2
         sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
         getSampleFuncVar v = case v of
                                ExtV extV -> extV
@@ -364,7 +363,7 @@ getIdx arr s ts =
 makeTrigger :: Outputs -> Name -> Trigger -> A.Atom () -> A.Atom ()
 makeTrigger outputs cFileName trigger@(Trigger s fnName args) r = 
   do r 
-     (A.exactPhase 2 $ A.atom (show trigger) $ 
+     (A.exactPhase 3 $ A.atom (show trigger) $ 
         do A.cond (getOutput outputs s)
            fnCall cFileName fnName args)
 
