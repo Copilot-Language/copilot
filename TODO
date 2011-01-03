@@ -19,6 +19,8 @@ TODOs
 
  * Move all the error-checking to one file, instead of "error ..." spread all
    over.
+   get rid of getMaybeElem from the compiler---all error checking should be done
+   in Analysis.  Also, all errors.  
 
  * Better error handling/error message for bad options/parameters for interface
    functions.  Perhaps use hsTidy?  <http://hackage.haskell.org/package/hstidy>
@@ -49,10 +51,6 @@ TODOs
  * Move triggers to Compile.hs.
 
  * Define a clocks library.
-
- * Remove the notion of a phase!!  To low-level.  As the programmer, you should
-   JUST manipulate clocks.  The period is the smallest unit of time, as far as
-   you're concerned.
 
  * Lots of debugging with sampling functions (both array and var return types).
 
