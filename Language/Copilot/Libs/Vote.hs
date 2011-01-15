@@ -19,7 +19,7 @@ import qualified Language.Atom as A
 majority :: (Streamable a, A.EqE a) => [Spec a] -> Spec a
 majority [] = 
   error "Error in majority: list of arguments must be nonempty."
-majority ls = majority' ls 0 0
+majority ls = majority' ls (const unit) 0
 
 majority' :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Word32 -> Spec a
 majority' [] candidate cnt = candidate
@@ -40,10 +40,10 @@ aMajority ls candidate =
           ) 0 ls) * 2
   > (fromIntegral $ length ls)
 
--- | Fault-tolerant average.  Throw away the bottom and top third and take the
--- average of the rest.
-ftAvg :: (Streamable a, A.EqE a) => [Spec a] -> Spec a
-ftAvg [] = 
-  error "Error in aMajority: list of arguments must be nonempty."
-ftAvg ls = ftAvg' ls 0 0
+-- -- | Fault-tolerant average.  Throw away the bottom and top third and take the
+-- -- average of the rest.
+-- ftAvg :: (Streamable a, A.EqE a) => [Spec a] -> Spec a
+-- ftAvg [] = 
+--   error "Error in aMajority: list of arguments must be nonempty."
+-- ftAvg ls = ftAvg' ls 0 0
 
