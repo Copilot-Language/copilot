@@ -16,6 +16,7 @@ module Language.Copilot.Analyser(
 import Language.Copilot.Core
 
 import Data.List
+import Data.Maybe(mapMaybe)
 
 type Weight = Int
 
@@ -23,17 +24,11 @@ type Weight = Int
 data Error =
       BadSyntax String Var -- ^ the BNF is not respected
     | BadDrop Int Var -- ^ A drop expression of less than 0 is used
-    -- | BadSamplingPhase Var Ext -- ^ if an external variable is sampled at phase
-    --                            -- 0 then there is no time for the stream to be
-    --                            -- updated
-    -- | BadSamplingArrPhase Var Ext -- ^ if an external variable is sampled at
-    --                               -- phase 0 then there is no time for the
-    --                               -- stream to be updated
     | BadPArrSpec Var Ext String -- ^ External array indexes can only take
                                  -- variables or constants as indexes.
-    | BadType Var Var -- ^ either a variable is not defined, or not with the
-                      -- good type ; there is no implicit conversion of types in
-                      -- /Copilot/
+    | BadType Var String -- ^ either a variable is not defined, or not with the
+                         -- good type ; there is no implicit conversion of types
+                         -- in /Copilot/.
     | BadTypeExt Ext Var -- ^ either an external variable is not defined, or not
                          -- with the good type; there is no implicit conversion
                          -- of types in /Copilot/
@@ -50,6 +45,9 @@ data Error =
     | DependsOnFuture [Var] Ext Weight -- ^ If an output depends of a future of
                                        -- an input it will be hard to compile to
                                        -- say the least
+    | NoInit Var -- ^ If we are sampling a function and it has an
+                 -- argument that is a Copilot stream, the weight of
+                 -- that stream must have at least one initial element.
 
 instance Show Error where
     show (BadSyntax s v) =
@@ -62,18 +60,6 @@ instance Show Error where
           "of elements.\n" 
         , show i ++ " is negative, and Drop only accepts positive arguments.\n"
         ]
-    -- show (BadSamplingPhase v v' ph) =
-    --    unlines
-    --     [ "Error : the external variable " ++ show v' ++ " is sampled at phase " ++ 
-    --       show ph ++ " in the stream " ++ v ++ "." 
-    --     , "Sampling can only occur from phase 1 onwards.\n"
-    --     ]
-    -- show (BadSamplingArrPhase v arr ph) =
-    --    unlines
-    --     [ "Error : the external array " ++ show arr ++ " is sampled at phase " ++ 
-    --       show ph ++ " in the stream " ++ v ++ "."
-    --     , " Sampling can only occur from phase 1 onwards.\n"
-    --     ]
     show (BadPArrSpec v arr idx) = 
        unlines
         [ "Error : the index into an external array can only take a "
@@ -84,7 +70,7 @@ instance Show Error where
         ]
     show (BadType v v') =
        unlines
-        [ "Error : the monitor variable " ++ v ++ ", called in the stream " 
+        [ "Error : the monitor variable " ++ v ++ ", called from " 
           ++ v' ++ ", either"
         , "does not exist, or don't have the right type (there is no implicit " 
           ++ "conversion).\n"
@@ -127,6 +113,11 @@ instance Show Error where
           ++ "obviously impossible."
         , "Path : " ++ show (reverse vs) ++ "\n"
         ]
+    show (NoInit v) = 
+          "Error : the Copilot variable " ++ v ++ " appears either as an argument in an "
+          ++ "external function that is sampled or an index in an external array being sampled. "
+          ++ "In either case, the stream must have an initial value (that is not drawn from an "
+          ++ "external variable)."
 
 (&&>) :: Maybe a -> Maybe a -> Maybe a
 m &&> m' =
@@ -145,18 +136,18 @@ infixr 1 &&>
 
 -- | Check a /Copilot/ specification.
 -- If it is not compilable, then returns an error describing the issue.
--- Else, returns @Nothing@
+-- Else, returns @Nothing@.
 check :: StreamableMaps Spec -> Maybe Error
 check streams =
-    syntaxCheck streams &&> defCheck streams
+  syntaxCheck streams &&> defCheck streams &&> checkInitsArgs streams
 
 -- Represents all the kind of specs that are authorized after a given operator.
-data SpecSet = AllSpecSet | FunSpecSet | DropSpecSet | PArrSet 
-             deriving Eq
+data SpecSet = AllSpecSet | FunSpecSet | DropSpecSet 
+  deriving Eq
 
--- Check that the AST of the copilot specification match the BNF
--- Could have been verified by the type checker if the type of Spec had been cut
--- But then there would have been quite a lot construction/deconstruction to do everywhere.
+-- Check that the AST of the copilot specification match the BNF could have been
+-- verified by the type checker if the type of Spec had been cut But then there
+-- would have been quite a lot construction/deconstruction to do everywhere.
 -- Hence the compact type for Spec and this extra check.
 syntaxCheck :: StreamableMaps Spec -> Maybe Error
 syntaxCheck streams =
@@ -169,10 +160,16 @@ syntaxCheck streams =
                 case s of
                     Var _ -> Nothing
                     Const _ -> Nothing
-                    PVar _ _ -> Nothing -- ph > 0 ||> BadSamplingPhase v v' ph
+                    PVar _ _ -> Nothing -- checkSampling s0
                     PArr _ (arr,s0) -> checkIndex v arr s0 
---                      &&> ph > 0 ||> BadSamplingArrPhase v arr ph 
-                      &&> checkSyntaxSpec PArrSet v s0 Nothing
+-- case chkInitElem streams (getElem v streams `asTypeOf` s0) of
+--                                       Left ()  -> Just $ NoInit (show arr) v
+--                                       Right () -> Nothing
+--                          _       -> Just $ BadArrIdx (show arr) (show s0)
+--                      ) &&> checkSampling arr
+--                        &&> checkSyntaxSpec PArrSet v s0 Nothing                      
+                    -- PVar _ _ -> Nothing 
+                    -- PArr _ (arr,s0) -> 
                     F _ _ s0 -> set /= DropSpecSet ||> BadSyntax "F" v 
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
                     F2 _ _ s0 s1 -> set /= DropSpecSet ||> BadSyntax "F2" v 
@@ -189,6 +186,19 @@ syntaxCheck streams =
         checkIndex _ _ (Var _)      = Nothing
         checkIndex _ _ (Const _)    = Nothing
         checkIndex v arr idx = Just $ BadPArrSpec v arr (show idx)
+        -- checkSampling s = 
+        --   case s of
+        --     ExtV _   -> Nothing
+        --     fun@(Fun f args) ->  
+        --       foldl (\n arg -> case arg of
+        --                          C _ -> n &&> Nothing
+        --                                 -- already check elems defined in defCheck
+        --                          V v -> n &&> (case chkInitElem streams (getElem v streams) of 
+        --                                          Left ()  -> Just $ NoInit (show fun) v
+        --                                          Right () -> Nothing
+        --                                       )
+        --             ) Nothing args
+
 
 -- | Checks that streams are well defined (i.e., can be compiled).
 defCheck :: StreamableMaps Spec -> Maybe Error
@@ -248,12 +258,16 @@ getExternalVars :: StreamableMaps Spec -> [Exs]
 getExternalVars streams =
     nub $ foldStreamableMaps decl streams []
     where
-        decl :: Streamable a 
-             => Var -> Spec a -> [Exs] -> [Exs]
+        decl :: Streamable a => Var -> Spec a -> [Exs] -> [Exs]
         decl _ s ls =
             case s of
                 PVar t v -> (t, v, ExtRetV) : ls
-                PArr t (arr, s0) -> (t, arr, ExtRetA (show s0)) : ls
+                PArr t (arr, s0) -> (t, arr
+                                    , ExtRetA (case s0 of
+                                                 Var v -> V v
+                                                 Const c -> C (show c)
+                                                 _ -> error "Error in getExternalVars.")
+                                    ) : ls
                 F _ _ s0 -> decl undefined s0 ls
                 F2 _ _ s0 s1 -> decl undefined s0 $ decl undefined s1 ls
                 F3 _ _ s0 s1 s2 -> decl undefined s0 $ decl undefined s1 
@@ -262,6 +276,73 @@ getExternalVars streams =
                 Append _ s' -> decl undefined s' ls
                 _ -> ls
 
+-- | Is there an initial element (for sampling functions)?
+checkInitsArgs :: StreamableMaps Spec -> Maybe Error
+checkInitsArgs streams =
+  let checkInits :: Streamable a => Var -> Spec a -> Maybe Error -> Maybe Error
+      checkInits v s err =
+        err &&> if checkPath 0 [v] s >= 0 then Just (NoInit v)
+                  else Nothing
+        where checkPath :: Streamable a => Int -> [Var] -> Spec a -> Int
+              checkPath n vs s0 = 
+                if (v `elem` samplingFuncs) || (v `elem` arrIndices)
+                  then case s0 of
+                         Var v0    -> if elem v0 vs then n
+                                       else checkPath n (v0:vs) 
+                                              (getElem v0 streams `asTypeOf` s0)
+                         Append ls s1 -> checkPath (n - length ls) vs s1
+                         Drop m s1    -> checkPath (m + n) vs s1
+                         _ -> n
+                         -- Const _  -> n
+                         -- PVar _ _ -> n
+                         -- PArr _ _ -> n
+                         -- F _ _ _      -> n
+                         -- F2 _ _ _ _   -> n
+                         -- F3 _ _ _ _ _ -> n
+                  else (-1)
+              samplingFuncs = 
+                concatMap (\x -> case x of 
+                                   (_, Fun _ args, _) -> 
+                                     mapMaybe (\arg -> 
+                                       case arg of
+                                         C _ -> Nothing
+                                         V v0 -> Just v0
+                                              ) args
+                                   (_, ExtV _, _) -> [])
+                (getExternalVars streams)
+              arrIndices = mapMaybe (\x -> case x of
+                                             (_,_,ExtRetV) -> Nothing 
+                                             (_,_,ExtRetA idx) -> 
+                                               case idx of
+                                                 V v -> Just v
+                                                 C _ -> Nothing)
+                           (getExternalVars streams)
+  in foldStreamableMaps checkInits streams Nothing
+
+-- chkInitElem :: Streamable a => StreamableMaps Spec -> Spec a -> Either () ()
+-- chkInitElem streams spec = 
+--   initElem spec 0 []
+--   where 
+--     -- getSpec :: Streamable a => Var -> Spec a
+--     -- getSpec v = let s = getMaybeElem v streams in
+--     --                case s of
+--     --                  Nothing -> error $ "Error: No Copilot stream "
+--     --                             ++ v ++ " exists."
+--     --                  Just s0 -> s0 `asTypeOf` s
+--     initElem :: Streamable a => Spec a -> Int -> [Var] -> Either () ()
+--     initElem s cnt vs =
+--       case s of
+--         Var v    -> if elem v vs then initChk 
+--                       else initElem (getElem v streams) cnt (v:vs)
+--         Const _  -> initChk
+--         PVar t v -> initChk
+--         PArr t (arr, s0) -> initChk
+--         F _ _ _      -> initChk
+--         F2 _ _ _ _   -> initChk
+--         F3 _ _ _ _ _ -> initChk
+--         Append ls s0 -> initElem s0 (cnt - length ls) vs
+--         Drop n s0    -> initElem s0 (cnt + n) vs
+--       where initChk = if cnt < 0 then Right () else Left ()
 
 ---- Dependency graphs (for next version of nNWCP, and for scheduling)
 {-

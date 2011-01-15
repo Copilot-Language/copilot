@@ -19,6 +19,8 @@ TODOs
 
  * Move all the error-checking to one file, instead of "error ..." spread all
    over.
+   get rid of getMaybeElem from the compiler---all error checking should be done
+   in Analysis.  Also, all errors.  
 
  * Better error handling/error message for bad options/parameters for interface
    functions.  Perhaps use hsTidy?  <http://hackage.haskell.org/package/hstidy>
@@ -50,10 +52,6 @@ TODOs
 
  * Define a clocks library.
 
- * Remove the notion of a phase!!  To low-level.  As the programmer, you should
-   JUST manipulate clocks.  The period is the smallest unit of time, as far as
-   you're concerned.
-
  * Lots of debugging with sampling functions (both array and var return types).
 
  * Add a 'when' operator to the Clocks lib: when clk foo means update foo if clk
@@ -73,4 +71,13 @@ TODOs
 
  * Rename options to things more memorable. :)
 
- * Allow for external variables to be used as function args.
+ * Allow for external variables to be used as function args.  (Not sure if this
+   should be done.  Will require some rewiring, and passing "through" Copilot
+   vars gives extra typechecking.)
+
+ * Make assignment of input vars easier.  Just give var names and values, and
+   look up their type in the Interface to assign the maps.  
+
+ * Make the assignment of input vars in compiled testing better.  Fix Help.hs.
+   Something like setE-C ("x", "y") and let the compiler figure out the
+   appropriate input types.

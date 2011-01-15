@@ -65,10 +65,10 @@ postCode cName streams allExts inputExts p =
   , "  }"
   , "  rnd = atoi(argv[1]);"
   ]
-  ++
-  inputExtVars inputExts "  "
-  ++
-  sampleExtVars allExts cName
+  -- ++
+  -- inputExtVars inputExts "  "
+  -- ++
+  -- sampleExtVars allExts cName
   ++
   [ "  int i = 0;"
   , "  for(; i < rnd ; i++) {"
@@ -119,19 +119,19 @@ inputExtVars exts indent =
                     ++ typeId (head l) ++ "\", &" ++ v ++ ");") :
             (indent ++ "clean (" ++ string ++ ", stdin);") : ls
 
-sampleExtVars :: [Exs] -> Name -> [String]
-sampleExtVars allExts cName =
-    map (\ext -> let (v,e) = sample ext in
-           "  " ++ vPre cName ++ tmpSampleStr ++ (normalizeVar e)
-           ++ " = " ++ v ++ ";") 
-        allExts
-    where 
-        sample :: Exs -> (Var, String)
-        sample (_, v, ExtRetV) = ( case v of 
-                                     ExtV var -> var
-                                     Fun fname args -> funcShow cName fname args
-                                  , tmpVarName v)
-        sample (_, v, ExtRetA idx) = (show v ++ "[0]", tmpArrName v idx)
+-- sampleExtVars :: [Exs] -> Name -> [String]
+-- sampleExtVars allExts cName =
+--     map (\ext -> let (v,e) = sample ext in
+--            "  " ++ vPre cName ++ tmpSampleStr ++ (normalizeVar e)
+--            ++ " = " ++ v ++ ";") 
+--         allExts
+--     where 
+--         sample :: Exs -> (Var, String)
+--         sample (_, v, ExtRetV) = ( case v of 
+--                                      ExtV var -> var
+--                                      Fun fname args -> funcShow cName fname args
+--                                   , tmpVarName v)
+--         sample (_, v, ExtRetA idx) = (show v ++ "[0]", tmpArrName v idx)
 
 outputVars :: Name -> StreamableMaps Spec -> [String]
 outputVars cName streams =

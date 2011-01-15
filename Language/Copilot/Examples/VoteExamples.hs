@@ -38,8 +38,23 @@ maj1 = do
   ans .= majority ls
   chk .= aMajority ls ans
 
----------------------------------------------------------
+maj2 :: Streams
+maj2 = do
+  let v = varB "v"
+      b = varB "b"
+      ls = [true, false, true, false, false, false, true]
+  v .= majority ls
+  b .= aMajority ls v
 
+ft0 :: Streams
+ft0 = do
+  let v2 = varW32 "v2"
+      v3 = varW32 "v3"
+      ls = [8, 3, 7, 6, 5, 4, 2, 4, 1, 0]
+  v3 .= ftAvg ls 3
+  v2 .= ftAvg ls 2
+
+-------------------------------------------------------------------
 makeProcs :: IO ()
 makeProcs = do
   compile proc0 "proc0" $ setPP ("","") baseOpts
@@ -86,3 +101,4 @@ proc2 = do
   chk .= aMajority ls maj
   send "send2" (port 0) p2
   send "send2" (port 1) p2
+

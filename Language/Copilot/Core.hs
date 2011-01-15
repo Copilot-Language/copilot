@@ -49,7 +49,7 @@ data Spec a where
     Var :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
 
-    PVar :: Streamable a => A.Type -> Ext  -> Spec a
+    PVar :: Streamable a => A.Type -> Ext -> Spec a
     PArr :: (Streamable a, Streamable b, A.IntegralE b) 
          => A.Type -> (Ext, Spec b) -> Spec a
 
@@ -98,19 +98,20 @@ instance Show Trigger where
 -- XXX in Ext, we throw away the type info for Args.  This is because we're just
 -- making external calls, and we don't know anything about the types anyway (we
 -- just make strings).  Remove from the datatype.
+
 -- | Holds external variables or external functions to call.
 data Ext = ExtV Var
          | Fun String Args
 
-type Exs = (A.Type, Ext, ExtRet)
-
-data ExtRet = ExtRetV 
-            | ExtRetA String
-  deriving Eq
-
 instance Show Ext where
   show (ExtV v) = v
   show (Fun f args) = normalizeVar f ++ show args
+
+type Exs = (A.Type, Ext, ExtRet)
+
+data ExtRet = ExtRetV 
+            | ExtRetA ArgConstVar
+  deriving Eq
 
 -- | For calling a function with Atom variables.
 funcShow :: Name -> String -> Args -> String

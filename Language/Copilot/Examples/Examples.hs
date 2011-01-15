@@ -296,6 +296,59 @@ tdiv = do
   a .= [3] ++ a `div` 5
   b .= [3] ++ a `mod` 5
 
+extT :: Streams
+extT = do
+  let x = extW16 "x"
+  let y = varW16 "y"
+  y .= x 
+
+-- Testing error checking for badly-formed external sampling.
+
+-- Should fail.
+extT2 :: Streams
+extT2 = do
+  let y = varW16 "y"
+      x = extW16 (fun "f" y)
+  y .= x 
+
+-- Should pass.
+extT3 :: Streams
+extT3 = do
+  let y = varW16 "y"
+      x = extW16 (fun "f" y)
+  y .= [3] ++ x 
+
+-- Should fail.
+extT4 :: Streams
+extT4 = do
+  let y = varW16 "y"
+      x = extArrW16 "arr" y
+      z = extW16 "z"
+      w = varW16 "w"
+  y .= z
+  w .= x
+
+-- Should fail.
+extT5 :: Streams
+extT5 = do
+  let y = varW16 "y"
+      x = extW16 (fun "f" y)
+      z = extW16 "z"
+      w = varW16 "w"
+  y .= z
+  w .= x
+
+-- Should work.
+extT6 :: Streams
+extT6 = do
+  let y = varW16 "y"
+      x = extArrW16 "arr" y
+      z = extW16 "z"
+      w = varW16 "w"
+  y .= [7] ++ z
+  w .= x
+
+
 -- test external idx before after and in the stream it references
 -- test multiple defs
 -- test defs in functions
