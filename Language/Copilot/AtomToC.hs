@@ -3,21 +3,35 @@
 -- | Defines a main() and print statements to easily execute generated Copilot specs.
 module Language.Copilot.AtomToC(getPrePostCode) where
 
-import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
+--import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
 import Language.Copilot.AdHocC
 
 import Language.Copilot.Core
 
+import Data.Maybe (fromMaybe)
 import Data.List
 
 -- allExts represents all the variabbles to monitor (used for declaring them)
 -- inputExts represents the monitored variables which are to be fed to the
 -- standard input of the C program.  only used for the testing with random
 -- streams and values.
-getPrePostCode :: Name -> StreamableMaps Spec -> [Exs] 
+getPrePostCode :: Maybe (String, String) -> Name -> StreamableMaps Spec -> [Exs] 
                -> [(Ext,Int)] -> Vars -> Period -> (String, String)
-getPrePostCode cName streams allExts arrDecs inputExts p =
-    (preCode $ extDecls allExts arrDecs, postCode cName streams allExts inputExts p)
+getPrePostCode prePostCode cName streams allExts arrDecs inputExts p =
+    ( pre
+    , postCode post cName streams inputExts p
+    )
+  where (pre, post) = case prePostCode of
+                        Nothing -> ( preCode $ extDecls allExts arrDecs
+                                   , Nothing)
+                        Just (x, y) -> (x, Just y)
+
+-- getPrePostCode :: Name -> StreamableMaps Spec -> [Exs] 
+--                -> [(Ext,Int)] -> Vars -> Period -> (String, String)
+-- getPrePostCode cName streams allExts arrDecs inputExts p =
+--     ( preCode $ extDecls allExts arrDecs
+--     , postCode cName streams allExts inputExts p
+--     )
 
 -- Make the declarations for external vars
 extDecls :: [Exs] -> [(Ext,Int)] -> [String]
@@ -48,13 +62,78 @@ preCode extDeclarations = unlines $
   , "unsigned long long rnd;"
   ]
   ++ extDeclarations
-  
-postCode :: Name -> StreamableMaps Spec -> [Exs] -> Vars -> Period -> String
-postCode cName streams allExts inputExts p = 
+
+-- postCode :: Name -> StreamableMaps Spec -> [Exs] -> Vars -> Period -> String
+-- postCode cName streams allExts inputExts p = 
+--   unlines $
+--   (if isEmptySM inputExts
+--     then []
+--     else cleanString)
+--   ++
+--   [ "int main(int argc, char *argv[]) {"
+--   , "  if (argc != 2) {"
+--   , "    " ++ printfNewline 
+--          "Please pass a single argument to the simulator containing the number of rounds to execute it." 
+--          []
+--   , "    return 1;"
+--   , "  }"
+--   , "  rnd = atoi(argv[1]);"
+--   ]
+--   -- ++
+--   -- inputExtVars inputExts "  "
+--   -- ++
+--   -- sampleExtVars allExts cName
+--   ++
+--   [ "  int i = 0;"
+--   , "  for(; i < rnd ; i++) {"
+--   ]
+--   ++
+--   inputExtVars inputExts "    "
+--   ++
+--   [ "    int j = 0;"
+--   , "    for (; j < " ++ show p ++ " ; j++) {"
+--   , "      " ++ cName ++ "();"
+--   , "    }"
+--   , "    " ++ printf "period: %i   " ["i"]
+--   ]
+--   ++
+--   outputVars cName streams 
+--   ++
+--   [ "    " ++ printfNewline "" []
+--   , "    fflush(stdout);"
+--   , "  }"
+--   , "  return EXIT_SUCCESS;"
+--   , "}"
+--   ]
+--   where
+--     cleanString =
+--         [ "void clean(const char *buffer, FILE *fp) {"
+--         , "  char *p = strchr(buffer,'\\n');"
+--         , "  if (p != NULL)"
+--         , "    *p = 0;"
+--         , "  else {"
+--         , "    int c;"
+--         , "    while ((c = fgetc(fp)) != '\\n' && c != EOF);"
+--         , "  }"
+--         , "}"
+--         , ""
+--         ]
+postCode :: Maybe String -> Name -> StreamableMaps Spec 
+         -> Vars -> Period -> String
+postCode post cName streams inputExts p = 
   unlines $
+  [fromMaybe "" post]
+  ++ 
   (if isEmptySM inputExts
     then []
     else cleanString)
+  ++ -- make a loop to complete a period of computation.
+  [ "void " ++ cName ++ "(void) {"
+  , "  int i;"
+  , "  for(i = 0; i < " ++ show p ++ "; i++) {"
+  , "    "  ++ "__" ++ cName ++ "();"
+  , "  }"
+  ]
   ++
   [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
@@ -72,17 +151,17 @@ postCode cName streams allExts inputExts p =
   ++
   [ "  int i = 0;"
   , "  for(; i < rnd ; i++) {"
+  , "  " ++ cName ++ "();"
+  , "  " ++ printf "period: %i   " ["i"]
   ]
   ++
   inputExtVars inputExts "    "
   ++
-  [ "    int j = 0;"
-  , "    for (; j < " ++ show p ++ " ; j++) {"
-  , "      " ++ cName ++ "();"
-  , "    }"
-  , "    " ++ printf "period: %i   " ["i"]
-  ]
-  ++
+--  [ "    int j = 0;"
+--  , "    for (; j < " ++ show p ++ " ; j++) {"
+--  , "    }"
+--  ]
+--  ++
   outputVars cName streams 
   ++
   [ "    " ++ printfNewline "" []

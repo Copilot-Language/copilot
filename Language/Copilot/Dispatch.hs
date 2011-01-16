@@ -127,12 +127,15 @@ copilotToC elems allExts trueInputExts opts isVerbose =
     let cFileName = cName opts
         (p', program) = copilotToAtom elems (getPeriod opts) cFileName
         (preCode, postCode) = 
-            case (prePostCode opts) of
-                Nothing ->  
-                  getPrePostCode cFileName (strms elems) allExts 
-                                 (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
-                                 trueInputExts p'
-                Just (pre, post) -> (pre, post)
+            getPrePostCode (prePostCode opts) cFileName (strms elems) allExts
+                           (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
+                           trueInputExts p'
+            -- case (prePostCode opts) of
+            --     Nothing ->  
+            --       getPrePostCode cFileName (strms elems) allExts 
+            --                      (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
+            --                      trueInputExts p'
+            --     Just (pre, post) -> (pre, post)
         atomConfig = A.defaults 
             { A.cCode = \_ _ _ -> (preCode, postCode)
             , A.cRuleCoverage = False
