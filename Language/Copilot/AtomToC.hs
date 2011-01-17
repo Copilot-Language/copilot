@@ -23,7 +23,7 @@ getPrePostCode simulatation (pre, post) cName streams allExts
     ( (if simulatation then preCode (extDecls allExts arrDecs)
          else "") ++ fromMaybe "" pre
     , fromMaybe "" post ++ periodLoop cName p 
-      ++ postCode cName streams inputExts p
+      ++ postCode cName streams inputExts 
     )
 
 -- Make the declarations for external vars
@@ -71,8 +71,8 @@ periodLoop cName p = unlines
   , "}"
   ]
 
-postCode :: Name -> StreamableMaps Spec -> Vars -> Period -> String
-postCode cName streams inputExts p = 
+postCode :: Name -> StreamableMaps Spec -> Vars -> String
+postCode cName streams inputExts = 
   unlines $
   [""] ++
   (if isEmptySM inputExts
