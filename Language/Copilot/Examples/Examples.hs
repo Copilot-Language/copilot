@@ -349,6 +349,7 @@ extT6 = do
   w .= x
 
 
+
 -- test external idx before after and in the stream it references
 -- test multiple defs
 -- test defs in functions

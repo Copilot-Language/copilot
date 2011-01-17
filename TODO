@@ -81,3 +81,27 @@ TODOs
  * Make the assignment of input vars in compiled testing better.  Fix Help.hs.
    Something like setE-C ("x", "y") and let the compiler figure out the
    appropriate input types.
+
+ * Some of the file handling in Dispatch could overwrite other user files if
+   they're named something we use for tmp files.
+
+ * Testing:
+   * Improve 'test' so that you can test a specific program's compiler output
+     against its interpreter output.
+
+   * There is something broken with the use of processes (System.Process).  
+     I'll get an error
+       commitAndReleaseBuffer: resource vanished (Broken pipe)
+     after some number of tests.  The failure comes from random specs in which
+     external variable values have to be communicated to the C program.
+
+   * Finally, the equivalence fails for specs containing external vars.  The
+     reason is that right now, the generated C program needs to be executed to
+     sample the external variables initially.  However, once it's executed for a
+     period, all the streams are updated, so we're really into period 1.  So the
+     interpreter and the compiler can diverge on the initial state, where in the
+     compiler, variables that depend on sampled variables haven't captured their
+     values yet .  They should converge after one execution.  Possible solutions
+     include (1) ignoring the initial state, (2) or ensuring that variables are
+     initially sampled---perhaps just calling the loop for one phase to do the
+     sampling.

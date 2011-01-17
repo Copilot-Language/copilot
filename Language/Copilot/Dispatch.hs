@@ -33,8 +33,9 @@ data AtomToC = AtomToC
     , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
-    , prePostCode :: Maybe (String, String) -- ^ Code to replace the default
-                                            -- initialization and main
+    , sim :: Bool -- ^ Are we running a C simulator?
+    , prePostCode :: (Maybe String, Maybe String) -- ^ Code to replace the default
+                                                  -- initialization and main
     , arrDecs :: [(String, Int)] -- ^ When generating C programs to test, we
                                  -- don't know how large external arrays are, so
                                  -- we cannot declare them.  Passing in pairs
@@ -107,7 +108,8 @@ dispatch elems inputExts backEnd iterations verbose =
                         copy ".h"
                         delete ".c"
                         delete ".h"
-                        when (prePostCode opts == Nothing) $ gccCall (Opts opts)
+--                        when (prePostCode opts == Nothing) $ gccCall (Opts opts)
+                        when (sim opts) (gccCall (Opts opts))
                         when ((isInterpreted || isExecuted) && not allInputsPresents) $ 
                             error errMsg
                         when isExecuted $ execute (strms elems) (dirName ++ cName opts) 
@@ -127,9 +129,9 @@ copilotToC elems allExts trueInputExts opts isVerbose =
     let cFileName = cName opts
         (p', program) = copilotToAtom elems (getPeriod opts) cFileName
         (preCode, postCode) = 
-            getPrePostCode (prePostCode opts) cFileName (strms elems) allExts
-                           (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
-                           trueInputExts p'
+            getPrePostCode (sim opts) (prePostCode opts) cFileName 
+                           (strms elems) allExts (map (\(x,y) -> (ExtV x,y)) 
+                           (arrDecs opts)) trueInputExts p'
             -- case (prePostCode opts) of
             --     Nothing ->  
             --       getPrePostCode cFileName (strms elems) allExts 
@@ -151,6 +153,7 @@ copilotToC elems allExts trueInputExts opts isVerbose =
             else return ()
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
+-- | Call Gcc to compile the code.
 gccCall :: BackEnd -> IO ()
 gccCall backend = 
   case backend of
@@ -160,8 +163,9 @@ gccCall backend =
           programName = cName opts
       in
         do
-          let command = (compiler opts) ++ " " ++ dirName ++ cName opts ++ ".c" ++ " -o " 
-                        ++ dirName ++ programName ++ " " ++ gccOpts opts
+          let command = compiler opts ++ " " ++ dirName ++ cName opts 
+                        ++ ".c" ++ " -o " ++ dirName ++ programName 
+                        ++ " " ++ gccOpts opts
           putStrLn "Calling the C compiler  ..."
           putStrLn command
           _ <- system command
@@ -177,8 +181,7 @@ execute streams programName trueInputExts isInterpreted interpretedLines iterati
                  (do putStrLn "\n *** Checking the randomly-generated Copilot specification: ***\n"
                      putStrLn $ show streams)
         let inputVar v (val:vals) ioVars =
-                do
-                    hPutStr hin (showAsC val ++ " \n")
+                do  hPutStr hin (showAsC val ++ " \n")
                     hFlush hin
                     vars <- ioVars
                     return $ updateSubMap (\m -> M.insert v vals m) vars
@@ -187,8 +190,7 @@ execute streams programName trueInputExts isInterpreted interpretedLines iterati
             executePeriod _ [] _ = error "Impossible : empty ExecutePeriod"
             executePeriod inputExts (inLine:inLines) n =
                 when (n > 0) $ 
-                    do
-                        nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
+                    do  nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
                         line <- hGetLine hout
                         let nextPeriod = 
                                 (when (not isSilent) $ putStrLn line) >> 

@@ -10,10 +10,8 @@ import Language.Copilot.Core
 -- It takes a /Copilot/ specification, the values of the monitored values,
 -- and returns the values of the streams.
 interpretStreams :: StreamableMaps Spec -> Vars -> Vars
-interpretStreams streams moVs =
-    inVs
-    where 
-        inVs = mapStreamableMaps (\ _ -> interpret inVs moVs) streams
+interpretStreams streams moVs = inVs
+  where inVs = mapStreamableMaps (\ _ -> interpret inVs moVs) streams
 
 interpret :: forall a. Streamable a => Vars -> Vars -> Spec a -> [a]
 interpret inVs moVs s =
