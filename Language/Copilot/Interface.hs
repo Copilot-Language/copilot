@@ -3,8 +3,8 @@
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
-        , help , setE, setC, setO, setP, setI, setPP, setN, setV, setR
-        , setDir, setGCC, setArrs, setClock,
+        , help , setE, setC, setO, setP, setI, setCode, setN, setV, setR
+        , setDir, setGCC, setArrs, setClock, setSim,
         module Language.Copilot.Dispatch
     ) where
 
@@ -39,7 +39,8 @@ data Options = Options {
         optCName :: Name, -- ^ Name of the C file generated.
         optCompiler :: String, -- ^ The C compiler to use, as a path to the executable.
         optOutputDir :: String, -- ^ Where to place the output C files (.c, .h, and binary).
-        optPrePostCode :: Maybe (String, String), -- ^ Code to append above and below the C file.
+        optPrePostCode :: (Maybe String, Maybe String), -- ^ Code to append above and below the C file.
+        optSimulate :: Bool, -- ^ Do we want a simulation driver?
         optTriggers :: Triggers, -- ^ A list of Copilot variable C function name
                                  -- pairs.  The C funciton is called if the
                                  -- Copilot stream becomes True.  The Stream
@@ -71,7 +72,8 @@ baseOpts = Options {
         optCName = "copilotProgram",
         optCompiler = "gcc",
         optOutputDir = "./",
-        optPrePostCode = Nothing,
+        optPrePostCode = (Nothing, Nothing),
+        optSimulate = False,
         optTriggers = M.empty,
         optArrs = [],
         optClock = Nothing
@@ -81,7 +83,7 @@ baseOpts = Options {
 
 test :: Int -> Options -> IO ()
 test n opts = 
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts 
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim True opts 
 
 interpret :: Streams -> Int -> Options -> IO ()
 interpret streams n opts = 
@@ -173,6 +175,7 @@ setN n opts = opts {optIterations = n}
 setV :: Verbose -> Options -> Options
 setV v opts = opts {optVerbose = v}
 
+-- | Set the random seed for generating random `Copilot` specs.
 setR :: Int -> Options -> Options
 setR seed opts = opts {optRandomSeed = Just seed}
 
@@ -191,8 +194,12 @@ setDir dir opts = opts {optOutputDir = dir}
 
 -- | Sets the code to precede and follow the copilot specification
 -- If nothing, then code appropriate for communication with the interpreter is generated
-setPP :: (String, String) -> Options -> Options
-setPP pp opts = opts {optPrePostCode = Just pp}
+setCode :: (Maybe String, Maybe String) -> Options -> Options
+setCode pp opts = opts {optPrePostCode = pp}
+
+-- | Include simulation driver code (in a main() loop)?
+setSim :: Bool -> Options -> Options
+setSim b opts = opts {optSimulate = b}
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
@@ -246,6 +253,7 @@ getBackend opts seed =
                 outputDir = optOutputDir opts,
                 compiler  = optCompiler opts,
                 prePostCode = optPrePostCode opts,
+                sim = optSimulate opts,
 --                triggers = optTriggers opts,
                 arrDecs = optArrs opts,
                 clock = optClock opts

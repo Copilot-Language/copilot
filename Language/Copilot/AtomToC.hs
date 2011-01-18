@@ -3,21 +3,28 @@
 -- | Defines a main() and print statements to easily execute generated Copilot specs.
 module Language.Copilot.AtomToC(getPrePostCode) where
 
-import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
+--import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
 import Language.Copilot.AdHocC
 
 import Language.Copilot.Core
 
+import Data.Maybe (fromMaybe)
 import Data.List
 
 -- allExts represents all the variabbles to monitor (used for declaring them)
 -- inputExts represents the monitored variables which are to be fed to the
 -- standard input of the C program.  only used for the testing with random
 -- streams and values.
-getPrePostCode :: Name -> StreamableMaps Spec -> [Exs] 
-               -> [(Ext,Int)] -> Vars -> Period -> (String, String)
-getPrePostCode cName streams allExts arrDecs inputExts p =
-    (preCode $ extDecls allExts arrDecs, postCode cName streams allExts inputExts p)
+getPrePostCode :: Bool -> (Maybe String, Maybe String) -> Name 
+               -> StreamableMaps Spec -> [Exs] -> [(Ext,Int)] -> Vars 
+               -> Period -> (String, String)
+getPrePostCode simulatation (pre, post) cName streams allExts 
+               arrDecs inputExts p =
+    ( (if simulatation then preCode (extDecls allExts arrDecs)
+         else "") ++ fromMaybe "" pre
+    , fromMaybe "" post ++ periodLoop cName p 
+      ++ postCode cName streams inputExts 
+    )
 
 -- Make the declarations for external vars
 extDecls :: [Exs] -> [(Ext,Int)] -> [String]
@@ -43,19 +50,35 @@ preCode extDeclarations = unlines $
   [ includeBracket "stdio.h"
   , includeBracket "stdlib.h"
   , includeBracket "string.h"
-  , includeBracket "inttypes.h"
+--  , includeBracket "inttypes.h"
   , ""
   , "unsigned long long rnd;"
   ]
   ++ extDeclarations
-  
-postCode :: Name -> StreamableMaps Spec -> [Exs] -> Vars -> Period -> String
-postCode cName streams allExts inputExts p = 
+
+-- | Generate a temporary C file name. 
+tmpCFileName :: String -> String
+tmpCFileName name = "__" ++ name
+
+periodLoop :: Name -> Period -> String
+periodLoop cName p = unlines
+  [ "\n"
+  , "void " ++ tmpCFileName cName ++ "(void) {"
+  , "  int i;"
+  , "  for(i = 0; i < " ++ show p ++ "; i++) {"
+  , "    "  ++ cName ++ "();"
+  , "  }"
+  , "}"
+  ]
+
+postCode :: Name -> StreamableMaps Spec -> Vars -> String
+postCode cName streams inputExts = 
   unlines $
+  [""] ++
   (if isEmptySM inputExts
-    then []
-    else cleanString)
-  ++
+     then []
+     else cleanString)
+  ++ -- make a loop to complete a period of computation.
   [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
   , "    " ++ printfNewline 
@@ -64,27 +87,14 @@ postCode cName streams allExts inputExts p =
   , "    return 1;"
   , "  }"
   , "  rnd = atoi(argv[1]);"
-  ]
-  -- ++
-  -- inputExtVars inputExts "  "
-  -- ++
-  -- sampleExtVars allExts cName
-  ++
-  [ "  int i = 0;"
-  , "  for(; i < rnd ; i++) {"
-  ]
-  ++
-  inputExtVars inputExts "    "
-  ++
-  [ "    int j = 0;"
-  , "    for (; j < " ++ show p ++ " ; j++) {"
-  , "      " ++ cName ++ "();"
-  , "    }"
+  , "  int i;"
+  , "  for(i = 0; i < rnd ; i++) {"
   , "    " ++ printf "period: %i   " ["i"]
   ]
-  ++
-  outputVars cName streams 
-  ++
+  ++ inputExtVars inputExts "    "
+  ++ ["    " ++ tmpCFileName cName ++ "();"]
+  ++ outputVars cName streams 
+  ++ 
   [ "    " ++ printfNewline "" []
   , "    fflush(stdout);"
   , "  }"
@@ -118,20 +128,6 @@ inputExtVars exts indent =
             (indent ++ "sscanf (" ++ string ++ ", \"" 
                     ++ typeId (head l) ++ "\", &" ++ v ++ ");") :
             (indent ++ "clean (" ++ string ++ ", stdin);") : ls
-
--- sampleExtVars :: [Exs] -> Name -> [String]
--- sampleExtVars allExts cName =
---     map (\ext -> let (v,e) = sample ext in
---            "  " ++ vPre cName ++ tmpSampleStr ++ (normalizeVar e)
---            ++ " = " ++ v ++ ";") 
---         allExts
---     where 
---         sample :: Exs -> (Var, String)
---         sample (_, v, ExtRetV) = ( case v of 
---                                      ExtV var -> var
---                                      Fun fname args -> funcShow cName fname args
---                                   , tmpVarName v)
---         sample (_, v, ExtRetA idx) = (show v ++ "[0]", tmpArrName v idx)
 
 outputVars :: Name -> StreamableMaps Spec -> [String]
 outputVars cName streams =
