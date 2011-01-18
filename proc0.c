@@ -226,14 +226,21 @@ void proc0() {
 }
 
 
-int main (void) {
-  int rnds = 0;
-  for(rnds; rnds < 40; rnds++) {
-    proc0();
-    proc1();
-    proc2();
-    printf("proc0 maj: %u  ", copilotStateproc0.proc0.maj);   
-    printf("chk: %u\n", copilotStateproc0.proc0.chk);   
-  }
-  return 0;
-}
+/* int main (void) { */
+/*   int rnds = 0; */
+/*   for(rnds; rnds < 40; rnds++) { */
+/*     proc0(); */
+/*     proc1(); */
+/*     proc2(); */
+/*     printf("proc0 maj: %u  ", copilotStateproc0.proc0.maj);    */
+/*     printf("chk: %u\n", copilotStateproc0.proc0.chk);    */
+/*   } */
+/*   return 0; */
+/* } */
+
+/* uint16_t p01; */
+/* uint16_t p02; */
+/* uint16_t p10; */
+/* uint16_t p12; */
+/* uint16_t p20; */
+/* uint16_t p21; */

@@ -1,12 +1,11 @@
 module Language.Copilot.Examples.LTLExamples where
 
--- import Prelude (replicate, Int, replicate)
--- import qualified Prelude as P
-
 import Language.Copilot
+import Language.Copilot.Core
 import Language.Copilot.Libs.Vote
 
-import Prelude (IO(..), ($))
+import Prelude (IO(..), ($), Int)
+import qualified Prelude as P
 
 -- | Computes an alleged majority over constants and determines if 3 is the
 -- majority.
@@ -57,9 +56,19 @@ ft0 = do
 -------------------------------------------------------------------
 makeProcs :: IO ()
 makeProcs = do
-  compile proc0 "proc0" $ setPP ("","") baseOpts
-  compile proc1 "proc1" $ setPP ("","") baseOpts
-  compile proc2 "proc2" $ setPP ("","") baseOpts
+  compile proc0 "proc0" $ setCode baseOpts
+  compile proc1 "proc1" $ setCode ("","") baseOpts
+  compile proc2 "proc2" $ setCode ("","") baseOpts
+
+body :: Streamable a => Int -> Spec a -> [Spec a] -> Streams
+body id p ls = do
+  let maj = varW16 "maj"
+      chk = varB "chk"
+  p   .= [0] ++ p + 1
+  maj .= majority ls
+  chk .= aMajority ls maj
+  send ("send" P.++ P.show id) (port 1) p
+  send ("send" P.++ P.show id) (port 2) p
 
 -- | Distributed majority voting among three processors.
 proc0, proc1, proc2 :: Streams
@@ -67,14 +76,15 @@ proc0 = do
   let p0 = varW16 "p0"
       p01 = extW16 "p01"
       p02 = extW16 "p02"
-      maj = varW16 "maj"
-      chk = varB "chk"
+      -- maj = varW16 "maj"
+      -- chk = varB "chk"
       ls = [p0, p01, p02]
-  p0  .= [0] ++ p0 + 1
-  maj .= majority ls
-  chk .= aMajority ls maj
-  send "send0" (port 1) p0
-  send "send0" (port 2) p0
+  body 0 p0 ls
+  -- p0  .= [0] ++ p0 + 1
+  -- maj .= majority ls
+  -- chk .= aMajority ls maj
+  -- send "send0" (port 1) p0
+  -- send "send0" (port 2) p0
 
 proc1 = do
   let p1 = varW16 "p1"
@@ -102,3 +112,43 @@ proc2 = do
   send "send2" (port 0) p2
   send "send2" (port 1) p2
 
+-- int main (void) {
+--   int rnds = 0;
+--   for(rnds; rnds < 40; rnds++) {
+--     proc0();
+--     proc1();
+--     proc2();
+--     printf("proc0 maj: %u  ", copilotStateproc0.proc0.maj);   
+--     printf("chk: %u\n", copilotStateproc0.proc0.chk);   
+--   }
+--   return 0;
+-- }
+
+-- void send0(uint16_t val, int port) {
+--   switch (port) {
+--   case 1: p01 = val;
+--   case 2: p02 = val;
+--   }
+-- }
+
+-- void send1(uint16_t val, int port) {
+--   switch (port) {
+--   case 0: p10 = val;
+--   case 2: p12 = val;
+--   }
+-- }
+
+
+-- void send2(uint16_t val, int port) {
+--   switch (port) {
+--   case 0: p20 = val;
+--   case 1: p21 = val;
+--   }
+-- }
+
+-- uint16_t p01;
+-- uint16_t p02;
+-- uint16_t p10;
+-- uint16_t p12;
+-- uint16_t p20;
+-- uint16_t p21;
