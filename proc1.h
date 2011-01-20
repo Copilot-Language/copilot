@@ -11,8 +11,6 @@ extern struct {  /* copilotStateproc1 */
     uint16_t maj;
     uint64_t updateIndex__p1;
     uint64_t outputIndex__p1;
-    uint16_t tmpSampleVal__p10;
-    uint16_t tmpSampleVal__p12;
   } proc1;
 } copilotStateproc1;
 

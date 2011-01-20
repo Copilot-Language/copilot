@@ -23,7 +23,8 @@ getPrePostCode simulatation (pre, post) cName streams allExts
     ( (if simulatation then preCode (extDecls allExts arrDecs)
          else "") ++ fromMaybe "" pre
     , fromMaybe "" post ++ periodLoop cName p 
-      ++ postCode cName streams inputExts 
+      ++ if simulatation then (postCode cName streams inputExts)
+           else ""
     )
 
 -- Make the declarations for external vars

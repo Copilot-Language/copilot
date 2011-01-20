@@ -1,10 +1,13 @@
-module Language.Copilot.Examples.LTLExamples where
+module Language.Copilot.Examples.VoteExamples where
 
 import Language.Copilot
-import Language.Copilot.Core
+import Language.Copilot.AdHocC
+--import Language.Copilot.Core
 import Language.Copilot.Libs.Vote
+import Data.Word
+import Data.Int
 
-import Prelude (IO(..), ($), Int)
+import Prelude (IO(..), ($), Int, String, unlines, Maybe(..))
 import qualified Prelude as P
 
 -- | Computes an alleged majority over constants and determines if 3 is the
@@ -56,15 +59,18 @@ ft0 = do
 -------------------------------------------------------------------
 makeProcs :: IO ()
 makeProcs = do
-  compile proc0 "proc0" $ setCode baseOpts
-  compile proc1 "proc1" $ setCode ("","") baseOpts
-  compile proc2 "proc2" $ setCode ("","") baseOpts
+  compile proc0 "proc0" $ 
+    setCode (Just (includes P.++ vars P.++ send0), Just mainStr) baseOpts
+  compile proc1 "proc1" $ 
+    setCode (Just (includes P.++ vars P.++ send1), Nothing) baseOpts
+  compile proc2 "proc2" $ 
+    setCode (Just (includes P.++ vars P.++ send2), Nothing) baseOpts
 
-body :: Streamable a => Int -> Spec a -> [Spec a] -> Streams
-body id p ls = do
+body :: Int -> Spec Word16 -> [Spec Word16] -> Spec Word16 -> Streams
+body id p ls exp = do
   let maj = varW16 "maj"
       chk = varB "chk"
-  p   .= [0] ++ p + 1
+  p   .= exp
   maj .= majority ls
   chk .= aMajority ls maj
   send ("send" P.++ P.show id) (port 1) p
@@ -73,82 +79,64 @@ body id p ls = do
 -- | Distributed majority voting among three processors.
 proc0, proc1, proc2 :: Streams
 proc0 = do
-  let p0 = varW16 "p0"
-      p01 = extW16 "p01"
-      p02 = extW16 "p02"
-      -- maj = varW16 "maj"
-      -- chk = varB "chk"
-      ls = [p0, p01, p02]
-  body 0 p0 ls
-  -- p0  .= [0] ++ p0 + 1
-  -- maj .= majority ls
-  -- chk .= aMajority ls maj
-  -- send "send0" (port 1) p0
-  -- send "send0" (port 2) p0
+  let p0  = varW16 "p0"
+      p1 = extW16 "p1"
+      p2 = extW16 "p2"
+      ls = [p0, p1, p2]
+  body 0 p0 ls ([0] ++ p0 + 1)
 
 proc1 = do
-  let p1 = varW16 "p1"
-      p10 = extW16 "p10"
-      p12 = extW16 "p12"
-      maj = varW16 "maj"
-      chk = varB "chk"
-      ls = [p10, p1, p12]
-  p1  .= [0] ++ p1 + 1
-  maj .= majority ls
-  chk .= aMajority ls maj
-  send "send1" (port 0) p1
-  send "send1" (port 2) p1
+  let p1  = varW16 "p1"
+      p0 = extW16 "p0"
+      p2 = extW16 "p2"
+      ls = [p1, p1, p1]
+  body 1 p1 ls ([0] ++ p1 + 1)
 
 proc2 = do
   let p2 = varW16 "p2"
-      p20 = extW16 "p20"
-      p21 = extW16 "p21"
-      maj = varW16 "maj"
-      chk = varB "chk"
-      ls = [p20, p21, p2]
-  p2  .= [0] ++ p2 + 1
-  maj .= majority ls
-  chk .= aMajority ls maj
-  send "send2" (port 0) p2
-  send "send2" (port 1) p2
+      p0 = extW16 "p0"
+      p1 = extW16 "p1"
+      ls = [p0, p1, p2]
+  body 2 p2 ls ([0] ++ p2 + 1)
 
--- int main (void) {
---   int rnds = 0;
---   for(rnds; rnds < 40; rnds++) {
---     proc0();
---     proc1();
---     proc2();
---     printf("proc0 maj: %u  ", copilotStateproc0.proc0.maj);   
---     printf("chk: %u\n", copilotStateproc0.proc0.chk);   
---   }
---   return 0;
--- }
+mainStr :: String 
+mainStr = unlines 
+  [ "int main (void) {"
+  , "  int rnds = 0;"
+  , "  for(rnds; rnds < 40; rnds++) {"
+  , "    proc0();"
+  , "    proc1();"
+  , "    proc2();"
+  , "    printf(\"proc0 maj: %u  \", copilotStateproc0.proc0.maj);   "
+  , "    printf(\"chk: %u\\n\", copilotStateproc0.proc0.chk);   "
+  , "  }"
+  , "  return 0;"
+  , "}"
+  ]
 
--- void send0(uint16_t val, int port) {
---   switch (port) {
---   case 1: p01 = val;
---   case 2: p02 = val;
---   }
--- }
+vars :: String
+vars = unlines 
+  [ "uint16_t p0;"
+  , "uint16_t p1;"
+  , "uint16_t p2;"
+  ]
 
--- void send1(uint16_t val, int port) {
---   switch (port) {
---   case 0: p10 = val;
---   case 2: p12 = val;
---   }
--- }
+includes :: String
+includes = unlines
+  [ includeBracket "stdlib.h"
+  , includeBracket "stdio.h"]
 
+sendBody :: Int -> String
+sendBody id = unlines
+  [ "void send" P.++ P.show id P.++ "(uint16_t val, int port) {"
+  , "  switch (port) {"
+  , "  case 1: p" P.++ (P.show $ (id + 1) `P.mod` 3) P.++ " = val;"
+  , "  case 2: p" P.++ (P.show $ (id + 2) `P.mod` 3) P.++ " = val;"
+  , "  }"
+  , "}"
+  ]
 
--- void send2(uint16_t val, int port) {
---   switch (port) {
---   case 0: p20 = val;
---   case 1: p21 = val;
---   }
--- }
-
--- uint16_t p01;
--- uint16_t p02;
--- uint16_t p10;
--- uint16_t p12;
--- uint16_t p20;
--- uint16_t p21;
+send0, send1, send2 :: String
+send0 = sendBody 0
+send1 = sendBody 1
+send2 = sendBody 2
