@@ -9,7 +9,7 @@ import qualified Prelude as P
 
 -- for specifying options
 import Data.Map (fromList) 
-import Data.Maybe (Maybe (..))
+--import Data.Maybe (Maybe (..))
 --import System.Random
 
 import Language.Copilot 
@@ -301,6 +301,16 @@ extT = do
   let x = extW16 "x"
   let y = varW16 "y"
   y .= x 
+
+-- Examples:
+interpretExtT :: Prelude.IO ()
+interpretExtT =
+  interpret extT 10 $ 
+    setE (emptySM {w16Map = fromList [("x", [8,9..])]})
+      baseOpts
+compileExtT :: P.IO ()
+compileExtT =
+  compile extT "extT" $ setCode (P.Just "#include \"mylib.h\"", P.Nothing) baseOpts
 
 -- Testing error checking for badly-formed external sampling.
 
