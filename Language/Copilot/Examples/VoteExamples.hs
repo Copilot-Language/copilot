@@ -9,7 +9,7 @@ import Data.Int
 import System.Cmd (system)
 import System.Exit (ExitCode(..))
 
-import Prelude (IO(..), ($), Int, String, unlines, Maybe(..), putStrLn)
+import Prelude (IO(..), ($), Int, String, unlines, Maybe(..), print)
 import qualified Prelude as P
 
 -- | Computes an alleged majority over constants and determines if 3 is the
@@ -68,7 +68,7 @@ makeProcs = do
   compile proc2 "proc2" $ 
     setCode (Just (includes P.++ vars P.++ decls P.++ send2), Nothing) baseOpts
   exitCode <- system "gcc -o proc -Wall proc0.c proc1.c proc2.c"
-  putStrLn (P.show exitCode)
+  print exitCode
 
 body :: Int -> Spec Word16 -> [Spec Word16] -> Spec Word16 -> Streams
 body id p ls exp = do

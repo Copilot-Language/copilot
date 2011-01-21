@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -XRelaxedPolyRec #-}
+{-# LANGUAGE RelaxedPolyRec #-}
 
 -- | This module provides a way to check that a /Copilot/ specification is
 -- compilable
@@ -314,7 +314,7 @@ checkInitsArgs streams =
                                              (_,_,ExtRetV) -> Nothing 
                                              (_,_,ExtRetA idx) -> 
                                                case idx of
-                                                 V v -> Just v
+                                                 V v' -> Just v'
                                                  C _ -> Nothing)
                            (getExternalVars streams)
   in foldStreamableMaps checkInits streams Nothing

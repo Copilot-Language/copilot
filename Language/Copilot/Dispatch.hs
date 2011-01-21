@@ -73,7 +73,7 @@ dispatch elems inputExts backEnd iterations verbose =
         mapM_ putStrLn preludeText 
         isValid <-
             case check (strms elems) of
-                Just x -> putStrLn (show x) >> return False
+                Just x -> print x >> return False
                 Nothing -> return True
         when isValid $
             -- because haskell is lazy, will only get computed if later used
@@ -82,7 +82,7 @@ dispatch elems inputExts backEnd iterations verbose =
             in case backEnd of
                 Interpreter -> 
                     do
-                        when (not allInputsPresents) $ error errMsg
+                        unless allInputsPresents $ error errMsg
                         mapM_ putStrLn interpretedLines
                 Opts opts ->
                     let isInterpreted =
@@ -100,8 +100,7 @@ dispatch elems inputExts backEnd iterations verbose =
                         let delete ext = do 
                               f0 <- canonicalizePath (cName opts ++ ext) 
                               f1 <- canonicalizePath (dirName ++ cName opts ++ ext)
-                              if f0 == f1 then return ()
-                                else removeFile (cName opts ++ ext)
+                              unless (f0 == f1) $ removeFile (cName opts ++ ext)
                         putStrLn $ "Moving " ++ cName opts ++ ".c and " ++ cName opts 
                                         ++ ".h to " ++ dirName ++ "  ..."
                         copy ".c"
@@ -148,9 +147,7 @@ copilotToC elems allExts trueInputExts opts isVerbose =
     in do
         putStrLn $ "Compiling Copilot specs to C  ..."
         (sched, _, _, _, _) <- A.compile cFileName atomConfig program
-        if isVerbose
-            then putStrLn $ A.reportSchedule sched
-            else return ()
+        when isVerbose (putStrLn $ A.reportSchedule sched)
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
 -- | Call Gcc to compile the code.
@@ -179,7 +176,7 @@ execute streams programName trueInputExts isInterpreted interpretedLines iterati
 
         when isInterpreted 
                  (do putStrLn "\n *** Checking the randomly-generated Copilot specification: ***\n"
-                     putStrLn $ show streams)
+                     print streams)
         let inputVar v (val:vals) ioVars =
                 do  hPutStr hin (showAsC val ++ " \n")
                     hFlush hin
@@ -193,7 +190,7 @@ execute streams programName trueInputExts isInterpreted interpretedLines iterati
                     do  nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
                         line <- hGetLine hout
                         let nextPeriod = 
-                                (when (not isSilent) $ putStrLn line) >> 
+                                (unless isSilent $ putStrLn line) >> 
                                     executePeriod nextInputExts inLines (n - 1)
                         -- Checking the compiler and interpreter.
                         if isInterpreted

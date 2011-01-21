@@ -85,15 +85,15 @@ instance ExtCl Ext where
   extF = PVar A.Float
   extD = PVar A.Double
   -- for arrays 
-  extArrB = \fn idx -> PArr A.Bool (fn, idx)
-  extArrI8 = \fn idx -> PArr A.Int8 (fn, idx)
-  extArrI16 = \fn idx -> PArr A.Int16 (fn, idx)
-  extArrI32 = \fn idx -> PArr A.Int32 (fn, idx)
-  extArrI64 = \fn idx -> PArr A.Int64 (fn, idx)
-  extArrW8 = \fn idx -> PArr A.Word8 (fn, idx)
-  extArrW16 = \fn idx -> PArr A.Word16 (fn, idx)
-  extArrW32 = \fn idx -> PArr A.Word32 (fn, idx)
-  extArrW64 = \fn idx -> PArr A.Word64 (fn, idx)
-  extArrF = \fn idx -> PArr A.Float (fn, idx)
-  extArrD = \fn idx -> PArr A.Double (fn, idx)
+  extArrB = curry (PArr A.Bool)
+  extArrI8 = curry (PArr A.Int8)
+  extArrI16 = curry (PArr A.Int16)
+  extArrI32 = curry (PArr A.Int32)
+  extArrI64 = curry (PArr A.Int64)
+  extArrW8 = curry (PArr A.Word8)
+  extArrW16 = curry (PArr A.Word16)
+  extArrW32 = curry (PArr A.Word32)
+  extArrW64 = curry (PArr A.Word64)
+  extArrF = curry (PArr A.Float)
+  extArrD = curry (PArr A.Double)
 
