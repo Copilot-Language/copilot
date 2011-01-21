@@ -62,13 +62,14 @@ ft0 = do
 makeProcs :: IO ()
 makeProcs = do
   compile proc0 "proc0" $ 
-    setCode (Just (includes P.++ vars P.++ decls P.++ send0), Just mainStr) baseOpts
+    setCode (Just (headers P.++ send0), Just mainStr) baseOpts
   compile proc1 "proc1" $ 
-    setCode (Just (includes P.++ vars P.++ decls P.++ send1), Nothing) baseOpts
+    setCode (Just (headers P.++ send1), Nothing) baseOpts
   compile proc2 "proc2" $ 
-    setCode (Just (includes P.++ vars P.++ decls P.++ send2), Nothing) baseOpts
+    setCode (Just (headers P.++ send2), Nothing) baseOpts
   exitCode <- system "gcc -o proc -Wall proc0.c proc1.c proc2.c"
   print exitCode
+  where headers = includes P.++ vars P.++ decls
 
 body :: Int -> Spec Word16 -> [Spec Word16] -> Spec Word16 -> Streams
 body id p ls exp = do
@@ -76,7 +77,7 @@ body id p ls exp = do
       chk = varB "chk"
       pd  = varW16 "pd"
   p   .= exp
-  pd  .= drop 1 p -- because we sample las round's vars
+  pd  .= drop 1 p -- because we sample last round's vars
   maj .= majority (pd:ls)
   chk .= aMajority ls maj
   send ("send" P.++ P.show id) (port 1) p
@@ -88,24 +89,19 @@ proc0 = do
   let p0 = varW16 "p0"
       p1 = extW16 "p1"
       p2 = extW16 "p2"
-      ls = [p1, p2]
-  body 0 p0 ls ([0,1] ++ (p0 + 1) `mod` 3)
+  body 0 p0 [p1, p2] ([0,1,2] ++ p0)
 
 proc1 = do
   let p1 = varW16 "p1"
       p0 = extW16 "p0"
       p2 = extW16 "p2"
-      ls = [p0, p2]
-  body 1 p1 ls ([1,0] ++ (p1 + 2) `mod` 3)
+  body 1 p1 [p0, p2] ([1,0,2,0] ++ p1)
 
 proc2 = do
   let p2 = varW16 "p2"
       p0 = extW16 "p0"
       p1 = extW16 "p1"
-      ls = [p0, p1]
-  body 2 p2 ls ([2,0] ++ (p2 + 1) `mod` 3)
-
-
+  body 2 p2 [p0, p1] ([2,1,0,2,1] ++ p1)
 
 mainStr :: String 
 mainStr = unlines 
