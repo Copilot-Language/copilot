@@ -21,13 +21,12 @@ majority [] =
   error "Error in majority: list of arguments must be nonempty."
 majority ls = majority' ls (const unit) 0
 
-majority' :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Word32 -> Spec a
+majority' :: (Streamable a, A.EqE a) 
+          => [Spec a] -> Spec a -> Spec Word32 -> Spec a
 majority' [] candidate _ = candidate
 majority' (x:xs) candidate cnt = 
-  majority'
-    xs
-    (mux (cnt == 0) x candidate)
-    (mux (cnt == 0 || x == candidate) (cnt + 1) (cnt - 1))
+  majority' xs (mux (cnt == 0) x candidate)
+               (mux (cnt == 0 || x == candidate) (cnt + 1) (cnt - 1))
 
 aMajority :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Bool
 aMajority [] _ = 
