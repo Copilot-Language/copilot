@@ -103,6 +103,8 @@ xx = do
   trigger w "z0_trigger" (a <> b <> true)
   trigger w "z1_trigger" (d <> constW16 3 <> w)
 
+-- If the temperature of the engine rises more than 2.3 degrees within 2 seconds
+-- and the cooler is not engaged, trigger the shutoff function.
 engineMonitor :: Streams
 engineMonitor = do
   -- external vars
