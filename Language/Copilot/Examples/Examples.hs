@@ -109,7 +109,6 @@ engineMonitor :: Streams
 engineMonitor = do
   -- external vars
   let temp     = extF "temp"
-      cooler   = extB "cooler"
   -- Copilot vars
       temps    = varF "temps"
       overTemp = varB "overTemp"
