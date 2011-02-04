@@ -83,7 +83,7 @@ baseOpts = Options {
 
 test :: Int -> Options -> IO ()
 test n opts = 
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim True opts 
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim opts 
 
 interpret :: Streams -> Int -> Options -> IO ()
 interpret streams n opts = 
@@ -198,8 +198,8 @@ setCode :: (Maybe String, Maybe String) -> Options -> Options
 setCode pp opts = opts {optPrePostCode = pp}
 
 -- | Include simulation driver code (in a main() loop)?
-setSim :: Bool -> Options -> Options
-setSim b opts = opts {optSimulate = b}
+setSim :: Options -> Options
+setSim opts = opts {optSimulate = True}
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
