@@ -12,7 +12,7 @@ import Language.Copilot.Core
 import Data.Maybe
 import qualified Data.Map as M
 import Data.List
-import Data.Word (Word64)
+import Data.Word (Word32)
 
 import qualified Language.Atom as A
 
@@ -29,8 +29,13 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
                     (\_ -> initExtSamples streams outputs prophArrs outputIndexes) 
                     streams 
                     (return emptyTmpSamples)
+
+    let nextStates = 
+          mapStreamableMaps
+            (nextSt streams prophArrs tmpSamples outputIndexes 0) streams
+
     -- One atom rule for each stream
-    foldStreamableMaps (makeRule p' streams outputs prophArrs tmpSamples 
+    foldStreamableMaps (makeRule p' nextStates outputs prophArrs
                            updateIndexes outputIndexes) 
       streams (return ())
 
@@ -66,7 +71,7 @@ period p =
         minPeriod = 5
 
 -- For the prophecy arrays
-type ArrIndex = Word64
+type ArrIndex = Word32
 type ProphArrs = StreamableMaps BoundedArray
 type Outputs = StreamableMaps A.V
 type Indexes = M.Map Var (A.V ArrIndex)
@@ -76,9 +81,60 @@ data PhasedValueVar a = PhV (A.V a)
 
 data BoundedArray a = B ArrIndex (Maybe (A.A a))
 
-nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
-       -> Spec a -> ArrIndex -> A.E a
-nextSt streams prophArrs tmpSamples outputIndexes s index = 
+-- nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
+--        -> Spec a -> ArrIndex -> A.E a
+-- nextSt streams prophArrs tmpSamples outputIndexes s index = 
+--     case s of
+--         PVar _ v  -> 
+--           let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
+--           A.value var
+--         PArr _ (v, idx) -> 
+--           let PhA var = e tmp (tmpArrs tmpSamples) 
+--               tmp = tmpArrName v (show idx) 
+--               e a b = case getMaybeElem a b of
+--                         Nothing -> 
+--                           error "Error in application of getElem in nextSt."
+--                         Just x  -> x 
+--           in A.value var
+--         Var v -> nextStVar v streams prophArrs tmpSamples outputIndexes index
+--         Const e -> A.Const e
+--         F _ f s0 -> f $ next s0 index 
+--         F2 _ f s0 s1 -> 
+--             f (next s0 index) 
+--               (next s1 index)
+--         F3 _ f s0 s1 s2 -> 
+--             f (next s0 index) 
+--               (next s1 index) 
+--               (next s2 index)
+--         Append _ s0 -> next s0 index
+--         Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
+--     where next :: Streamable b => Spec b -> ArrIndex -> A.E b
+--           next = nextSt streams prophArrs tmpSamples outputIndexes
+
+-- nextStVar v streams prophArrs tmpSamples outputIndexes index = 
+--   let B initLen maybeArr = getElem v prophArrs in
+--   -- This check is extremely important It means that if x at time n depends on y
+--   -- at time n then x is obtained not by y, but by inlining the definition of y
+--   -- so it increases the size of code (sadly), but is the only thing preventing
+--   -- race conditions from occuring
+--   if index < initLen
+--     then getVar v initLen maybeArr 
+--     else let s0 = getElem v streams in 
+--          nextSt streams prophArrs tmpSamples outputIndexes s0 (index - initLen)
+--   where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
+--         getVar v initLen maybeArr =
+--            let outputIndex = case M.lookup v outputIndexes of
+--                                Nothing -> error "Error in function getVar."
+--                                Just x -> x
+--                arr = case maybeArr of
+--                        Nothing -> error "Error in function getVar (maybeArr)."
+--                        Just x -> x in 
+--            arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
+--                        (A.Const (initLen + 1)))
+nextSt :: Streamable a 
+       => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes -> ArrIndex 
+       -> Var -> Spec a -> A.E a
+nextSt streams prophArrs tmpSamples outputIndexes index var s = 
     case s of
         PVar _ v  -> 
           let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
@@ -91,32 +147,28 @@ nextSt streams prophArrs tmpSamples outputIndexes s index =
                           error "Error in application of getElem in nextSt."
                         Just x  -> x 
           in A.value var
-        Var v -> let B initLen maybeArr = getElem v prophArrs in
-            -- This check is extremely important
-            -- It means that if x at time n depends on y at time n
-            -- then x is obtained not by y, but by inlining the definition of y
-            -- so it increases the size of code (sadly),
-            -- but is the only thing preventing race conditions from occuring
-            if index < initLen
-                then getVar v initLen maybeArr 
-                else let s0 = getElem v streams in 
-                     next s0 (index - initLen)
+        Var v -> nextStVar v streams prophArrs tmpSamples outputIndexes index
         Const e -> A.Const e
-        F _ f s0 -> f $ next s0 index
-        F2 _ f s0 s1 ->
-            f (next s0 index) 
-              (next s1 index)
-        F3 _ f s0 s1 s2 ->
-            f (next s0 index) 
-              (next s1 index) 
-              (next s2 index)
+        F _ f s0 -> f (next s0 index)
+        F2 _ f s0 s1 -> f (next s0 index) (next s1 index)
+        F3 _ f s0 s1 s2 -> f (next s0 index) (next s1 index) (next s2 index)
         Append _ s0 -> next s0 index
         Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
-    where
-        next :: Streamable b => Spec b -> ArrIndex -> A.E b
-        next = nextSt streams prophArrs tmpSamples outputIndexes 
-        getVar :: Streamable a 
-               => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
+    where next :: Streamable b => Spec b -> ArrIndex -> A.E b
+          next s' ind = 
+            nextSt streams prophArrs tmpSamples outputIndexes ind undefined s'
+
+nextStVar v streams prophArrs tmpSamples outputIndexes index = 
+  let B initLen maybeArr = getElem v prophArrs in
+  -- This check is extremely important. It means that if x at time n depends on y
+  -- at time n then x is obtained not by y, but by inlining the definition of y
+  -- so it increases the size of code (sadly), but is the only thing preventing
+  -- race conditions from occuring.
+  if index < initLen
+    then getVar v initLen maybeArr 
+    else let s0 = getElem v streams in 
+         nextSt streams prophArrs tmpSamples outputIndexes (index - initLen) v s0
+  where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
         getVar v initLen maybeArr =
            let outputIndex = case M.lookup v outputIndexes of
                                Nothing -> error "Error in function getVar."
@@ -127,7 +179,8 @@ nextSt streams prophArrs tmpSamples outputIndexes s index =
            arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
                        (A.Const (initLen + 1)))
 
-initProphArr :: forall a. Streamable a => Var -> Spec a -> A.Atom (BoundedArray a)
+initProphArr :: forall a. Streamable a 
+             => Var -> Spec a -> A.Atom (BoundedArray a)
 initProphArr v s =
     let states = initState s
         name = "prophVal__" ++ normalizeVar v
@@ -222,30 +275,63 @@ initExtSamples streams outputs prophArrs outputIndexes s tmpSamples = do
                           => Spec b -> A.Atom TmpSamples -> A.Atom TmpSamples
           initExtSamples' = initExtSamples streams outputs prophArrs outputIndexes
 
+-- | For each stream, make an index into its array of values telling you where
+-- the next value in the array to update is.
 makeUpdateIndex :: Var -> BoundedArray a -> A.Atom Indexes -> A.Atom Indexes
 makeUpdateIndex v (B n arr) indexes =
     case arr of
         Nothing -> indexes
         Just _ ->  
-            do
-                mindexes <- indexes
+            do  mindexes <- indexes
                 index <- atomConstructor ("updateIndex__" ++ normalizeVar v) n
                 return $ M.insert v index mindexes
 
+-- | For each stream, make an index into its array of values telling you where
+-- its current output value is.
 makeOutputIndex :: Var -> BoundedArray a -> A.Atom Indexes -> A.Atom Indexes
 makeOutputIndex v (B _ arr) indexes =
     case arr of
         Nothing -> indexes
         Just _ ->  
-            do
-                mindexes <- indexes
+            do  mindexes <- indexes
                 index <- atomConstructor ("outputIndex__" ++ normalizeVar v) 0
                 return $ M.insert v index mindexes
 
+-- makeRule :: forall a. Streamable a => 
+--     Period -> StreamableMaps Spec -> Outputs -> ProphArrs -> TmpSamples -> 
+--     Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
+-- makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r = do
+--     r 
+--     let B n maybeArr = getElem v prophArrs::BoundedArray a
+--     case maybeArr of
+--         Nothing ->
+--             -- Fusing together the update and the output if the prophecy array doesn't exist 
+--             -- (ie if it would only have hold the output value)
+--             A.exactPhase 2 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
+--                 ((getElem v outputs)::(A.V a)) A.<== nextSt'
+
+--         Just arr -> do
+--             let updateIndex = fromJust $ M.lookup v updateIndexes
+--                 outputIndex = fromJust $ M.lookup v outputIndexes
+
+--             A.exactPhase 1 $ A.atom ("update__" ++ normalizeVar v) $ do
+--                 arr A.! (A.VRef updateIndex) A.<== nextSt'
+            
+--             A.exactPhase 2 $ A.atom ("output__" ++ normalizeVar v) $ do
+--                 ((getElem v outputs)::(A.V a)) A.<== arr A.!. (A.VRef outputIndex)
+--                 outputIndex A.<==          (A.VRef outputIndex + A.Const 1) 
+--                                   `A.mod_` A.Const (n + 1)
+            
+--             A.phase 4
+--               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
+--                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
+--                                   `A.mod_` A.Const (n + 1)
+
+--        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
 makeRule :: forall a. Streamable a => 
-    Period -> StreamableMaps Spec -> Outputs -> ProphArrs -> TmpSamples -> 
-    Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
-makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r = do
+    Period -> StreamableMaps A.E -> Outputs -> ProphArrs
+    -> Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
+makeRule p exps outputs prophArrs updateIndexes outputIndexes v s r = do
     r 
     let B n maybeArr = getElem v prophArrs::BoundedArray a
     case maybeArr of
@@ -253,14 +339,14 @@ makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s 
             -- Fusing together the update and the output if the prophecy array doesn't exist 
             -- (ie if it would only have hold the output value)
             A.exactPhase 2 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
-                ((getElem v outputs)::(A.V a)) A.<== nextSt'
+                ((getElem v outputs)::(A.V a)) A.<== getElem v exps
 
         Just arr -> do
             let updateIndex = fromJust $ M.lookup v updateIndexes
                 outputIndex = fromJust $ M.lookup v outputIndexes
 
             A.exactPhase 1 $ A.atom ("update__" ++ normalizeVar v) $ do
-                arr A.! (A.VRef updateIndex) A.<== nextSt'
+                arr A.! (A.VRef updateIndex) A.<== getElem v exps
             
             A.exactPhase 2 $ A.atom ("output__" ++ normalizeVar v) $ do
                 ((getElem v outputs)::(A.V a)) A.<== arr A.!. (A.VRef outputIndex)
@@ -271,8 +357,6 @@ makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s 
               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
-
-       where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
              
 makeSend :: forall a. Streamable a 
          => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
