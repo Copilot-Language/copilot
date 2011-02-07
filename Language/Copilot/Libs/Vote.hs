@@ -6,7 +6,7 @@ module Language.Copilot.Libs.Vote
 import Prelude 
   ( ($), fromIntegral, error, length, otherwise
   , Bounded(..), maxBound, minBound, Int)
-import Data.List (foldl, replicate, (!!))
+import Data.List (foldl, foldl', replicate, (!!))
 import qualified Prelude as P 
 import Data.Word
 
@@ -32,10 +32,10 @@ aMajority :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Bool
 aMajority [] _ = 
   error "Error in aMajority: list of arguments must be nonempty."
 aMajority ls candidate = 
-  (foldl (\cnt x -> mux (x == candidate)
-                        (cnt + 1)
-                        cnt :: Spec Word32
-         ) 0 ls) * 2
+  (foldl' (\cnt x -> mux (x == candidate)
+                         (cnt + 1)
+                         cnt :: Spec Word32
+          ) 0 ls) * 2
   > (fromIntegral $ length ls)
 
 -- | Fault-tolerant average.  Throw away the bottom and top @n@ elements and
@@ -64,7 +64,7 @@ ftAvg' (x:xs) lows highs sum =
 insert :: (Streamable a, A.OrdE a) 
        => (Spec a -> Spec a -> Spec Bool) 
        -> [Spec a] -> Spec a -> Int -> [Spec a]
-insert ord xs x idx | idx P.== length xs = []
+insert _ xs _ idx | idx P.== length xs = []
 insert ord xs x idx | otherwise =
   let n = xs !! idx
       choice = mux (x `ord` n) x n in
