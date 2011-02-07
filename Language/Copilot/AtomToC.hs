@@ -3,7 +3,6 @@
 -- | Defines a main() and print statements to easily execute generated Copilot specs.
 module Language.Copilot.AtomToC(getPrePostCode) where
 
---import Language.Copilot.Compiler (tmpSampleStr, tmpArrName, tmpVarName)
 import Language.Copilot.AdHocC
 
 import Language.Copilot.Core
