@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, Rank2Types #-}
+{-# LANGUAGE ScopedTypeVariables, Rank2Types, GADTs #-}
 
 -- XXX Clean this up!
 
@@ -30,9 +30,9 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
                     streams 
                     (return emptyTmpSamples)
 
-    let nextStates = 
-          mapStreamableMaps
-            (nextSt streams prophArrs tmpSamples outputIndexes 0) streams
+    let nextStates = makeStates $ 
+          mapStreamableMaps (nextSt streams prophArrs tmpSamples outputIndexes 0) 
+            streams
 
     -- One atom rule for each stream
     foldStreamableMaps (makeRule p' nextStates outputs prophArrs
@@ -131,15 +131,48 @@ data BoundedArray a = B ArrIndex (Maybe (A.A a))
 --                        Just x -> x in 
 --            arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
 --                        (A.Const (initLen + 1)))
+
+
+-- | Takes the NextSts and walks over the tree building the Atom expression.  
+makeStates :: StreamableMaps NextSt -> StreamableMaps A.E
+makeStates trees = 
+  mapStreamableMaps (\_ -> makeState) trees
+  where 
+    makeState :: (Streamable a) => NextSt a -> A.E a
+    makeState tree = 
+      case tree of 
+        ExpLeaf s -> s
+        F1Node f s0 -> f (makeState s0) 
+        F2Node f s0 s1 -> f (makeState s0) (makeState s1)
+        F3Node f s0 s1 s2 -> f (makeState s0) (makeState s1) (makeState s2)
+        VarRefLeaf v -> makeState (getElem v trees)
+
+-- | A tree datatype that holds Atom expressions from the 'nextSt' function
+-- | until we've got all variable references collected up.  In particular, we
+-- | have told function applications.
+data NextSt a where
+    -- Leaves
+    ExpLeaf :: A.E a -> NextSt a
+    VarRefLeaf :: Var -> NextSt a
+    -- Parent nodes
+    F1Node :: (Streamable a, Streamable b) 
+           => (A.E b -> A.E a) -> NextSt b -> NextSt a
+    F2Node :: (Streamable a, Streamable b, Streamable c) 
+           => (A.E b -> A.E c -> A.E a) -> NextSt b -> NextSt c -> NextSt a 
+    F3Node :: (Streamable a, Streamable b, Streamable c, Streamable d) 
+           => (A.E b -> A.E c -> A.E d -> A.E a) 
+              -> NextSt b -> NextSt c -> NextSt d -> NextSt a
+
+-- | Compute the next state value.
 nextSt :: Streamable a 
        => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes -> ArrIndex 
-       -> Var -> Spec a -> A.E a
-nextSt streams prophArrs tmpSamples outputIndexes index var s = 
+       -> Var -> Spec a -> NextSt a
+nextSt streams prophArrs tmpSamples outputIndexes index _ s = 
     case s of
-        PVar _ v  -> 
+        PVar _ v  -> ExpLeaf $ 
           let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
           A.value var
-        PArr _ (v, idx) -> 
+        PArr _ (v, idx) -> ExpLeaf $
           let PhA var = e tmp (tmpArrs tmpSamples) 
               tmp = tmpArrName v (show idx) 
               e a b = case getMaybeElem a b of
@@ -148,16 +181,19 @@ nextSt streams prophArrs tmpSamples outputIndexes index var s =
                         Just x  -> x 
           in A.value var
         Var v -> nextStVar v streams prophArrs tmpSamples outputIndexes index
-        Const e -> A.Const e
-        F _ f s0 -> f (next s0 index)
-        F2 _ f s0 s1 -> f (next s0 index) (next s1 index)
-        F3 _ f s0 s1 s2 -> f (next s0 index) (next s1 index) (next s2 index)
+        Const e -> ExpLeaf $ A.Const e
+        F _ f s0 -> F1Node f (next s0 index)
+        F2 _ f s0 s1 -> F2Node f (next s0 index) (next s1 index)
+        F3 _ f s0 s1 s2 -> F3Node f (next s0 index) (next s1 index) (next s2 index)
         Append _ s0 -> next s0 index
         Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
-    where next :: Streamable b => Spec b -> ArrIndex -> A.E b
+    where next :: Streamable b => Spec b -> ArrIndex -> NextSt b
           next s' ind = 
             nextSt streams prophArrs tmpSamples outputIndexes ind undefined s'
 
+-- | Get the next state when one stream references another Copilot stream variable.
+nextStVar :: Streamable a => Var -> StreamableMaps Spec -> ProphArrs 
+          -> TmpSamples -> Indexes -> ArrIndex -> NextSt a
 nextStVar v streams prophArrs tmpSamples outputIndexes index = 
   let B initLen maybeArr = getElem v prophArrs in
   -- This check is extremely important. It means that if x at time n depends on y
@@ -167,9 +203,15 @@ nextStVar v streams prophArrs tmpSamples outputIndexes index =
   if index < initLen
     then getVar v initLen maybeArr 
     else let s0 = getElem v streams in 
-         nextSt streams prophArrs tmpSamples outputIndexes (index - initLen) v s0
-  where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
-        getVar v initLen maybeArr =
+         -- XXX This should be generalized to handle arbitrary index values.
+         -- For now, as a test, we'll just use the cahced nextState value if
+         -- it's like computing that stream's nextState from scratch.
+         let newIndex = index - initLen in
+         if newIndex == 0 then VarRefLeaf v
+           else nextSt streams prophArrs tmpSamples outputIndexes 
+                  newIndex undefined s0
+  where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> NextSt a
+        getVar v initLen maybeArr = ExpLeaf $
            let outputIndex = case M.lookup v outputIndexes of
                                Nothing -> error "Error in function getVar."
                                Just x -> x
