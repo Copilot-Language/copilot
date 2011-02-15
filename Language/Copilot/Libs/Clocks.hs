@@ -42,6 +42,8 @@ period = Period
 phase :: Int -> Phase
 phase = Phase
 
+-- clock generates a clock that counts n ticks by using a
+-- prophecy array of size n
 clock :: Spec Bool -> (Period, Phase) -> Streams
 clock v (Period per, Phase ph) =
   if (per P.< 1) then error ("Error in stream " P.++ (show v)
@@ -53,9 +55,11 @@ clock v (Period per, Phase ph) =
              else v .= ((replicate ph False)
                           P.++ (True : (replicate ((per - ph) - 1) False)) ++ v)
 
-clock' :: Spec Bool -> (Period, Phase) -> Streams
-clock' v (Period per, Phase ph) = do
-  { let counter = varI32 "counter"
+-- clock generates a clock that counts n ticks by using a
+-- 32 bit counter variable
+clock' :: String -> Spec Bool -> (Period, Phase) -> Streams
+clock' clockName v (Period per, Phase ph) = do
+  { let counter = varI32 ( clockName P.++ "_counter" )
   ; counter .= [ 0 ] ++ ( mux ( counter /= ( Const . fromIntegral ) per - 1 )
                               ( counter + 1 )
                               ( 0 ) )
@@ -73,8 +77,10 @@ clkTest = do
   let x = varB "x"
   let y = varB "y"
   let z = varB "z"
+  let w = varB "w"
   x `clock`  (period 3, phase 1)
   y `clock`  (period 4, phase 3)
-  z `clock'` (period 4, phase 3)
+  clock' "c1" z (period 4, phase 3)
+  clock' "c2" w (period 4, phase 3)
 
-test = interpret clkTest 100 baseOpts
+test = interpret clkTest 10 baseOpts
