@@ -109,7 +109,6 @@ engineMonitor :: Streams
 engineMonitor = do
   -- external vars
   let temp     = extF "temp"
-      cooler   = extB "cooler"
   -- Copilot vars
       temps    = varF "temps"
       overTemp = varB "overTemp"
@@ -129,6 +128,17 @@ distrib = do
   -- sends
   send "portA" (port 2) a 
   send "portB" (port 1) b 
+
+monitor :: Streams
+monitor = do
+  -- external variables
+  let word     = extW32 "rx"
+      arbiter  = extB "arbiter"
+  -- Copilot variables
+      words    = varW32 "words"
+      arbiters = varB "arbiters"
+  words   .=      [0] ++ mux arbiter word words
+  arbiters .= [False] ++ mux arbiter false arbiter
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams
