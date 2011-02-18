@@ -8,6 +8,7 @@ import Data.Map (fromList)
 
 import Language.Copilot
 import Language.Copilot.Libs.PTLTL
+import Language.Copilot.Libs.Vote
 
 -- Next examples are for testing of the ptLTL library
 
@@ -91,36 +92,41 @@ tSinExt2 = do
   t `ptltl` (alwaysBeen $ not a)
   e .= e1 ==> d
 
--- "If the engine temperature exeeds 250 degrees, then the engine is shutoff
--- within the next 10 periods, and in the period following the shutoff, the
--- cooler is engaged and remains engaged."
+-- "If the majority of the engine temperature probes exeeds 250 degrees, then
+-- the cooler is engaged and remains engaged until the majority of the engine
+-- temperature drops to 250 or below.  Otherwise, trigger an immediate shutdown
+-- of the engine."
 engine :: Streams
 engine = do
   -- external vars
-  let engineTemp = extW8 "engineTemp"
-      engineOff  = extB "engineOff"
-      coolerOn   = extB "coolerOn"
+  let t0       = extW8 "temp_probe_0"
+      t1       = extW8 "temp_probe_1"
+      t2       = extW8 "temp_probe_2"
+      cooler   = extB  "fan_status"
   -- Copilot vars
-      cnt        = varW8 "cnt"
-      temp       = varB "temp"
-      cooler     = varB "cooler"
-      off        = varB "off"
-      monitor    = varB "monitor"
+      maj      = varW8 "maj"
+      check    = varB  "maj_check"
+      overHeat = varB  "over_heat"
+      monitor  = varB  "monitor"
+  -- local vars
+      temps    = [t0, t1, t2]
+  maj      .= majority temps
+  check    .= aMajority temps maj
+  overHeat `ptltl` (        (cooler || (maj <= 250 && check)) 
+                    `since` (maj > 250))
+  monitor .= not overHeat
+  trigger monitor "shutoff_engine" void
 
-  temp    `ptltl` (alwaysBeen (engineTemp > 250))
-  cnt     .=      [0] ++ mux (temp && cnt < 10) (cnt + 1) cnt
-  off     .=      cnt >= 10 ==> engineOff
-  cooler  `ptltl` (coolerOn `since` engineOff)
-  monitor .=      off && cooler
 
-engineRun :: IO ()
-engineRun = 
+engineRun :: Bool -> IO ()
+engineRun b = if b then 
   interpret engine 40 $ 
-    setE (emptySM { bMap = fromList 
-                            [ ("engineOff", replicate 8 False P.++ repeat True)
-                            , ("coolerOn", replicate 9 False P.++ repeat True)
-                            ]
-                  , w8Map = fromList [("engineTemp", [99,100..])]
+    setE (emptySM { bMap  = fromList [("fan_status", replicate 3 False P.++ repeat False)]
+                  , w8Map = fromList [ ("temp_probe_0", [240,240..])
+                                     , ("temp_probe_1", [240,241..])
+                                     , ("temp_probe_2", [240,241..])
+                                     ]
                   }) 
     baseOpts
+  else compile engine "engine" $ setSim baseOpts
 
