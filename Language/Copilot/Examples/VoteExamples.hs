@@ -29,18 +29,37 @@ maj1 = do
   let v0  = varW32 "v0"
       v1  = varW32 "v1"
       v2  = varW32 "v2"
-      v3  = varW32 "v3"
-      v4  = varW32 "v4"
+      -- v3  = varW32 "v3"
+      -- v4  = varW32 "v4"
+
+      -- v5  = varW32 "v5"
+      -- v6  = varW32 "v6"
+      -- v7  = varW32 "v7"
+      -- v8  = varW32 "v8"
+      -- v9  = varW32 "v9"
+      -- v10  = varW32 "v10"
+      -- v11 = varW32 "v11"
+      -- v12  = varW32 "v12"
+
       ans = varW32 "ans"
-      chk = varB "chk"
-      ls = [v0, v1, v2, v3, v4]
+--      chk = varB "chk"
+      ls = [v0, v1, v2] --, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12]
   v0  .= [3] ++ v0 + 1
   v1  .= [3] ++ v1 + 1
   v2  .= [1] ++ v2 + 1
-  v3  .= [3] ++ v3 + 1
-  v4  .= [1] ++ v4 + 1
+  -- v3  .= [3] ++ v3 + 1
+  -- v4  .= [1] ++ v4 + 1
+  -- v5  .= [3] ++ v5 + 1
+  -- v6  .= [3] ++ v6 + 1
+  -- v7  .= [1] ++ v7 + 1
+  -- v8  .= [3] ++ v8 + 1
+  -- v9  .= [1] ++ v9 + 1
+  -- v10  .= [3] ++ v10 + 1
+  -- v11  .= [3] ++ v11 + 1
+  -- v12  .= [1] ++ v12 + 1
+
   ans .= majority ls
-  chk .= aMajority ls ans
+--  chk .= aMajority ls ans
 
 maj2 :: Streams
 maj2 = do
@@ -50,6 +69,18 @@ maj2 = do
   v .= majority ls
   b .= aMajority ls v
 
+maj3 :: Streams
+maj3 = do
+  let x    = extW32 "x"
+      y    = extW32 "y"
+      z    = extW32 "z"
+      ans  = varW32 "ans"
+      chk  = varB "chk"
+      exts = [x, y, z]
+  ans .= majority exts
+  chk .= aMajority exts ans
+  
+
 ft0 :: Streams
 ft0 = do
   let v2 = varW32 "v2"
@@ -58,6 +89,9 @@ ft0 = do
   v3 .= ftAvg ls 3
   v2 .= ftAvg ls 2
 
+
+-------------------------------------------------------------------
+-- distributed example
 -------------------------------------------------------------------
 makeProcs :: IO ()
 makeProcs = do

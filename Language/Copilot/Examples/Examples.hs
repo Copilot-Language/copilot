@@ -103,18 +103,6 @@ xx = do
   trigger w "z0_trigger" (a <> b <> true)
   trigger w "z1_trigger" (d <> constW16 3 <> w)
 
--- If the temperature of the engine rises more than 2.3 degrees within 2 seconds
--- and the cooler is not engaged, trigger the shutoff function.
-engineMonitor :: Streams
-engineMonitor = do
-  -- external vars
-  let temp     = extF "temp"
-  -- Copilot vars
-      temps    = varF "temps"
-      overTemp = varB "overTemp"
-  temps    .= [0, 0, 0] ++ temp
-  overTemp .= drop 2 temps > 2.3 + temps
-  trigger overTemp "shutoff" void
 
 -- | Sending over ports.
 distrib :: Streams
