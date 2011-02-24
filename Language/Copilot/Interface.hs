@@ -3,8 +3,8 @@
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
-        , help, setS, setTriggers, setE, setC, setO, setP, setI, setCode
-        , setN, setV, setR , setDir, setGCC, setArrs, setClock, setSim,
+        , help, setE, setC, setO, setP, setI, setCode , setN, setV, setR
+        , setDir, setGCC, setArrs, setClock, setSim,
         module Language.Copilot.Dispatch
     ) where
 
