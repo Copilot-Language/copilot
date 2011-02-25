@@ -51,43 +51,43 @@ data Error =
 
 instance Show Error where
     show (BadSyntax s v) =
-       unlines 
-        ["Error syntax : " ++ s ++ " is not allowed in that position in stream " 
+       unlines
+        ["Error syntax : " ++ s ++ " is not allowed in that position in stream "
          ++ v ++ "."]
     show (BadDrop i v) =
        unlines
         [ "Error : a Drop in stream " ++ v ++ " drops the number " ++ show i ++
-          "of elements.\n" 
+          "of elements.\n"
         , show i ++ " is negative, and Drop only accepts positive arguments.\n"
         ]
-    show (BadPArrSpec v arr idx) = 
+    show (BadPArrSpec v arr idx) =
        unlines
         [ "Error : the index into an external array can only take a "
-            ++ "variable or a constant.  The index\n"  
+            ++ "variable or a constant.  The index\n"
         ,   idx ++ "\n\n in external array "
             ++ show arr ++ "in the definition of stream " ++ v ++ " is not of that "
             ++ "form.\n"
         ]
     show (BadType v v') =
        unlines
-        [ "Error : the monitor variable " ++ v ++ ", called from " 
+        [ "Error : the monitor variable " ++ v ++ ", called from "
           ++ v' ++ ", either"
-        , "does not exist, or don't have the right type (there is no implicit " 
+        , "does not exist, or does not have the right type (there is no implicit "
           ++ "conversion).\n"
         ]
     show (BadTypeExt v v') =
        unlines
-        [ "Error : the external call " ++ show v ++ ", called in the stream " 
+        [ "Error : the external call " ++ show v ++ ", called in the stream "
           ++ v' ++ ", either"
-        , "does not exist, or don't have the right type (there is no implicit " 
+        , "does not exist, or does not have the right type (there is no implicit "
           ++ "conversion).\n"
         ]
     show (NonNegativeWeightedClosedPath vs w) =
-       unlines 
+       unlines
         [ "Error : the following path is closed in the dependency graph of the "
-            ++ "specification and has" 
+            ++ "specification and has"
         , "weight " ++ show w ++ " which is positive (append decreases the weight, "
-          ++ "while drop increases it)."  
+          ++ "while drop increases it)."
         , "This is forbidden to avoid streams which could take 0 or several different"
           ++ " values."
         , "Try adding some initial elements (e.g., [0,0,0] ++ ...) "
@@ -97,23 +97,23 @@ instance Show Error where
     show (DependsOnClosePast vs v w len) =
        unlines
         [ "Error : the following path is of weight " ++ show w ++ " ending in "
-          ++ "the external variable " ++ show v 
-        , "while the first variable of that path has a prophecy array of length " 
-          ++ show len ++ "," 
+          ++ "the external variable " ++ show v
+        , "while the first variable of that path has a prophecy array of length "
+          ++ show len ++ ","
         , "which is strictly greater than the weight. This is forbidden."
         , "Path : " ++ show (reverse vs) ++ "\n"
         ]
     show (DependsOnFuture vs v w) =
        unlines
-        [ "Error : the following path is of weight " ++ show w 
+        [ "Error : the following path is of weight " ++ show w
           ++ " which is strictly positive."
         , "This means that the first variable depends on the future of the "
-          ++ "external variable " ++ show v 
+          ++ "external variable " ++ show v
         , "which is quoted in the last variable of the path.  This is "
           ++ "obviously impossible."
         , "Path : " ++ show (reverse vs) ++ "\n"
         ]
-    show (NoInit v) = 
+    show (NoInit v) =
           "Error : the Copilot variable " ++ v ++ " appears either as an argument in an "
           ++ "external function that is sampled or an index in an external array being sampled. "
           ++ "In either case, the stream must have an initial value (that is not drawn from an "
@@ -142,7 +142,7 @@ check streams =
   syntaxCheck streams &&> defCheck streams &&> checkInitsArgs streams
 
 -- Represents all the kind of specs that are authorized after a given operator.
-data SpecSet = AllSpecSet | FunSpecSet | DropSpecSet 
+data SpecSet = AllSpecSet | FunSpecSet | DropSpecSet
   deriving Eq
 
 -- Check that the AST of the copilot specification match the BNF could have been
@@ -153,7 +153,7 @@ syntaxCheck :: StreamableMaps Spec -> Maybe Error
 syntaxCheck streams =
     foldStreamableMaps (checkSyntaxSpec AllSpecSet) streams Nothing
     where
-        checkSyntaxSpec :: Streamable a 
+        checkSyntaxSpec :: Streamable a
                         => SpecSet -> Var -> Spec a -> Maybe Error -> Maybe Error
         checkSyntaxSpec set v s e =
             e &&>
@@ -161,39 +161,39 @@ syntaxCheck streams =
                     Var _ -> Nothing
                     Const _ -> Nothing
                     PVar _ _ -> Nothing -- checkSampling s0
-                    PArr _ (arr,s0) -> checkIndex v arr s0 
+                    PArr _ (arr,s0) -> checkIndex v arr s0
 -- case chkInitElem streams (getElem v streams `asTypeOf` s0) of
 --                                       Left ()  -> Just $ NoInit (show arr) v
 --                                       Right () -> Nothing
 --                          _       -> Just $ BadArrIdx (show arr) (show s0)
 --                      ) &&> checkSampling arr
---                        &&> checkSyntaxSpec PArrSet v s0 Nothing                      
-                    -- PVar _ _ -> Nothing 
-                    -- PArr _ (arr,s0) -> 
-                    F _ _ s0 -> set /= DropSpecSet ||> BadSyntax "F" v 
+--                        &&> checkSyntaxSpec PArrSet v s0 Nothing
+                    -- PVar _ _ -> Nothing
+                    -- PArr _ (arr,s0) ->
+                    F _ _ s0 -> set /= DropSpecSet ||> BadSyntax "F" v
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
-                    F2 _ _ s0 s1 -> set /= DropSpecSet ||> BadSyntax "F2" v 
+                    F2 _ _ s0 s1 -> set /= DropSpecSet ||> BadSyntax "F2" v
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
                       &&> checkSyntaxSpec FunSpecSet v s1 Nothing
-                    F3 _ _ s0 s1 s2 -> set /= DropSpecSet ||> BadSyntax "F3" v 
+                    F3 _ _ s0 s1 s2 -> set /= DropSpecSet ||> BadSyntax "F3" v
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
                       &&> checkSyntaxSpec FunSpecSet v s1 Nothing
                       &&> checkSyntaxSpec FunSpecSet v s2 Nothing
-                    Append _ s0 -> set == AllSpecSet ||> BadSyntax "Append" v 
+                    Append _ s0 -> set == AllSpecSet ||> BadSyntax "Append" v
                       &&> checkSyntaxSpec AllSpecSet v s0 Nothing
-                    Drop i s0 -> (0 <= i) ||> BadDrop i v 
+                    Drop i s0 -> (0 <= i) ||> BadDrop i v
                       &&> checkSyntaxSpec DropSpecSet v s0 Nothing
         checkIndex _ _ (Var _)      = Nothing
         checkIndex _ _ (Const _)    = Nothing
         checkIndex v arr idx = Just $ BadPArrSpec v arr (show idx)
-        -- checkSampling s = 
+        -- checkSampling s =
         --   case s of
         --     ExtV _   -> Nothing
-        --     fun@(Fun f args) ->  
+        --     fun@(Fun f args) ->
         --       foldl (\n arg -> case arg of
         --                          C _ -> n &&> Nothing
         --                                 -- already check elems defined in defCheck
-        --                          V v -> n &&> (case chkInitElem streams (getElem v streams) of 
+        --                          V v -> n &&> (case chkInitElem streams (getElem v streams) of
         --                                          Left ()  -> Just $ NoInit (show fun) v
         --                                          Right () -> Nothing
         --                                       )
@@ -216,26 +216,26 @@ defCheck streams =
                     case s of
                         PVar t v -> case () of
                                 () | n > 0 -> Just $ DependsOnFuture vs v n
-                                   | n > negate (prophecyArrayLength s0) -> 
-                                           Just $ DependsOnClosePast vs v n 
+                                   | n > negate (prophecyArrayLength s0) ->
+                                           Just $ DependsOnClosePast vs v n
                                                     (prophecyArrayLength s0)
-                                   | t /= getAtomType s -> 
+                                   | t /= getAtomType s ->
                                             Just $ BadTypeExt v (head vs)
                                 _ -> Nothing
-                        PArr t (arr, idx) 
+                        PArr t (arr, idx)
                                    | n > 0 -> Just $ DependsOnFuture vs arr n
-                                   | n > negate (prophecyArrayLength idx) -> 
-                                           Just $ DependsOnClosePast vs arr n 
+                                   | n > negate (prophecyArrayLength idx) ->
+                                           Just $ DependsOnClosePast vs arr n
                                                     (prophecyArrayLength idx)
-                                   | t /= getAtomType s -> 
+                                   | t /= getAtomType s ->
                                        Just $ BadTypeExt arr (head vs)
-                                   | otherwise -> 
+                                   | otherwise ->
                                        case idx of
                                          Const _ -> checkPath n vs idx
                                          Var _   -> checkPath n vs idx
-                                         _       -> 
+                                         _       ->
                                            Just $ BadPArrSpec v0 arr (show idx)
-                        Var v -> 
+                        Var v ->
                             if elem v vs
                                 then if n >= 0
                                     then Just $ NonNegativeWeightedClosedPath vs n
@@ -248,7 +248,7 @@ defCheck streams =
                         Const _ -> Nothing
                         F _ _ s1 -> checkPath n vs s1
                         F2 _ _ s1 s2 -> checkPath n vs s1 &&> checkPath n vs s2
-                        F3 _ _ s1 s2 s3 -> checkPath n vs s1 &&> checkPath n vs s2 
+                        F3 _ _ s1 s2 s3 -> checkPath n vs s1 &&> checkPath n vs s2
                                              &&> checkPath n vs s3
                         Append l s' -> checkPath (n - length l) vs s'
                         Drop i s' -> checkPath (n + i) vs s'
@@ -270,7 +270,7 @@ getExternalVars streams =
                                     ) : ls
                 F _ _ s0 -> decl undefined s0 ls
                 F2 _ _ s0 s1 -> decl undefined s0 $ decl undefined s1 ls
-                F3 _ _ s0 s1 s2 -> decl undefined s0 $ decl undefined s1 
+                F3 _ _ s0 s1 s2 -> decl undefined s0 $ decl undefined s1
                                      $ decl undefined s2 ls
                 Drop _ s' -> decl undefined s' ls
                 Append _ s' -> decl undefined s' ls
@@ -284,11 +284,11 @@ checkInitsArgs streams =
         err &&> if checkPath 0 [v] s >= 0 then Just (NoInit v)
                   else Nothing
         where checkPath :: Streamable a => Int -> [Var] -> Spec a -> Int
-              checkPath n vs s0 = 
+              checkPath n vs s0 =
                 if (v `elem` samplingFuncs) || (v `elem` arrIndices)
                   then case s0 of
                          Var v0    -> if elem v0 vs then n
-                                       else checkPath n (v0:vs) 
+                                       else checkPath n (v0:vs)
                                               (getElem v0 streams `asTypeOf` s0)
                          Append ls s1 -> checkPath (n - length ls) vs s1
                          Drop m s1    -> checkPath (m + n) vs s1
@@ -300,10 +300,10 @@ checkInitsArgs streams =
                          -- F2 _ _ _ _   -> n
                          -- F3 _ _ _ _ _ -> n
                   else (-1)
-              samplingFuncs = 
-                concatMap (\x -> case x of 
-                                   (_, Fun _ args, _) -> 
-                                     mapMaybe (\arg -> 
+              samplingFuncs =
+                concatMap (\x -> case x of
+                                   (_, Fun _ args, _) ->
+                                     mapMaybe (\arg ->
                                        case arg of
                                          C _ -> Nothing
                                          V v0 -> Just v0
@@ -311,8 +311,8 @@ checkInitsArgs streams =
                                    (_, ExtV _, _) -> [])
                 (getExternalVars streams)
               arrIndices = mapMaybe (\x -> case x of
-                                             (_,_,ExtRetV) -> Nothing 
-                                             (_,_,ExtRetA idx) -> 
+                                             (_,_,ExtRetV) -> Nothing
+                                             (_,_,ExtRetA idx) ->
                                                case idx of
                                                  V v' -> Just v'
                                                  C _ -> Nothing)
@@ -320,9 +320,9 @@ checkInitsArgs streams =
   in foldStreamableMaps checkInits streams Nothing
 
 -- chkInitElem :: Streamable a => StreamableMaps Spec -> Spec a -> Either () ()
--- chkInitElem streams spec = 
+-- chkInitElem streams spec =
 --   initElem spec 0 []
---   where 
+--   where
 --     -- getSpec :: Streamable a => Var -> Spec a
 --     -- getSpec v = let s = getMaybeElem v streams in
 --     --                case s of
@@ -332,7 +332,7 @@ checkInitsArgs streams =
 --     initElem :: Streamable a => Spec a -> Int -> [Var] -> Either () ()
 --     initElem s cnt vs =
 --       case s of
---         Var v    -> if elem v vs then initChk 
+--         Var v    -> if elem v vs then initChk
 --                       else initElem (getElem v streams) cnt (v:vs)
 --         Const _  -> initChk
 --         PVar t v -> initChk
