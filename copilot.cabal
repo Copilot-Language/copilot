@@ -32,7 +32,7 @@ description:         Can you write a list in Haskell? Then you can write embedde
 extra-source-files:  README
 
 library
-    ghc-options:     -Wall 
+    ghc-options:     -Wall -O2
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constaints.
     build-depends:     
@@ -67,6 +67,7 @@ library
                      Language.Copilot.Libs.PTLTL
                      Language.Copilot.Libs.LTL
                      Language.Copilot.Libs.Indexes
+                     Language.Copilot.Libs.Vote
                      Language.Copilot.Libs.Statistics
                      Language.Copilot.Examples.Examples
                      Language.Copilot.Examples.LTLExamples
