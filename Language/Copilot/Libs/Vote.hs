@@ -6,7 +6,7 @@ module Language.Copilot.Libs.Vote
 import Prelude 
   ( ($), fromIntegral, error, length, otherwise
   , Bounded(..), maxBound, minBound, Int)
-import Data.List (foldl, foldl', replicate, (!!))
+import Data.List (replicate, foldl')
 import qualified Prelude as P 
 import Data.Word
 

@@ -6,7 +6,7 @@ import Prelude (($), repeat, replicate, IO())
 import qualified Prelude as P
 import Data.Map (fromList)
 
-import Language.Copilot
+import Language.Copilot hiding (check)
 import Language.Copilot.Libs.PTLTL
 import Language.Copilot.Libs.Vote
 

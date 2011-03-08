@@ -35,7 +35,7 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
             streams
 
     -- One atom rule for each stream
-    foldStreamableMaps (makeRule p' nextStates outputs prophArrs
+    foldStreamableMaps (makeRule nextStates outputs prophArrs
                            updateIndexes outputIndexes) 
       streams (return ())
 
@@ -211,8 +211,8 @@ nextStVar v streams prophArrs tmpSamples outputIndexes index =
            else nextSt streams prophArrs tmpSamples outputIndexes 
                   newIndex undefined s0
   where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> NextSt a
-        getVar v initLen maybeArr = ExpLeaf $
-           let outputIndex = case M.lookup v outputIndexes of
+        getVar v' initLen maybeArr = ExpLeaf $
+           let outputIndex = case M.lookup v' outputIndexes of
                                Nothing -> error "Error in function getVar."
                                Just x -> x
                arr = case maybeArr of
@@ -339,41 +339,11 @@ makeOutputIndex v (B _ arr) indexes =
                 index <- atomConstructor ("outputIndex__" ++ normalizeVar v) 0
                 return $ M.insert v index mindexes
 
--- makeRule :: forall a. Streamable a => 
---     Period -> StreamableMaps Spec -> Outputs -> ProphArrs -> TmpSamples -> 
---     Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
--- makeRule p streams outputs prophArrs tmpSamples updateIndexes outputIndexes v s r = do
---     r 
---     let B n maybeArr = getElem v prophArrs::BoundedArray a
---     case maybeArr of
---         Nothing ->
---             -- Fusing together the update and the output if the prophecy array doesn't exist 
---             -- (ie if it would only have hold the output value)
---             A.exactPhase 2 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
---                 ((getElem v outputs)::(A.V a)) A.<== nextSt'
-
---         Just arr -> do
---             let updateIndex = fromJust $ M.lookup v updateIndexes
---                 outputIndex = fromJust $ M.lookup v outputIndexes
-
---             A.exactPhase 1 $ A.atom ("update__" ++ normalizeVar v) $ do
---                 arr A.! (A.VRef updateIndex) A.<== nextSt'
-            
---             A.exactPhase 2 $ A.atom ("output__" ++ normalizeVar v) $ do
---                 ((getElem v outputs)::(A.V a)) A.<== arr A.!. (A.VRef outputIndex)
---                 outputIndex A.<==          (A.VRef outputIndex + A.Const 1) 
---                                   `A.mod_` A.Const (n + 1)
-            
---             A.phase 4
---               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
---                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
---                                   `A.mod_` A.Const (n + 1)
-
 --        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
 makeRule :: forall a. Streamable a => 
-    Period -> StreamableMaps A.E -> Outputs -> ProphArrs
+    StreamableMaps A.E -> Outputs -> ProphArrs
     -> Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
-makeRule p exps outputs prophArrs updateIndexes outputIndexes v s r = do
+makeRule exps outputs prophArrs updateIndexes outputIndexes v _ r = do
     r 
     let B n maybeArr = getElem v prophArrs::BoundedArray a
     case maybeArr of

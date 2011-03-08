@@ -3,8 +3,6 @@ module Language.Copilot.Examples.StatExamples where
 import Prelude ()
 import Language.Copilot.Core
 import Language.Copilot.Language
-import Language.Copilot.Interface
-import Language.Copilot.PrettyPrinter
 import Language.Copilot.Libs.Statistics
 
 t0 :: Streams
