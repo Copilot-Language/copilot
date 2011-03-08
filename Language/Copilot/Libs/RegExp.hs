@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Main where
+module RegExp where
 
 
 import Text.ParserCombinators.Parsec
@@ -234,7 +234,7 @@ copilotRegexp inStream regexp outStream reset =
         if hasFinitePath regexp then
             error $
             concat [ "The regular expression contains a finite path "
-                   , "which is something that will fail to match on "
+                   , "which is something that will fail to match, "
                    , "since we do not have a distinct end-of-input "
                    , "symbol on infinite streams." ]
         else if hasEpsilon regexp then
@@ -246,14 +246,14 @@ copilotRegexp inStream regexp outStream reset =
              else regexp2CopilotNFA inStream regexp outStream reset
 
 
-test' = do { let input  = C.varW8 "input"
-                 output = C.varB  "output"
-                 reset  = C.varB  "reset"
-           ; input C..= [ 0, 1, 2, 3, 3, 4, 3, 4, 1, 1, 1 ] C.++ input
-           ; reset C..= [ True ] C.++ Const False
-           ; copilotRegexp input "<0><1><4>*<2>(<3><3>*|<4>)*" output reset
-           }
+testRegExp' = do { let input  = C.varW8 "input"
+                       output = C.varB  "output"
+                       reset  = C.varB  "reset"
+                 ; input C..= [ 0, 1, 2, 3, 3, 4, 3, 4, 1, 1, 1 ] C.++ input
+                 ; reset C..= [ True ] C.++ Const False
+                 ; copilotRegexp input "<0><1><4>*<2>(<3><3>*|<4>)*" output reset
+                 }
 
-main = do
-  interpret test' 15 baseOpts
+testRegExp = do
+  interpret testRegExp' 15 baseOpts
   return ()
