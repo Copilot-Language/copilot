@@ -67,7 +67,6 @@ library
                      Language.Copilot.Libs.PTLTL
                      Language.Copilot.Libs.LTL
                      Language.Copilot.Libs.Indexes
-                     Language.Copilot.Libs.Vote
                      Language.Copilot.Libs.Statistics
                      Language.Copilot.Libs.Vote
                      Language.Copilot.Examples.Examples
