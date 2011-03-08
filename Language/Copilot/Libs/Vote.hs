@@ -32,10 +32,11 @@ aMajority :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Bool
 aMajority [] _ = 
   error "Error in aMajority: list of arguments must be nonempty."
 aMajority ls candidate = 
-  (foldl' (\cnt x -> mux (x == candidate)
-                         (cnt + 1)
-                         cnt :: Spec Word32
-          ) 0 ls) * 2
+    (foldl' (\cnt x -> mux (x == candidate)
+                           (cnt + 1)
+                           cnt :: Spec Word32
+            ) 0 ls
+    ) * 2
   > (fromIntegral $ length ls)
 
 -- | Fault-tolerant average.  Throw away the bottom and top @n@ elements and
@@ -43,29 +44,33 @@ aMajority ls candidate =
 -- + 1@ elements in the list.
 ftAvg :: (Streamable a, A.IntegralE a, Bounded a) => [Spec a] -> Int -> Spec a
 ftAvg ls n | length ls P.<= 2 P.* n = 
-  error "Error in ftAvg: list of arguments must be at least five."
+  error $      "Error in ftAvg: list of arguments must be at least " 
+          P.++ P.show (2 * n + 1) P.++ "."
            | otherwise =       (ftAvg' ls (replicate n low) (replicate n high) 0)
-                         `div` (fromIntegral $ length ls P.- 2 P.* n)
+                         `div` (fromIntegral $ length ls P.- (2 P.* n))
   where low = const maxBound
         high = const minBound
 
--- | Return the sublist to take an average over.  Invariant: lows and highs are in
--- order of lowest to higest, and are the values we're going to lop off.
+-- | Return the total sum of values, minus the high and low values.
 ftAvg' :: (Streamable a, A.IntegralE a, Bounded a) 
        => [Spec a] -> [Spec a] -> [Spec a] -> Spec a -> Spec a
-ftAvg' [] lows highs sum = foldl (-) sum (lows P.++ highs)
+ftAvg' [] lows highs sum = foldl' (-) sum (lows P.++ highs)
 ftAvg' (x:xs) lows highs sum = 
-  ftAvg'
-    xs (insert (<) lows x 0) (insert (>) highs x 0)
-    (sum + x)
+  ftAvg' xs (insert (<) lows x) (insert (>) highs x) (sum + x)
 
--- | Insert an element into an ordered list, throwing away top-most element if
--- an element is inserted.
+-- | Insert an element into an ordered list.
+-- insert :: (Streamable a, A.OrdE a) 
+--        => (Spec a -> Spec a -> Spec Bool) 
+--        -> [Spec a] -> Spec a -> Int -> [Spec a]
+-- insert _ xs _ idx   | idx P.== length xs = []
+-- insert ord xs x idx | otherwise =
+--   let n = xs !! idx
+--       choice = mux (x `ord` n) x n in
+--   choice : insert ord xs choice (idx + 1)
 insert :: (Streamable a, A.OrdE a) 
        => (Spec a -> Spec a -> Spec Bool) 
-       -> [Spec a] -> Spec a -> Int -> [Spec a]
-insert _ xs _ idx | idx P.== length xs = []
-insert ord xs x idx | otherwise =
-  let n = xs !! idx
-      choice = mux (x `ord` n) x n in
-  choice : insert ord xs choice (idx + 1)
+       -> [Spec a] -> Spec a -> [Spec a]
+insert _ [] _ = []
+insert ord (n:ns) x = 
+  let pred = x `ord` n in
+  mux pred x n : insert ord ns (mux pred n x) 

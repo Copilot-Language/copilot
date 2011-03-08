@@ -67,7 +67,7 @@ not = F P.not A.not_
 -- Same risk with mod. Use div0 and mod0 if unsure.
 mod, div :: (Streamable a, A.IntegralE a) => Spec a -> Spec a -> Spec a
 mod = F2 P.mod A.mod_
-div = F2 P.mod A.div_
+div = F2 P.div A.div_
 
 -- | As mod and div, except that if the division would be by 0, the first
 -- argument is used as a default.

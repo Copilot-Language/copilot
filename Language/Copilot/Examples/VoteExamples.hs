@@ -82,12 +82,9 @@ maj3 = do
 
 ft0 :: Streams
 ft0 = do
-  let v2 = varW32 "v2"
-      v3 = varW32 "v3"
-      ls = [8, 3, 7, 6, 5, 4, 2, 4, 1, 0]
+  let v3 = varW32 "v3"
+      ls = [8, 3, 7, 4, 2, 4, 1, 0]
   v3 .= ftAvg ls 3
-  v2 .= ftAvg ls 2
-
 
 -------------------------------------------------------------------
 -- distributed example
