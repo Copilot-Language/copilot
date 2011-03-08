@@ -1,15 +1,254 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Language.Copilot.Language</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
-window.onload = function () {pageLoad();};
-//]]>
-</script></head><body id="mini"><div id="module-header"><p class="caption">Language.Copilot.Language</p></div><div id="interface"><h1>Operators and functions
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:mod" target="main">mod</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:div" target="main">div</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:mod0" target="main">mod0</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:div0" target="main">div0</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-60-" target="main">(&lt;)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-60--61-" target="main">(&lt;=)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-61--61-" target="main">(==)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-47--61-" target="main">(/=)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-62--61-" target="main">(&gt;=)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-62-" target="main">(&gt;)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:not" target="main">not</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-124--124-" target="main">(||)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-38--38-" target="main">(&amp;&amp;)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-94-" target="main">(^)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-61--61--62-" target="main">(==&gt;)</a></p></div><h1>Boolean constants
-</h1><div class="top"><p class="src"><span class="keyword">data</span> <a href="Language-Copilot-Language.html#t:Bool" target="main">Bool</a> </p></div><h1>Arithmetic operators (derived)
-</h1><div class="top"><p class="src"><span class="keyword">class</span> <a href="Language-Copilot-Language.html#t:Num" target="main">Num</a> a</p></div><h1>Division
-</h1><div class="top"><p class="src"><span class="keyword">class</span> <a href="Language-Copilot-Language.html#t:Fractional" target="main">Fractional</a> a</p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:mux" target="main">mux</a></p></div><h1>Copilot variable declarations.
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:var" target="main">var</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varB" target="main">varB</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varI8" target="main">varI8</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varI16" target="main">varI16</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varI32" target="main">varI32</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varI64" target="main">varI64</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varW8" target="main">varW8</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varW16" target="main">varW16</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varW32" target="main">varW32</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varW64" target="main">varW64</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varF" target="main">varF</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:varD" target="main">varD</a></p></div><h1>Copilot constant declarations.  For the most part, these are
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:const" target="main">const</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constI8" target="main">constI8</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constI16" target="main">constI16</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constI32" target="main">constI32</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constI64" target="main">constI64</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constW8" target="main">constW8</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constW16" target="main">constW16</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constW32" target="main">constW32</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constW64" target="main">constW64</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constF" target="main">constF</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:constD" target="main">constD</a></p></div><h1>Boolean stream constants
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:true" target="main">true</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:false" target="main">false</a></p></div><h1>Constructs of the copilot language
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:drop" target="main">drop</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:-43--43-" target="main">(++)</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:.-61-" target="main">(.=)</a></p></div><h1>The next functions help typing the send operations
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:send" target="main">send</a></p></div><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:port" target="main">port</a></p></div><h1>Triggers
-</h1><h1>Safe casting
-</h1><div class="top"><p class="src"><a href="Language-Copilot-Language.html#v:notConstVarErr" target="main">notConstVarErr</a></p></div></div></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Language</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+></HEAD
+><BODY
+><DIV CLASS="outer"
+><DIV CLASS="mini-topbar"
+>Language.Copilot.Language</DIV
+><DIV CLASS="mini-synopsis"
+><H1
+>Operators and functions
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Amod" TARGET="main"
+>mod</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Adiv" TARGET="main"
+>div</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Amod0" TARGET="main"
+>mod0</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Adiv0" TARGET="main"
+>div0</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3C" TARGET="main"
+>(&lt;)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3C%3D" TARGET="main"
+>(&lt;=)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3D%3D" TARGET="main"
+>(==)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%2F%3D" TARGET="main"
+>(/=)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3E%3D" TARGET="main"
+>(&gt;=)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3E" TARGET="main"
+>(&gt;)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Anot" TARGET="main"
+>not</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%7C%7C" TARGET="main"
+>(||)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%26%26" TARGET="main"
+>(&amp;&amp;)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%5E" TARGET="main"
+>(^)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%3D%3D%3E" TARGET="main"
+>(==&gt;)</A
+></DIV
+> <H1
+>Boolean constants
+</H1
+>  <H1
+>Arithmetic operators (derived)
+</H1
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+>&nbsp;<A HREF="Language-Copilot-Language.html#t%3ANum" TARGET="main"
+>Num</A
+> a</DIV
+> <H1
+>Division
+</H1
+> <DIV CLASS="decl"
+><SPAN CLASS="keyword"
+>class</SPAN
+>&nbsp;<A HREF="Language-Copilot-Language.html#t%3AFractional" TARGET="main"
+>Fractional</A
+> a</DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Amux" TARGET="main"
+>mux</A
+></DIV
+> <H1
+>Copilot variable declarations.
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Avar" TARGET="main"
+>var</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarB" TARGET="main"
+>varB</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarI8" TARGET="main"
+>varI8</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarI16" TARGET="main"
+>varI16</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarI32" TARGET="main"
+>varI32</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarI64" TARGET="main"
+>varI64</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarW8" TARGET="main"
+>varW8</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarW16" TARGET="main"
+>varW16</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarW32" TARGET="main"
+>varW32</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarW64" TARGET="main"
+>varW64</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarF" TARGET="main"
+>varF</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AvarD" TARGET="main"
+>varD</A
+></DIV
+> <H1
+>Copilot constant declarations.  For the most part, these are
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Aconst" TARGET="main"
+>const</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstI8" TARGET="main"
+>constI8</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstI16" TARGET="main"
+>constI16</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstI32" TARGET="main"
+>constI32</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstI64" TARGET="main"
+>constI64</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstW8" TARGET="main"
+>constW8</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstW16" TARGET="main"
+>constW16</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstW32" TARGET="main"
+>constW32</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstW64" TARGET="main"
+>constW64</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstF" TARGET="main"
+>constF</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AconstD" TARGET="main"
+>constD</A
+></DIV
+> <H1
+>Boolean stream constants
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Atrue" TARGET="main"
+>true</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Afalse" TARGET="main"
+>false</A
+></DIV
+>  <H1
+>Constructs of the copilot language
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Adrop" TARGET="main"
+>drop</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A%2B%2B" TARGET="main"
+>(++)</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3A.%3D" TARGET="main"
+>(.=)</A
+></DIV
+> <H1
+>The next functions help typing the send operations
+</H1
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Asend" TARGET="main"
+>send</A
+></DIV
+> <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3Aport" TARGET="main"
+>port</A
+></DIV
+> <H1
+>Triggers
+</H1
+>  <H1
+>Safe casting
+</H1
+>  <DIV CLASS="decl"
+><A HREF="Language-Copilot-Language.html#v%3AnotConstVarErr" TARGET="main"
+>notConstVarErr</A
+></DIV
+></DIV
+></DIV
+></BODY
+></HTML
+>

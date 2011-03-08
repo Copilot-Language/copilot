@@ -1,43 +1,684 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Language.Copilot.Analyser</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
-window.onload = function () {pageLoad();setSynopsis("mini_Language-Copilot-Analyser.html");};
-//]]>
-</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="http://github.com/leepike/Copilot/Language.Copilot.Analyser.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">copilot-1.0: A stream DSL for writing embedded C monitors.</p></div><div id="content"><div id="module-header"><p class="caption">Language.Copilot.Analyser</p></div><div id="table-of-contents"><p class="caption">Contents</p><ul><li><a href="#g:1">Main error checking functions
-</a></li><li><a href="#g:2">Varied other things
-</a></li></ul></div><div id="description"><p class="caption">Description</p><div class="doc"><p>This module provides a way to check that a <em>Copilot</em> specification is
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Analyser</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Analyser.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-1.0.1: A stream DSL for writing embedded C monitors.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Analyser.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Analyser</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+><B
+>Contents</B
+></TD
+></TR
+><TR
+><TD
+><DL
+><DT
+><A HREF="#1"
+>Main error checking functions
+</A
+></DT
+><DT
+><A HREF="#2"
+>Varied other things
+</A
+></DT
+></DL
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+>This module provides a way to check that a <EM
+>Copilot</EM
+> specification is
  compilable
-</p></div></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><a href="#v:check">check</a> :: <a href="Language-Copilot-Core.html#t:StreamableMaps">StreamableMaps</a> <a href="Language-Copilot-Core.html#t:Spec">Spec</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Maybe.html#t:Maybe">Maybe</a> <a href="Language-Copilot-Analyser.html#t:Error">Error</a></li><li class="src short"><span class="keyword">data</span>  <a href="#t:Error">Error</a> <ul class="subs"><li>= <a href="#v:BadSyntax">BadSyntax</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> <a href="Language-Copilot-Core.html#t:Var">Var</a>  </li><li>| <a href="#v:BadDrop">BadDrop</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Int.html#t:Int">Int</a> <a href="Language-Copilot-Core.html#t:Var">Var</a>  </li><li>| <a href="#v:BadPArrSpec">BadPArrSpec</a> <a href="Language-Copilot-Core.html#t:Var">Var</a> <a href="Language-Copilot-Core.html#t:Ext">Ext</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>  </li><li>| <a href="#v:BadType">BadType</a> <a href="Language-Copilot-Core.html#t:Var">Var</a> <a href="Language-Copilot-Core.html#t:Var">Var</a>  </li><li>| <a href="#v:BadTypeExt">BadTypeExt</a> <a href="Language-Copilot-Core.html#t:Ext">Ext</a> <a href="Language-Copilot-Core.html#t:Var">Var</a>  </li><li>| <a href="#v:NonNegativeWeightedClosedPath">NonNegativeWeightedClosedPath</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] Weight  </li><li>| <a href="#v:DependsOnClosePast">DependsOnClosePast</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] <a href="Language-Copilot-Core.html#t:Ext">Ext</a> Weight Weight  </li><li>| <a href="#v:DependsOnFuture">DependsOnFuture</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] <a href="Language-Copilot-Core.html#t:Ext">Ext</a> Weight  </li></ul></li><li class="src short"><span class="keyword">data</span>  <a href="#t:SpecSet">SpecSet</a> <ul class="subs"><li>= <a href="#v:AllSpecSet">AllSpecSet</a>  </li><li>| <a href="#v:FunSpecSet">FunSpecSet</a>  </li><li>| <a href="#v:DropSpecSet">DropSpecSet</a>  </li><li>| <a href="#v:PArrSet">PArrSet</a>  </li></ul></li><li class="src short"><a href="#v:getExternalVars">getExternalVars</a> :: <a href="Language-Copilot-Core.html#t:StreamableMaps">StreamableMaps</a> <a href="Language-Copilot-Core.html#t:Spec">Spec</a> -&gt; [<a href="Language-Copilot-Core.html#t:Exs">Exs</a>]</li></ul></div><div id="interface"><h1 id="g:1">Main error checking functions
-</h1><div class="top"><p class="src"><a name="v:check" class="def">check</a> :: <a href="Language-Copilot-Core.html#t:StreamableMaps">StreamableMaps</a> <a href="Language-Copilot-Core.html#t:Spec">Spec</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Maybe.html#t:Maybe">Maybe</a> <a href="Language-Copilot-Analyser.html#t:Error">Error</a></p><div class="doc"><p>Check a <em>Copilot</em> specification.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Acheck"
+>check</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Analyser.html#t%3AError"
+>Error</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3AError"
+>Error</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3ABadSyntax"
+>BadSyntax</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadDrop"
+>BadDrop</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Types.html#t%3AInt"
+>Int</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadPArrSpec"
+>BadPArrSpec</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadType"
+>BadType</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ABadTypeExt"
+>BadTypeExt</A
+> <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ANonNegativeWeightedClosedPath"
+>NonNegativeWeightedClosedPath</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] Weight</TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADependsOnClosePast"
+>DependsOnClosePast</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> Weight Weight</TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADependsOnFuture"
+>DependsOnFuture</A
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> Weight</TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ANoInit"
+>NoInit</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A HREF="#t%3ASpecSet"
+>SpecSet</A
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+>= <A HREF="#v%3AAllSpecSet"
+>AllSpecSet</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3AFunSpecSet"
+>FunSpecSet</A
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+>| <A HREF="#v%3ADropSpecSet"
+>DropSpecSet</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AgetExternalVars"
+>getExternalVars</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [<A HREF="Language-Copilot-Core.html#t%3AExs"
+>Exs</A
+>]</TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="1"
+><A NAME="1"
+>Main error checking functions
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:check"
+><A NAME="v%3Acheck"
+></A
+></A
+><B
+>check</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="Language-Copilot-Analyser.html#t%3AError"
+>Error</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Check a <EM
+>Copilot</EM
+> specification.
  If it is not compilable, then returns an error describing the issue.
- Else, returns <code>Nothing</code>
-</p></div></div><div class="top"><p class="src"><span class="keyword">data</span>  <a name="t:Error" class="def">Error</a>  </p><div class="doc"><p>Used for representing an error in the specification, detected by <code><code><a href="Language-Copilot-Analyser.html#v:check">check</a></code></code>
-</p></div><div class="subs constructors"><p class="caption">Constructors</p><table><tr><td class="src"><a name="v:BadSyntax" class="def">BadSyntax</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> <a href="Language-Copilot-Core.html#t:Var">Var</a></td><td class="doc"><p>the BNF is not respected
-</p></td></tr><tr><td class="src"><a name="v:BadDrop" class="def">BadDrop</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Int.html#t:Int">Int</a> <a href="Language-Copilot-Core.html#t:Var">Var</a></td><td class="doc"><p>A drop expression of less than 0 is used
- | BadSamplingPhase Var Ext -- ^ if an external variable is sampled at phase
-                            -- 0 then there is no time for the stream to be
-                            -- updated
- | BadSamplingArrPhase Var Ext -- ^ if an external variable is sampled at
-                               -- phase 0 then there is no time for the
-                               -- stream to be updated
-</p></td></tr><tr><td class="src"><a name="v:BadPArrSpec" class="def">BadPArrSpec</a> <a href="Language-Copilot-Core.html#t:Var">Var</a> <a href="Language-Copilot-Core.html#t:Ext">Ext</a> <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></td><td class="doc"><p>External array indexes can only take
+ Else, returns <TT
+>Nothing</TT
+>.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:Error"
+><A NAME="t%3AError"
+></A
+></A
+><B
+>Error</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="ndoc"
+>Used for representing an error in the specification, detected by <TT
+><TT
+><A HREF="Language-Copilot-Analyser.html#v%3Acheck"
+>check</A
+></TT
+></TT
+>
+</TD
+></TR
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadSyntax"
+><A NAME="v%3ABadSyntax"
+></A
+></A
+><B
+>BadSyntax</B
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>the BNF is not respected
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadDrop"
+><A NAME="v%3ABadDrop"
+></A
+></A
+><B
+>BadDrop</B
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Types.html#t%3AInt"
+>Int</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>A drop expression of less than 0 is used
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadPArrSpec"
+><A NAME="v%3ABadPArrSpec"
+></A
+></A
+><B
+>BadPArrSpec</B
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+><TD CLASS="rdoc"
+>External array indexes can only take
  variables or constants as indexes.
-</p></td></tr><tr><td class="src"><a name="v:BadType" class="def">BadType</a> <a href="Language-Copilot-Core.html#t:Var">Var</a> <a href="Language-Copilot-Core.html#t:Var">Var</a></td><td class="doc"><p>either a variable is not defined, or not with the
- good type ; there is no implicit conversion of types in
- <em>Copilot</em>
-</p></td></tr><tr><td class="src"><a name="v:BadTypeExt" class="def">BadTypeExt</a> <a href="Language-Copilot-Core.html#t:Ext">Ext</a> <a href="Language-Copilot-Core.html#t:Var">Var</a></td><td class="doc"><p>either an external variable is not defined, or not
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadType"
+><A NAME="v%3ABadType"
+></A
+></A
+><B
+>BadType</B
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+><TD CLASS="rdoc"
+>either a variable is not defined, or not with the
+ good type ; there is no implicit conversion of types
+ in <EM
+>Copilot</EM
+>.
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:BadTypeExt"
+><A NAME="v%3ABadTypeExt"
+></A
+></A
+><B
+>BadTypeExt</B
+> <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>either an external variable is not defined, or not
  with the good type; there is no implicit conversion
- of types in <em>Copilot</em>
-</p></td></tr><tr><td class="src"><a name="v:NonNegativeWeightedClosedPath" class="def">NonNegativeWeightedClosedPath</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] Weight</td><td class="doc"><p>The algorithm to compile
- <em>Copilot</em> specification can
+ of types in <EM
+>Copilot</EM
+>
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:NonNegativeWeightedClosedPath"
+><A NAME="v%3ANonNegativeWeightedClosedPath"
+></A
+></A
+><B
+>NonNegativeWeightedClosedPath</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] Weight</TD
+><TD CLASS="rdoc"
+>The algorithm to compile
+ <EM
+>Copilot</EM
+> specification can
  only work if there is no
  negative weighted closed
  path in the specification,
  as described in the original
  research paper
-</p></td></tr><tr><td class="src"><a name="v:DependsOnClosePast" class="def">DependsOnClosePast</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] <a href="Language-Copilot-Core.html#t:Ext">Ext</a> Weight Weight</td><td class="doc"><p>Could be compiled, but
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DependsOnClosePast"
+><A NAME="v%3ADependsOnClosePast"
+></A
+></A
+><B
+>DependsOnClosePast</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> Weight Weight</TD
+><TD CLASS="rdoc"
+>Could be compiled, but
  would need bigger
  prophecyArrays
-</p></td></tr><tr><td class="src"><a name="v:DependsOnFuture" class="def">DependsOnFuture</a> [<a href="Language-Copilot-Core.html#t:Var">Var</a>] <a href="Language-Copilot-Core.html#t:Ext">Ext</a> Weight</td><td class="doc"><p>If an output depends of a future of
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DependsOnFuture"
+><A NAME="v%3ADependsOnFuture"
+></A
+></A
+><B
+>DependsOnFuture</B
+> [<A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+>] <A HREF="Language-Copilot-Core.html#t%3AExt"
+>Ext</A
+> Weight</TD
+><TD CLASS="rdoc"
+>If an output depends of a future of
  an input it will be hard to compile to
  say the least
-</p></td></tr></table></div><div class="subs instances"><p id="control.i:Error" class="caption collapser" onclick="toggleSection('i:Error')">Instances</p><div id="section.i:Error" class="show"><table><tr><td class="src"><a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Text-Show.html#t:Show">Show</a> <a href="Language-Copilot-Analyser.html#t:Error">Error</a></td><td class="doc empty">&nbsp;</td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">data</span>  <a name="t:SpecSet" class="def">SpecSet</a>  </p><div class="subs constructors"><p class="caption">Constructors</p><table><tr><td class="src"><a name="v:AllSpecSet" class="def">AllSpecSet</a></td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a name="v:FunSpecSet" class="def">FunSpecSet</a></td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a name="v:DropSpecSet" class="def">DropSpecSet</a></td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a name="v:PArrSet" class="def">PArrSet</a></td><td class="doc empty">&nbsp;</td></tr></table></div><div class="subs instances"><p id="control.i:SpecSet" class="caption collapser" onclick="toggleSection('i:SpecSet')">Instances</p><div id="section.i:SpecSet" class="show"><table><tr><td class="src"><a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Eq.html#t:Eq">Eq</a> <a href="Language-Copilot-Analyser.html#t:SpecSet">SpecSet</a></td><td class="doc empty">&nbsp;</td></tr></table></div></div></div><h1 id="g:2">Varied other things
-</h1><div class="top"><p class="src"><a name="v:getExternalVars" class="def">getExternalVars</a> :: <a href="Language-Copilot-Core.html#t:StreamableMaps">StreamableMaps</a> <a href="Language-Copilot-Core.html#t:Spec">Spec</a> -&gt; [<a href="Language-Copilot-Core.html#t:Exs">Exs</a>]</p></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.9.0</p></div></body></html>
+</TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:NoInit"
+><A NAME="v%3ANoInit"
+></A
+></A
+><B
+>NoInit</B
+> <A HREF="Language-Copilot-Core.html#t%3AVar"
+>Var</A
+></TD
+><TD CLASS="rdoc"
+>If we are sampling a function and it has an
+ argument that is a Copilot stream, the weight of
+ that stream must have at least one initial element.
+</TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><SPAN CLASS="keyword"
+>data</SPAN
+>  <A NAME="t:SpecSet"
+><A NAME="t%3ASpecSet"
+></A
+></A
+><B
+>SpecSet</B
+>  </TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="section4"
+>Constructors</TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="1" CELLPADDING="0"
+><TR
+><TD CLASS="arg"
+><A NAME="v:AllSpecSet"
+><A NAME="v%3AAllSpecSet"
+></A
+></A
+><B
+>AllSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:FunSpecSet"
+><A NAME="v%3AFunSpecSet"
+></A
+></A
+><B
+>FunSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+><TR
+><TD CLASS="arg"
+><A NAME="v:DropSpecSet"
+><A NAME="v%3ADropSpecSet"
+></A
+></A
+><B
+>DropSpecSet</B
+></TD
+><TD CLASS="rdoc"
+></TD
+></TR
+></TABLE
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+><A NAME="2"
+><A NAME="2"
+>Varied other things
+</A
+></A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:getExternalVars"
+><A NAME="v%3AgetExternalVars"
+></A
+></A
+><B
+>getExternalVars</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreamableMaps"
+>StreamableMaps</A
+> <A HREF="Language-Copilot-Core.html#t%3ASpec"
+>Spec</A
+> -&gt; [<A HREF="Language-Copilot-Core.html#t%3AExs"
+>Exs</A
+>]</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.0</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

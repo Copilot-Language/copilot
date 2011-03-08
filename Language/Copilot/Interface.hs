@@ -54,7 +54,7 @@ data Options = Options {
                                     -- so we cannot declare them.  Passing in
                                     -- pairs containing the name of the array
                                     -- and it's size allows them to be
-                                    -- declared."
+                                    -- declared.
         optClock :: Maybe A.Clock  -- ^ Use the hardware clock to drive the timing of the program?
     }
 

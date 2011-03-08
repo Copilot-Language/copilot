@@ -40,7 +40,7 @@ data AtomToC = AtomToC
                                  -- don't know how large external arrays are, so
                                  -- we cannot declare them.  Passing in pairs
                                  -- containing the name of the array and it's
-                                 -- size allows them to be declared."
+                                 -- size allows them to be declared.
     , clock :: Maybe A.Clock     -- Use the hardware clock to drive the timing
                                  -- of the program.
     }

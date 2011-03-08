@@ -1,16 +1,494 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Language.Copilot.AdHocC</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
-window.onload = function () {pageLoad();setSynopsis("mini_Language-Copilot-AdHocC.html");};
-//]]>
-</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="http://github.com/leepike/Copilot/Language.Copilot.AdHocC.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">copilot-1.0: A stream DSL for writing embedded C monitors.</p></div><div id="content"><div id="module-header"><p class="caption">Language.Copilot.AdHocC</p></div><div id="description"><p class="caption">Description</p><div class="doc"><p>Helper functions for writing free-form C code.
-</p></div></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><a href="#v:varDecl">varDecl</a> :: Type -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:arrDecl">arrDecl</a> :: Type -&gt; [(<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>, <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Int.html#t:Int">Int</a>)] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:varInit">varInit</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Text-Show.html#t:Show">Show</a> a =&gt; Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; a -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:arrayInit">arrayInit</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Text-Show.html#t:Show">Show</a> a =&gt; Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [a] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:funcDecl">funcDecl</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Maybe.html#t:Maybe">Maybe</a> Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [Type] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:includeBracket">includeBracket</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:includeQuote">includeQuote</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:printf">printf</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li><li class="src short"><a href="#v:printfNewline">printfNewline</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></li></ul></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><a name="v:varDecl" class="def">varDecl</a> :: Type -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Takes a type and a list of variable names and declares them.
-</p></div></div><div class="top"><p class="src"><a name="v:arrDecl" class="def">arrDecl</a> :: Type -&gt; [(<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>, <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Int.html#t:Int">Int</a>)] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Takes a type and a list of array names and their sizes declares them.
-</p></div></div><div class="top"><p class="src"><a name="v:varInit" class="def">varInit</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Text-Show.html#t:Show">Show</a> a =&gt; Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; a -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Takes a type and a variable and initializes it.  It is YOUR responsibility
- to ensure that <code>val</code> is of type <code>t</code>.
-</p></div></div><div class="top"><p class="src"><a name="v:arrayInit" class="def">arrayInit</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Text-Show.html#t:Show">Show</a> a =&gt; Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [a] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Takes a type and an array and initializes it.  It is YOUR responsibility to
- ensure that <code>vals</code> is of type <code>t</code>.
-</p></div></div><div class="top"><p class="src"><a name="v:funcDecl" class="def">funcDecl</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Maybe.html#t:Maybe">Maybe</a> Type -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [Type] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Declare function prototypes, given a return type, a function name, and a
- | list of argument types.  Use <code><a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Maybe.html#v:Nothing">Nothing</a></code> for a return type of <code>void</code>.
-</p></div></div><div class="top"><p class="src"><a name="v:includeBracket" class="def">includeBracket</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Add an include of a library
-</p></div></div><div class="top"><p class="src"><a name="v:includeQuote" class="def">includeQuote</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>Add an include of a header file
-</p></div></div><div class="top"><p class="src"><a name="v:printf" class="def">printf</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p></div><div class="top"><p class="src"><a name="v:printfNewline" class="def">printfNewline</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a> -&gt; [<a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a>] -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Char.html#t:String">String</a></p><div class="doc"><p>printf, with and without a newline (nl) character.
-</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.9.0</p></div></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.AdHocC</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-AdHocC.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-1.0.1: A stream DSL for writing embedded C monitors.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.AdHocC.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.AdHocC</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Description</TD
+></TR
+><TR
+><TD CLASS="doc"
+>Helper functions for writing free-form C code.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarDecl"
+>varDecl</A
+> :: <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AarrDecl"
+>arrDecl</A
+> :: <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; [(<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>, <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Types.html#t%3AInt"
+>Int</A
+>)] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AvarInit"
+>varInit</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Text-Show.html#t%3AShow"
+>Show</A
+> a =&gt; <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; a -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AarrayInit"
+>arrayInit</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Text-Show.html#t%3AShow"
+>Show</A
+> a =&gt; <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [a] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AfuncDecl"
+>funcDecl</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AincludeBracket"
+>includeBracket</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AincludeQuote"
+>includeQuote</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Aprintf"
+>printf</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AprintfNewline"
+>printfNewline</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Documentation</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varDecl"
+><A NAME="v%3AvarDecl"
+></A
+></A
+><B
+>varDecl</B
+> :: <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Takes a type and a list of variable names and declares them.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:arrDecl"
+><A NAME="v%3AarrDecl"
+></A
+></A
+><B
+>arrDecl</B
+> :: <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; [(<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>, <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Types.html#t%3AInt"
+>Int</A
+>)] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Takes a type and a list of array names and their sizes declares them.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:varInit"
+><A NAME="v%3AvarInit"
+></A
+></A
+><B
+>varInit</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Text-Show.html#t%3AShow"
+>Show</A
+> a =&gt; <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; a -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Takes a type and a variable and initializes it.  It is YOUR responsibility
+ to ensure that <TT
+>val</TT
+> is of type <TT
+>t</TT
+>.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:arrayInit"
+><A NAME="v%3AarrayInit"
+></A
+></A
+><B
+>arrayInit</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Text-Show.html#t%3AShow"
+>Show</A
+> a =&gt; <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [a] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Takes a type and an array and initializes it.  It is YOUR responsibility to
+ ensure that <TT
+>vals</TT
+> is of type <TT
+>t</TT
+>.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:funcDecl"
+><A NAME="v%3AfuncDecl"
+></A
+></A
+><B
+>funcDecl</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Maybe.html#t%3AMaybe"
+>Maybe</A
+> <A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/home/leepike/.cabal/share/doc/atom-1.0.9/html/Language-Atom-Expressions.html#t%3AType"
+>Type</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Declare function prototypes, given a return type, a function name, and a
+ | list of argument types.  Use <TT
+><A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Maybe.html#v%3ANothing"
+>Nothing</A
+></TT
+> for a return type of <TT
+>void</TT
+>.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:includeBracket"
+><A NAME="v%3AincludeBracket"
+></A
+></A
+><B
+>includeBracket</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Add an include of a library
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:includeQuote"
+><A NAME="v%3AincludeQuote"
+></A
+></A
+><B
+>includeQuote</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Add an include of a header file
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:printf"
+><A NAME="v%3Aprintf"
+></A
+></A
+><B
+>printf</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:printfNewline"
+><A NAME="v%3AprintfNewline"
+></A
+></A
+><B
+>printfNewline</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+> -&gt; [<A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+>] -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Char.html#t%3AString"
+>String</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>printf, with and without a newline (nl) character.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.0</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>

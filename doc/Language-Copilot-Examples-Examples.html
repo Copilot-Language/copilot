@@ -1,5 +1,925 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Language.Copilot.Examples.Examples</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
-window.onload = function () {pageLoad();setSynopsis("mini_Language-Copilot-Examples-Examples.html");};
-//]]>
-</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="http://github.com/leepike/Copilot/Language.Copilot.Examples.Examples.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">copilot-1.0: A stream DSL for writing embedded C monitors.</p></div><div id="content"><div id="module-header"><p class="caption">Language.Copilot.Examples.Examples</p></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><a href="#v:fib">fib</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t1">t1</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t3">t3</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t4">t4</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t5">t5</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:yy">yy</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:zz">zz</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:xx">xx</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:engine">engine</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:distrib">distrib</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:gcd">gcd</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Word.html#t:Word16">Word16</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Word.html#t:Word16">Word16</a> -&gt; <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:gcd-39-">gcd'</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:testCoercions">testCoercions</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:testCoercions2">testCoercions2</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:testCoercions3">testCoercions3</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:i8">i8</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:trap">trap</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:testArr">testArr</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t99">t99</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li><li class="src short"><a href="#v:t11">t11</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></li></ul></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><a name="v:fib" class="def">fib</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t1" class="def">t1</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t3" class="def">t3</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t4" class="def">t4</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t5" class="def">t5</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:yy" class="def">yy</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:zz" class="def">zz</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:xx" class="def">xx</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:engine" class="def">engine</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:distrib" class="def">distrib</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p><div class="doc"><p>Sending over ports.
-</p></div></div><div class="top"><p class="src"><a name="v:gcd" class="def">gcd</a> :: <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Word.html#t:Word16">Word16</a> -&gt; <a href="/Library/Frameworks/GHC.framework/Versions/7.0.1-i386/usr/share/doc/ghc/html/libraries/base-4.3.0.0/Data-Word.html#t:Word16">Word16</a> -&gt; <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:gcd-39-" class="def">gcd'</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:testCoercions" class="def">testCoercions</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:testCoercions2" class="def">testCoercions2</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:testCoercions3" class="def">testCoercions3</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:i8" class="def">i8</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:trap" class="def">trap</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:testArr" class="def">testArr</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t99" class="def">t99</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div><div class="top"><p class="src"><a name="v:t11" class="def">t11</a> :: <a href="Language-Copilot-Core.html#t:Streams">Streams</a></p></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.9.0</p></div></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Rendered using the Haskell Html Library v0.2-->
+<HTML
+><HEAD
+><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"
+><TITLE
+>Language.Copilot.Examples.Examples</TITLE
+><LINK HREF="haddock.css" REL="stylesheet" TYPE="text/css"
+><SCRIPT SRC="haddock-util.js" TYPE="text/javascript"
+></SCRIPT
+><SCRIPT TYPE="text/javascript"
+>window.onload = function () {setSynopsis("mini_Language-Copilot-Examples-Examples.html")};</SCRIPT
+></HEAD
+><BODY
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="topbar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><IMG SRC="haskell_icon.gif" WIDTH="16" HEIGHT="16" ALT=" "
+></TD
+><TD CLASS="title"
+>copilot-1.0.1: A stream DSL for writing embedded C monitors.</TD
+><TD CLASS="topbut"
+><A HREF="http://github.com/leepike/Copilot/Language.Copilot.Examples.Examples.html"
+>Source code</A
+></TD
+><TD CLASS="topbut"
+><A HREF="index.html"
+>Contents</A
+></TD
+><TD CLASS="topbut"
+><A HREF="doc-index.html"
+>Index</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="modulebar"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD
+><FONT SIZE="6"
+>Language.Copilot.Examples.Examples</FONT
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Synopsis</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="body"
+><TABLE CLASS="vanilla" CELLSPACING="0" CELLPADDING="0"
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Afib"
+>fib</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At1"
+>t1</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At3"
+>t3</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At4"
+>t4</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At5"
+>t5</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Ayy"
+>yy</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Azz"
+>zz</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Axx"
+>xx</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Adistrib"
+>distrib</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Amonitor"
+>monitor</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Agcd"
+>gcd</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Agcd%27"
+>gcd'</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtestCoercions"
+>testCoercions</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtestCoercions2"
+>testCoercions2</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtestCoercions3"
+>testCoercions3</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Ai8"
+>i8</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Atrap"
+>trap</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AtestArr"
+>testArr</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At99"
+>t99</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3At11"
+>t11</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3Atdiv"
+>tdiv</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT"
+>extT</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AinterpretExtT"
+>interpretExtT</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AcompileExtT"
+>compileExtT</A
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT2"
+>extT2</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT3"
+>extT3</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT4"
+>extT4</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT5"
+>extT5</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s8"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A HREF="#v%3AextT6"
+>extT6</A
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+></TABLE
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="section1"
+>Documentation</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:fib"
+><A NAME="v%3Afib"
+></A
+></A
+><B
+>fib</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t1"
+><A NAME="v%3At1"
+></A
+></A
+><B
+>t1</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t3"
+><A NAME="v%3At3"
+></A
+></A
+><B
+>t3</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t4"
+><A NAME="v%3At4"
+></A
+></A
+><B
+>t4</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t5"
+><A NAME="v%3At5"
+></A
+></A
+><B
+>t5</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:yy"
+><A NAME="v%3Ayy"
+></A
+></A
+><B
+>yy</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:zz"
+><A NAME="v%3Azz"
+></A
+></A
+><B
+>zz</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:xx"
+><A NAME="v%3Axx"
+></A
+></A
+><B
+>xx</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:distrib"
+><A NAME="v%3Adistrib"
+></A
+></A
+><B
+>distrib</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="doc"
+>Sending over ports.
+</TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:monitor"
+><A NAME="v%3Amonitor"
+></A
+></A
+><B
+>monitor</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:gcd"
+><A NAME="v%3Agcd"
+></A
+></A
+><B
+>gcd</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/Data-Word.html#t%3AWord16"
+>Word16</A
+> -&gt; <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:gcd'"
+><A NAME="v%3Agcd%27"
+></A
+></A
+><B
+>gcd'</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:testCoercions"
+><A NAME="v%3AtestCoercions"
+></A
+></A
+><B
+>testCoercions</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:testCoercions2"
+><A NAME="v%3AtestCoercions2"
+></A
+></A
+><B
+>testCoercions2</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:testCoercions3"
+><A NAME="v%3AtestCoercions3"
+></A
+></A
+><B
+>testCoercions3</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:i8"
+><A NAME="v%3Ai8"
+></A
+></A
+><B
+>i8</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:trap"
+><A NAME="v%3Atrap"
+></A
+></A
+><B
+>trap</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:testArr"
+><A NAME="v%3AtestArr"
+></A
+></A
+><B
+>testArr</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t99"
+><A NAME="v%3At99"
+></A
+></A
+><B
+>t99</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:t11"
+><A NAME="v%3At11"
+></A
+></A
+><B
+>t11</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:tdiv"
+><A NAME="v%3Atdiv"
+></A
+></A
+><B
+>tdiv</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT"
+><A NAME="v%3AextT"
+></A
+></A
+><B
+>extT</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:interpretExtT"
+><A NAME="v%3AinterpretExtT"
+></A
+></A
+><B
+>interpretExtT</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:compileExtT"
+><A NAME="v%3AcompileExtT"
+></A
+></A
+><B
+>compileExtT</B
+> :: <A HREF="/usr/share/doc/ghc6-doc/html/libraries/base-4.2.0.0/System-IO.html#t%3AIO"
+>IO</A
+> <A HREF="/usr/share/doc/ghc6-doc/html/libraries/ghc-prim-0.2.0.0/GHC-Unit.html#t%3A%28%29"
+>()</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT2"
+><A NAME="v%3AextT2"
+></A
+></A
+><B
+>extT2</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT3"
+><A NAME="v%3AextT3"
+></A
+></A
+><B
+>extT3</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT4"
+><A NAME="v%3AextT4"
+></A
+></A
+><B
+>extT4</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT5"
+><A NAME="v%3AextT5"
+></A
+></A
+><B
+>extT5</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="decl"
+><A NAME="v:extT6"
+><A NAME="v%3AextT6"
+></A
+></A
+><B
+>extT6</B
+> :: <A HREF="Language-Copilot-Core.html#t%3AStreams"
+>Streams</A
+></TD
+></TR
+><TR
+><TD CLASS="s15"
+></TD
+></TR
+><TR
+><TD CLASS="botbar"
+>Produced by <A HREF="http://www.haskell.org/haddock/"
+>Haddock</A
+> version 2.6.0</TD
+></TR
+></TABLE
+></BODY
+></HTML
+>
