@@ -9,6 +9,9 @@ import Data.Word
 import Data.List
 import Data.Char
 
+import Data.Maybe
+import Control.Monad.State
+
 import Language.Copilot.Core
 import qualified Language.Copilot.Language as C
 import Language.Copilot.Interface
@@ -29,12 +32,12 @@ instance Show t => Show ( Sym t ) where
 -- A symbol's value can occur multiple times in a regular expression,
 -- e.g. "(tfft)*". A running number "symbolNum" is used to make all
 -- symbols in a regular expression unique.
-data NumSym t = NumSym { symbolNum :: Int
+data NumSym t = NumSym { symbolNum :: Maybe Int
                        , symbol    :: Sym t
                        } deriving ( Eq )
 
 instance Show t => Show ( NumSym t ) where
-    show s     = show ( symbol s ) ++ "_" ++ show ( symbolNum s )
+    show s     = show ( symbol s ) ++ "_" ++ show ( fromJust $ symbolNum s )
 
 
 -- The regular expression data type. For our use
@@ -91,9 +94,7 @@ factor' = between lparen rparen regexp
 
 -- Parses the "." - point character used to match any symbol.
 anySym  = do { point
-             ; symbolNum <- getState
-             ; updateState ( +1 )
-             ; return $ RSymbol ( NumSym symbolNum Any )
+             ; return $ RSymbol ( NumSym Nothing Any )
              }
 
 class SymbolParser t where
@@ -106,9 +107,7 @@ instance SymbolParser Bool where
                                     >> return False )
                               <|> ( string "1" >> return True )
                               <|> ( string "0" >> return False )
-                  ; symbolNum <- getState
-                  ; updateState ( +1 )
-                  ; return $ RSymbol ( NumSym symbolNum $ Sym truth )
+                  ; return $ RSymbol ( NumSym Nothing $ Sym truth )
                   }
 
 -- TODO: use the SymbolParser class to parse all integral
@@ -116,17 +115,13 @@ instance SymbolParser Bool where
 -- for unsigned values, bound checking
 instance SymbolParser Word8 where
     parseSym = do { result <- between lquote rquote $ many1 digit
-                  ; symbolNum <- getState
-                  ; updateState ( +1 )
-                  ; return . RSymbol . ( NumSym symbolNum . Sym ) . read $ result
+                  ; return . RSymbol . ( NumSym Nothing . Sym ) . read $ result
                   }
 
 instance SymbolParser Int8 where
     parseSym = do { result <- between lquote rquote $
                               optCPrefix minus ( many1 digit )
-                  ; symbolNum <- getState
-                  ; updateState ( +1 )
-                  ; return . RSymbol . ( NumSym symbolNum . Sym ) . read $ result
+                  ; return . RSymbol . ( NumSym Nothing . Sym ) . read $ result
                   }
 
 
@@ -192,6 +187,29 @@ getSymbols ( RStar   r     ) = getSymbols r
 getSymbols   _               = []
 
 
+-- assign each symbol in the regular expression a
+-- unique number, counting up from 0
+enumSyms r = evalState ( enumSyms' r ) 0
+    where
+      enumSyms' ( RSymbol s     ) = do
+        num <- get
+        modify ( + 1 )
+        return $ RSymbol s { symbolNum = Just num }
+      enumSyms' ( ROr     r1 r2 ) = do
+        r1' <- enumSyms' r1
+        r2' <- enumSyms' r2
+        return $ ROr r1' r2'
+      enumSyms' ( RConcat r1 r2 ) = do
+        r1' <- enumSyms' r1
+        r2' <- enumSyms' r2
+        return $ RConcat r1' r2'
+      enumSyms' ( RStar   r     ) = do
+        r'  <- enumSyms' r
+        return $ RStar r'
+      enumSyms'   other           =
+        return other
+
+
 -- TODO: get the reset right
 regexp2CopilotNFA inStream regexp outStream reset =
     let symbols                    = getSymbols regexp
@@ -227,20 +245,20 @@ copilotRegexp inStream regexp outStream reset =
   case runParser start 0 regexp regexp of
     Left  err ->
         error $ "parse error: " ++ show err
-    Right regexp ->
-        if hasFinitePath regexp then
+    Right regexp -> let nregexp = enumSyms regexp in
+        if hasFinitePath nregexp then
             error $
             concat [ "The regular expression contains a finite path "
                    , "which is something that will fail to match, "
                    , "since we do not have a distinct end-of-input "
                    , "symbol on infinite streams." ]
-        else if hasEpsilon regexp then
+        else if hasEpsilon nregexp then
                  error $
                  concat [ "The regular expression matches a language "
                         , "that contains epsilon. This cannot be handled "
                         , "on infinite streams, since we do not have "
                         , "a distinct end-of-input symbol."]
-             else regexp2CopilotNFA inStream regexp outStream reset
+             else regexp2CopilotNFA inStream nregexp outStream reset
 
 
 testRegExp' = do { let input  = C.varW8 "input"
