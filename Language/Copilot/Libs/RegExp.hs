@@ -9,9 +9,6 @@ import Data.Word
 import Data.List
 import Data.Char
 
-import Debug.Trace
-import Text.Printf
-
 import Language.Copilot.Core
 import qualified Language.Copilot.Language as C
 import Language.Copilot.Interface
