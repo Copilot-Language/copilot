@@ -19,7 +19,7 @@ import qualified Language.Atom as A
 -- | Compiles an /Copilot/ specification to an /Atom/ one.
 -- The period is given as a Maybe : if it is Nothing, an optimal period will be chosen.
 copilotToAtom :: LangElems -> Maybe Period -> Name -> (Period, A.Atom ()) 
-copilotToAtom (LangElems streams sends triggers) p cFileName = 
+copilotToAtom (LangElems streams triggers) p cFileName = 
   (p', A.period p' $ do
     prophArrs <- mapStreamableMapsM initProphArr streams
     outputs <- mapStreamableMapsM initOutput streams
@@ -41,7 +41,7 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
 
     M.fold (makeTrigger outputs cFileName) (return ()) triggers
            
-    foldStreamableMaps (makeSend outputs) sends (return ())
+--    foldStreamableMaps (makeSend outputs) sends (return ())
 
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
@@ -57,7 +57,6 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
 -- Phase 1: state update.
 -- Phase 2: Compute output variables.
 -- Phase 3: Fire triggers (if any).
--- Phase 3: send values (if any).
 -- Phase 4 up to n: update indexes.
 period :: Maybe Int -> Int
 period p = 
@@ -370,20 +369,20 @@ makeRule exps outputs prophArrs updateIndexes outputIndexes v _ r = do
                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
              
-makeSend :: forall a. Streamable a 
-         => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
-makeSend outputs name (Send v port portName) r = do
-        r 
-        A.exactPhase 3 $ A.atom ("__send_" ++ name) $
-            mkSend (A.value $ getElem (getMaybeVar v) outputs :: A.E a) 
-                   port 
-                   portName
+-- makeSend :: forall a. Streamable a 
+--          => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
+-- makeSend outputs name (Send v port portName) r = do
+--         r 
+--         A.exactPhase 3 $ A.atom ("__send_" ++ name) $
+--             mkSend (A.value $ getElem (getMaybeVar v) outputs :: A.E a) 
+--                    port 
+--                    portName
 
--- | Sending data over ports.
-mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
-mkSend e (Port port) portName =
-  A.action (\ueStr -> portName ++ "(" ++ head ueStr ++ "," ++ show port ++ ")") 
-           [A.ue e]
+-- -- | Sending data over ports.
+-- mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
+-- mkSend e (Port port) portName =
+--   A.action (\ueStr -> portName ++ "(" ++ head ueStr ++ "," ++ show port ++ ")") 
+--            [A.ue e]
 
 sampleStr :: String
 sampleStr = "sample__"

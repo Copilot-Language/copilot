@@ -110,8 +110,8 @@ body id p ls exp = do
   pd  .= drop 1 p -- because we sample last round's vars
   maj .= majority (pd:ls)
   chk .= aMajority ls maj
-  send ("send" P.++ P.show id) (port 1) p
-  send ("send" P.++ P.show id) (port 2) p
+  trigger true ("send" P.++ P.show id) (constW16 1 <> p)
+  trigger true ("send" P.++ P.show id) (constW16 2 <> p)
 
 -- | Distributed majority voting among three processors.
 proc0, proc1, proc2 :: Streams

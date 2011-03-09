@@ -32,8 +32,6 @@ module Language.Copilot.Language (
         module Language.Copilot.Language.Sampling,
         -- * Constructs of the copilot language
         drop, (++), (.=), -- (..|), 
-        -- * The next functions help typing the send operations
-        send, port, 
         -- * Triggers
         module Language.Copilot.Language.FunctionCalls,
         -- * Safe casting
@@ -44,7 +42,7 @@ module Language.Copilot.Language (
 import qualified Language.Atom as A
 import Data.Int
 import Data.Word
-import Prelude ( Bool(..), Num(..), Float, Double, String, ($), error
+import Prelude ( Bool(..), Num(..), Float, Double, ($), error
                , Fractional(..), fromInteger, Show(..))
 import qualified Prelude as P
 import Control.Monad.Writer (tell)
@@ -146,27 +144,9 @@ varD = Var
 v .= s = 
   case v of
     (Var v') -> tell $ LangElems (updateSubMap (M.insert v' s) emptySM) 
-                                    emptySM 
-                                    M.empty
+                                 M.empty
     _ -> error $ "Given spec " P.++ show v 
                    P.++ " but expected a variable in a Copilot definition (.=)."
-
-port :: Int -> Port
-port = Port
-
--- | Takes a function @name@, a port @number@, and a Copilot variable @v@ and
--- constructs a call to the C function @name(x,y)@ where @x@ is the value of the
--- Copilot stream @v@ and @y@ is the port number.
-send :: Streamable a => String -> Port -> Spec a -> Streams
-send portName thePort s = 
-  tell $ LangElems 
-           emptySM 
-           (updateSubMap (M.insert (show sending) sending) emptySM) 
-           M.empty
-  where sending = case s of 
-                    v@(Var _) -> Send v thePort portName
-                    _ -> error $ "Expected a Copilot variable but given " 
-                           P.++ show s P.++ " instead."
 
 -- | Coerces a type that is 'Streamable' into a Copilot constant.
 const :: Streamable a => a -> Spec a
@@ -192,7 +172,6 @@ constF :: Float -> Spec Float
 constF = Const
 constD :: Double -> Spec Double
 constD = Const
-
 
 true, false :: Spec Bool
 true = Const True

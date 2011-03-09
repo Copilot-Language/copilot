@@ -114,8 +114,8 @@ distrib = do
   a .= [0,1] ++ a + 1
   b .= mod a 2 == 0 
   -- sends
-  send "portA" (port 2) a 
-  send "portB" (port 1) b 
+  trigger true "portA" a 
+  trigger true "portB" b
 
 monitor :: Streams
 monitor = do
