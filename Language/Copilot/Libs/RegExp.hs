@@ -129,17 +129,22 @@ instance SymbolParser Int8 where
 
 opOr       = char '|' >> return ROr
 opConcat   = return RConcat
-opSuffix r = do { exp      <- r
+opSuffix r = do { subexp   <- r
                 ; suffixes <- many $ choice [ star, plus, qmark ]
-                ; let transform e s =
-                          case s of
-                            '*' -> RStar e
-                            '+' -> RConcat e $ RStar e
-                            '?' -> ROr REpsilon e
-                  in return $ foldl transform exp suffixes
+                ; let transform exp suffix =
+                          case suffix of
+                            '*' -> RStar   exp
+                            '+' -> RConcat exp ( RStar exp )
+                            '?' -> ROr     exp   REpsilon
+                  in return $ foldl transform subexp suffixes
                 }
 
 start = regexp `followedBy` eof
+
+
+{-# RULES
+  "rstar/rstar" forall regexp . RStar ( RStar regexp ) = RStar regexp
+  #-}
 
 
 hasEpsilon   REpsilon         = True
