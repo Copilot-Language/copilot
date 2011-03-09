@@ -9,6 +9,7 @@ import Data.Word
 import Data.List
 import Data.Char
 
+import Debug.Trace
 import Data.Maybe
 import Control.Monad.State
 
@@ -30,7 +31,7 @@ instance Show t => Show ( Sym t ) where
     show ( Sym s ) = show s
 
 -- A symbol's value can occur multiple times in a regular expression,
--- e.g. "(tfft)*". A running number "symbolNum" is used to make all
+-- e.g. "t(tfft)*". A running number "symbolNum" is used to make all
 -- symbols in a regular expression unique.
 data NumSym t = NumSym { symbolNum :: Maybe Int
                        , symbol    :: Sym t
@@ -59,9 +60,10 @@ rquote = char '>'
 lparen = char '('
 rparen = char ')'
 star   = char '*'
+plus   = char '+'
+qmark  = char '?'
 point  = char '.'
 minus  = char '-'
-plus   = char '+'
 
 
 -- A "followedBy" combinator for parsing, parses
@@ -128,13 +130,14 @@ instance SymbolParser Int8 where
 
 opOr       = char '|' >> return ROr
 opConcat   = return RConcat
-opSuffix r = do { exp <- r
-                ; st  <- many star
-                ; pl  <- many plus
-                ; return $
-                  if null pl then
-                      if null st then exp else RStar exp
-                  else RConcat exp ( RStar exp )
+opSuffix r = do { exp      <- r
+                ; suffixes <- many $ choice [ star, plus, qmark ]
+                ; let transform e s =
+                          case s of
+                            '*' -> RStar e
+                            '+' -> RConcat e $ RStar e
+                            '?' -> ROr REpsilon e
+                  in return $ foldl transform exp suffixes
                 }
 
 start = regexp `followedBy` eof
@@ -180,7 +183,7 @@ preceding = follow . reverse'
 
 hasFinitePath ( ROr     r1 r2 ) = hasFinitePath r1 || hasFinitePath r2
 hasFinitePath ( RConcat _  r2 ) = hasFinitePath r2
-hasFinitePath ( RStar   r     ) = hasEpsilon r
+hasFinitePath ( RStar   r     ) = False
 hasFinitePath   _               = True
 
 
@@ -250,10 +253,11 @@ copilotRegexp inStream regexp outStream reset =
     Left  err ->
         error $ "parse error: " ++ show err
     Right regexp -> let nregexp = enumSyms regexp in
+        trace ( "regexp: " ++ ( show nregexp ) ) $
         if hasFinitePath nregexp then
             error $
             concat [ "The regular expression contains a finite path "
-                   , "which is something that will fail to match, "
+                   , "which is something that will fail to match "
                    , "since we do not have a distinct end-of-input "
                    , "symbol on infinite streams." ]
         else if hasEpsilon nregexp then
@@ -268,9 +272,9 @@ copilotRegexp inStream regexp outStream reset =
 testRegExp' = do { let input  = C.varW8 "input"
                        output = C.varB  "output"
                        reset  = C.varB  "reset"
-                 ; input C..= [ 0, 1, 1, 2, 3, 4, 4, 4 ] C.++ input
+                 ; input C..= [ 0, 1, 2, 2 ] C.++ Const 3
                  ; reset C..= [ True ] C.++ Const False
-                 ; copilotRegexp input "<0><1>+<2>*<3><4>+" output reset
+                 ; copilotRegexp input "<0><1><2>?+<3>+" output reset
                  }
 
 testRegExp = do
