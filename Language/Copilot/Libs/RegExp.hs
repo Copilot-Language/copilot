@@ -9,7 +9,6 @@ import Data.Word
 import Data.List
 import Data.Char
 
-import Debug.Trace
 import Data.Maybe
 import Control.Monad.State
 
@@ -253,7 +252,6 @@ copilotRegexp inStream regexp outStream reset =
     Left  err ->
         error $ "parse error: " ++ show err
     Right regexp -> let nregexp = enumSyms regexp in
-        trace ( "regexp: " ++ ( show nregexp ) ) $
         if hasFinitePath nregexp then
             error $
             concat [ "The regular expression contains a finite path "
