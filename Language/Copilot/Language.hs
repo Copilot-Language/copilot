@@ -36,7 +36,6 @@ module Language.Copilot.Language (
         send, port, 
         -- * Triggers
         module Language.Copilot.Language.FunctionCalls,
---        trigger, (<>), void,
         -- * Safe casting
         module Language.Copilot.Language.Casting,
         notConstVarErr
