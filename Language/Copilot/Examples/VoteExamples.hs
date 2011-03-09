@@ -27,38 +27,27 @@ maj0 = do
 maj1 :: Streams
 maj1 = do
   let v0  = varW32 "v0"
-      v1  = varW32 "v1"
-      v2  = varW32 "v2"
-      v3  = varW32 "v3"
-      v4  = varW32 "v4"
-      v5  = varW32 "v5"
-      v6  = varW32 "v6"
-      --v7  = varW32 "v7"
-      --v8  = varW32 "v8"
-      -- v9  = varW32 "v9"
-      -- v10  = varW32 "v10"
-      -- v11 = varW32 "v11"
-      -- v12  = varW32 "v12"
+      -- v1  = varW32 "v1"
+      -- v2  = varW32 "v2"
+      -- v3  = varW32 "v3"
+      -- v4  = varW32 "v4"
+      -- v5  = varW32 "v5"
+      -- v6  = varW32 "v6"
+--      ans = varW32 "ans"
+      ans2 = varW32 "ans2"
+--      chk = varB "chk"
+--      ls = [v0] --, v1, v2] --, v3, v4, v5, v6] --, v7] --, v8, v9, v10, v11, v12]
+  v0  .= [3,7] ++ v0 + 1
+  -- v1  .= [3] ++ v1 + 1
+  -- v2  .= [1] ++ v2 + 1
+  -- v3  .= [3] ++ v3 + 1
+  -- v4  .= [1] ++ v4 + 1
+  -- v5  .= [3] ++ v5 + 1
+  -- v6  .= [3] ++ v6 + 1
 
-      ans = varW32 "ans"
-      chk = varB "chk"
-      ls = [v0, v1, v2, v3, v4, v5, v6] --, v7] --, v8, v9, v10, v11, v12]
-  v0  .= [3] ++ v0 + 1
-  v1  .= [3] ++ v1 + 1
-  v2  .= [1] ++ v2 + 1
-  v3  .= [3] ++ v3 + 1
-  v4  .= [1] ++ v4 + 1
-  v5  .= [3] ++ v5 + 1
-  v6  .= [3] ++ v6 + 1
-  -- v7  .= [1] ++ v7 + 1
-  -- v8  .= [3] ++ v8 + 1
-  -- v9  .= [1] ++ v9 + 1
-  -- v10  .= [3] ++ v10 + 1
-  -- v11  .= [3] ++ v11 + 1
-  -- v12  .= [1] ++ v12 + 1
-
-  ans .= majority ls
-  chk .= aMajority ls ans
+--  ans .= majority ls
+  ans2 .= v0
+--  chk .= aMajority ls ans
 
 maj2 :: Streams
 maj2 = do
@@ -119,25 +108,25 @@ proc0 = do
   let p0 = varW16 "p0"
       p1 = extW16 "p1"
       p2 = extW16 "p2"
-  body 0 p0 [p1, p2] ([0,1,2] ++ p0)
+  body 0 p0 [p1, p2] ([3,4,5] ++ p0)
 
 proc1 = do
   let p1 = varW16 "p1"
       p0 = extW16 "p0"
       p2 = extW16 "p2"
-  body 1 p1 [p0, p2] ([1,0,2,0] ++ p1)
+  body 1 p1 [p0, p2] ([7,8,9] ++ p1)
 
 proc2 = do
   let p2 = varW16 "p2"
       p0 = extW16 "p0"
       p1 = extW16 "p1"
-  body 2 p2 [p0, p1] ([2,1,0,2,1] ++ p1)
+  body 2 p2 [p0, p1] ([7,8,9] ++ p2)
 
 mainStr :: String 
 mainStr = unlines 
   [ "int main (void) {"
   , "  int rnds;"
-  , "  for(rnds = 0; rnds < 20; rnds++) {"
+  , "  for(rnds = 0; rnds < 60; rnds++) {"
   , "    proc0();"
   , "    proc1();"
   , "    proc2();"
