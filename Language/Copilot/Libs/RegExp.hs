@@ -61,6 +61,7 @@ rparen = char ')'
 star   = char '*'
 point  = char '.'
 minus  = char '-'
+plus   = char '+'
 
 
 -- A "followedBy" combinator for parsing, parses
@@ -86,7 +87,7 @@ regexp  = chainr1 term opOr
 
 term    = chainr factor opConcat REpsilon
 
-factor  = opStar factor'
+factor  = opSuffix factor'
 
 factor' = between lparen rparen regexp
           <|> anySym
@@ -125,13 +126,16 @@ instance SymbolParser Int8 where
                   }
 
 
-opOr     = char '|' >> return ROr
-opConcat = return RConcat
-opStar r = do { exp <- r
-              ; st  <- many star
-              ; return $
-                if null st then exp else RStar exp
-              }
+opOr       = char '|' >> return ROr
+opConcat   = return RConcat
+opSuffix r = do { exp <- r
+                ; st  <- many star
+                ; pl  <- many plus
+                ; return $
+                  if null pl then
+                      if null st then exp else RStar exp
+                  else RConcat exp ( RStar exp )
+                }
 
 start = regexp `followedBy` eof
 
@@ -264,9 +268,9 @@ copilotRegexp inStream regexp outStream reset =
 testRegExp' = do { let input  = C.varW8 "input"
                        output = C.varB  "output"
                        reset  = C.varB  "reset"
-                 ; input C..= [ 0, 1, 2, 3, 3, 4, 3, 4, 1, 1, 1 ] C.++ input
+                 ; input C..= [ 0, 1, 1, 2, 3, 4, 4, 4 ] C.++ input
                  ; reset C..= [ True ] C.++ Const False
-                 ; copilotRegexp input "<0><1><4>*<2>(<3><3>*|<4>)*" output reset
+                 ; copilotRegexp input "<0><1>+<2>*<3><4>+" output reset
                  }
 
 testRegExp = do
