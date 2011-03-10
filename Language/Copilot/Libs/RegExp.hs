@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module RegExp ( copilotRegexp ) where
+module Language.Copilot.Libs.RegExp ( copilotRegexp ) where
 
 
 import Text.ParserCombinators.Parsec
@@ -234,7 +234,7 @@ enumSyms r = evalState ( enumSyms' r ) 0
         return $ RConcat r1' r2'
       enumSyms' ( RStar   r     ) = do
         r'  <- enumSyms' r
-        return $ RStar r'
+        return $ RStar   r'
       enumSyms'   other           =
         return other
 
@@ -293,9 +293,9 @@ copilotRegexp inStream regexp outStream reset =
 testRegExp' = do { let input  = C.varI64 "input"
                        output = C.varB  "output"
                        reset  = C.varB  "reset"
-                 ; input C..= [ 0, 1, 2, 2 ] C.++ Const 3
+                 ; input C..= [ 0, 1, 2, 2 ] C.++ Const (-3)
                  ; reset C..= [ True ] C.++ Const False
-                 ; copilotRegexp input "<0><1><2>*<2>*<2>*<3>+" output reset
+                 ; copilotRegexp input "<0><1><2>*<2>*<2>*<-3>+" output reset
                  }
 
 testRegExp = do
