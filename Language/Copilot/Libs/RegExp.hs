@@ -99,8 +99,9 @@ anySym  = do { point
              ; return $ RSymbol ( NumSym Nothing Any )
              }
 
-class SymbolParser t where
-    parseSym :: GenParser Char Int ( RegExp t )
+
+class Streamable t => SymbolParser t where
+    parseSym   :: GenParser Char () ( RegExp t )
 
 instance SymbolParser Bool where
     parseSym = do { truth <- ( ci "t" >> ( optional $ ci "rue" )
@@ -112,19 +113,41 @@ instance SymbolParser Bool where
                   ; return $ RSymbol ( NumSym Nothing $ Sym truth )
                   }
 
--- TODO: use the SymbolParser class to parse all integral
--- Copilot types by having one parser for signed and one
--- for unsigned values, bound checking
-instance SymbolParser Word8 where
-    parseSym = do { result <- between lquote rquote $ many1 digit
-                  ; return . RSymbol . ( NumSym Nothing . Sym ) . read $ result
+
+parseWordSym = do { num <- between lquote rquote $ many1 digit
+                  ; return . RSymbol . ( NumSym Nothing . Sym )
+                    . fromIntegral $ read num
                   }
 
+parseIntSym = do { num <- between lquote rquote $
+                          optCPrefix minus ( many1 digit )
+                 ; return . RSymbol . ( NumSym Nothing . Sym )
+                   . fromIntegral $ read num
+                 }
+
+instance SymbolParser Word8 where
+    parseSym = parseWordSym
+
+instance SymbolParser Word16 where
+    parseSym = parseWordSym
+
+instance SymbolParser Word32 where
+    parseSym = parseWordSym
+
+instance SymbolParser Word64 where
+    parseSym = parseWordSym
+
 instance SymbolParser Int8 where
-    parseSym = do { result <- between lquote rquote $
-                              optCPrefix minus ( many1 digit )
-                  ; return . RSymbol . ( NumSym Nothing . Sym ) . read $ result
-                  }
+    parseSym = parseIntSym
+
+instance SymbolParser Int16 where
+    parseSym = parseIntSym
+
+instance SymbolParser Int32 where
+    parseSym = parseIntSym
+
+instance SymbolParser Int64 where
+    parseSym = parseIntSym
 
 
 opOr       = char '|' >> return ROr
@@ -140,11 +163,6 @@ opSuffix r = do { subexp   <- r
                 }
 
 start = regexp `followedBy` eof
-
-
-{-# RULES
-  "rstar/rstar" forall regexp . RStar ( RStar regexp ) = RStar regexp
-  #-}
 
 
 hasEpsilon   REpsilon         = True
@@ -253,7 +271,7 @@ regexp2CopilotNFA inStream regexp outStream reset =
 
 
 copilotRegexp inStream regexp outStream reset =
-  case runParser start 0 regexp regexp of
+  case parse start regexp regexp of
     Left  err ->
         error $ "parse error: " ++ show err
     Right regexp -> let nregexp = enumSyms regexp in
@@ -272,14 +290,14 @@ copilotRegexp inStream regexp outStream reset =
              else regexp2CopilotNFA inStream nregexp outStream reset
 
 
-testRegExp' = do { let input  = C.varW8 "input"
+testRegExp' = do { let input  = C.varI64 "input"
                        output = C.varB  "output"
                        reset  = C.varB  "reset"
                  ; input C..= [ 0, 1, 2, 2 ] C.++ Const 3
                  ; reset C..= [ True ] C.++ Const False
-                 ; copilotRegexp input "<0><1><2>?+<3>+" output reset
+                 ; copilotRegexp input "<0><1><2>*<2>*<2>*<3>+" output reset
                  }
 
 testRegExp = do
-  interpret testRegExp' 15 baseOpts
+  interpret testRegExp' 10 baseOpts
   return ()
