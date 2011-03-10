@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module RegExp where
+module RegExp ( copilotRegexp ) where
 
 
 import Text.ParserCombinators.Parsec
