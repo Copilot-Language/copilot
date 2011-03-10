@@ -1,5 +1,8 @@
 module Main where
 
+import Language.Copilot.Core
+import qualified Language.Copilot.Language as C
+import Language.Copilot.Interface
 import Language.Copilot.Libs.RegExp ( copilotRegexp )
 
 
