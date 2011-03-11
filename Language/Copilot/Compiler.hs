@@ -356,14 +356,15 @@ sampleExts outputs ts cFileName s a = do
                          sampleExts' s2 a
     Append _ s0 -> sampleExts' s0 a
     Drop _ s0 -> sampleExts' s0 a
-  where -- minSampPh :: Int
-        --minSampPh = 2
-        sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
-        getSampleFuncVar v = case v of
-                               ExtV extV -> extV
-                               -- XXX A bit of a hack.  Atom should be changed to allow
-                               -- "out-of-Atom" assignments.  But this works for now.
-                               Fun nm args -> funcShow cFileName nm args
+  where 
+    sampleExts' :: Streamable b => Spec b -> [(Var, A.Atom ())] -> [(Var, A.Atom ())]
+    sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
+    getSampleFuncVar v = 
+      case v of
+        ExtV extV -> extV
+        -- XXX A bit of a hack.  Atom should be changed to allow "out-of-Atom"
+        -- assignments.  But this works for now.
+        Fun nm args -> funcShow cFileName nm args
 
 
 -- lookup the idx for external array accesses in the map.
