@@ -32,10 +32,10 @@ description:         Can you write a list in Haskell? Then you can write embedde
 extra-source-files:  README
 
 library
-    ghc-options:     -Wall 
+    ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constaints.
-    build-depends:     
+    build-depends:
                        base >= 4.0 && < 6
                      , atom >= 1.0.8
                      , containers >= 0.2.0.1
@@ -44,6 +44,7 @@ library
                      , directory >= 1.0.0.0
                      , mtl >= 1.0.0.0
                      , filepath >= 1.0.0.0
+                     , parsec >= 2.0
 
     extensions:
     exposed-modules: Language.Copilot
