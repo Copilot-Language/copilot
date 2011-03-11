@@ -71,9 +71,19 @@ t5 = do
   trigger z "z1_trigger" (y <> constW16 3 <> x)
   
 yy :: Streams
-yy = 
-  let a = varW64 "a"
-  in  do a .= 4  
+yy = do
+  let a = varW32 "a"
+--      ans2 = varW32 "ans2"
+  a .= [3,5] ++ a + 1
+--  ans2 .= a
+
+maj1 :: Streams
+maj1 = do
+  let v0  = varW32 "v0"
+      ans2 = varW32 "ans2"
+  v0  .= [3,7] ++ v0 + 1
+  ans2 .= v0
+
 
 zz :: Streams
 zz = do
@@ -103,21 +113,6 @@ xx = do
   trigger w "z0_trigger" (a <> b <> true)
   trigger w "z1_trigger" (d <> constW16 3 <> w)
 
--- If the temperature rises more than 2.3 degrees within 0.2 seconds, then the
--- engine is immediately shut off.  From the paper.
-engine :: Streams
-engine = do
-  -- external vars
-  let temp     = extF "temp"
-      shutoff  = extB "shutoff"
-  -- Copilot vars
-      temps    = varF "temps"
-      overTemp = varB "overTemp"
-      err  = varB "trigger"
-
-  temps    .= [0, 0, 0] ++ temp
-  overTemp .= drop 2 temps > 2.3 + temps
-  err  .= overTemp ==> shutoff
 
 -- | Sending over ports.
 distrib :: Streams
@@ -129,8 +124,19 @@ distrib = do
   a .= [0,1] ++ a + 1
   b .= mod a 2 == 0 
   -- sends
-  send "portA" (port 2) a 
-  send "portB" (port 1) b 
+  trigger true "portA" a 
+  trigger true "portB" b
+
+monitor :: Streams
+monitor = do
+  -- external variables
+  let word     = extW32 "rx"
+      arbiter  = extB "arbiter"
+  -- Copilot variables
+      words    = varW32 "words"
+      arbiters = varB "arbiters"
+  words   .=      [0] ++ mux arbiter word words
+  arbiters .= [False] ++ mux arbiter false arbiter
 
 -- greatest common divisor.
 gcd :: Word16 -> Word16 -> Streams

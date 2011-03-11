@@ -27,7 +27,7 @@ data Options = Options {
         optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams,
                                                    -- then generate random
                                                    -- streams.
-        optSends :: StreamableMaps Send, -- ^ For distributed monitors.
+--        optSends :: StreamableMaps Send, -- ^ For distributed monitors.
         optExts :: Maybe Vars, -- ^ Assign values to external variables.
         optCompile :: Maybe String, -- ^ Set gcc options.
         optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then
@@ -61,7 +61,7 @@ data Options = Options {
 baseOpts :: Options
 baseOpts = Options {
         optStreams = Nothing,
-        optSends = emptySM,
+--        optSends = emptySM,
         optExts = Nothing,
         optCompile = Nothing,
         optPeriod = Nothing,
@@ -83,16 +83,16 @@ baseOpts = Options {
 
 test :: Int -> Options -> IO ()
 test n opts =
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim True opts
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim opts 
 
 interpret :: Streams -> Int -> Options -> IO ()
 interpret streams n opts =
   interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
 
 compile :: Streams -> Name -> Options -> IO ()
-compile streams fileName opts =
-  interface $ setC "-Wall" $ setO fileName $ setS (getSends streams)
-    $ setTriggers (getTriggers streams)
+compile streams fileName opts = 
+  interface $ setC "-Wall" $ setO fileName -- $ setS (getSends streams)
+    $ setTriggers (getTriggers streams) 
       $ opts {optStreams = Just (getSpecs streams)}
 
 verify :: FilePath -> Int -> String -> IO ()
@@ -120,9 +120,9 @@ verify file n opts = do
 
 -- Small functions for easy modification of the Options record
 
--- | Set the directives for sending stream values on ports.
-setS :: StreamableMaps Send -> Options -> Options
-setS sends opts = opts {optSends = sends}
+-- -- | Set the directives for sending stream values on ports.
+-- setS :: StreamableMaps Send -> Options -> Options
+-- setS sends opts = opts {optSends = sends}
 
 -- -- | Set the directives for sending stream values on ports.
 setTriggers :: Triggers -> Options -> Options
@@ -198,8 +198,8 @@ setCode :: (Maybe String, Maybe String) -> Options -> Options
 setCode pp opts = opts {optPrePostCode = pp}
 
 -- | Include simulation driver code (in a main() loop)?
-setSim :: Bool -> Options -> Options
-setSim b opts = opts {optSimulate = b}
+setSim :: Options -> Options
+setSim opts = opts {optSimulate = True}
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
@@ -207,7 +207,7 @@ interface opts =
     do
         seed <- createSeed opts
         let (streams, vars) = getStreamsVars opts seed
-            sends = optSends opts
+--            sends = optSends opts
             triggers = optTriggers opts
             backEnd = getBackend opts seed
             iterations = optIterations opts
@@ -216,7 +216,7 @@ interface opts =
             putStrLn $ "Random seed :" ++ show seed
         -- dispatch is doing all the heavy plumbing between
         -- analyser, compiler, interpreter, gcc and the generated program
-        dispatch (LangElems streams sends triggers) vars backEnd iterations verbose
+        dispatch (LangElems streams triggers) vars backEnd iterations verbose 
 
 createSeed :: Options -> IO Int
 createSeed opts =
