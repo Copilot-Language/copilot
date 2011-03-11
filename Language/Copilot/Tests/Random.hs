@@ -75,17 +75,17 @@ foldRandomableMaps :: forall b c.
     (forall a. (Streamable a, Random a) => Var -> c a -> b -> b) -> 
     StreamableMaps c -> b -> b
 foldRandomableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
-    let acc0 = M.foldWithKey f acc bm
-        acc1 = M.foldWithKey f acc0 i8m        
-        acc2 = M.foldWithKey f acc1 i16m
-        acc3 = M.foldWithKey f acc2 i32m
-        acc4 = M.foldWithKey f acc3 i64m
-        acc5 = M.foldWithKey f acc4 w8m
-        acc6 = M.foldWithKey f acc5 w16m
-        acc7 = M.foldWithKey f acc6 w32m
-        acc8 = M.foldWithKey f acc7 w64m
-        acc9 = M.foldWithKey f acc8 fm      
-        acc10 = M.foldWithKey f acc9 dm
+    let acc0 = M.foldrWithKey f acc bm
+        acc1 = M.foldrWithKey f acc0 i8m        
+        acc2 = M.foldrWithKey f acc1 i16m
+        acc3 = M.foldrWithKey f acc2 i32m
+        acc4 = M.foldrWithKey f acc3 i64m
+        acc5 = M.foldrWithKey f acc4 w8m
+        acc6 = M.foldrWithKey f acc5 w16m
+        acc7 = M.foldrWithKey f acc6 w32m
+        acc8 = M.foldrWithKey f acc7 w64m
+        acc9 = M.foldrWithKey f acc8 fm      
+        acc10 = M.foldrWithKey f acc9 dm
     in acc10
 
 randomWeighted :: (RandomGen g, Random a) => g -> [(a, Int)] -> (a, g)
