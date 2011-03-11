@@ -24,6 +24,13 @@ originally developed to write embedded monitors for more complex embedded
 systems, but it can be used to develop a variety of functional-style embedded
 code.
 
+The documentation for the language itself is mainly at
+
+  Copilot/doc/Language-Copilot-Language.html 
+
+and there are numerous examples in
+
+  Copilot/Language/Copilot/Examples 
 
 *******************************************************************************
 Download
@@ -43,6 +50,14 @@ and you should see index.html.
 *******************************************************************************
 Release notes
 *******************************************************************************
+
+* Copilot-1.0.2
+  * Fixed a major compilation bug.
+  * Upgraded to GHC 7.0.2 (Haskell Platform).
+
+* Copilot-1.0.1
+  * Removed send operators---use triggers instead (see the distributed voting
+  * example in VoteExamples.hs.
 
 * Copilot-1.0
   * Language frozen. 
