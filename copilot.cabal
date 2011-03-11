@@ -34,13 +34,8 @@ extra-source-files:  README
 library
     ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
-<<<<<<< HEAD
     -- build on packages outside these constaints.
     build-depends:
-=======
-    -- build on packages outside these constraints.
-    build-depends:     
->>>>>>> lp/development
                        base >= 4.0 && < 6
                      , atom >= 1.0.8
                      , containers >= 0.2.0.1
@@ -74,11 +69,8 @@ library
                      Language.Copilot.Libs.LTL
                      Language.Copilot.Libs.Indexes
                      Language.Copilot.Libs.Statistics
-<<<<<<< HEAD
-                     Language.Copilot.Libs.RegExp
-=======
                      Language.Copilot.Libs.Vote
->>>>>>> lp/development
+                     Language.Copilot.Libs.RegExp
                      Language.Copilot.Examples.Examples
                      Language.Copilot.Examples.LTLExamples
                      Language.Copilot.Examples.PTLTLExamples
