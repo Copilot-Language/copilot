@@ -1,18 +1,82 @@
 // Haddock JavaScript utilities
-function toggle(button,id)
-{
-   var n = document.getElementById(id).style;
-   if (n.display == "none")
-   {
-    button.src = "minus.gif";
-    n.display = "block";
-   }
-   else
-   {
-    button.src = "plus.gif";
-    n.display = "none";
-   }
+
+var rspace = /\s\s+/g,
+	  rtrim = /^\s+|\s+$/g;
+
+function spaced(s) { return (" " + s + " ").replace(rspace, " "); }
+function trim(s)   { return s.replace(rtrim, ""); }
+
+function hasClass(elem, value) {
+  var className = spaced(elem.className || "");
+  return className.indexOf( " " + value + " " ) >= 0;
 }
+
+function addClass(elem, value) {
+  var className = spaced(elem.className || "");
+  if ( className.indexOf( " " + value + " " ) < 0 ) {
+    elem.className = trim(className + " " + value);
+  }
+}
+
+function removeClass(elem, value) {
+  var className = spaced(elem.className || "");
+  className = className.replace(" " + value + " ", " ");
+  elem.className = trim(className);
+}
+
+function toggleClass(elem, valueOn, valueOff, bool) {
+  if (bool == null) { bool = ! hasClass(elem, valueOn); }
+  if (bool) {
+    removeClass(elem, valueOff);
+    addClass(elem, valueOn);
+  }
+  else {
+    removeClass(elem, valueOn);
+    addClass(elem, valueOff);
+  }
+  return bool;
+}
+
+
+function makeClassToggle(valueOn, valueOff)
+{
+  return function(elem, bool) {
+    return toggleClass(elem, valueOn, valueOff, bool);
+  }
+}
+
+toggleShow = makeClassToggle("show", "hide");
+toggleCollapser = makeClassToggle("collapser", "expander");
+
+function toggleSection(id)
+{
+  var b = toggleShow(document.getElementById("section." + id))
+  toggleCollapser(document.getElementById("control." + id), b)
+  return b;
+}
+
+
+function setCookie(name, value) {
+  document.cookie = name + "=" + escape(value) + ";path=/;";
+}
+
+function clearCookie(name) {
+  document.cookie = name + "=;path=/;expires=Thu, 01-Jan-1970 00:00:01 GMT;";
+}
+
+function getCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0;i < ca.length;i++) {
+    var c = ca[i];
+    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+    if (c.indexOf(nameEQ) == 0) {
+      return unescape(c.substring(nameEQ.length,c.length));
+    }
+  }
+  return null;
+}
+
 
 
 var max_results = 75; // 50 is not enough to search for map in the base libraries
@@ -134,6 +198,114 @@ function perform_search(full)
 
 function setSynopsis(filename) {
     if (parent.window.synopsis) {
-      parent.window.synopsis.location = filename;
+        if (parent.window.synopsis.location.replace) {
+            // In Firefox this avoids adding the change to the history.
+            parent.window.synopsis.location.replace(filename);
+        } else {
+            parent.window.synopsis.location = filename;
+        }
     }
 }
+
+function addMenuItem(html) {
+  var menu = document.getElementById("page-menu");
+  if (menu) {
+    var btn = menu.firstChild.cloneNode(false);
+    btn.innerHTML = html;
+    menu.appendChild(btn);
+  }
+}
+
+function adjustForFrames() {
+  var bodyCls;
+  
+  if (parent.location.href == window.location.href) {
+    // not in frames, so add Frames button
+    addMenuItem("<a href='#' onclick='reframe();return true;'>Frames</a>");
+    bodyCls = "no-frame";
+  }
+  else {
+    bodyCls = "in-frame";
+  }
+  addClass(document.body, bodyCls);
+}
+
+function reframe() {
+  setCookie("haddock-reframe", document.URL);
+  window.location = "frames.html";
+}
+
+function postReframe() {
+  var s = getCookie("haddock-reframe");
+  if (s) {
+    parent.window.main.location = s;
+    clearCookie("haddock-reframe");
+  }
+}
+
+function styles() {
+  var i, a, es = document.getElementsByTagName("link"), rs = [];
+  for (i = 0; a = es[i]; i++) {
+    if(a.rel.indexOf("style") != -1 && a.title) {
+      rs.push(a);
+    }
+  }
+  return rs;
+}
+
+function addStyleMenu() {
+  var as = styles();
+  var i, a, btns = "";
+  for(i=0; a = as[i]; i++) {
+    btns += "<li><a href='#' onclick=\"setActiveStyleSheet('"
+      + a.title + "'); return false;\">"
+      + a.title + "</a></li>"
+  }
+  if (as.length > 1) {
+    var h = "<div id='style-menu-holder'>"
+      + "<a href='#' onclick='styleMenu(); return false;'>Style &#9662;</a>"
+      + "<ul id='style-menu' class='hide'>" + btns + "</ul>"
+      + "</div>";
+    addMenuItem(h);
+  }
+}
+
+function setActiveStyleSheet(title) {
+  var as = styles();
+  var i, a, found;
+  for(i=0; a = as[i]; i++) {
+    a.disabled = true;
+          // need to do this always, some browsers are edge triggered
+    if(a.title == title) {
+      found = a;
+    }
+  }
+  if (found) {
+    found.disabled = false;
+    setCookie("haddock-style", title);
+  }
+  else {
+    as[0].disabled = false;
+    clearCookie("haddock-style");
+  }
+  styleMenu(false);
+}
+
+function resetStyle() {
+  var s = getCookie("haddock-style");
+  if (s) setActiveStyleSheet(s);
+}
+
+
+function styleMenu(show) {
+  var m = document.getElementById('style-menu');
+  if (m) toggleShow(m, show);
+}
+
+
+function pageLoad() {
+  addStyleMenu();
+  adjustForFrames();
+  resetStyle();
+}
+

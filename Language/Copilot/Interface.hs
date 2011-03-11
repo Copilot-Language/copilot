@@ -91,7 +91,7 @@ interpret streams n opts =
 
 compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
-  interface $ setC "-Wall" $ setO fileName -- $ setS (getSends streams)
+  interface $ setC "-Wall" $ setO fileName 
     $ setTriggers (getTriggers streams) 
       $ opts {optStreams = Just (getSpecs streams)}
 
