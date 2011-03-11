@@ -38,7 +38,6 @@ trigger' :: Spec Bool -> String -> Args -> Streams
 trigger' v fnName args =
   tell $ LangElems 
            emptySM 
-           emptySM 
            (M.insert (show trig) trig M.empty)
   where trig = Trigger v fnName args
 

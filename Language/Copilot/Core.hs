@@ -10,15 +10,15 @@
 module Language.Copilot.Core (
         Period, Var, Name, Port(..), Ext(..),
         Exs, ExtRet(..), Args, ArgConstVar(..),
-        Spec(..), Streams, Stream, Send(..), 
+        Spec(..), Streams, Stream, 
         Trigger(..), Triggers, LangElems(..),
 	Streamable(..), StreamableMaps(..), emptySM,
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, 
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, Vars,
-        getAtomType, getSpecs, getSends, getTriggers, vPre, funcShow,
-        getMaybeVar, notConstVarErr
+        getAtomType, getSpecs, getTriggers, vPre, funcShow,
+        notConstVarErr
     ) where
 
 import qualified Language.Atom as A
@@ -92,7 +92,12 @@ type Triggers = M.Map String Trigger
 
 instance Show Trigger where 
   show (Trigger s fnName args) =
-    "trigger_" ++ getMaybeVar s ++ "_" ++ fnName ++ "_" ++ normalizeVar (show args)
+    "trigger_" ++ notConstVarErr s show ++ "_" ++ fnName ++ "_" ++ normalizeVar (show args)
+
+  -- getMaybeVar :: Streamable a => Spec a -> Var
+  -- getMaybeVar (Var v) = v
+  -- getMaybeVar s = 
+  --   error $ "Expected a Copilot variable but provided " ++ show s ++ " instead."
 
 -- XXX change the constructors to SimpleVar and Function (or something like that)
 -- XXX in Ext, we throw away the type info for Args.  This is because we're just
@@ -164,33 +169,26 @@ instance Eq a => Eq (Spec a) where
     (==) (Drop i s) (Drop i' s') = i == i' && s == s'
     (==) _ _ = False
 
--- | Get a variable name from a spec; throw an error otherwise.
-getMaybeVar :: Streamable a => Spec a -> Var
-getMaybeVar (Var v) = v
-getMaybeVar s = error $ "Expected a Copilot variable but provided " ++ show s ++ " instead."
-
 -- | Copilot variable reference, taking the name of the generated C file.
 vPre :: Name -> String
 vPre cName = "copilotState" ++ cName ++ "." ++ cName ++ "."
 
--- | An instruction to send data on a port at a given phase.  
--- data Send a = Sendable a => Send (Var, Phase, Port)
-data Send a =  
-  Send { sendVar  :: Spec a 
-       , sendPort :: Port
-       , sendName :: String}
+-- -- | An instruction to send data on a port at a given phase.  
+-- -- data Send a = Sendable a => Send (Var, Phase, Port)
+-- data Send a =  
+--   Send { sendVar  :: Spec a 
+--        , sendPort :: Port
+--        , sendName :: String}
 
-instance Streamable a => Show (Send a) where 
-  show (Send s (Port port) portName) = 
-    portName ++ "_port_" ++ show port ++ "_var_" ++ getMaybeVar s
+-- instance Streamable a => Show (Send a) where 
+--   show (Send s (Port port) portName) = 
+--     portName ++ "_port_" ++ show port ++ "_var_" ++ getMaybeVar s
                             
 -- | Holds all the different kinds of language elements that are pushed into the
--- Writer monad.  This currently includes the actual specs, "send" directives,
--- and trigger directives. (Use the functions in Language.hs to make sends and
--- triggers.)
+-- Writer monad.  This currently includes the actual specs and trigger
+-- directives. (Use the functions in Language.hs to make sends and triggers.)
 data LangElems = LangElems 
        { strms :: StreamableMaps Spec
-       , snds  :: StreamableMaps Send
        , trigs :: Triggers}
 
 -- | Container for mutually recursive streams, whose specifications may be
@@ -199,17 +197,12 @@ type Streams = Writer LangElems ()
 
 getSpecs :: Streams -> StreamableMaps Spec
 getSpecs streams = 
-  let (LangElems ss _ _) = execWriter streams
+  let (LangElems ss _) = execWriter streams
   in  ss
-
-getSends :: Streams -> StreamableMaps Send
-getSends streams = 
-  let (LangElems _ sendMap _) = execWriter streams
-  in  sendMap
 
 getTriggers :: Streams -> Triggers
 getTriggers streams = 
-  let (LangElems _ _ triggers) = execWriter streams
+  let (LangElems _ triggers) = execWriter streams
   in  triggers
 
 -- | A named stream
@@ -218,10 +211,10 @@ type Stream a = Streamable a => (Var, Spec a)
 -- | If the 'Spec' isn't a 'Var' or 'Const', then throw an error; otherwise,
 -- apply the function.
 notConstVarErr :: Streamable a => Spec a -> (ArgConstVar -> b) -> b
-notConstVarErr s f =
+notConstVarErr s f = f $
   case s of
-    Var v -> f (V v)
-    Const c -> f (C (showAsC c))
+    Var v -> V v
+    Const c -> C (showAsC c)
     _     -> error $ "You provided specification \n" ++ "  " ++ show s 
                         ++ "\n where you needed to give a Copilot variable or constant."
 
@@ -404,17 +397,17 @@ foldStreamableMaps :: forall b c.
     (Streamable a => Var -> c a -> b -> b) -> 
     StreamableMaps c -> b -> b
 foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
-    let acc0  = M.foldWithKey f acc  bm
-        acc1  = M.foldWithKey f acc0 i8m        
-        acc2  = M.foldWithKey f acc1 i16m
-        acc3  = M.foldWithKey f acc2 i32m
-        acc4  = M.foldWithKey f acc3 i64m
-        acc5  = M.foldWithKey f acc4 w8m
-        acc6  = M.foldWithKey f acc5 w16m
-        acc7  = M.foldWithKey f acc6 w32m
-        acc8  = M.foldWithKey f acc7 w64m
-        acc9  = M.foldWithKey f acc8 fm      
-        acc10 = M.foldWithKey f acc9 dm
+    let acc0  = M.foldrWithKey f acc  bm
+        acc1  = M.foldrWithKey f acc0 i8m        
+        acc2  = M.foldrWithKey f acc1 i16m
+        acc3  = M.foldrWithKey f acc2 i32m
+        acc4  = M.foldrWithKey f acc3 i64m
+        acc5  = M.foldrWithKey f acc4 w8m
+        acc6  = M.foldrWithKey f acc5 w16m
+        acc7  = M.foldrWithKey f acc6 w32m
+        acc8  = M.foldrWithKey f acc7 w64m
+        acc9  = M.foldrWithKey f acc8 fm      
+        acc10 = M.foldrWithKey f acc9 dm
     in acc10
 
 {-# INLINE mapStreamableMaps #-}
@@ -492,16 +485,16 @@ instance Monoid (StreamableMaps Spec) where
   mappend x y = overlap x y
 
 instance Monoid LangElems where
-  mempty = LangElems emptySM emptySM M.empty
-  mappend (LangElems x y z) (LangElems x' y' z') = 
-    LangElems (overlap x x') (overlap y y') (M.union z z') -- XXX should we test for the same key? 
+  mempty = LangElems emptySM M.empty
+  mappend (LangElems x z) (LangElems x' z') = 
+    LangElems (overlap x x') (M.union z z') 
 overlap :: StreamableMaps s -> StreamableMaps s -> StreamableMaps s 
 overlap x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) 
         y@(SM bm' i8m' i16m' i32m' i64m' w8m' w16m' w32m' w64m' fm' dm') =
   let multDefs = (getVars x `intersect` getVars y)
   in  if null multDefs then union
-        else error $ "Copilot error: The variables " 
-                                   ++ show multDefs ++ " have multiple definitions."
+        else error $    "Copilot error: The variables " 
+                     ++ show multDefs ++ " have multiple definitions."
   where union = SM (M.union bm bm') (M.union i8m i8m') (M.union i16m i16m') 
                    (M.union i32m i32m') (M.union i64m i64m') (M.union w8m w8m') 
                    (M.union w16m w16m') (M.union w32m w32m') (M.union w64m w64m') 

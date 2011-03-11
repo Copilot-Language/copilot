@@ -71,9 +71,19 @@ t5 = do
   trigger z "z1_trigger" (y <> constW16 3 <> x)
   
 yy :: Streams
-yy = 
-  let a = varW64 "a"
-  in  do a .= 4  
+yy = do
+  let a = varW32 "a"
+--      ans2 = varW32 "ans2"
+  a .= [3,5] ++ a + 1
+--  ans2 .= a
+
+maj1 :: Streams
+maj1 = do
+  let v0  = varW32 "v0"
+      ans2 = varW32 "ans2"
+  v0  .= [3,7] ++ v0 + 1
+  ans2 .= v0
+
 
 zz :: Streams
 zz = do
@@ -114,8 +124,8 @@ distrib = do
   a .= [0,1] ++ a + 1
   b .= mod a 2 == 0 
   -- sends
-  send "portA" (port 2) a 
-  send "portB" (port 1) b 
+  trigger true "portA" a 
+  trigger true "portB" b
 
 monitor :: Streams
 monitor = do

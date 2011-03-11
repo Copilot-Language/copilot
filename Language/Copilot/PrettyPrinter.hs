@@ -14,17 +14,17 @@ instance (Show (a Bool), Show (a Int8), Show (a Int16), Show (a Int32), Show (a 
     Show (a Word8), Show (a Word16), Show (a Word32), Show (a Word64), 
     Show (a Float), Show (a Double)) => Show (StreamableMaps a) where
         show (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
-            let acc0 = M.foldWithKey showVal "" bm
-                acc1 = M.foldWithKey showVal acc0 i8m        
-                acc2 = M.foldWithKey showVal acc1 i16m
-                acc3 = M.foldWithKey showVal acc2 i32m
-                acc4 = M.foldWithKey showVal acc3 i64m
-                acc5 = M.foldWithKey showVal acc4 w8m
-                acc6 = M.foldWithKey showVal acc5 w16m
-                acc7 = M.foldWithKey showVal acc6 w32m
-                acc8 = M.foldWithKey showVal acc7 w64m
-                acc9 = M.foldWithKey showVal acc8 fm      
-                acc10 = M.foldWithKey showVal acc9 dm
+            let acc0 = M.foldrWithKey showVal "" bm
+                acc1 = M.foldrWithKey showVal acc0 i8m        
+                acc2 = M.foldrWithKey showVal acc1 i16m
+                acc3 = M.foldrWithKey showVal acc2 i32m
+                acc4 = M.foldrWithKey showVal acc3 i64m
+                acc5 = M.foldrWithKey showVal acc4 w8m
+                acc6 = M.foldrWithKey showVal acc5 w16m
+                acc7 = M.foldrWithKey showVal acc6 w32m
+                acc8 = M.foldrWithKey showVal acc7 w64m
+                acc9 = M.foldrWithKey showVal acc8 fm      
+                acc10 = M.foldrWithKey showVal acc9 dm
             in acc10
             where
                 showVal :: (Streamable a, Show (b a)) => Var -> b a -> String -> String

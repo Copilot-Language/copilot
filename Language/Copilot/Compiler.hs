@@ -19,7 +19,7 @@ import qualified Language.Atom as A
 -- | Compiles an /Copilot/ specification to an /Atom/ one.
 -- The period is given as a Maybe : if it is Nothing, an optimal period will be chosen.
 copilotToAtom :: LangElems -> Maybe Period -> Name -> (Period, A.Atom ()) 
-copilotToAtom (LangElems streams sends triggers) p cFileName = 
+copilotToAtom (LangElems streams triggers) p cFileName = 
   (p', A.period p' $ do
     prophArrs <- mapStreamableMapsM initProphArr streams
     outputs <- mapStreamableMapsM initOutput streams
@@ -31,7 +31,8 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
                     (return emptyTmpSamples)
 
     let nextStates = makeStates $ 
-          mapStreamableMaps (nextSt streams prophArrs tmpSamples outputIndexes 0) 
+          mapStreamableMaps 
+            (nextSt streams prophArrs tmpSamples outputIndexes 0) 
             streams
 
     -- One atom rule for each stream
@@ -41,23 +42,17 @@ copilotToAtom (LangElems streams sends triggers) p cFileName =
 
     M.fold (makeTrigger outputs cFileName) (return ()) triggers
            
-    foldStreamableMaps (makeSend outputs) sends (return ())
-
     -- Sampling of the external variables.  Remove redundancies.
     sequence_ $ snd . unzip $ nubBy (\x y -> fst x == fst y) $ 
       foldStreamableMaps (\_ -> sampleExts outputs tmpSamples cFileName) streams []
     )
   where p' = period p
---  where
---    optP = getOptimalPeriod streams sends
-
 
 -- | For period n >= 5:
 -- Phase 0: Sample external vars (if any).
 -- Phase 1: state update.
 -- Phase 2: Compute output variables.
 -- Phase 3: Fire triggers (if any).
--- Phase 3: send values (if any).
 -- Phase 4 up to n: update indexes.
 period :: Maybe Int -> Int
 period p = 
@@ -80,58 +75,6 @@ type Indexes = M.Map Var (A.V ArrIndex)
 data PhasedValueVar a = PhV (A.V a)
 
 data BoundedArray a = B ArrIndex (Maybe (A.A a))
-
--- nextSt :: Streamable a => StreamableMaps Spec -> ProphArrs -> TmpSamples -> Indexes 
---        -> Spec a -> ArrIndex -> A.E a
--- nextSt streams prophArrs tmpSamples outputIndexes s index = 
---     case s of
---         PVar _ v  -> 
---           let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
---           A.value var
---         PArr _ (v, idx) -> 
---           let PhA var = e tmp (tmpArrs tmpSamples) 
---               tmp = tmpArrName v (show idx) 
---               e a b = case getMaybeElem a b of
---                         Nothing -> 
---                           error "Error in application of getElem in nextSt."
---                         Just x  -> x 
---           in A.value var
---         Var v -> nextStVar v streams prophArrs tmpSamples outputIndexes index
---         Const e -> A.Const e
---         F _ f s0 -> f $ next s0 index 
---         F2 _ f s0 s1 -> 
---             f (next s0 index) 
---               (next s1 index)
---         F3 _ f s0 s1 s2 -> 
---             f (next s0 index) 
---               (next s1 index) 
---               (next s2 index)
---         Append _ s0 -> next s0 index
---         Drop i s0 -> next s0 (fromInteger (toInteger i) + index)
---     where next :: Streamable b => Spec b -> ArrIndex -> A.E b
---           next = nextSt streams prophArrs tmpSamples outputIndexes
-
--- nextStVar v streams prophArrs tmpSamples outputIndexes index = 
---   let B initLen maybeArr = getElem v prophArrs in
---   -- This check is extremely important It means that if x at time n depends on y
---   -- at time n then x is obtained not by y, but by inlining the definition of y
---   -- so it increases the size of code (sadly), but is the only thing preventing
---   -- race conditions from occuring
---   if index < initLen
---     then getVar v initLen maybeArr 
---     else let s0 = getElem v streams in 
---          nextSt streams prophArrs tmpSamples outputIndexes s0 (index - initLen)
---   where getVar :: Streamable a => Var -> ArrIndex -> Maybe (A.A a) -> A.E a
---         getVar v initLen maybeArr =
---            let outputIndex = case M.lookup v outputIndexes of
---                                Nothing -> error "Error in function getVar."
---                                Just x -> x
---                arr = case maybeArr of
---                        Nothing -> error "Error in function getVar (maybeArr)."
---                        Just x -> x in 
---            arr A.!. ((A.Const index + A.VRef outputIndex) `A.mod_`  
---                        (A.Const (initLen + 1)))
-
 
 -- | Takes the NextSts and walks over the tree building the Atom expression.  
 makeStates :: StreamableMaps NextSt -> StreamableMaps A.E
@@ -339,7 +282,6 @@ makeOutputIndex v (B _ arr) indexes =
                 index <- atomConstructor ("outputIndex__" ++ normalizeVar v) 0
                 return $ M.insert v index mindexes
 
---        where nextSt' = nextSt streams prophArrs tmpSamples outputIndexes s 0
 makeRule :: forall a. Streamable a => 
     StreamableMaps A.E -> Outputs -> ProphArrs
     -> Indexes -> Indexes -> Var -> Spec a -> A.Atom () -> A.Atom ()
@@ -350,7 +292,7 @@ makeRule exps outputs prophArrs updateIndexes outputIndexes v _ r = do
         Nothing ->
             -- Fusing together the update and the output if the prophecy array doesn't exist 
             -- (ie if it would only have hold the output value)
-            A.exactPhase 2 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
+            A.exactPhase 1 $ A.atom ("updateOutput__" ++ normalizeVar v) $ do
                 ((getElem v outputs)::(A.V a)) A.<== getElem v exps
 
         Just arr -> do
@@ -369,21 +311,6 @@ makeRule exps outputs prophArrs updateIndexes outputIndexes v _ r = do
               $ A.atom ("incrUpdateIndex__" ++ normalizeVar v) $ do
                 updateIndex A.<==          (A.VRef updateIndex + A.Const 1) 
                                   `A.mod_` A.Const (n + 1)
-             
-makeSend :: forall a. Streamable a 
-         => Outputs -> String -> Send a -> A.Atom () -> A.Atom ()
-makeSend outputs name (Send v port portName) r = do
-        r 
-        A.exactPhase 3 $ A.atom ("__send_" ++ name) $
-            mkSend (A.value $ getElem (getMaybeVar v) outputs :: A.E a) 
-                   port 
-                   portName
-
--- | Sending data over ports.
-mkSend :: (Streamable a) => A.E a -> Port -> String -> A.Atom ()
-mkSend e (Port port) portName =
-  A.action (\ueStr -> portName ++ "(" ++ head ueStr ++ "," ++ show port ++ ")") 
-           [A.ue e]
 
 sampleStr :: String
 sampleStr = "sample__"
@@ -403,7 +330,6 @@ sampleExts outputs ts cFileName s a = do
     Const _ -> a
     PVar _ v -> 
      let v' = tmpVarName v
---         PhV var = getElem v' (tmpVars ts) :: PhasedValueVar a in
          PhV var = case getMaybeElem v' (tmpVars ts) :: Maybe (PhasedValueVar a) of 
                      Nothing ->  error $ "Copilot error: variable " ++ v' 
                                    ++ " was not defined!."
@@ -430,14 +356,15 @@ sampleExts outputs ts cFileName s a = do
                          sampleExts' s2 a
     Append _ s0 -> sampleExts' s0 a
     Drop _ s0 -> sampleExts' s0 a
-  where -- minSampPh :: Int
-        --minSampPh = 2
-        sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
-        getSampleFuncVar v = case v of
-                               ExtV extV -> extV
-                               -- XXX A bit of a hack.  Atom should be changed to allow
-                               -- "out-of-Atom" assignments.  But this works for now.
-                               Fun nm args -> funcShow cFileName nm args
+  where 
+    sampleExts' :: Streamable b => Spec b -> [(Var, A.Atom ())] -> [(Var, A.Atom ())]
+    sampleExts' s' a' = sampleExts outputs ts cFileName s' a'
+    getSampleFuncVar v = 
+      case v of
+        ExtV extV -> extV
+        -- XXX A bit of a hack.  Atom should be changed to allow "out-of-Atom"
+        -- assignments.  But this works for now.
+        Fun nm args -> funcShow cFileName nm args
 
 
 -- lookup the idx for external array accesses in the map.
