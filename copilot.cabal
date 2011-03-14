@@ -1,6 +1,6 @@
 name:                copilot
-version:             1.0.1
-cabal-version:       >= 1.2
+version:             1.0.2
+cabal-version:       >= 1.6
 license:             BSD3
 license-file:        LICENSE
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller
@@ -30,6 +30,10 @@ description:         Can you write a list in Haskell? Then you can write embedde
                      code.
 
 extra-source-files:  README
+
+source-repository head
+    type:       git
+    location:   git://github.com/leepike/Copilot.git
 
 library
     ghc-options:     -Wall
