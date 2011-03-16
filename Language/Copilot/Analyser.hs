@@ -407,6 +407,7 @@ mkDepGraph streams =
                 Nothing -> fromJust $ find ((==) (InternalVar v [])) dGFixpoint
                 Just ph -> fromJust $ find ((==) (ExternalVar v ph)) dGFixpoint -}
 
+checkVarName :: SourceName -> Maybe Error
 checkVarName varName =
     let checkVarName' = nondigit
                         >> many ( nondigit <|> digit )
