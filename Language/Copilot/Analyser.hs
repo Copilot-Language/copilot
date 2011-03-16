@@ -17,13 +17,16 @@ import Language.Copilot.Core
 
 import Data.List
 import Data.Maybe(mapMaybe)
+import Text.ParserCombinators.Parsec
 
 type Weight = Int
 
 -- | Used for representing an error in the specification, detected by @'check'@
 data Error =
       BadSyntax String Var -- ^ the BNF is not respected
-    | BadDrop Int Var -- ^ A drop expression of less than 0 is used
+    | BadVarName String    -- ^ The name of the variable has not valid syntax
+                           -- for C identifiers
+    | BadDrop Int Var      -- ^ A drop expression of less than 0 is used
     | BadPArrSpec Var Ext String -- ^ External array indexes can only take
                                  -- variables or constants as indexes.
     | BadType Var String -- ^ either a variable is not defined, or not with the
@@ -54,6 +57,8 @@ instance Show Error where
        unlines
         ["Error syntax : " ++ s ++ " is not allowed in that position in stream "
          ++ v ++ "."]
+    show (BadVarName s) =
+        "Error in stream variable name syntax : " ++ s ++ "."
     show (BadDrop i v) =
        unlines
         [ "Error : a Drop in stream " ++ v ++ " drops the number " ++ show i ++
@@ -158,10 +163,10 @@ syntaxCheck streams =
         checkSyntaxSpec set v s e =
             e &&>
                 case s of
-                    Var _ -> Nothing
-                    Const _ -> Nothing
-                    PVar _ _ -> Nothing -- checkSampling s0
-                    PArr _ (arr,s0) -> checkIndex v arr s0
+                    Var   varName    -> checkVarName varName
+                    Const _          -> Nothing
+                    PVar  _ _        -> Nothing -- checkSampling s0
+                    PArr  _ (arr,s0) -> checkIndex v arr s0
 -- case chkInitElem streams (getElem v streams `asTypeOf` s0) of
 --                                       Left ()  -> Just $ NoInit (show arr) v
 --                                       Right () -> Nothing
@@ -401,3 +406,13 @@ mkDepGraph streams =
              case mp of
                 Nothing -> fromJust $ find ((==) (InternalVar v [])) dGFixpoint
                 Just ph -> fromJust $ find ((==) (ExternalVar v ph)) dGFixpoint -}
+
+checkVarName varName =
+    let checkVarName' = nondigit
+                        >> many ( nondigit <|> digit )
+                        >> return ()
+        nondigit      = char '_' <|> letter
+    in
+    case parse checkVarName' varName varName of
+      Right ()  -> Nothing
+      Left  err -> Just $ BadVarName $ show err
