@@ -36,8 +36,11 @@ data NumSym t = NumSym { symbolNum :: Maybe Int
                        } deriving ( Eq )
 
 instance Show t => Show ( NumSym t ) where
-    show s     = show ( symbol s ) ++ "_" ++ show ( fromJust $ symbolNum s )
-
+    show s     = "rsym_"
+                 ++ ( replace '-' '_' . show . symbol ) s
+                 ++ "_"
+                 ++ show ( fromJust $ symbolNum s )
+        where replace c1 c2 = map ( \ c -> if c == c1 then c2 else c )
 
 -- The regular expression data type. For our use
 -- regular expressions describing a language with
@@ -274,12 +277,11 @@ enumSyms rexp = evalState ( enumSyms' rexp ) 0
         return other
 
 
--- TODO: get the reset right
 regexp2CopilotNFA inStream rexp outStream reset =
     let symbols                    = getSymbols rexp
         ref                        = C.var . show
-        startRef                   = ref "start"
-        startStream                = startRef C..= reset
+        startRef                   = C.var "start"
+        startStream                = startRef  C..= reset
         outStream'                 = outStream C..=
                                      foldl ( C.|| ) reset ( map ref symbols )
 
@@ -298,8 +300,8 @@ regexp2CopilotNFA inStream rexp outStream reset =
                                        ( preceding' rexp numSym ) )
 
         spec         numSym        = [ False ] C.++
-                                     -- C.mux reset
-                                     -- ( Const False )
+                                     C.mux ( C.drop 1 reset )
+                                     ( Const False )
                                      ( transition numSym )
         stream       numSym        = ref numSym C..= spec numSym
         streams                    = map stream symbols
