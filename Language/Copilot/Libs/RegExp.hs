@@ -86,7 +86,7 @@ optCPrefix :: GenParser tok () Char
 optCPrefix p p' = optionMaybe p
                   >>= \ r -> case r of
                                Nothing -> p'
-                               Just c  -> p' >>= return . ( c: )
+                               Just c  -> fmap ( c : ) p'
 
 -- The ci function ("case insensitive") takes one argument of
 -- type string, parses for the string in a case insensitive
@@ -119,9 +119,9 @@ class Streamable t => SymbolParser t where
     parseSym   :: GenParser Char () ( RegExp t )
 
 instance SymbolParser Bool where
-    parseSym = do { truth <- ( ci "t" >> ( optional $ ci "rue" )
+    parseSym = do { truth <- ( ci "t" >> optional ( ci "rue" )
                                >> return True )
-                              <|> ( ci "f" >> ( optional $ ci "alse" )
+                              <|> ( ci "f" >> optional ( ci "alse" )
                                     >> return False )
                               <|> ( string "1" >> return True )
                               <|> ( string "0" >> return False )
@@ -132,7 +132,7 @@ instance SymbolParser Bool where
 parseWordSym :: ( Integral t, Streamable t )
                 => GenParser Char () ( RegExp t )
 parseWordSym = do { num <- between lquote rquote $ many1 digit
-                  ; return . RSymbol . ( NumSym Nothing . Sym )
+                  ; return . RSymbol . NumSym Nothing . Sym
                     $ fromIntegral ( read num :: Integer )
                   }
 
@@ -140,7 +140,7 @@ parseIntSym :: ( Integral t, Streamable t )
                 => GenParser Char () ( RegExp t )
 parseIntSym = do { num <- between lquote rquote $
                           optCPrefix minus ( many1 digit )
-                 ; return . RSymbol . ( NumSym Nothing . Sym )
+                 ; return . RSymbol . NumSym Nothing . Sym
                    $ fromIntegral ( read num :: Integer )
                  }
 
@@ -228,10 +228,10 @@ follow   REpsilon         _   = []
 follow ( RSymbol  _     ) _   = []
 follow ( ROr      r1 r2 ) sNr = follow r1 sNr ++ follow r2 sNr
 follow ( RConcat  r1 r2 ) sNr = follow r1 sNr ++ follow r2 sNr
-                                ++ if sNr `elem` ( last' r1 ) then
+                                ++ if sNr `elem` last' r1 then
                                        first r2 else []
 follow ( RStar    r     ) sNr = follow r sNr
-                                `union` if sNr `elem` ( last' r ) then
+                                `union` if sNr `elem` last' r then
                                             first r else []
 
 
@@ -297,8 +297,8 @@ regexp2CopilotNFA inStream rexp outStream reset =
 
         transition   numSym        = matchesInput numSym
                                      C.&&
-                                     ( foldl1 ( C.|| )
-                                       ( preceding' rexp numSym ) )
+                                     foldl1 ( C.|| )
+                                       ( preceding' rexp numSym )
 
         spec         numSym        = [ False ] C.++
                                      C.mux ( C.drop 1 reset )
