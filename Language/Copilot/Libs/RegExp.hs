@@ -1,5 +1,3 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-
 module Language.Copilot.Libs.RegExp ( copilotRegexp ) where
 
 
@@ -35,6 +33,9 @@ data NumSym t = NumSym { symbolNum :: Maybe Int
                        , symbol    :: Sym t
                        } deriving ( Eq )
 
+-- A show instance for the numbered symbol type, converts a numbered
+-- symbol type into a valid C identifier string to be used as a
+-- Copilot variable name
 instance Show t => Show ( NumSym t ) where
     show s     = "rsym_"
                  ++ ( replace '-' '_' . show . symbol ) s
