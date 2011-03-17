@@ -411,6 +411,7 @@ checkVarName :: SourceName -> Maybe Error
 checkVarName varName =
     let checkVarName' = nondigit
                         >> many ( nondigit <|> digit )
+                        >> eof
                         >> return ()
         nondigit      = char '_' <|> letter
     in
