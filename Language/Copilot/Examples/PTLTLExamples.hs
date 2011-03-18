@@ -96,20 +96,21 @@ tSinExt2 = do
 -- the cooler is engaged and remains engaged until the majority of the engine
 -- temperature drops to 250 or below.  Otherwise, trigger an immediate shutdown
 -- of the engine."
+-- external vars
+t0       = extW8 "temp_probe_0"
+t1       = extW8 "temp_probe_1"
+t2       = extW8 "temp_probe_2"
+cooler   = extB  "fan_status"
+-- Copilot vars
+maj      = varW8 "maj"
+check    = varB  "maj_check"
+overHeat = varB  "over_heat"
+monitor  = varB  "monitor"
+
+
 engine :: Streams
 engine = do
-  -- external vars
-  let t0       = extW8 "temp_probe_0"
-      t1       = extW8 "temp_probe_1"
-      t2       = extW8 "temp_probe_2"
-      cooler   = extB  "fan_status"
-  -- Copilot vars
-      maj      = varW8 "maj"
-      check    = varB  "maj_check"
-      overHeat = varB  "over_heat"
-      monitor  = varB  "monitor"
-  -- local vars
-      temps    = [t0, t1, t2]
+  let temps = [t0, t1, t2] -- local vars
   maj      .= majority temps
   check    .= aMajority temps maj
   overHeat `ptltl` (        (cooler || (maj <= 250 && check)) 
