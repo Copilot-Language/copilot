@@ -46,23 +46,24 @@ data Port = Port Int
 -- | Specification of a stream, parameterized by the type of the values of the stream.
 -- The only requirement on @a@ is that it should be 'Streamable'.
 data Spec a where
-    Var :: Streamable a => Var -> Spec a
+    Var   :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
 
     PVar :: Streamable a => A.Type -> Ext -> Spec a
     PArr :: (Streamable a, Streamable b, A.IntegralE b) 
          => A.Type -> (Ext, Spec b) -> Spec a
 
-    F :: (Streamable a, Streamable b) => 
-	    (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
-    F2 :: (Streamable a, Streamable b, Streamable c) => 
-        (b -> c -> a) -> (A.E b -> A.E c -> A.E a) -> Spec b -> Spec c -> Spec a
-    F3 :: (Streamable a, Streamable b, Streamable c, Streamable d) => 
-        (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a) 
-                           -> Spec b -> Spec c -> Spec d -> Spec a
+    F  :: (Streamable a, Streamable b) 
+       => (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
+    F2 :: (Streamable a, Streamable b, Streamable c) 
+       =>      (b -> c -> a) -> (A.E b -> A.E c -> A.E a) 
+            -> Spec b -> Spec c -> Spec a
+    F3 :: (Streamable a, Streamable b, Streamable c, Streamable d) 
+       =>      (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a) 
+            -> Spec b -> Spec c -> Spec d -> Spec a
 
     Append :: Streamable a => [a] -> Spec a -> Spec a
-    Drop :: Streamable a => Int -> Spec a -> Spec a
+    Drop   :: Streamable a => Int -> Spec a -> Spec a
 
 -- | Arguments to be passed to a C function.  Either a Copilot variable or a
 -- constant.  A little hacky that I store constants as strings so we don't have
