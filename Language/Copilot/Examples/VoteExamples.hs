@@ -22,6 +22,8 @@ maj0 = do
   v .= majority ls
   b .= aMajority ls 3
 
+main = interpret maj1 20 baseOpts
+
 -- | Computes an alleged majority over streams and determines if the computed
 -- value is the majority.
 maj1 :: Streams
@@ -33,9 +35,11 @@ maj1 = do
       v4  = varW32 "v4"
       v5  = varW32 "v5"
       v6  = varW32 "v6"
+      v7  = varW32 "v7"
+      v8  = varW32 "v8"
       ans = varW32 "ans"
       chk = varB "chk"
-      ls = [v0, v1, v2, v3, v4, v5, v6] --, v7] --, v8, v9, v10, v11, v12]
+      ls = [v0, v1, v2, v3, v4, v5, v6] --, v7, v8] --, v9, v10, v11, v12]
   v0  .= [3,7] ++ v0 
   v1  .= [7] ++ v1 
   v2  .= [1] ++ v2 + 1
@@ -43,8 +47,9 @@ maj1 = do
   v4  .= [1] ++ v4 + 1
   v5  .= [3] ++ v5 + 1
   v6  .= [3] ++ v6 + 1
+  v7  .= [3] ++ v7 + 1
+  v8  .= [3] ++ v8 + 1
   ans .= majority ls
---  ans2 .= v0
   chk .= aMajority ls ans
 
 maj2 :: Streams

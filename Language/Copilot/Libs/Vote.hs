@@ -5,7 +5,7 @@ module Language.Copilot.Libs.Vote
 
 import Prelude 
   ( ($), fromIntegral, error, length, otherwise
-  , Bounded(..), maxBound, minBound, Int)
+  , Bounded(..), maxBound, minBound, Int, map)
 import Data.List (replicate, foldl')
 import qualified Prelude as P 
 import Data.Word
@@ -28,17 +28,14 @@ majority' (x:xs) candidate cnt =
   majority' xs (mux (cnt == 0) x candidate)
                (mux (cnt == 0 || x == candidate) (cnt + 1) (cnt - 1))
 
+-- | Is the candidate majority value the actual majority value?
 aMajority :: (Streamable a, A.EqE a) => [Spec a] -> Spec a -> Spec Bool
 aMajority [] _ = 
   error "Error in aMajority: list of arguments must be nonempty."
 aMajority ls candidate = 
-    (foldl' (\cnt x -> mux (x == candidate)
-                           (cnt + 1)
-                           cnt :: Spec Word32
-            ) 0 ls
-    ) * 2
-  > (fromIntegral $ length ls)
-
+  let m = map (\v -> mux (v == candidate) 1 (0 :: Spec Word32)) ls in
+  (foldl' (+) 0 m) * 2 > (fromIntegral $ length ls)
+  
 -- | Fault-tolerant average.  Throw away the bottom and top @n@ elements and
 -- take the average of the rest.  Return an error if there are less than @2 * n
 -- + 1@ elements in the list.
