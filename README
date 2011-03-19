@@ -51,6 +51,10 @@ and you should see index.html.
 Release notes
 *******************************************************************************
 
+* Copilot-1.0.3
+  * Integrated seni's regular expression-to-Copilot compiler.
+  * Improved efficiency for Voting library.
+
 * Copilot-1.0.2
   * Fixed a major compilation bug.
   * Upgraded to GHC 7.0.2 (Haskell Platform).
