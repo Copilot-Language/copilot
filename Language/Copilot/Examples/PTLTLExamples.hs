@@ -9,6 +9,7 @@ import Data.Map (fromList)
 import Language.Copilot hiding (check)
 import Language.Copilot.Libs.PTLTL
 import Language.Copilot.Libs.Vote
+import Data.Word
 
 -- Next examples are for testing of the ptLTL library
 
@@ -97,6 +98,8 @@ tSinExt2 = do
 -- temperature drops to 250 or below.  Otherwise, trigger an immediate shutdown
 -- of the engine."
 -- external vars
+t0, t1, t2, maj :: Spec Word8
+cooler, check, overHeat, monitor :: Spec Bool
 t0       = extW8 "temp_probe_0"
 t1       = extW8 "temp_probe_1"
 t2       = extW8 "temp_probe_2"
