@@ -48,6 +48,7 @@ library
                      , directory >= 1.0.0.0
                      , mtl >= 1.0.0.0
                      , filepath >= 1.0.0.0
+                     , parsec >= 2.0
 
     extensions:
     exposed-modules: Language.Copilot
@@ -73,6 +74,7 @@ library
                      Language.Copilot.Libs.Indexes
                      Language.Copilot.Libs.Statistics
                      Language.Copilot.Libs.Vote
+                     Language.Copilot.Libs.RegExp
                      Language.Copilot.Examples.Examples
                      Language.Copilot.Examples.LTLExamples
                      Language.Copilot.Examples.PTLTLExamples

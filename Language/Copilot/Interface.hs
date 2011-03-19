@@ -3,7 +3,7 @@
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
-        , help , setE, setC, setO, setP, setI, setCode, setN, setV, setR
+        , help, setE, setC, setO, setP, setI, setCode , setN, setV, setR
         , setDir, setGCC, setArrs, setClock, setSim,
         module Language.Copilot.Dispatch
     ) where
@@ -82,11 +82,11 @@ baseOpts = Options {
 -- Functions for making it easier for configuring copilot in the frequent use cases
 
 test :: Int -> Options -> IO ()
-test n opts = 
+test n opts =
   interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim opts 
 
 interpret :: Streams -> Int -> Options -> IO ()
-interpret streams n opts = 
+interpret streams n opts =
   interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
 
 compile :: Streams -> Name -> Options -> IO ()
@@ -115,8 +115,8 @@ verify file n opts = do
     where cmd = unwords ("cbmc" : args)
           args = ["--div-by-zero-check", "--overflow-check", "--bounds-check"
                  , "--nan-check", "--pointer-check"
-                 , "--unwind " ++ show n, opts, file] 
-                   
+                 , "--unwind " ++ show n, opts, file]
+
 
 -- Small functions for easy modification of the Options record
 
@@ -130,9 +130,9 @@ setTriggers triggers opts = opts {optTriggers = triggers}
 
 -- | Sets the environment for simulation by giving a mapping of external
 -- variables to lists of values. E.g.,
--- 
+--
 -- @ setE (emptySM {w32Map = fromList [(\"ext\", [0,1..])]}) ... @
--- 
+--
 -- sets the external variable names "ext" to take the natural numbers, up to the limit of Word32.
 setE :: Vars -> Options -> Options
 setE vs opts = opts {optExts = Just vs}
@@ -171,7 +171,7 @@ setI opts = opts {optInterpret = True}
 setN :: Int -> Options -> Options
 setN n opts = opts {optIterations = n}
 
--- | Set the verbosity level.  
+-- | Set the verbosity level.
 setV :: Verbose -> Options -> Options
 setV v opts = opts {optVerbose = v}
 
@@ -205,7 +205,7 @@ setSim opts = opts {optSimulate = True}
 interface :: Options -> IO ()
 interface opts =
     do
-        seed <- createSeed opts 
+        seed <- createSeed opts
         let (streams, vars) = getStreamsVars opts seed
 --            sends = optSends opts
             triggers = optTriggers opts
@@ -214,33 +214,33 @@ interface opts =
             verbose = optVerbose opts
         when (verbose == Verbose) $
             putStrLn $ "Random seed :" ++ show seed
-        -- dispatch is doing all the heavy plumbing between 
+        -- dispatch is doing all the heavy plumbing between
         -- analyser, compiler, interpreter, gcc and the generated program
         dispatch (LangElems streams triggers) vars backEnd iterations verbose 
 
 createSeed :: Options -> IO Int
 createSeed opts =
     case optRandomSeed opts of
-        Nothing -> 
+        Nothing ->
             do
-                g <- newStdGen 
+                g <- newStdGen
                 return . fst . random $ g
         Just i -> return i
 
 -- | Were streams given?  If not, just make random streams.
 getStreamsVars :: Options -> Int -> (StreamableMaps Spec, Vars)
-getStreamsVars opts seed = 
+getStreamsVars opts seed =
     case optStreams opts of
         Nothing -> randomStreams opsF opsF2 opsF3 (mkStdGen seed)
         Just s ->
             case optExts opts of
                 Nothing -> (s, emptySM)
                 Just vs -> (s, vs)
-        
+
 getBackend :: Options -> Int -> BackEnd
 getBackend opts seed =
     case optCompile opts of
-        Nothing -> 
+        Nothing ->
             if not $ optInterpret opts
                 then error "neither interpreted nor compiled: nothing to be done"
                 else Interpreter
