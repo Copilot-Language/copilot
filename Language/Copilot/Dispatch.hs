@@ -107,7 +107,6 @@ dispatch elems inputExts backEnd iterations verbose =
                         copy ".h"
                         delete ".c"
                         delete ".h"
---                        when (prePostCode opts == Nothing) $ gccCall (Opts opts)
                         when (sim opts) (gccCall (Opts opts))
                         when ((isInterpreted || isExecuted) && not allInputsPresents) $ 
                             error errMsg
@@ -157,8 +156,7 @@ gccCall backend =
     Interpreter -> error "Impossible: gccCall called with Interpreter."
     Opts opts   -> 
       let dirName = outputDir opts
-          programName = cName opts
-      in
+          programName = cName opts in
         do
           let command = compiler opts ++ " " ++ dirName ++ cName opts 
                         ++ ".c" ++ " -o " ++ dirName ++ programName 
