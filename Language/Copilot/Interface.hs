@@ -5,14 +5,14 @@ module Language.Copilot.Interface (
           Options(), baseOpts, test, interpret, compile, verify, interface
         , help, setE, setC, setO, setP, setI, setCode , setN, setV, setR
         , setDir, setGCC, setArrs, setClock, setSim,
-        module Language.Copilot.Dispatch
+--        module Language.Copilot.Dispatch 
     ) where
 
 import Language.Copilot.Core
 --import Language.Copilot.Language (opsF, opsF2, opsF3)
 import Language.Copilot.Language.RandomOps (opsF, opsF2, opsF3)
 import Language.Copilot.Tests.Random
-import Language.Copilot.Dispatch
+import Language.Copilot.Dispatch 
 import Language.Copilot.Help
 import qualified Language.Atom as A (Clock)
 

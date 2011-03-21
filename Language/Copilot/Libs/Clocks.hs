@@ -19,7 +19,7 @@
 -- The phase must be less than the period.
 
 module Language.Copilot.Libs.Clocks
-  ( clock, period
+  ( clock, period, phase
   ) where
 
 import Prelude (Int, error, String, show, (.), fromIntegral)
@@ -27,8 +27,7 @@ import qualified Prelude as P
 import Data.List (replicate)
 import Data.Int
 
-import Language.Copilot.Language
-import Language.Copilot.Core hiding (Period)
+import Language.Copilot 
 
 -- For testing.
 import Language.Copilot.Interface (interpret, baseOpts)
@@ -60,7 +59,7 @@ clock v (Period per, Phase ph) =
 clock' :: String -> Spec Bool -> (Period, Phase) -> Streams
 clock' clockName v (Period per, Phase ph) = do
   { let counter = varI32 ( clockName P.++ "_counter" )
-  ; counter .= [ 0 ] ++ ( mux ( counter /= ( Const . fromIntegral ) per - 1 )
+  ; counter .= [ 0 ] ++ ( mux ( counter /= ( fromIntegral ) per - 1 )
                               ( counter + 1 )
                               ( 0 ) )
   ; if (per P.< 1) then error ("Error in stream " P.++ (show v)
@@ -69,18 +68,6 @@ clock' clockName v (Period per, Phase ph) = do
                                    P.++ ": phase must be 0 or greater.")
          else if (ph P.>= per) then error ("Error in stream " P.++ (show v)
                                            P.++ ": phase must be less than period.")
-              else v .= counter == ( Const . fromIntegral ) ph
+              else v .= counter == ( fromIntegral ) ph
   }
 
-clkTest :: Streams
-clkTest = do
-  let x = varB "x"
-  let y = varB "y"
-  let z = varB "z"
-  let w = varB "w"
-  x `clock`  (period 3, phase 1)
-  y `clock`  (period 4, phase 3)
-  clock' "c1" z (period 4, phase 3)
-  clock' "c2" w (period 4, phase 3)
-
-test = interpret clkTest 10 baseOpts
