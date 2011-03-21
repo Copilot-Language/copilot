@@ -254,7 +254,6 @@ getBackend opts seed =
                 compiler  = optCompiler opts,
                 prePostCode = optPrePostCode opts,
                 sim = optSimulate opts,
---                triggers = optTriggers opts,
                 arrDecs = optArrs opts,
                 clock = optClock opts
                     }
