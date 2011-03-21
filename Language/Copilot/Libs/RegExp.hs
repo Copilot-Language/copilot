@@ -292,8 +292,8 @@ regexp2CopilotNFA inStream rexp outStream reset =
 
         matchesInput numSym        = case symbol numSym of
                                        Start -> error "start matched"
-                                       Any   -> Const True
-                                       Sym t -> inStream C.== Const t
+                                       Any   -> C.true
+                                       Sym t -> inStream C.== C.const t
 
         transition   numSym        = matchesInput numSym
                                      C.&&
@@ -302,8 +302,9 @@ regexp2CopilotNFA inStream rexp outStream reset =
 
         spec         numSym        = [ False ] C.++
                                      C.mux ( C.drop 1 reset )
-                                     ( Const False )
+                                     C.false 
                                      ( transition numSym )
+
         stream       numSym        = ref numSym C..= spec numSym
         streams                    = map stream symbols
     in foldl ( >> ) startStream streams >> outStream'
