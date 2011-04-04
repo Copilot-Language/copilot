@@ -15,12 +15,6 @@ import Data.Map (fromList)
 import Language.Copilot 
 -- import Language.Copilot.Variables
 
-bb = do
-  let x = varB "x"
-      y = varB "y"
-  x .= [False] ++ not x
-  y .= 
-
 fib :: Streams
 fib = do
   let f = varW64 "f"

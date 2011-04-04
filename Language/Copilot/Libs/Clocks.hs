@@ -23,11 +23,13 @@ module Language.Copilot.Libs.Clocks
   ) where
 
 import Prelude (Int, error, String, show, (.), fromIntegral)
+import Prelude (($))
 import qualified Prelude as P
 import Data.List (replicate)
 import Data.Int
 
 import Language.Copilot 
+import Language.Copilot.Core hiding (Period)
 
 -- For testing.
 import Language.Copilot.Interface (interpret, baseOpts)
@@ -52,22 +54,22 @@ clock v (Period per, Phase ph) =
       else if (ph P.>= per) then error ("Error in stream " P.++ (show v)
                                         P.++ ": phase must be less than period.")
              else v .= ((replicate ph False)
-                          P.++ (True : (replicate ((per - ph) - 1) False)) ++ v)
+                       P.++ (True : (replicate ((per - ph) - 1) False)) ++ v)
 
--- clock generates a clock that counts n ticks by using a
--- 32 bit counter variable
-clock' :: String -> Spec Bool -> (Period, Phase) -> Streams
-clock' clockName v (Period per, Phase ph) = do
-  { let counter = varI32 ( clockName P.++ "_counter" )
-  ; counter .= [ 0 ] ++ ( mux ( counter /= ( fromIntegral ) per - 1 )
-                              ( counter + 1 )
-                              ( 0 ) )
-  ; if (per P.< 1) then error ("Error in stream " P.++ (show v)
-                               P.++ ": period must be 1 or greater.")
-    else if (ph P.< 0) then error ("Error in stream " P.++ (show v)
-                                   P.++ ": phase must be 0 or greater.")
-         else if (ph P.>= per) then error ("Error in stream " P.++ (show v)
-                                           P.++ ": phase must be less than period.")
-              else v .= counter == ( fromIntegral ) ph
-  }
+-- -- clock generates a clock that counts n ticks by using a
+-- -- 32 bit counter variable
+-- clock' :: String -> Spec Bool -> (Period, Phase) -> Streams
+-- clock' clockName v (Period per, Phase ph) = do
+--   { let counter = varI32 ( clockName P.++ "_counter" )
+--   ; counter .= [ 0 ] ++ ( mux ( counter /= ( fromIntegral ) per - 1 )
+--                               ( counter + 1 )
+--                               ( 0 ) )
+--   ; if (per P.< 1) then error ("Error in stream " P.++ (show v)
+--                                P.++ ": period must be 1 or greater.")
+--     else if (ph P.< 0) then error ("Error in stream " P.++ (show v)
+--                                    P.++ ": phase must be 0 or greater.")
+--          else if (ph P.>= per) then error ("Error in stream " P.++ (show v)
+--                                            P.++ ": phase must be less than period.")
+--               else v .= counter == ( fromIntegral ) ph
+--   }
 

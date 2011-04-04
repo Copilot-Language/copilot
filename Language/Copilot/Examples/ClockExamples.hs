@@ -2,6 +2,7 @@
 
 module Language.Copilot.Examples.ClockExamples where
 
+import qualified Prelude as P
 import Language.Copilot.Libs.Clocks
 import Language.Copilot
 
@@ -9,7 +10,9 @@ clkTest :: Streams
 clkTest = do
   let x = varB "x"
   let y = varB "y"
+  let a = varW8 "a"
+  let b = varW8 "b"
   x `clock` (period 3, phase 1)
   y `clock` (period 4, phase 3)
-
-test = interpret clkTest 10 baseOpts
+  a .= [0] ++ mux x (a + 2) a
+  b .= [1] ++ mux y (b + 2) b
