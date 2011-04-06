@@ -105,3 +105,5 @@ TODOs
      include (1) ignoring the initial state, (2) or ensuring that variables are
      initially sampled---perhaps just calling the loop for one phase to do the
      sampling.
+
+ * Do a test for a trailing '/' when giving a path in the setDir option.
