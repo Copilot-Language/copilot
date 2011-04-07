@@ -2,7 +2,7 @@
 
 module Language.Copilot.Examples.PTLTLExamples where
 
-import Prelude (($), repeat, replicate, IO())
+import Prelude (($), repeat, replicate, IO(), Bool(..), map)
 import qualified Prelude as P
 import Data.Map (fromList)
 
@@ -71,7 +71,7 @@ tSince = do
     z `ptltl` (q1 `since` q2)
 
 -- with external variables
--- interface $ setE (emptySM {bMap = fromList [("e1", [True,True ..]), ("e2", [False,False ..])]}) $ interpretOpts tSinExt 20
+-- interpret tSinExt 50 $ setE (emptySM {bMap = fromList [("e1", [True,True ..]), ("e2", [False,False ..])]}) baseOpts
 tSinExt :: Streams 
 tSinExt = do
   let e1 = extB "e1"
@@ -98,39 +98,36 @@ tSinExt2 = do
 -- temperature drops to 250 or below.  Otherwise, trigger an immediate shutdown
 -- of the engine."
 -- external vars
-t0, t1, t2, maj :: Spec Word8
-cooler, check, overHeat, monitor :: Spec Bool
+t0, t1, t2 :: Spec Word8
+cooler, check, overHeat, monitor, maj :: Spec Bool
 t0       = extW8 "temp_probe_0"
 t1       = extW8 "temp_probe_1"
 t2       = extW8 "temp_probe_2"
 cooler   = extB  "fan_status"
 -- Copilot vars
-maj      = varW8 "maj"
+maj      = varB "maj"
 check    = varB  "maj_check"
 overHeat = varB  "over_heat"
 monitor  = varB  "monitor"
 
-
 engine :: Streams
 engine = do
-  let temps = [t0, t1, t2] -- local vars
+  let temps = map (<= 250) [t0, t1, t2] 
   maj      .= majority temps
   check    .= aMajority temps maj
-  overHeat `ptltl` (        (cooler || (maj <= 250 && check)) 
-                    `since` (maj > 250))
+  overHeat `ptltl` (        (cooler || maj && check)
+                    `since` not maj)
   monitor .= not overHeat
   trigger monitor "shutoff_engine" void
 
-
 engineRun :: Bool -> IO ()
 engineRun b = if b then 
-  interpret engine 40 $ 
-    setE (emptySM { bMap  = fromList [("fan_status", replicate 3 False P.++ repeat False)]
-                  , w8Map = fromList [ ("temp_probe_0", [240,240..])
-                                     , ("temp_probe_1", [240,241..])
-                                     , ("temp_probe_2", [240,241..])
+  interpret engine 20 $ 
+    setE (emptySM { bMap  = fromList [ ("fan_status"  , [False, False ..]) ]
+                  , w8Map = fromList [ ("temp_probe_0", [0 ..])
+                                     , ("temp_probe_1", [0 ..])
+                                     , ("temp_probe_2", [0 ..])
                                      ]
-                  }) 
-    baseOpts
-  else compile engine "engine" $ setSim baseOpts
+                  }) baseOpts
+              else compile engine "engine" $ setSim baseOpts
 
