@@ -27,7 +27,7 @@ data Error =
     | BadVarName String    -- ^ The name of the variable has not valid syntax
                            -- for C identifiers
     | BadDrop Int Var      -- ^ A drop expression of less than 0 is used
-    | BadPArrSpec Var Ext String -- ^ External array indexes can only take
+    | BadExtArrSpec Var Ext String -- ^ External array indexes can only take
                                  -- variables or constants as indexes.
     | BadType Var String -- ^ either a variable is not defined, or not with the
                          -- good type ; there is no implicit conversion of types
@@ -65,7 +65,7 @@ instance Show Error where
           "of elements.\n"
         , show i ++ " is negative, and Drop only accepts positive arguments.\n"
         ]
-    show (BadPArrSpec v arr idx) =
+    show (BadExtArrSpec v arr idx) =
        unlines
         [ "Error : the index into an external array can only take a "
             ++ "variable or a constant.  The index\n"
@@ -165,16 +165,16 @@ syntaxCheck streams =
                 case s of
                     Var   varName    -> checkVarName varName
                     Const _          -> Nothing
-                    PVar  _ _        -> Nothing -- checkSampling s0
-                    PArr  _ (arr,s0) -> checkIndex v arr s0
+                    ExtVar  _ _        -> Nothing -- checkSampling s0
+                    ExtArr  _ (arr,s0) -> checkIndex v arr s0
 -- case chkInitElem streams (getElem v streams `asTypeOf` s0) of
 --                                       Left ()  -> Just $ NoInit (show arr) v
 --                                       Right () -> Nothing
 --                          _       -> Just $ BadArrIdx (show arr) (show s0)
 --                      ) &&> checkSampling arr
---                        &&> checkSyntaxSpec PArrSet v s0 Nothing
-                    -- PVar _ _ -> Nothing
-                    -- PArr _ (arr,s0) ->
+--                        &&> checkSyntaxSpec ExtArrSet v s0 Nothing
+                    -- ExtVar _ _ -> Nothing
+                    -- ExtArr _ (arr,s0) ->
                     F _ _ s0 -> set /= DropSpecSet ||> BadSyntax "F" v
                       &&> checkSyntaxSpec FunSpecSet v s0 Nothing
                     F2 _ _ s0 s1 -> set /= DropSpecSet ||> BadSyntax "F2" v
@@ -190,7 +190,7 @@ syntaxCheck streams =
                       &&> checkSyntaxSpec DropSpecSet v s0 Nothing
         checkIndex _ _ (Var _)      = Nothing
         checkIndex _ _ (Const _)    = Nothing
-        checkIndex v arr idx = Just $ BadPArrSpec v arr (show idx)
+        checkIndex v arr idx = Just $ BadExtArrSpec v arr (show idx)
         -- checkSampling s =
         --   case s of
         --     ExtV _   -> Nothing
@@ -219,7 +219,7 @@ defCheck streams =
                 checkPath :: Streamable a => Int -> [Var] -> Spec a -> Maybe Error
                 checkPath n vs s =
                     case s of
-                        PVar t v -> case () of
+                        ExtVar t v -> case () of
                                 () | n > 0 -> Just $ DependsOnFuture vs v n
                                    | n > negate (prophecyArrayLength s0) ->
                                            Just $ DependsOnClosePast vs v n
@@ -227,7 +227,7 @@ defCheck streams =
                                    | t /= getAtomType s ->
                                             Just $ BadTypeExt v (head vs)
                                 _ -> Nothing
-                        PArr t (arr, idx)
+                        ExtArr t (arr, idx)
                                    | n > 0 -> Just $ DependsOnFuture vs arr n
                                    | n > negate (prophecyArrayLength idx) ->
                                            Just $ DependsOnClosePast vs arr n
@@ -239,7 +239,7 @@ defCheck streams =
                                          Const _ -> checkPath n vs idx
                                          Var _   -> checkPath n vs idx
                                          _       ->
-                                           Just $ BadPArrSpec v0 arr (show idx)
+                                           Just $ BadExtArrSpec v0 arr (show idx)
                         Var v ->
                             if elem v vs
                                 then if n >= 0
@@ -266,8 +266,8 @@ getExternalVars streams =
         decl :: Streamable a => Var -> Spec a -> [Exs] -> [Exs]
         decl _ s ls =
             case s of
-                PVar t v -> (t, v, ExtRetV) : ls
-                PArr t (arr, s0) -> (t, arr
+                ExtVar t v -> (t, v, ExtRetV) : ls
+                ExtArr t (arr, s0) -> (t, arr
                                     , ExtRetA (case s0 of
                                                  Var v -> V v
                                                  Const c -> C (show c)
@@ -299,8 +299,8 @@ checkInitsArgs streams =
                          Drop m s1    -> checkPath (m + n) vs s1
                          _ -> n
                          -- Const _  -> n
-                         -- PVar _ _ -> n
-                         -- PArr _ _ -> n
+                         -- ExtVar _ _ -> n
+                         -- ExtArr _ _ -> n
                          -- F _ _ _      -> n
                          -- F2 _ _ _ _   -> n
                          -- F3 _ _ _ _ _ -> n
@@ -340,8 +340,8 @@ checkInitsArgs streams =
 --         Var v    -> if elem v vs then initChk
 --                       else initElem (getElem v streams) cnt (v:vs)
 --         Const _  -> initChk
---         PVar t v -> initChk
---         PArr t (arr, s0) -> initChk
+--         ExtVar t v -> initChk
+--         ExtArr t (arr, s0) -> initChk
 --         F _ _ _      -> initChk
 --         F2 _ _ _ _   -> initChk
 --         F3 _ _ _ _ _ -> initChk
@@ -382,7 +382,7 @@ mkDepGraph streams =
         mkExternalNodes :: Spec a -> [Node]
         mkExternalNodes s =
             case s of
-                PVar _ v ph -> [ExternalVar v ph]
+                ExtVar _ v ph -> [ExternalVar v ph]
                 Var _ -> []
                 Const _ -> []
                 F _ _ s0 -> mkExternalNodes s0
@@ -393,7 +393,7 @@ mkDepGraph streams =
         mkEdges :: Weight -> Spec a -> [(Weight, Node)]
         mkEdges w s =
             case s of
-                PVar _ v ph -> [(w, getNode v $ Just ph)]
+                ExtVar _ v ph -> [(w, getNode v $ Just ph)]
                 Var v -> [(w, getNode v Nothing)]
                 Const _ -> []
                 F _ _ s0 -> mkEdges w s0

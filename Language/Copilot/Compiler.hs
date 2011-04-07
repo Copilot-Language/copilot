@@ -112,10 +112,10 @@ nextSt :: Streamable a
        -> Var -> Spec a -> NextSt a
 nextSt streams prophArrs tmpSamples outputIndexes index _ s =
     case s of
-        PVar _ v  -> ExpLeaf $
+        ExtVar _ v  -> ExpLeaf $
           let PhV var = getElem (tmpVarName v) (tmpVars tmpSamples) in
           A.value var
-        PArr _ (v, idx) -> ExpLeaf $
+        ExtArr _ (v, idx) -> ExpLeaf $
           let PhA var = e tmp (tmpArrs tmpSamples)
               tmp = tmpArrName v (show idx)
               e a b = case getMaybeElem a b of
@@ -224,7 +224,7 @@ initExtSamples streams outputs prophArrs outputIndexes s tmpSamples = do
                            initExtSamples' s1 tmpSamples
         F3 _ _ s0 s1 s2 -> initExtSamples' s0 $ initExtSamples' s1 $
                              initExtSamples' s2 tmpSamples
-        PVar _ v ->
+        ExtVar _ v ->
             do  ts <- tmpSamples
                 let v' = tmpVarName v
                     vts = tmpVars ts
@@ -236,7 +236,7 @@ initExtSamples streams outputs prophArrs outputIndexes s tmpSamples = do
                             let m' = M.insert v' (PhV val) (getSubMap vts)
                             return $ ts {tmpVars = updateSubMap (\_ -> m') vts}
                     Just _ -> return ts
-        PArr _ (arr, idx) ->
+        ExtArr _ (arr, idx) ->
             do  ts <- tmpSamples
                 let arr' = tmpArrName arr (show idx)
                     arrts = tmpArrs ts
@@ -328,7 +328,7 @@ sampleExts outputs ts cFileName s a = do
   case s of
     Var _ -> a
     Const _ -> a
-    PVar _ v ->
+    ExtVar _ v ->
      let v' = tmpVarName v
          PhV var = case getMaybeElem v' (tmpVars ts) :: Maybe (PhasedValueVar a) of
                      Nothing ->  error $ "Copilot error: variable " ++ v'
@@ -338,7 +338,7 @@ sampleExts outputs ts cFileName s a = do
             A.atom (sampleStr ++ normalizeVar v') $
                var A.<== (A.value $ externalAtomConstructor $ getSampleFuncVar v)
      ) : a
-    PArr _ (arr, idx) ->
+    ExtArr _ (arr, idx) ->
          let arr' = tmpArrName arr (show idx)
              PhIdx i = getIdx arr' idx (tmpIdxs ts)
              PhA arrV =

@@ -56,11 +56,11 @@ data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 -- it glues together analyser, interpreter and compiler, and does all the IO.
 -- It can be called either from interface (which justs decodes the command-line argument)
 -- or directly from the interactive prompt in ghci.
--- @streams@ is a specification, 
+-- @elems@ is a specification (and possible triggers), 
 -- @inputExts@ allows the user to give at runtime values for
 --      the monitored variables. Useful for testing on randomly generated values and specifications,
 --      or for the interpreted version.
--- @be@ chooses between compilation or interpretation,
+-- @backend@ chooses between compilation or interpretation,
 --      and if compilation is chosen (AtomToC) holds a few additionnal informations.
 --      see description of @'BackEnd'@
 -- @iterations@ just gives the number of periods the specification must be executed.
@@ -81,8 +81,7 @@ dispatch elems inputExts backEnd iterations verbose =
                                      iterations 
             in case backEnd of
                 Interpreter -> 
-                    do
-                        unless allInputsPresents $ error errMsg
+                    do  unless allInputsPresents $ error errMsg
                         mapM_ putStrLn interpretedLines
                 Opts opts ->
                     let isInterpreted =
@@ -214,19 +213,19 @@ showVars :: Vars -> Int-> [String]
 showVars interpretedVars n =
     showVarsLine interpretedVars 0
     where
-        showVarsLine inVs i =
+        showVarsLine copilotVs i =
             if i == n 
                 then []
                 else 
-                    let (string, inVs') = foldStreamableMaps prettyShow inVs ("", emptySM) 
-                        endString = showVarsLine inVs' (i + 1) 
+                    let (string, copilotVs') = foldStreamableMaps prettyShow copilotVs ("", emptySM) 
+                        endString = showVarsLine copilotVs' (i + 1) 
                         beginString = "period: " ++ show i ++ "   " ++ string 
-                    in
-                    beginString:endString
-        prettyShow v l (s, vs) =
-            let s' = v ++ ": " ++ showAsC (head l) ++ "   " ++ s
+                    in  beginString:endString
+        prettyShow v l (s, vs) = 
+            let s' = v ++ ": " ++ showAsC head' ++ "   " ++ s
+                head' = if null l then error "Copilot: internal error in the interpreter." else head l
                 vs' = updateSubMap (\ m -> M.insert v (tail l) m) vs in
-            (s', vs')
+            trace s' $ (s', vs') 
                 
 preludeText :: [String]
 preludeText = 

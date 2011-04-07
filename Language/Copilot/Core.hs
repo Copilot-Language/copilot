@@ -49,8 +49,8 @@ data Spec a where
     Var   :: Streamable a => Var -> Spec a
     Const :: Streamable a => a -> Spec a
 
-    PVar :: Streamable a => A.Type -> Ext -> Spec a
-    PArr :: (Streamable a, Streamable b, A.IntegralE b) 
+    ExtVar :: Streamable a => A.Type -> Ext -> Spec a
+    ExtArr :: (Streamable a, Streamable b, A.IntegralE b) 
          => A.Type -> (Ext, Spec b) -> Spec a
 
     F  :: (Streamable a, Streamable b) 
@@ -158,8 +158,8 @@ instance (Streamable a, A.NumE a, Fractional a) => Fractional (Spec a) where
     #-}
 
 instance Eq a => Eq (Spec a) where
-    (==) (PVar t v) (PVar t' v') = t == t' && v == v' -- && ph == ph'
-    (==) (PArr t (v, idx)) (PArr t' (v', idx')) = 
+    (==) (ExtVar t v) (ExtVar t' v') = t == t' && v == v' -- && ph == ph'
+    (==) (ExtArr t (v, idx)) (ExtArr t' (v', idx')) = 
            t == t' && v == v' && show idx == show idx' -- && ph == ph'
     (==) (Var v) (Var v') = v == v'
     (==) (Const x) (Const x') = x == x'
@@ -559,9 +559,9 @@ showIndented s n =
     tabs ++ showRaw s n
 
 showRaw :: Spec a -> Int -> String
-showRaw (PVar t v) _ = "PVar " ++ show t ++ " " ++ show v -- ++ " " ++ show ph
-showRaw (PArr t (v, idx)) _ = 
-  "PArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ "))" -- ++ show ph
+showRaw (ExtVar t v) _ = "ExtVar " ++ show t ++ " " ++ show v -- ++ " " ++ show ph
+showRaw (ExtArr t (v, idx)) _ = 
+  "ExtArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ "))" -- ++ show ph
 showRaw (Var v) _ = "Var " ++ v
 showRaw (Const e) _ = show e
 showRaw (F _ _ s0) n = 
