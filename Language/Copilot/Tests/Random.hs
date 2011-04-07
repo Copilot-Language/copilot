@@ -22,25 +22,25 @@ import Data.Maybe
 
 maxDrop :: Int
 maxDrop = 4 -- The maximum value for i in Drop i _
--- maxSamplePhase = 8 -- The maximum value for ph in PVar _ _ ph
+-- maxSamplePhase = 8 -- The maximum value for ph in ExtVar _ _ ph
 
 -- These determines the number of streams and of monitored variables.
 -- Bools are drawn each time with the following weights, until a False is drawn
-weightsContinueVar, weightsContinuePVar :: [(Bool, Int)]
+weightsContinueVar, weightsContinueExtVar :: [(Bool, Int)]
 weightsContinueVar = [(True, 3), (False, 1)]
-weightsContinuePVar = [(True, 1), (False, 1)]
+weightsContinueExtVar = [(True, 1), (False, 1)]
 
 -- These determines the frequency of each atom type for the streams and the monitored variables
-weightsVarTypes, weightsPVarTypes :: [(A.Type, Int)]
+weightsVarTypes, weightsExtVarTypes :: [(A.Type, Int)]
 weightsVarTypes = 
     [(A.Bool, 5), (A.Word64, 3), (A.Int64, 3), (A.Float, 0), (A.Double, 4),
             (A.Int8, 1), (A.Int16, 1), (A.Int32, 1), (A.Word8, 1), (A.Word16, 1), (A.Word32, 1)]
-weightsPVarTypes = 
+weightsExtVarTypes = 
     [(A.Bool, 5), (A.Word64, 3), (A.Int64, 3), (A.Float, 0), (A.Double, 4),
             (A.Int8, 1), (A.Int16, 1), (A.Int32, 1), (A.Word8, 1), (A.Word16, 1), (A.Word32, 1)]
             
 -- These determines the frequency of each constructor in the random streams
--- 0 -> PVar
+-- 0 -> ExtVar
 -- 1 -> Var
 -- 2 -> Const
 -- 3 -> F
@@ -195,7 +195,7 @@ randomStreams :: RandomGen g => Operators -> Operators ->
      Operators -> g -> (StreamableMaps Spec, Vars)
 randomStreams opsF opsF2 opsF3 g =
     let (vs, g0) = addRandomVNames weightsContinueVar weightsVarTypes g emptySM
-        (exts, g1) = addRandomVNames weightsContinuePVar weightsPVarTypes g0 emptySM
+        (exts, g1) = addRandomVNames weightsContinueExtVar weightsExtVarTypes g0 emptySM
         (streams, g2) = foldRandomableMaps (addRandomSpec opsF opsF2 opsF3 vs exts) vs (emptySM, g1)
         (vars, g3) = foldRandomableMaps addRandomExternal exts (emptySM, g2) in
     if isNothing $ check streams
@@ -245,11 +245,11 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
             _           -> weightsAllSpecSet
         (n::Int, g0) = randomWeighted g weights in
     case n of
-            0 -> -- PVar
+            0 -> -- ExtVar
                 case getVar g0 exts of
                     (Just v, g1) -> 
 --                        let (ph, g2) = randomR (1, maxSamplePhase)  g1 in
-                        (PVar (atomType (unit::a)) (ExtV v), g1)
+                        (ExtVar (atomType (unit::a)) (ExtV v), g1)
                     (Nothing, g1) -> randomSpec' g1 set
             1 -> -- Var
                 case getVar g0 vs of
