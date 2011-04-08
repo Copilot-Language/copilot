@@ -4,6 +4,6 @@ fib: 100000000 iterations.
   Copilot: 7.458s
   C: .659s (one function calls)
 
-maj: 100000000 iterations.
+maj: 100,000,000 iterations.
   Copilot: 22.480s (0.0000002248) about 4-5 maj values per microsecond
   C: 0.003 
