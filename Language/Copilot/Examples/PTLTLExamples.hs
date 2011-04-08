@@ -112,13 +112,12 @@ monitor  = varB  "monitor"
 
 engine :: Streams
 engine = do
-  let temps = map (<= 250) [t0, t1, t2] 
+  let temps = map (< 250) [t0, t1, t2] 
   maj      .= majority temps
   check    .= aMajority temps maj
-  overHeat `ptltl` (        (cooler || maj && check)
-                    `since` not maj)
+  overHeat `ptltl` ((cooler || maj && check) `since` not maj)
   monitor .= not overHeat
-  trigger monitor "shutoff_engine" void
+  trigger monitor "shutoff" void
 
 engineRun :: Bool -> IO ()
 engineRun b = if b then 
