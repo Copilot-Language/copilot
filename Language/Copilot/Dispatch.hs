@@ -9,8 +9,9 @@
 -- compiler.  The Dispatch module only parses the command-line arguments before
 -- calling that module.
 module Language.Copilot.Dispatch 
-  (dispatch, BackEnd(..), AtomToC(..), Interpreted(..), Iterations, Verbose(..)) where
+  (dispatch, BackEnd(..), AtomToC(..), Iterations, Verbose(..)) where
 
+import Debug.Trace
 import Language.Copilot.Core
 import Language.Copilot.Analyser (check, getExternalVars)
 import Language.Copilot.Interpreter
@@ -30,7 +31,7 @@ data AtomToC = AtomToC
     { cName :: Name -- ^ Name of the C file to generate
     , gccOpts :: String -- ^ Options to pass to the compiler
     , getPeriod :: Maybe Period -- ^ The optional period
-    , interpreted :: Interpreted -- ^ Interpret the program or not
+--    , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
     , sim :: Bool -- ^ Are we running a C simulator?
@@ -45,10 +46,11 @@ data AtomToC = AtomToC
                                  -- of the program.
     }
 
-data BackEnd = Opts AtomToC 
-             | Interpreter
+data BackEnd = Interpreter -- Just interpret
+             | Compile AtomToC -- Just compile 
+             | Test AtomToC -- Interpret and compile (and test, with random programs)
 
-data Interpreted = Interpreted | NotInterpreted
+--data Interpreted = Interpreted | NotInterpreted
 type Iterations = Int
 data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 
@@ -66,75 +68,96 @@ data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 -- @iterations@ just gives the number of periods the specification must be executed.
 --      If you would rather execute it by hand, then just choose AtomToC for backEnd and 0 for iterations
 -- @verbose@ determines what is output.
-dispatch :: LangElems -> Vars -> BackEnd -> Iterations -> Verbose -> IO ()
-dispatch elems inputExts backEnd iterations verbose =
-    do
-        hSetBuffering stdout LineBuffering
-        mapM_ putStrLn preludeText 
-        isValid <-
-            case check (strms elems) of
-                Just x -> print x >> return False
-                Nothing -> return True
-        when isValid $
-            -- because haskell is lazy, will only get computed if later used
-            let interpretedLines = showVars (interpretStreams (strms elems) trueInputExts) 
-                                     iterations 
-            in case backEnd of
-                Interpreter -> 
-                    do  unless allInputsPresents $ error errMsg
-                        mapM_ putStrLn interpretedLines
-                Opts opts ->
-                    let isInterpreted =
-                            case (interpreted opts) of
-                                Interpreted -> True
-                                NotInterpreted -> False
-                        dirName = outputDir opts
-                    in do
-                        putStrLn $ "Trying to create the directory " ++ dirName 
-                                     ++  " (if missing)  ..."
-                        createDirectoryIfMissing False dirName
-                        copilotToC elems allExts trueInputExts opts isVerbose
-                        let copy ext = copyFile (cName opts ++ ext) 
-                                        (dirName ++ cName opts ++ ext)
-                        let delete ext = do 
-                              f0 <- canonicalizePath (cName opts ++ ext) 
-                              f1 <- canonicalizePath (dirName ++ cName opts ++ ext)
-                              unless (f0 == f1) $ removeFile (cName opts ++ ext)
-                        putStrLn $ "Moving " ++ cName opts ++ ".c and " ++ cName opts 
-                                        ++ ".h to " ++ dirName ++ "  ..."
-                        copy ".c"
-                        copy ".h"
-                        delete ".c"
-                        delete ".h"
-                        when (sim opts) (gccCall (Opts opts))
-                        when ((isInterpreted || isExecuted) && not allInputsPresents) $ 
-                            error errMsg
-                        when isExecuted $ execute (strms elems) (dirName ++ cName opts) 
-                                             trueInputExts isInterpreted 
-                            interpretedLines iterations isSilent
-    where
-        errMsg = "The interpreter does not have values for some of the external variables."
-        isVerbose = verbose == Verbose
-        isSilent = verbose == OnlyErrors
-        isExecuted = iterations /= 0
-        allExts = getExternalVars (strms elems)
-        (trueInputExts :: StreamableMaps [] , allInputsPresents :: Bool) = 
-          filterStreamableMaps inputExts (map (\(a,v,r) -> (a, show v, r)) allExts)
+dispatch :: LangElems -> SimValues -> BackEnd -> Maybe Iterations -> Verbose -> IO ()
+dispatch elems inputExts backEnd mIterations verbose = do
+--  hSetBuffering stdout LineBuffering
+  mapM_ putStrLn preludeText 
+   -- run Copilot's typechecker/analyzer
+  isValid <- case check (strms elems) of
+               Just x -> print x >> return False
+               Nothing -> return True
+  when isValid $
+    -- Ok, the Copilot program is valid.  What are we doing?n
+    case backEnd of
+      Interpreter -> do
+        extVarValuesChks 
+        mapM_ putStrLn interpretedLines
 
-copilotToC :: LangElems -> [Exs] -> Vars -> AtomToC -> Bool -> IO ()
-copilotToC elems allExts trueInputExts opts isVerbose =
+      Compile opts -> do 
+        makeCFiles elems simExtValues allExts opts verbose
+        when (sim opts) $ do extVarValuesChks 
+                             gccCall opts
+                             simC opts False
+      Test opts -> do
+        extVarValuesChks
+        makeCFiles elems simExtValues allExts opts verbose
+        when (sim opts) (gccCall opts)
+        simC opts True
+
+ where
+   -- Do all the checks for feeding in external variable values.
+   extVarValuesChks = do 
+     unless allInputsPresent $ error missingExtVars
+     unless (null inputsTooShort) $ error missingExtValues
+   -- Simulate the generated C code, possibly checking it against the interpreter.
+   simC opts b = 
+     simCCode (strms elems) (outputDir opts ++ cName opts) simExtValues b
+              interpretedLines iterations verbose
+   iterations = case mIterations of
+                  Nothing -> error "Internal copilot error: no iterations given"
+                  Just i -> i
+   -- Call the interpreter and pass the result to showVars, which prettyprints
+   -- the results.
+   interpretedLines = showVars (interpretStreams (strms elems) simExtValues) 
+                        iterations 
+   missingExtVars = 
+     "The interpreter does not have values for some of the external variables."
+   missingExtValues =
+        "Error: the input values given for the external streams " 
+     ++ show inputsTooShort ++ " must contain at least " ++ show iterations 
+     ++ " (the number of iterations) elements."
+   -- collect all the external variables from the Copilot program.
+   allExts = getExternalVars (strms elems)
+    -- check that all the external variables have streams given for them for
+    -- simulation.
+   (simExtValues :: SimValues , allInputsPresent :: Bool) = 
+     filterStreamableMaps inputExts (map (\(a,v,r) -> (a, show v, r)) allExts)
+   -- check that enough values are given for each external-variable
+   -- value-stream.  (Can't just use length, since lists might be infinite.)
+   inputsTooShort = 
+     foldStreamableMaps (\v ls vs -> if length (take iterations ls) < iterations
+                                       then v:vs else vs) 
+       simExtValues [] 
+
+makeCFiles :: LangElems -> SimValues -> [Exs] -> AtomToC -> Verbose -> IO ()
+makeCFiles elems simExtValues allExts opts verbose = do
+   let dirName = outputDir opts
+   unless (last dirName == '/') 
+          (error $ "Error: directory name for C files must contain a final '/'.  "
+                   ++ "The directory name " ++ dirName ++ " does not.")
+   putStrLn $ "Trying to create the directory " ++ dirName 
+                ++  " (if missing)  ..."
+   createDirectoryIfMissing False dirName
+   copilotToC elems allExts simExtValues opts verbose
+   let copy ext = copyFile (cName opts ++ ext) (dirName ++ cName opts ++ ext)
+   let delete ext = do f0 <- canonicalizePath (cName opts ++ ext) 
+                       f1 <- canonicalizePath (dirName ++ cName opts ++ ext)
+                       unless (f0 == f1) $ removeFile (cName opts ++ ext)
+   putStrLn $ "Moving " ++ cName opts ++ ".c and " ++ cName opts 
+                 ++ ".h to " ++ dirName ++ "  ..."
+   copy ".c"
+   copy ".h"
+   delete ".c"
+   delete ".h"
+
+copilotToC :: LangElems -> [Exs] -> SimValues -> AtomToC -> Verbose -> IO ()
+copilotToC elems allExts simExtValues opts verbose =
     let cFileName = cName opts
         (p', program) = copilotToAtom elems (getPeriod opts) cFileName
         (preCode, postCode) = 
             getPrePostCode (sim opts) (prePostCode opts) cFileName 
                            (strms elems) allExts (map (\(x,y) -> (ExtV x,y)) 
-                           (arrDecs opts)) trueInputExts p'
-            -- case (prePostCode opts) of
-            --     Nothing ->  
-            --       getPrePostCode cFileName (strms elems) allExts 
-            --                      (map (\(x,y) -> (ExtV x,y)) (arrDecs opts))
-            --                      trueInputExts p'
-            --     Just (pre, post) -> (pre, post)
+                           (arrDecs opts)) simExtValues p'
         atomConfig = A.defaults 
             { A.cCode = \_ _ _ -> (preCode, postCode)
             , A.cRuleCoverage = False
@@ -145,71 +168,74 @@ copilotToC elems allExts trueInputExts opts isVerbose =
     in do
         putStrLn $ "Compiling Copilot specs to C  ..."
         (sched, _, _, _, _) <- A.compile cFileName atomConfig program
-        when isVerbose (putStrLn $ A.reportSchedule sched)
+        when (verbose == Verbose) (putStrLn $ A.reportSchedule sched)
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
--- | Call Gcc to compile the code.
-gccCall :: BackEnd -> IO ()
-gccCall backend = 
-  case backend of
-    Interpreter -> error "Impossible: gccCall called with Interpreter."
-    Opts opts   -> 
-      let dirName = outputDir opts
-          programName = cName opts in
-        do
-          let command = compiler opts ++ " " ++ dirName ++ cName opts 
-                        ++ ".c" ++ " -o " ++ dirName ++ programName 
-                        ++ " " ++ gccOpts opts
-          putStrLn "Calling the C compiler  ..."
-          putStrLn command
-          _ <- system command
-          return ()
+-- | Call the C compiler.
+gccCall :: AtomToC -> IO ()
+gccCall opts = 
+  let dirName = outputDir opts
+      programName = cName opts 
+      command = compiler opts ++ " " ++ dirName ++ cName opts 
+                  ++ ".c" ++ " -o " ++ dirName ++ programName 
+                  ++ " " ++ gccOpts opts
+  in do putStrLn "Calling the C compiler  ..."
+        putStrLn command
+        _ <- system command
+        return ()
 
-execute :: StreamableMaps Spec -> String -> Vars -> Bool -> [String] -> Iterations -> Bool -> IO ()
-execute streams programName trueInputExts isInterpreted interpretedLines iterations isSilent =
-    do  (Just hin, Just hout, _, _) <- createProcess processConfig
-        hSetBuffering hout LineBuffering
-        hSetBuffering hin LineBuffering
+-- | Execute the generated C code, interpreter, and compare the results.
+simCCode :: StreamableMaps Spec -> String -> SimValues -> Bool -> [String] 
+         -> Iterations -> Verbose -> IO ()
+simCCode streams programName simExtValues isInterpreted interpretedLines 
+         iterations verbose = do
+  (Just hin, Just hout, _, proc) <- createProcess processConfig
+  hSetBuffering hout LineBuffering
+  hSetBuffering hin LineBuffering
+  when isInterpreted 
+       (do putStrLn "\n *** Checking the randomly-generated Copilot specification: ***\n"
+           print streams)
+  let inputVar v (val:vals) ioVars = do
+        hPutStr hin (showAsC val ++ " \n")
+        hFlush hin
+        vars <- ioVars
+        return $ updateSubMap (\m -> M.insert v vals m) vars
+      inputVar _ [] _ = error "Impossible : empty inputVar"
+      executePeriod _ [] 0 = do putStrLn "Execution complete." 
+                                _ <- waitForProcess proc
+                                return ()
+      executePeriod _ [] _ = error "Impossible : empty ExecutePeriod"
+      executePeriod inputExts (inLine:inLines) n = do
+        nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
+        line <- hGetLine hout
+        let nextPeriod = (unless (verbose == OnlyErrors) $ 
+                            putStrLn line) 
+                         >> executePeriod nextInputExts inLines (n - 1)
+        if isInterpreted 
+          then compareOutputs inLine line nextPeriod programName
+          else nextPeriod
+  -- useful for initializing the sampling temporary variables
+  firstInputExts <- foldStreamableMaps inputVar simExtValues (return emptySM)
+  executePeriod firstInputExts interpretedLines iterations
+  where processConfig = 
+          (shell $ programName ++ " " ++ show iterations)
+          {std_in = CreatePipe, std_out = CreatePipe, std_err = UseHandle stdout}
 
-        when isInterpreted 
-                 (do putStrLn "\n *** Checking the randomly-generated Copilot specification: ***\n"
-                     print streams)
-        let inputVar v (val:vals) ioVars =
-                do  hPutStr hin (showAsC val ++ " \n")
-                    hFlush hin
-                    vars <- ioVars
-                    return $ updateSubMap (\m -> M.insert v vals m) vars
-            inputVar _ [] _ = error "Impossible : empty inputVar"
-            executePeriod _ [] 0 = putStrLn "Execution complete." 
-            executePeriod _ [] _ = error "Impossible : empty ExecutePeriod"
-            executePeriod inputExts (inLine:inLines) n =
-                when (n > 0) $ 
-                    do  nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
-                        line <- hGetLine hout
-                        let nextPeriod = 
-                                (unless isSilent $ putStrLn line) >> 
-                                    executePeriod nextInputExts inLines (n - 1)
-                        -- Checking the compiler and interpreter.
-                        if isInterpreted
-                            then if inLine == line
-                                       then nextPeriod
-                                       else error $ unlines 
-                                              [ "Failure: interpreter /= compiler"
-                                              , "  program name: " ++ programName
-                                              , "  interpreter: " ++ inLine
-                                              , "  compiler: "    ++ line
-                                              ]
-                            else nextPeriod
-                            
-        -- useful for initializing the sampling temporary variables
-        firstInputExts <- foldStreamableMaps inputVar trueInputExts (return emptySM)
-        executePeriod firstInputExts interpretedLines iterations
-    where
-        processConfig = 
-            (shell $ programName ++ " " ++ show iterations)
-            {std_in = CreatePipe, std_out = CreatePipe, std_err = UseHandle stdout}
+-- Checking the compiler and interpreter.
+compareOutputs :: String -> String -> IO () -> String -> IO ()
+compareOutputs inLine line nextPeriod programName =
+  if inLine == line
+    then nextPeriod
+    else error $ unlines 
+             [ "Failure: interpreter /= compiler"
+             , "  program name: " ++ programName
+             , "  interpreter: " ++ inLine
+             , "  compiler: "    ++ line
+             ]
 
-showVars :: Vars -> Int-> [String]
+
+-- | Prettyprint the interpreted values.
+showVars :: SimValues -> Int-> [String]
 showVars interpretedVars n =
     showVarsLine interpretedVars 0
     where
@@ -225,7 +251,7 @@ showVars interpretedVars n =
             let s' = v ++ ": " ++ showAsC head' ++ "   " ++ s
                 head' = if null l then error "Copilot: internal error in the interpreter." else head l
                 vs' = updateSubMap (\ m -> M.insert v (tail l) m) vs in
-            trace s' $ (s', vs') 
+            (s', vs') 
                 
 preludeText :: [String]
 preludeText = 
