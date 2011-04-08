@@ -35,20 +35,17 @@ t1 = do
   z .= x <= drop 1 x
   w .= 3 == x
 
--- t2 :: Streams
--- t2 = do
---      a .= [True] ++ not (var a) 
---      b .= mux (var a) 2 (int8 3) 
-
 -- t3 :: use an external variable called ext, typed Word32
 t3 :: Streams
 t3 = do
   let a    = varW32 "a"
       b    = varB "b"
+      c    = varW32 "c"
       ext8 = extW32 "ext"
       ext1 = extW32 "ext"
   a .= [0,1] ++ a + ext8 + ext8 + ext1
   b .= [True, False] ++ 2 + a < 5 + ext1
+  c .= ext1
 
 t4 :: Streams
 t4 = do
