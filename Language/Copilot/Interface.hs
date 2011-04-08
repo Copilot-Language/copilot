@@ -26,13 +26,12 @@ data Options = Options {
         optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams,
                                                    -- then generate random
                                                    -- streams.
---        optSends :: StreamableMaps Send, -- ^ For distributed monitors.
-        optExts :: Maybe Vars, -- ^ Assign values to external variables.
-        optCompile :: Maybe String, -- ^ Set gcc options.
+        optExts :: Maybe SimValues, -- ^ Assign values to external variables.
+        optCompile :: String, -- ^ Set gcc options.
         optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then
                                    -- the smallest feasible period is computed.
         optInterpret :: Bool, -- ^ Interpreting?
-        optIterations :: Int, -- ^ How many iterations are we simulating for?
+        optIterations :: Maybe Int, -- ^ How many iterations are we simulating for?
         optVerbose :: Verbose, -- ^ Verbosity level: OnlyErrors | DefaultVerbose | Verbose.
         optRandomSeed :: Maybe Int, -- ^ Random seed for generating Copilot specs.
         optCName :: Name, -- ^ Name of the C file generated.
@@ -60,12 +59,11 @@ data Options = Options {
 baseOpts :: Options
 baseOpts = Options {
         optStreams = Nothing,
---        optSends = emptySM,
         optExts = Nothing,
-        optCompile = Nothing,
+        optCompile = "",
         optPeriod = Nothing,
         optInterpret = False,
-        optIterations = 0,
+        optIterations = Nothing,
         optVerbose = DefaultVerbose,
         optRandomSeed = Nothing,
         optCName = "copilotProgram",
@@ -82,7 +80,7 @@ baseOpts = Options {
 
 test :: Int -> Options -> IO ()
 test n opts =
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ setSim opts 
+  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts {optSimulate = True}
 
 interpret :: Streams -> Int -> Options -> IO ()
 interpret streams n opts =
@@ -133,7 +131,7 @@ setTriggers triggers opts = opts {optTriggers = triggers}
 -- @ setE (emptySM {w32Map = fromList [(\"ext\", [0,1..])]}) ... @
 --
 -- sets the external variable names "ext" to take the natural numbers, up to the limit of Word32.
-setE :: Vars -> Options -> Options
+setE :: SimValues -> Options -> Options
 setE vs opts = opts {optExts = Just vs}
 
 -- | Set the external arrays.
@@ -151,7 +149,7 @@ setClock clk opts = opts {optClock = Just clk}
 --
 -- Sets gcc options.
 setC :: String -> Options -> Options
-setC gccOptions opts = opts {optCompile = Just gccOptions}
+setC gccOptions opts = opts {optCompile = gccOptions}
 
 -- | Manually set the period for the program.  Otherwise, the minimum required period is computed automatically.  E.g.,
 --
@@ -168,7 +166,7 @@ setI opts = opts {optInterpret = True}
 -- @ setN 50 @
 -- simulations the program for 50 steps.
 setN :: Int -> Options -> Options
-setN n opts = opts {optIterations = n}
+setN n opts = opts {optIterations = Just n}
 
 -- | Set the verbosity level.
 setV :: Verbose -> Options -> Options
@@ -196,17 +194,16 @@ setDir dir opts = opts {optOutputDir = dir}
 setCode :: (Maybe String, Maybe String) -> Options -> Options
 setCode pp opts = opts {optPrePostCode = pp}
 
--- | Include simulation driver code (in a main() loop)?
-setSim :: Options -> Options
-setSim opts = opts {optSimulate = True}
+-- | Include simulation driver code (in a main() loop)?  If so, how many times
+-- should we simulate it/
+setSim :: Int -> Options -> Options
+setSim n opts = opts {optIterations = Just n, optSimulate = True}
 
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
 interface opts =
-    do
-        seed <- createSeed opts
+    do  seed <- createSeed opts
         let (streams, vars) = getStreamsVars opts seed
---            sends = optSends opts
             triggers = optTriggers opts
             backEnd = getBackend opts seed
             iterations = optIterations opts
@@ -227,7 +224,7 @@ createSeed opts =
         Just i -> return i
 
 -- | Were streams given?  If not, just make random streams.
-getStreamsVars :: Options -> Int -> (StreamableMaps Spec, Vars)
+getStreamsVars :: Options -> Int -> (StreamableMaps Spec, SimValues)
 getStreamsVars opts seed =
     case optStreams opts of
         Nothing -> randomStreams opsF opsF2 opsF3 (mkStdGen seed)
@@ -236,26 +233,28 @@ getStreamsVars opts seed =
                 Nothing -> (s, emptySM)
                 Just vs -> (s, vs)
 
+-- | Are we interpreting, compiling, or comparing the interpreter to the compiler?
 getBackend :: Options -> Int -> BackEnd
 getBackend opts seed =
-    case optCompile opts of
-        Nothing ->
-            if not $ optInterpret opts
-                then error "neither interpreted nor compiled: nothing to be done"
-                else Interpreter
-        Just gccOptions ->
-            Opts $ AtomToC {
-                cName     = optCName opts ++ if isJust $ optRandomSeed opts then show seed else "",
-                gccOpts   = gccOptions,
-                getPeriod = optPeriod opts,
-                interpreted = if optInterpret opts then Interpreted else NotInterpreted,
-                outputDir = optOutputDir opts,
-                compiler  = optCompiler opts,
-                prePostCode = optPrePostCode opts,
-                sim = optSimulate opts,
-                arrDecs = optArrs opts,
-                clock = optClock opts
-                    }
+  if optInterpret opts
+    then if optSimulate opts
+           then Test backendOpts
+           else Interpreter
+    else Compile backendOpts
+  where 
+    backendOpts =
+        AtomToC { cName = 
+                   optCName opts ++ if isJust $ optRandomSeed opts 
+                                      then show seed else ""
+                , gccOpts     =  optCompile opts
+                , getPeriod   = optPeriod opts
+                , outputDir   = optOutputDir opts
+                , compiler    = optCompiler opts
+                , prePostCode = optPrePostCode opts
+                , sim = optSimulate opts
+                , arrDecs = optArrs opts
+                , clock   = optClock opts
+                }
 
 help :: IO ()
 help = putStrLn helpStr
