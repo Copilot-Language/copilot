@@ -9,11 +9,11 @@ import Language.Copilot.Core
 -- | The main function of this module.
 -- It takes a /Copilot/ specification, the values of the monitored values,
 -- and returns the values of the streams.
-interpretStreams :: StreamableMaps Spec -> Vars -> Vars
+interpretStreams :: StreamableMaps Spec -> SimValues -> SimValues
 interpretStreams streams extVs = copilotVs
   where copilotVs = mapStreamableMaps (\ _ -> interpret copilotVs extVs) streams
 
-interpret :: forall a. Streamable a => Vars -> Vars -> Spec a -> [a]
+interpret :: forall a. Streamable a => SimValues -> SimValues -> Spec a -> [a]
 interpret copilotVs extVs s =
   case s of
     Const c -> repeat c

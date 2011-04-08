@@ -16,7 +16,7 @@ module Language.Copilot.Core (
         isEmptySM, getMaybeElem, getElem, 
         foldStreamableMaps, 
         mapStreamableMaps, mapStreamableMapsM,
-        filterStreamableMaps, normalizeVar, getVars, Vars,
+        filterStreamableMaps, normalizeVar, getVars, SimValues,
         getAtomType, getSpecs, getTriggers, vPre, funcShow,
         notConstVarErr
     ) where
@@ -113,6 +113,7 @@ instance Show Ext where
   show (ExtV v) = v
   show (Fun f args) = normalizeVar f ++ show args
 
+-- | External variable, function, or array, together with it's type
 type Exs = (A.Type, Ext, ExtRet)
 
 data ExtRet = ExtRetV 
@@ -543,12 +544,11 @@ normalizeVar v =
   map (\c -> if (c `elem` ".[]()") then '_' else c)
       (filter (\c -> c /= ',' && c /= ' ') v) 
 
--- | For each typed variable, this type holds all its successive values in an infinite list
--- Beware : each element of one of those lists corresponds to a full @Atom@ period, 
--- not to a single clock tick.
-type Vars = StreamableMaps []
+-- | For each typed variable, this type holds all its successive values in a
+-- (probably) infinite list.
+type SimValues = StreamableMaps []
 
--- Pretty printer: can't put in PrettyPrinter since that causes circular deps.
+-- XXX Pretty printer: can't put in PrettyPrinter since that causes circular deps.
 
 instance Show a => Show (Spec a) where
     show s = showIndented s 0

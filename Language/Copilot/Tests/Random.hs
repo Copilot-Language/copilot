@@ -192,7 +192,7 @@ instance Random A.Type where
 ---- Generation of random streams ----------------------------------------------
 
 randomStreams :: RandomGen g => Operators -> Operators -> 
-     Operators -> g -> (StreamableMaps Spec, Vars)
+     Operators -> g -> (StreamableMaps Spec, SimValues)
 randomStreams opsF opsF2 opsF3 g =
     let (vs, g0) = addRandomVNames weightsContinueVar weightsVarTypes g emptySM
         (exts, g1) = addRandomVNames weightsContinueExtVar weightsExtVarTypes g0 emptySM
@@ -304,7 +304,7 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
                 else (Nothing, g0)
                 
 addRandomExternal :: forall a g. (Streamable a, Random a, RandomGen g) => 
-    Var -> VName a -> (Vars, g) -> (Vars, g)
+    Var -> VName a -> (SimValues, g) -> (SimValues, g)
 addRandomExternal v _ (vars, g) =
     let (vals::[a], g') = randomExternalValues g in
     (updateSubMap (\m -> M.insert v vals m) vars, g')

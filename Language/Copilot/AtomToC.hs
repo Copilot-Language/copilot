@@ -10,12 +10,12 @@ import Language.Copilot.Core
 import Data.Maybe (fromMaybe)
 import Data.List
 
--- allExts represents all the variabbles to monitor (used for declaring them)
+-- allExts represents all the variables to monitor (used for declaring them)
 -- inputExts represents the monitored variables which are to be fed to the
 -- standard input of the C program.  only used for the testing with random
 -- streams and values.
 getPrePostCode :: Bool -> (Maybe String, Maybe String) -> Name 
-               -> StreamableMaps Spec -> [Exs] -> [(Ext,Int)] -> Vars 
+               -> StreamableMaps Spec -> [Exs] -> [(Ext,Int)] -> SimValues 
                -> Period -> (String, String)
 getPrePostCode simulatation (pre, post) cName streams allExts 
                arrDecs inputExts p =
@@ -71,7 +71,7 @@ periodLoop cName p = unlines
   , "}"
   ]
 
-postCode :: Name -> StreamableMaps Spec -> Vars -> String
+postCode :: Name -> StreamableMaps Spec -> SimValues -> String
 postCode cName streams inputExts = 
   unlines $
   [""] ++
@@ -115,7 +115,7 @@ postCode cName streams inputExts =
         , ""
         ]
 
-inputExtVars :: Vars -> String -> [String]
+inputExtVars :: SimValues -> String -> [String]
 inputExtVars exts indent =
     foldStreamableMaps decl exts []
     where
