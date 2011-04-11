@@ -1,6 +1,7 @@
+#include <assert.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <assert.h>
 
 
 
@@ -131,8 +132,9 @@ void __copilot_fib(void) {
 }
 
 int main(void) {
-  uint64_t i = 100000000LLU;
+  uint64_t i = 10000000LLU;
   for (; i > 0; i--) { 
     __copilot_fib();
+    printf("copilot_fib: %llu\n\n", copilotStatecopilot_fib.copilot_fib.f);
   }
 }

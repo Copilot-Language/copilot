@@ -13,9 +13,10 @@ void fib(void) {
 }
 
 int main(void) {
-  uint64_t i = 100000000LLU;
+  uint64_t i = 10000000LLU;
   for (; i > 0; i--) { 
     fib();
+    printf("fib: %llu\n\n", x);
   }
 }
 

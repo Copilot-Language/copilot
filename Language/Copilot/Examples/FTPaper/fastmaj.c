@@ -54,10 +54,11 @@ uint64_t maj(void) {
 
 int main(void) {
   uint64_t i;
-  for(i = 0; i < 100000000LLU; i++) {
-    maj();
+  for(i = 0; i < 10000000LLU; i++) {
+    //    maj();
     /* printf("vals: %llu, %llu, %llu, %llu, %llu\n", x0,x1,x2,x3,x4); */
-    /* printf("maj: %llu\n\n", maj()); */
+    printf("maj: %llu\n\n", maj());
+
     x0up();
     x1up();
     x2up();

@@ -24,6 +24,11 @@ fib = do
     where even :: Spec Word64 -> Spec Bool
           even w' = w' `mod` 2 == 0
 
+fib' :: Streams
+fib' = do
+  let f = varW64 "f"
+  f .= [0,1] ++ f + (drop 1 f)
+
 t1 :: Streams
 t1 = do
   let x = varI32 "x"

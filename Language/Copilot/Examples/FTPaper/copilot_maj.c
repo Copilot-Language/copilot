@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
-
-
+#include <stdio.h>
 
 
 static uint64_t __global_clock = 0;
@@ -421,7 +420,9 @@ void __copilot_maj(void) {
 
 int main(void) {
   uint64_t i;
-  for(i = 0; i < 100000000LLU; i++) {
+  for(i = 0; i < 10000000LLU; i++) {
     __copilot_maj();
+    printf("maj: %llu\n\n", copilotStatecopilot_maj.copilot_maj.ans);
   }
+  return 1;
 }

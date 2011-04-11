@@ -1,9 +1,11 @@
 Intel(R) Atom(TM) CPU N280 @ 1.66GHz
 
-fib: 100000000 iterations.
-  Copilot: 7.458s
-  C: .659s (one function calls)
+fib: 10,000,000 iterations.
+  Copilot: 18.6s 
+  C: 17.1s
+    About 8% faster
 
-maj: 100,000,000 iterations.
-  Copilot: 22.480s (0.0000002248) about 4-5 maj values per microsecond
-  C: 0.003 
+maj: 10,000,000 iterations.
+  Copilot: 13.4s about 745 maj values per millisecond
+  C: 10.9 about 917 per millisecond
+    About 19% faster 
