@@ -2,8 +2,8 @@
 
 module Language.Copilot.Examples.PTLTLExamples where
 
-import Prelude (($), repeat, replicate, IO(), Bool(..), map)
-import qualified Prelude as P
+import Prelude (($), IO(), map)
+--import qualified Prelude as P
 import Data.Map (fromList)
 
 import Language.Copilot hiding (check)
@@ -128,5 +128,5 @@ engineRun b = if b then
                                      , ("temp_probe_2", [0 ..])
                                      ]
                   }) baseOpts
-              else compile engine "engine" $ setSim baseOpts
+              else compile engine "engine" $ setSim 20 baseOpts
 
