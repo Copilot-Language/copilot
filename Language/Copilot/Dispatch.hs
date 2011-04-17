@@ -37,6 +37,7 @@ data AtomToC = AtomToC
 --    , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
+    , randomProg :: Bool -- ^ Was the program randomly generated?
     , sim :: Bool -- ^ Are we running a C simulator?
     , prePostCode :: (Maybe String, Maybe String) -- ^ Code to replace the default
                                                   -- initialization and main
@@ -99,7 +100,7 @@ dispatch elems inputExts backEnd mIterations verbose = do
         makeCFiles elems simExtValues allExts opts verbose
         gccCall opts
         simC opts (Just interpretedLines) -- check against interpreter
-
+        when (randomProg opts) (removeCFiles opts)
  where
    -- Do all the checks for feeding in external variable values for
    -- interpreting.
@@ -136,6 +137,8 @@ dispatch elems inputExts backEnd mIterations verbose = do
                                        then v:vs else vs) 
        simExtValues [] 
 
+-- | Make and possibly move C files.  (We make them in the current directory,
+-- | then move them.)
 makeCFiles :: LangElems -> SimValues -> [Exs] -> AtomToC -> Verbose -> IO ()
 makeCFiles elems simExtValues allExts opts verbose = do
    let dirName = outputDir opts
@@ -149,13 +152,26 @@ makeCFiles elems simExtValues allExts opts verbose = do
    let copy ext = copyFile (cName opts ++ ext) (dirName ++ cName opts ++ ext)
    let delete ext = do f0 <- canonicalizePath (cName opts ++ ext) 
                        f1 <- canonicalizePath (dirName ++ cName opts ++ ext)
-                       unless (f0 == f1) $ removeFile (cName opts ++ ext)
+                       -- We might not have to move them!
+                       unless (f0 == f1) $ removeFile f0
    putStrLn $ "Moving " ++ cName opts ++ ".c and " ++ cName opts 
                  ++ ".h to " ++ dirName ++ "  ..."
    copy ".c"
    copy ".h"
    delete ".c"
    delete ".h"
+
+-- | Remove C files when we're testing random programs.
+removeCFiles :: AtomToC -> IO ()
+removeCFiles opts = do
+  putStrLn "Removing random program files..."
+  let delete ext = do 
+         f1 <- canonicalizePath (outputDir opts ++ cName opts ++ ext)
+         removeFile f1
+  delete ".c"
+  delete ".h"
+  delete "" -- delete executable
+  putStrLn "Done."
 
 copilotToC :: LangElems -> [Exs] -> SimValues -> AtomToC -> Verbose -> IO ()
 copilotToC elems allExts simExtValues opts verbose =
@@ -205,7 +221,7 @@ simCCode streams programName simExtValues mbInterpretedLines
   fdin  <- handleToFd hin >>= dup
   fdout <- handleToFd hout >>= dup
 
-  when (verbose == Verbose) (putStrLn $ "Testing stream: " 
+  when (verbose == Verbose) (putStrLn $ "\nTesting program:\n" 
                                           ++ unlines showStreams)
   -- Make the initial set of external variable values to send to the C program.
   inputVals <- foldStreamableMaps (inputVar fdin) simExtValues (return emptySM)
@@ -266,7 +282,7 @@ simCCode streams programName simExtValues mbInterpretedLines
     when (isJust mbInLines) 
          (compareOutputs ((concat . fromJust) mbInLines) cLines)
                          
-    unless (verbose == Verbose) (putStrLn cLines)
+    -- when (verbose == Verbose) (putStrLn cLines)
     -- Ok, we're done with the file descriptors, so close them.
     closeFd fdin
     closeFd fdout

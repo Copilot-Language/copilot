@@ -84,14 +84,15 @@ baseOpts = Options {
 -- | Generate a random Copilot program and compare the interpreter against the
 -- compiler on that program.
 randomTest :: Int -> Options -> IO ()
-randomTest n opts =
-  interface $ setC "-Wall" $ setI $ setSim n $ setV OnlyErrors opts
+randomTest n opts = do
+  r <- randomIO
+  interface $ setC "-Wall" $ setI $ setR r $ setSim n opts
     
 -- | Compare the interpreter and the compiler on a specific program.
 test :: Streams -> Name -> Int -> Options -> IO ()
 test streams fileName n opts =
   interface $ setC "-Wall" $ setO fileName $ setSim n
-    $ setTriggers (getTriggers streams) $ setV OnlyErrors
+    $ setTriggers (getTriggers streams) 
       $ setI $ opts {optStreams = Just (getSpecs streams)}
 
 -- | Interpret a program.
@@ -261,6 +262,7 @@ getBackend opts seed =
         AtomToC { cName = 
                   optCName opts ++ if isJust $ optRandomSeed opts 
                                      then show seed else ""
+                , randomProg = isJust $ optRandomSeed opts 
                 , gccOpts     =  optCompile opts
                 , getPeriod   = optPeriod opts
                 , outputDir   = optOutputDir opts
