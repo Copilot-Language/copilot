@@ -49,6 +49,7 @@ library
                      , mtl >= 1.0.0.0
                      , filepath >= 1.0.0.0
                      , parsec >= 2.0
+                     , unix >= 2.0
 
     extensions:
     exposed-modules: Language.Copilot
