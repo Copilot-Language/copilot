@@ -85,7 +85,7 @@ baseOpts = Options {
 -- compiler on that program.
 randomTest :: Int -> Options -> IO ()
 randomTest n opts = do
-  r <- randomIO
+  r <- randomRIO (0, maxBound)
   interface $ setC "-Wall" $ setI $ setR r $ setSim n opts
     
 -- | Compare the interpreter and the compiler on a specific program.
