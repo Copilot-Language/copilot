@@ -36,7 +36,8 @@ module Language.Copilot.Language (
         module Language.Copilot.Language.FunctionCalls,
         -- * Safe casting
         module Language.Copilot.Language.Casting,
-        notConstVarErr
+        notConstVarErr,
+        A.EqE
     ) where
 
 import qualified Language.Atom as A

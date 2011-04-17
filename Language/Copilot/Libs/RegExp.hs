@@ -1,18 +1,18 @@
 module Language.Copilot.Libs.RegExp ( copilotRegexp ) where
 
-
 import Text.ParserCombinators.Parsec
+  ( optional, (<|>), string, char, between, GenParser, many, choice, CharParser
+  , optionMaybe, chainr1, chainr, many1, digit, eof, parse, SourceName)
 import Data.Int
 import Data.Word
 import Data.List
 import Data.Char
 
 import Data.Maybe
-import Control.Monad.State
+import Control.Monad.State (evalState, get, modify)
 
 import Language.Copilot.Core
 import qualified Language.Copilot.Language as C
-
 
 -- The symbols in a regular expression, "Any" is any value of type t
 -- (matches any symbol, the "point" character in a regular expression).
@@ -277,7 +277,8 @@ enumSyms rexp = evalState ( enumSyms' rexp ) 0
       enumSyms'   other           =
         return other
 
-
+regexp2CopilotNFA :: (Streamable t, C.EqE t) 
+                  => Spec t -> RegExp t -> Spec Bool -> Spec Bool -> Streams
 regexp2CopilotNFA inStream rexp outStream reset =
     let symbols                    = getSymbols rexp
         ref                        = C.var . show
@@ -310,6 +311,8 @@ regexp2CopilotNFA inStream rexp outStream reset =
     in foldl ( >> ) startStream streams >> outStream'
 
 
+copilotRegexp :: (SymbolParser t, C.EqE t) 
+              => Spec t -> SourceName -> Spec Bool -> Spec Bool -> Streams
 copilotRegexp inStream rexp outStream reset =
   case parse start rexp rexp of
     Left  err ->
