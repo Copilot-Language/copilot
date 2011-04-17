@@ -304,6 +304,8 @@ simCCode streams programName simExtValues mbInterpretedLines
     ]
 
   -- Checking the compiler and interpreter.
+  -- XXX This is pretty fragile, and depends on the string representations given
+  -- by the interpreter and parser.  Ideally, this would be made more robust.
   compareOutputs :: String -> String -> IO ()
   compareOutputs inLine line =
     unless (inLine == line) $
