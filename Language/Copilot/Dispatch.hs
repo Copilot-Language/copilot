@@ -11,7 +11,6 @@
 module Language.Copilot.Dispatch 
   (dispatch, BackEnd(..), AtomToC(..), Iterations, Verbose(..)) where
 
-import Debug.Trace
 import Language.Copilot.Core
 import Language.Copilot.Analyser (check, getExternalVars)
 import Language.Copilot.Interpreter
@@ -24,8 +23,12 @@ import qualified Data.Map as M
 
 import System.Directory 
 import System.Process
-import System.IO
+import Control.Concurrent (threadWaitRead)
+import System.Posix.Types (Fd(..))
+import System.Posix.IO (handleToFd, dup, fdRead, fdWrite, closeFd)
+import System.IO (stderr)
 import Control.Monad
+import Data.Maybe (isJust, fromJust)
 
 data AtomToC = AtomToC 
     { cName :: Name -- ^ Name of the C file to generate
@@ -54,19 +57,20 @@ data BackEnd = Interpreter -- Just interpret
 type Iterations = Int
 data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 
--- | This function is the core of /Copilot/ :
--- it glues together analyser, interpreter and compiler, and does all the IO.
--- It can be called either from interface (which justs decodes the command-line argument)
--- or directly from the interactive prompt in ghci.
+-- | This function is the core of /Copilot/ : it glues together analyser,
+-- interpreter and compiler, and does all the IO.  It can be called either from
+-- interface (which justs decodes the command-line argument) or directly from
+-- the interactive prompt in ghci.
 -- @elems@ is a specification (and possible triggers), 
 -- @inputExts@ allows the user to give at runtime values for
---      the monitored variables. Useful for testing on randomly generated values and specifications,
---      or for the interpreted version.
+--   the monitored variables. Useful for testing on randomly generated values
+--   and specifications, or for the interpreted version.
 -- @backend@ chooses between compilation or interpretation,
---      and if compilation is chosen (AtomToC) holds a few additionnal informations.
---      see description of @'BackEnd'@
--- @iterations@ just gives the number of periods the specification must be executed.
---      If you would rather execute it by hand, then just choose AtomToC for backEnd and 0 for iterations
+--   and if compilation is chosen (AtomToC) holds a few additionnal
+--   informations.  see description of @'BackEnd'@
+-- @iterations@ just gives the number of periods the specification must be
+--   executed. If you would rather execute it by hand, then just choose AtomToC
+--   for backEnd and 0 for iterations
 -- @verbose@ determines what is output.
 dispatch :: LangElems -> SimValues -> BackEnd -> Maybe Iterations -> Verbose -> IO ()
 dispatch elems inputExts backEnd mIterations verbose = do
@@ -77,7 +81,7 @@ dispatch elems inputExts backEnd mIterations verbose = do
                Just x -> print x >> return False
                Nothing -> return True
   when isValid $
-    -- Ok, the Copilot program is valid.  What are we doing?n
+    -- Ok, the Copilot program is valid.  What are we doing?
     case backEnd of
       Interpreter -> do
         extVarValuesChks 
@@ -85,24 +89,27 @@ dispatch elems inputExts backEnd mIterations verbose = do
 
       Compile opts -> do 
         makeCFiles elems simExtValues allExts opts verbose
+        -- Did the user ask us to execute the code, too?
         when (sim opts) $ do extVarValuesChks 
                              gccCall opts
-                             simC opts False
+                             -- Don't check against interpreter
+                             simC opts Nothing 
       Test opts -> do
         extVarValuesChks
         makeCFiles elems simExtValues allExts opts verbose
-        when (sim opts) (gccCall opts)
-        simC opts True
+        gccCall opts
+        simC opts (Just interpretedLines) -- check against interpreter
 
  where
-   -- Do all the checks for feeding in external variable values.
+   -- Do all the checks for feeding in external variable values for
+   -- interpreting.
    extVarValuesChks = do 
      unless allInputsPresent $ error missingExtVars
      unless (null inputsTooShort) $ error missingExtValues
    -- Simulate the generated C code, possibly checking it against the interpreter.
-   simC opts b = 
-     simCCode (strms elems) (outputDir opts ++ cName opts) simExtValues b
-              interpretedLines iterations verbose
+   simC opts interps = 
+     simCCode (strms elems) (outputDir opts ++ cName opts) simExtValues
+              interps iterations verbose
    iterations = case mIterations of
                   Nothing -> error "Internal copilot error: no iterations given"
                   Just i -> i
@@ -184,74 +191,135 @@ gccCall opts =
         _ <- system command
         return ()
 
--- | Execute the generated C code, interpreter, and compare the results.
-simCCode :: StreamableMaps Spec -> String -> SimValues -> Bool -> [String] 
+-- | Execute the generated C code using provided values for external
+-- variables. (And possibly execute the interpreter, and compare the results, if
+-- interpretedLines is defined .)
+simCCode :: StreamableMaps Spec -> String -> SimValues -> Maybe [String] 
          -> Iterations -> Verbose -> IO ()
-simCCode streams programName simExtValues isInterpreted interpretedLines 
+simCCode streams programName simExtValues mbInterpretedLines 
          iterations verbose = do
-  (Just hin, Just hout, _, proc) <- createProcess processConfig
-  hSetBuffering hout LineBuffering
-  hSetBuffering hin LineBuffering
-  when isInterpreted 
-       (do putStrLn "\n *** Checking the randomly-generated Copilot specification: ***\n"
-           print streams)
-  let inputVar v (val:vals) ioVars = do
-        hPutStr hin (showAsC val ++ " \n")
-        hFlush hin
-        vars <- ioVars
-        return $ updateSubMap (\m -> M.insert v vals m) vars
-      inputVar _ [] _ = error "Impossible : empty inputVar"
-      executePeriod _ [] 0 = do putStrLn "Execution complete." 
-                                _ <- waitForProcess proc
-                                return ()
-      executePeriod _ [] _ = error "Impossible : empty ExecutePeriod"
-      executePeriod inputExts (inLine:inLines) n = do
-        nextInputExts <- foldStreamableMaps inputVar inputExts (return emptySM)
-        line <- hGetLine hout
-        let nextPeriod = (unless (verbose == OnlyErrors) $ 
-                            putStrLn line) 
-                         >> executePeriod nextInputExts inLines (n - 1)
-        if isInterpreted 
-          then compareOutputs inLine line nextPeriod programName
-          else nextPeriod
-  -- useful for initializing the sampling temporary variables
-  firstInputExts <- foldStreamableMaps inputVar simExtValues (return emptySM)
-  executePeriod firstInputExts interpretedLines iterations
-  where processConfig = 
-          (shell $ programName ++ " " ++ show iterations)
-          {std_in = CreatePipe, std_out = CreatePipe, std_err = UseHandle stdout}
+  (Just hin, Just hout, _, prc) <- createProcess processConfig
 
--- Checking the compiler and interpreter.
-compareOutputs :: String -> String -> IO () -> String -> IO ()
-compareOutputs inLine line nextPeriod programName =
-  if inLine == line
-    then nextPeriod
-    else error $ unlines 
-             [ "Failure: interpreter /= compiler"
-             , "  program name: " ++ programName
-             , "  interpreter: " ++ inLine
-             , "  compiler: "    ++ line
-             ]
+  -- Convert to using POSIX file descriptors.  The reason is that we use
+  -- threadWaitRead below, which requires fds.
+  fdin  <- handleToFd hin >>= dup
+  fdout <- handleToFd hout >>= dup
 
+  when (verbose == Verbose) (putStrLn $ "Testing stream: " 
+                                          ++ unlines showStreams)
+  -- Make the initial set of external variable values to send to the C program.
+  inputVals <- foldStreamableMaps (inputVar fdin) simExtValues (return emptySM)
+
+  -- -1 Because we did an initial set of external vars.
+  executePeriod (fdin, fdout, prc) inputVals mbInterpretedLines (iterations - 1) 
+  where 
+
+  -- Create a subprocess to execute the C program.  stdin and stdout for the C
+  -- program, executed as a subprocess, will be redirected to hin and hout,
+  -- respectively.  We'll keep stderr (for the C program) pointed at stderr.
+  processConfig = 
+    (shell $ programName ++ " " ++ show iterations) 
+    {std_in = CreatePipe, std_out = CreatePipe, std_err = UseHandle stderr}
+
+  -- inputVar is folded over the set of input values (as lists) given for
+  -- external variables.  It returns a set of IO actions: for each external
+  -- variable, the actions pipe the head of the list to the C simulator, then
+  -- update the external variable map with the tail of the list.
+  inputVar :: Streamable a 
+           => Fd -> Var -> [a] -> IO SimValues -> IO SimValues
+  inputVar _ _ [] _ = 
+    error "Error: no more input values for external variables exist!"
+  inputVar fdin v (val:vals) ioSimVals = do
+    _ <- fdWrite fdin (showAsC val ++ " \n") -- needs a line ternminator.
+                                             -- Warning: only least 8-bits of
+                                             -- chars written.  Returns bytes
+                                             -- written: could do better error
+                                             -- checking to ensure they're all
+                                             -- sent.  ioSimVals >>= (return
+                                             -- (updateSubMap (\m -> M.insert v
+                                             -- vals m)))
+    valMap <- ioSimVals
+    return $ updateSubMap (\m -> M.insert v vals m) valMap
+
+  -- Execute the C program for the specified number of periods, comparing the
+  -- outputs to the results of the interpreter at each period, if we're in
+  -- testing mode.
+  -- 
+  -- XXX I don't quite understand the Posix pipes we're using, but essentially,
+  -- you have to do all your output to the executable, then all of your input
+  -- from the executable, with a threadWaitPeriod inbetween.  You can't
+  -- interleave things, or you'll get race conditions.  You can probably get
+  -- this to work if you set up a duplex pipe (two pipes), but I couldn't figure
+  -- out how to do this in the little time I looked at the Haskell API.  The
+  -- code below works, but don't change it to interleave input/output unless you
+  -- know what you're doing.  A less fragile version might use temporary
+  -- files...
+  executePeriod :: (Fd, Fd, ProcessHandle) -> SimValues -> Maybe [String] 
+                -> Int -> IO ()
+  executePeriod (fdin, fdout, prc) _ mbInLines 0 = do
+    threadWaitRead fdout -- VERY IMPORTANT to wait until something is available.
+                         -- fdRead doesn't seem to be blocking.
+    let getLines acc = do (cLines,_) <- fdRead fdout 1
+                          if cLines == "\n" then return acc
+                            else getLines (acc ++ cLines)
+    cLines <- getLines ""
+    when (isJust mbInLines) 
+         (compareOutputs ((concat . fromJust) mbInLines) cLines)
+                         
+    unless (verbose == Verbose) (putStrLn cLines)
+    -- Ok, we're done with the file descriptors, so close them.
+    closeFd fdin
+    closeFd fdout
+    _ <- waitForProcess prc 
+    putStrLn "Execution complete." 
+  executePeriod ps@(fdin, _, _) inputVals mbInLines n = do
+    nextInputVals <- 
+      foldStreamableMaps (inputVar fdin) inputVals (return emptySM)
+    let nextLines = case mbInLines of
+                      Nothing -> Nothing
+                      Just [] -> error "Impossible : empty ExecutePeriod"
+                      Just xs -> Just xs
+    executePeriod ps nextInputVals nextLines (n - 1)
+
+  showStreams = 
+    [ "****************************************************************\n"
+    , show streams
+    , "****************************************************************\n"
+    ]
+
+  -- Checking the compiler and interpreter.
+  compareOutputs :: String -> String -> IO ()
+  compareOutputs inLine line =
+    unless (inLine == line) $
+     error $ unlines
+       [ "\n*** Failed on the randomly-generated Copilot specification: ***\n"
+       , unlines showStreams
+       , ""
+       , "Failure: interpreter /= compiler"
+       , "  program name: " ++ programName
+       , "  interpreter: " ++ inLine
+       , "  compiler:    " ++ line
+       ]
 
 -- | Prettyprint the interpreted values.
 showVars :: SimValues -> Int-> [String]
-showVars interpretedVars n =
-    showVarsLine interpretedVars 0
-    where
-        showVarsLine copilotVs i =
-            if i == n 
-                then []
-                else 
-                    let (string, copilotVs') = foldStreamableMaps prettyShow copilotVs ("", emptySM) 
-                        endString = showVarsLine copilotVs' (i + 1) 
-                        beginString = "period: " ++ show i ++ "   " ++ string 
-                    in  beginString:endString
-        prettyShow v l (s, vs) = 
-            let s' = v ++ ": " ++ showAsC head' ++ "   " ++ s
-                head' = if null l then error "Copilot: internal error in the interpreter." else head l
-                vs' = updateSubMap (\ m -> M.insert v (tail l) m) vs in
-            (s', vs') 
+showVars interpretedVars n = showVarsLine interpretedVars 0
+  where
+  showVarsLine copilotVs i =
+    if i == n 
+      then []
+      else let (string, copilotVs') = 
+                 foldStreamableMaps prettyShow copilotVs ("", emptySM) 
+               endString = showVarsLine copilotVs' (i + 1) 
+               beginString = "period: " ++ show i ++ "   " ++ string in
+           beginString:endString
+  prettyShow v l (s, vs) = 
+    let s' = v ++ ": " ++ showAsC head' ++ "   " ++ s
+        head' = if null l 
+                  then error "Copilot: internal error in the interpreter."
+                  else head l
+        vs' = updateSubMap (\ m -> M.insert v (tail l) m) vs in
+    (s', vs') 
                 
 preludeText :: [String]
 preludeText = 

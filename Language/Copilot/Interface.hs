@@ -2,9 +2,9 @@
 
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
-          Options(), baseOpts, test, interpret, compile, verify, interface
-        , help, setE, setC, setO, setP, setI, setCode , setN, setV, setR
-        , setDir, setGCC, setArrs, setClock, setSim,
+    Options(), baseOpts, randomTest, test, interpret, compile, verify
+  , interface , help, setE, setC, setO, setP, setI, setCode --, setN
+  , setV, setR, setDir, setGCC, setArrs, setClock, setSim, Verbose(..)
 --        module Language.Copilot.Dispatch 
     ) where
 
@@ -20,40 +20,42 @@ import System.Exit
 import System.Cmd
 import Data.Maybe
 import qualified Data.Map as M (empty)
-import Control.Monad (when)
+--import Control.Monad (when)
 
 data Options = Options {
-        optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams,
-                                                   -- then generate random
-                                                   -- streams.
-        optExts :: Maybe SimValues, -- ^ Assign values to external variables.
-        optCompile :: String, -- ^ Set gcc options.
-        optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then
-                                   -- the smallest feasible period is computed.
-        optInterpret :: Bool, -- ^ Interpreting?
-        optIterations :: Maybe Int, -- ^ How many iterations are we simulating for?
-        optVerbose :: Verbose, -- ^ Verbosity level: OnlyErrors | DefaultVerbose | Verbose.
-        optRandomSeed :: Maybe Int, -- ^ Random seed for generating Copilot specs.
-        optCName :: Name, -- ^ Name of the C file generated.
-        optCompiler :: String, -- ^ The C compiler to use, as a path to the executable.
-        optOutputDir :: String, -- ^ Where to place the output C files (.c, .h, and binary).
-        optPrePostCode :: (Maybe String, Maybe String), -- ^ Code to append above and below the C file.
-        optSimulate :: Bool, -- ^ Do we want a simulation driver?
-        optTriggers :: Triggers, -- ^ A list of Copilot variable C function name
-                                 -- pairs.  The C funciton is called if the
-                                 -- Copilot stream becomes True.  The Stream
-                                 -- must be of Booleans and the C function must
-                                 -- be of type void @foo(void)@.  There should
-                                 -- be no more than one function per trigger
-                                 -- variable.  Triggers fire in the same phase
-                                 -- (1) that output vars are assigned.
-        optArrs :: [(String, Int)], -- ^ When generating C programs to test, we
-                                    -- don't know how large external arrays are,
-                                    -- so we cannot declare them.  Passing in
-                                    -- pairs containing the name of the array
-                                    -- and it's size allows them to be
-                                    -- declared.
-        optClock :: Maybe A.Clock  -- ^ Use the hardware clock to drive the timing of the program?
+  optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams, then
+                                             -- generate random streams.
+  optExts :: Maybe SimValues, -- ^ Assign values to external variables.
+  optCompile :: String, -- ^ Set gcc options.
+  optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then the
+                             -- smallest feasible period is computed.
+  optInterpret :: Bool, -- ^ Interpreting?
+  optIterations :: Maybe Int, -- ^ How many iterations are we simulating for?
+  optVerbose :: Verbose, -- ^ Verbosity level: OnlyErrors | DefaultVerbose |
+                         -- Verbose.
+  optRandomSeed :: Maybe Int, -- ^ Random seed for generating Copilot specs.
+  optCName :: Name, -- ^ Name of the C file generated.
+  optCompiler :: String, -- ^ The C compiler to use, as a path to the
+                         -- executable.
+  optOutputDir :: String, -- ^ Where to place the output C files (.c, .h, and
+                          -- binary).
+  optPrePostCode :: (Maybe String, Maybe String), -- ^ Code to append above and
+                                                  -- below the C file.
+  optSimulate :: Bool, -- ^ Do we want a simulation driver?
+  optTriggers :: Triggers, -- ^ A list of Copilot variable C function name
+                           -- pairs.  The C funciton is called if the Copilot
+                           -- stream becomes True.  The Stream must be of
+                           -- Booleans and the C function must be of type void
+                           -- @foo(void)@.  There should be no more than one
+                           -- function per trigger variable.  Triggers fire in
+                           -- the same phase (1) that output vars are assigned.
+  optArrs :: [(String, Int)], -- ^ When generating C programs to test, we don't
+                              -- know how large external arrays are, so we
+                              -- cannot declare them.  Passing in pairs
+                              -- containing the name of the array and it's size
+                              -- allows them to be declared.
+  optClock :: Maybe A.Clock  -- ^ Use the hardware clock to drive the timing of
+                             -- the program?
     }
 
 baseOpts :: Options
@@ -76,22 +78,35 @@ baseOpts = Options {
         optClock = Nothing
     }
 
--- Functions for making it easier for configuring copilot in the frequent use cases
+-- Functions for making it easier for configuring copilot in the frequent use
+-- cases
 
-test :: Int -> Options -> IO ()
-test n opts =
-  interface $ setC "-Wall" $ setI $ setN n $ setV OnlyErrors $ opts {optSimulate = True}
+-- | Generate a random Copilot program and compare the interpreter against the
+-- compiler on that program.
+randomTest :: Int -> Options -> IO ()
+randomTest n opts =
+  interface $ setC "-Wall" $ setI $ setSim n $ setV OnlyErrors opts
+    
+-- | Compare the interpreter and the compiler on a specific program.
+test :: Streams -> Name -> Int -> Options -> IO ()
+test streams fileName n opts =
+  interface $ setC "-Wall" $ setO fileName $ setSim n
+    $ setTriggers (getTriggers streams) $ setV OnlyErrors
+      $ setI $ opts {optStreams = Just (getSpecs streams)}
 
+-- | Interpret a program.
 interpret :: Streams -> Int -> Options -> IO ()
 interpret streams n opts =
   interface $ setI $ setN n $ opts {optStreams = Just (getSpecs streams)}
 
+-- | Compile a program.
 compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
   interface $ setC "-Wall" $ setO fileName 
     $ setTriggers (getTriggers streams) 
       $ opts {optStreams = Just (getSpecs streams)}
 
+-- | Verify the output of a compiled program using @CBMC@.
 verify :: FilePath -> Int -> String -> IO ()
 verify file n opts = do
   putStrLn "Calling cbmc, developed by Daniel Kroening \& Edmund Clarke."
@@ -202,14 +217,14 @@ setSim n opts = opts {optIterations = Just n, optSimulate = True}
 -- | The "main" function that dispatches.
 interface :: Options -> IO ()
 interface opts =
-    do  seed <- createSeed opts
+    do  seed <- createSeed opts -- called lazily
         let (streams, vars) = getStreamsVars opts seed
             triggers = optTriggers opts
             backEnd = getBackend opts seed
             iterations = optIterations opts
             verbose = optVerbose opts
-        when (verbose == Verbose) $
-            putStrLn $ "Random seed :" ++ show seed
+        -- when (verbose == Verbose) $
+        --     putStrLn $ "Random seed :" ++ show seed
         -- dispatch is doing all the heavy plumbing between
         -- analyser, compiler, interpreter, gcc and the generated program
         dispatch (LangElems streams triggers) vars backEnd iterations verbose 
@@ -244,14 +259,14 @@ getBackend opts seed =
   where 
     backendOpts =
         AtomToC { cName = 
-                   optCName opts ++ if isJust $ optRandomSeed opts 
-                                      then show seed else ""
+                  optCName opts ++ if isJust $ optRandomSeed opts 
+                                     then show seed else ""
                 , gccOpts     =  optCompile opts
                 , getPeriod   = optPeriod opts
                 , outputDir   = optOutputDir opts
                 , compiler    = optCompiler opts
                 , prePostCode = optPrePostCode opts
-                , sim = optSimulate opts
+                , sim     = optSimulate opts
                 , arrDecs = optArrs opts
                 , clock   = optClock opts
                 }

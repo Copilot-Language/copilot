@@ -75,10 +75,10 @@ postCode :: Name -> StreamableMaps Spec -> SimValues -> String
 postCode cName streams inputExts = 
   unlines $
   [""] ++
-  (if isEmptySM inputExts
-     then []
-     else cleanString)
-  ++ -- make a loop to complete a period of computation.
+  -- (if isEmptySM inputExts
+  --    then []
+  --    else cleanString)
+  -- make a loop to complete a period of computation.
   [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
   , "    " ++ printfNewline 
@@ -95,25 +95,27 @@ postCode cName streams inputExts =
   ++ ["    " ++ tmpCFileName cName ++ "();"]
   ++ outputVars cName streams 
   ++ 
-  [ "    " ++ printfNewline "" []
-  , "    fflush(stdout);"
-  , "  }"
+  [ --"    " ++ printfNewline "" []
+--  , "    fflush(stdout);"
+    "  }"
+  , "  //Important to let the Haskell program know we're done with stdout."
+  , printfNewline "" []
   , "  return EXIT_SUCCESS;"
   , "}"
   ]
-  where
-    cleanString =
-        [ "void clean(const char *buffer, FILE *fp) {"
-        , "  char *p = strchr(buffer,'\\n');"
-        , "  if (p != NULL)"
-        , "    *p = 0;"
-        , "  else {"
-        , "    int c;"
-        , "    while ((c = fgetc(fp)) != '\\n' && c != EOF);"
-        , "  }"
-        , "}"
-        , ""
-        ]
+  -- where
+  --   cleanString =
+  --       [ "void clean(const char *buffer, FILE *fp) {"
+  --       , "  char *p = strchr(buffer,'\\n');"
+  --       , "  if (p != NULL)"
+  --       , "    *p = 0;"
+  --       , "  else {"
+  --       , "    int c;"
+  --       , "    while ((c = fgetc(fp)) != '\\n' && c != EOF);"
+  --       , "  }"
+  --       , "}"
+  --       , ""
+  --       ]
 
 inputExtVars :: SimValues -> String -> [String]
 inputExtVars exts indent =
@@ -123,11 +125,12 @@ inputExtVars exts indent =
         decl v l ls =
             let string = "string_" ++ v in
             (indent ++ "char " ++ string ++ " [50] = \"\";") :
-            (indent ++ "fgets (" ++ string ++ ", sizeof(" ++ string 
-                    ++ "), stdin);") :
-            (indent ++ "sscanf (" ++ string ++ ", \"" 
+            (indent ++ "if(fgets (" ++ string ++ ", sizeof(" ++ string 
+                    ++ "), stdin) != NULL)") :
+            (indent ++ indent ++ "sscanf (" ++ string ++ ", \"" 
                     ++ typeId (head l) ++ "\", &" ++ v ++ ");") :
-            (indent ++ "clean (" ++ string ++ ", stdin);") : ls
+--            (indent ++ "clean (" ++ string ++ ", stdin);") : 
+            ls
 
 outputVars :: Name -> StreamableMaps Spec -> [String]
 outputVars cName streams =
