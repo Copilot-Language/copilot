@@ -233,11 +233,11 @@ notConstVarErr s f = f $
 -- types and that invariant should be kept (see methods)
 class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- | Provides access to the Map in a StreamableMaps which store values
-    -- of the good type
+    -- of the type
     getSubMap :: StreamableMaps b -> M.Map Var (b a)
 
     -- | Provides a way to modify (mostly used for insertions) the Map in a
-    -- StreamableMaps which store values of the good type
+    -- StreamableMaps which store values of the type
     updateSubMap :: (M.Map Var (b a) -> M.Map Var (b a)) 
                  -> StreamableMaps b -> StreamableMaps b
 

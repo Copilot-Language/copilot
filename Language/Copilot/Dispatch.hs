@@ -75,8 +75,7 @@ data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 -- @verbose@ determines what is output.
 dispatch :: LangElems -> SimValues -> BackEnd -> Maybe Iterations -> Verbose -> IO ()
 dispatch elems inputExts backEnd mIterations verbose = do
---  hSetBuffering stdout LineBuffering
-  mapM_ putStrLn preludeText 
+
    -- run Copilot's typechecker/analyzer
   isValid <- case check (strms elems) of
                Just x -> print x >> return False
@@ -85,10 +84,12 @@ dispatch elems inputExts backEnd mIterations verbose = do
     -- Ok, the Copilot program is valid.  What are we doing?
     case backEnd of
       Interpreter -> do
+        mapM_ putStrLn preludeText
         extVarValuesChks 
         mapM_ putStrLn interpretedLines
 
       Compile opts -> do 
+        mapM_ putStrLn preludeText
         makeCFiles elems simExtValues allExts opts verbose
         -- Did the user ask us to execute the code, too?
         when (sim opts) $ do extVarValuesChks 
@@ -96,6 +97,7 @@ dispatch elems inputExts backEnd mIterations verbose = do
                              -- Don't check against interpreter
                              simC opts Nothing 
       Test opts -> do
+        unless (randomProg opts) (mapM_ putStrLn preludeText)
         extVarValuesChks
         makeCFiles elems simExtValues allExts opts verbose
         gccCall opts

@@ -8,7 +8,7 @@ import qualified Prelude as Prelude
 import qualified Prelude as P
 
 -- for specifying options
-import Data.Map (fromList) 
+-- import Data.Map (fromList) 
 --import Data.Maybe (Maybe (..))
 --import System.Random
 
@@ -314,7 +314,8 @@ extT = do
 interpretExtT :: Prelude.IO ()
 interpretExtT =
   interpret extT 10 $ 
-    setE (emptySM {w16Map = fromList [("x", [8,9..])]})
+--    setE (emptySM {w16Map = fromList [("x", [8,9..])]})
+      setEW16 "x" [8,9..]
       baseOpts
 compileExtT :: P.IO ()
 compileExtT =
