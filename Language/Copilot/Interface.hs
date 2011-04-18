@@ -3,10 +3,13 @@
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
     Options(), baseOpts, randomTest, test, interpret, compile, verify
-  , interface , help, setE, setC, setO, setP, setI, setCode --, setN
+  , interface , help
+  , setC, setO, setP, setI, setCode --, setN
   , setV, setR, setDir, setGCC, setArrs, setClock, setSim, Verbose(..)
---        module Language.Copilot.Dispatch 
-    ) where
+  -- * For setting the environments
+  , setE, setEB, setEW8, setEW16, setEW32, setEW64
+  , setEI8, setEI16, setEI32, setEI64, setEF, setED
+  ) where
 
 import Language.Copilot.Core
 import Language.Copilot.Language.RandomOps (opsF, opsF2, opsF3)
@@ -15,17 +18,19 @@ import Language.Copilot.Dispatch
 import Language.Copilot.Help
 import qualified Language.Atom as A (Clock)
 
+import Data.Map (insert)
+import Data.Word
+import Data.Int
 import System.Random
 import System.Exit
 import System.Cmd
 import Data.Maybe
 import qualified Data.Map as M (empty)
---import Control.Monad (when)
 
 data Options = Options {
   optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams, then
                                              -- generate random streams.
-  optExts :: Maybe SimValues, -- ^ Assign values to external variables.
+  optSimVals :: Maybe SimValues, -- ^ Assign values to external variables.
   optCompile :: String, -- ^ Set gcc options.
   optPeriod :: Maybe Period, -- ^ Set the period.  If none is given, then the
                              -- smallest feasible period is computed.
@@ -61,7 +66,7 @@ data Options = Options {
 baseOpts :: Options
 baseOpts = Options {
         optStreams = Nothing,
-        optExts = Nothing,
+        optSimVals = Nothing,
         optCompile = "",
         optPeriod = Nothing,
         optInterpret = False,
@@ -118,13 +123,22 @@ verify file n opts = do
   putStrLn "  --overflow-check     enable arithmetic over- and underflow checks"
   putStrLn "  --nan-check          check floating-point for NaN"
   putStrLn ""
-  putStrLn "Assuming main() as the entry point unless specified otherwise (--function f)"
+  putStrLn $ "Assuming main() as the entry point unless specified otherwise " 
+             ++ "(--function f)"
   putStrLn cmd
   code <- system cmd
   case code of
     ExitSuccess -> return ()
     _           -> do putStrLn ""
-                      putStrLn $ "An error was returned by cbmc.  This may have be due to cbmc not finding the file " ++ file ++ ".  Perhaps cbmc is not installed on your system, is not in your path, cbmc cannot be called from the command line on your system, or " ++ file ++ " does not exist.  See <http://www.cprover.org/cbmc/>  for more information on cbmc."
+                      putStrLn $ "An error was returned by cbmc.  This may have " 
+                                 ++ "be due to cbmc not finding the file " 
+                                 ++ file ++ ".  Perhaps cbmc is not installed on"
+                                 ++ " your system, is not in your path, cbmc"
+                                 ++ " cannot be called from the command line"
+                                 ++ " on your system, or " ++ file 
+                                 ++ " does not exist.  See "
+                                 ++ "<http://www.cprover.org/cbmc/> "
+                                 ++ "for more information on cbmc."
     where cmd = unwords ("cbmc" : args)
           args = ["--div-by-zero-check", "--overflow-check", "--bounds-check"
                  , "--nan-check", "--pointer-check"
@@ -134,21 +148,48 @@ verify file n opts = do
 -- Small functions for easy modification of the Options record
 
 -- -- | Set the directives for sending stream values on ports.
--- setS :: StreamableMaps Send -> Options -> Options
--- setS sends opts = opts {optSends = sends}
-
--- -- | Set the directives for sending stream values on ports.
 setTriggers :: Triggers -> Options -> Options
 setTriggers triggers opts = opts {optTriggers = triggers}
+
+setE :: Streamable a => Var -> [a] -> Options -> Options
+setE v ls opts = 
+  opts {optSimVals = Just $ updateSubMap (\m -> insert v ls m) mp}
+  where mp = if isNothing (optSimVals opts) then emptySM
+               else fromJust $ optSimVals opts
+
+setEB :: Var -> [Bool] -> Options -> Options
+setEB = setE
+setEI8 :: Var -> [Int8] -> Options -> Options
+setEI8 = setE
+setEI16 :: Var -> [Int16] -> Options -> Options
+setEI16 = setE
+setEI32 :: Var -> [Int32] -> Options -> Options
+setEI32 = setE
+setEI64 :: Var -> [Int64] -> Options -> Options
+setEI64 = setE
+setEW8 :: Var -> [Word8] -> Options -> Options
+setEW8 = setE 
+setEW16 :: Var -> [Word16] -> Options -> Options
+setEW16 = setE
+setEW32 :: Var -> [Word32] -> Options -> Options
+setEW32 = setE
+setEW64 :: Var -> [Word64] -> Options -> Options
+setEW64 = setE
+setEF :: Var -> [Float] -> Options -> Options
+setEF = setE
+setED :: Var -> [Double] -> Options -> Options
+setED = setE
+
 
 -- | Sets the environment for simulation by giving a mapping of external
 -- variables to lists of values. E.g.,
 --
 -- @ setE (emptySM {w32Map = fromList [(\"ext\", [0,1..])]}) ... @
 --
--- sets the external variable names "ext" to take the natural numbers, up to the limit of Word32.
-setE :: SimValues -> Options -> Options
-setE vs opts = opts {optExts = Just vs}
+-- sets the external variable names "ext" to take the natural numbers, up to the
+-- limit of Word32.
+-- setE :: SimValues -> Options -> Options
+-- setE vs opts = opts {optSimVals = Just vs}
 
 -- | Set the external arrays.
 setArrs :: [(String,Int)] -> Options -> Options
@@ -167,7 +208,8 @@ setClock clk opts = opts {optClock = Just clk}
 setC :: String -> Options -> Options
 setC gccOptions opts = opts {optCompile = gccOptions}
 
--- | Manually set the period for the program.  Otherwise, the minimum required period is computed automatically.  E.g.,
+-- | Manually set the period for the program.  Otherwise, the minimum required
+-- period is computed automatically.  E.g.,
 --
 -- @ setP 100 ... @
 -- sets the period to be 100.  The period must be at least 1.
@@ -245,7 +287,7 @@ getStreamsVars opts seed =
     case optStreams opts of
         Nothing -> randomStreams opsF opsF2 opsF3 (mkStdGen seed)
         Just s ->
-            case optExts opts of
+            case optSimVals opts of
                 Nothing -> (s, emptySM)
                 Just vs -> (s, vs)
 

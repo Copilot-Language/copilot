@@ -4,7 +4,7 @@ module Language.Copilot.Examples.PTLTLExamples where
 
 import Prelude (($), IO(), map)
 --import qualified Prelude as P
-import Data.Map (fromList)
+-- import Data.Map (fromList)
 
 import Language.Copilot hiding (check)
 import Language.Copilot.Libs.PTLTL
@@ -120,13 +120,12 @@ engine = do
   trigger monitor "shutoff" void
 
 engineRun :: Bool -> IO ()
-engineRun b = if b then 
-  interpret engine 20 $ 
-    setE (emptySM { bMap  = fromList [ ("fan_status"  , [False, False ..]) ]
-                  , w8Map = fromList [ ("temp_probe_0", [0 ..])
-                                     , ("temp_probe_1", [0 ..])
-                                     , ("temp_probe_2", [0 ..])
-                                     ]
-                  }) baseOpts
-              else compile engine "engine" $ setSim 20 baseOpts
+engineRun b = 
+  if b 
+     then interpret engine 20 $ 
+            setEB "fan_status" [False, False ..] $
+            setEW8 "temp_probe_0" [0 ..] $
+            setEW8 "temp_probe_1" [0 ..] $
+            setEW8 "temp_probe_2" [0 ..] baseOpts
+     else compile engine "engine" $ setSim 20 baseOpts
 
