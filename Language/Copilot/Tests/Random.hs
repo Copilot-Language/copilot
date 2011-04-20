@@ -242,7 +242,7 @@ randomSpec vs exts opsF opsF2 opsF3 g set =
             AllSpecSet  -> weightsAllSpecSet
             FunSpecSet  -> weightsFunSpecSet
             DropSpecSet -> weightsDropSpecSet
-            _           -> weightsAllSpecSet
+--            _           -> weightsAllSpecSet
         (n::Int, g0) = randomWeighted g weights in
     case n of
             0 -> -- ExtVar
