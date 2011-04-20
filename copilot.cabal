@@ -75,6 +75,7 @@ library
                      Language.Copilot.Libs.Indexes
                      Language.Copilot.Libs.Statistics
                      Language.Copilot.Libs.Vote
+                     Language.Copilot.Libs.Clocks
                      Language.Copilot.Libs.RegExp
                      Language.Copilot.Examples.Examples
                      Language.Copilot.Examples.LTLExamples
