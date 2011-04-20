@@ -25,7 +25,7 @@ import System.Directory
 import System.Process
 import Control.Concurrent (threadWaitRead)
 import System.Posix.Types (Fd(..))
-import System.Posix.IO (handleToFd, dup, fdRead, fdWrite, closeFd)
+import System.Posix.IO (handleToFd, fdRead, fdWrite, closeFd)
 import System.IO (stderr)
 import Control.Monad
 import Data.Maybe (isJust, fromJust)
@@ -220,8 +220,8 @@ simCCode streams programName simExtValues mbInterpretedLines
 
   -- Convert to using POSIX file descriptors.  The reason is that we use
   -- threadWaitRead below, which requires fds.
-  fdin  <- handleToFd hin >>= dup
-  fdout <- handleToFd hout >>= dup
+  fdin  <- handleToFd hin
+  fdout <- handleToFd hout
 
   when (verbose == Verbose) (putStrLn $ "\nTesting program:\n" 
                                           ++ unlines showStreams)
@@ -230,6 +230,13 @@ simCCode streams programName simExtValues mbInterpretedLines
 
   -- -1 Because we did an initial set of external vars.
   executePeriod (fdin, fdout, prc) inputVals mbInterpretedLines (iterations - 1) 
+
+  -- Ok, we're done with the file descriptors, so close them.
+  closeFd fdin
+  closeFd fdout
+  _ <- waitForProcess prc
+  putStrLn "Execution complete." 
+
   where 
 
   -- Create a subprocess to execute the C program.  stdin and stdout for the C
@@ -248,14 +255,12 @@ simCCode streams programName simExtValues mbInterpretedLines
   inputVar _ _ [] _ = 
     error "Error: no more input values for external variables exist!"
   inputVar fdin v (val:vals) ioSimVals = do
-    _ <- fdWrite fdin (showAsC val ++ " \n") -- needs a line ternminator.
+    _ <- fdWrite fdin (showAsC val ++ " \n") -- Must have a line ternminator.
                                              -- Warning: only least 8-bits of
                                              -- chars written.  Returns bytes
                                              -- written: could do better error
                                              -- checking to ensure they're all
-                                             -- sent.  ioSimVals >>= (return
-                                             -- (updateSubMap (\m -> M.insert v
-                                             -- vals m)))
+                                             -- sent.
     valMap <- ioSimVals
     return $ updateSubMap (\m -> M.insert v vals m) valMap
 
@@ -274,7 +279,7 @@ simCCode streams programName simExtValues mbInterpretedLines
   -- files...
   executePeriod :: (Fd, Fd, ProcessHandle) -> SimValues -> Maybe [String] 
                 -> Int -> IO ()
-  executePeriod (fdin, fdout, prc) _ mbInLines 0 = do
+  executePeriod (_, fdout, _) _ mbInLines 0 = do
     threadWaitRead fdout -- VERY IMPORTANT to wait until something is available.
                          -- fdRead doesn't seem to be blocking.
     let getLines acc = do (cLines,_) <- fdRead fdout 1
@@ -284,12 +289,6 @@ simCCode streams programName simExtValues mbInterpretedLines
     when (isJust mbInLines) 
          (compareOutputs ((concat . fromJust) mbInLines) cLines)
                          
-    -- when (verbose == Verbose) (putStrLn cLines)
-    -- Ok, we're done with the file descriptors, so close them.
-    closeFd fdin
-    closeFd fdout
-    _ <- waitForProcess prc 
-    putStrLn "Execution complete." 
   executePeriod ps@(fdin, _, _) inputVals mbInLines n = do
     nextInputVals <- 
       foldStreamableMaps (inputVar fdin) inputVals (return emptySM)
@@ -312,7 +311,7 @@ simCCode streams programName simExtValues mbInterpretedLines
   compareOutputs inLine line =
     unless (inLine == line) $
      error $ unlines
-       [ "\n*** Failed on the randomly-generated Copilot specification: ***\n"
+       [ "\n*** Failed on the Copilot specification: ***\n"
        , unlines showStreams
        , ""
        , "Failure: interpreter /= compiler"
