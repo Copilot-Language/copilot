@@ -87,7 +87,7 @@ postCode cName streams inputExts =
          []
   , "    return 1;"
   , "  }"
-  , "  rnd = atoi(argv[1]);"
+  , "  rnd = strtol(argv[1], NULL, 10); //Yes, we really should do more error-checking here."
   , "  int i;"
   , "  for(i = 0; i < rnd ; i++) {"
   , "    " ++ printf "period: %i   " ["i"]

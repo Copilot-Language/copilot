@@ -25,7 +25,8 @@ import System.Exit
 import System.Cmd
 import Data.Maybe
 import qualified Data.Map as M (empty)
---import System.Mem (performGC)
+--import Control.Concurrent (forkOS, killThread)
+--import Control.Concurrent.MVar
 
 data Options = Options {
   optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams, then
@@ -86,10 +87,18 @@ baseOpts = Options {
 -- Functions for making it easier for configuring copilot in the frequent use
 -- cases
 
--- | Run 'randomTest' @i@ iterations on each of @n@ random programs.
+-- | Run 'randomTest' @n@ iterations on each of @i@ random programs.
 randomTests :: Int -> Int -> Options -> IO ()
-randomTests n i opts = 
-  sequence_ $ replicate i (randomTest n opts)
+randomTests n i opts = do 
+  randomTests' i
+  where 
+  randomTests' 0 = do putStrLn 
+                        $ "Executed " ++ show i ++ " tests without an error."
+  randomTests' j = do 
+    catch (randomTest n opts) 
+          (\_ -> error $    "Executed " ++ show (i-j) 
+                   ++ " tests before an unexpected system error.")
+                      randomTests' (j-1) 
 
 -- | Generate a random Copilot program and compare the interpreter against the
 -- compiler on that program.

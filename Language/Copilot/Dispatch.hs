@@ -23,7 +23,7 @@ import qualified Data.Map as M
 
 import System.Directory 
 import System.Process
-import Control.Concurrent (threadWaitRead)
+import Control.Concurrent (threadWaitRead, threadDelay)
 import System.Posix.Types (Fd(..))
 import System.Posix.IO (handleToFd, fdRead, fdWrite, closeFd)
 import System.IO (stderr)
@@ -34,7 +34,6 @@ data AtomToC = AtomToC
     { cName :: Name -- ^ Name of the C file to generate
     , gccOpts :: String -- ^ Options to pass to the compiler
     , getPeriod :: Maybe Period -- ^ The optional period
---    , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
     , randomProg :: Bool -- ^ Was the program randomly generated?
@@ -190,9 +189,13 @@ copilotToC elems allExts simExtValues opts verbose =
             , A.hardwareClock = clock opts
             , A.cStateName = "copilotState" ++ cFileName
             }
+        compileA = A.compile cFileName atomConfig program
     in do
         putStrLn $ "Compiling Copilot specs to C  ..."
-        (sched, _, _, _, _) <- A.compile cFileName atomConfig program
+        (sched, _, _, _, _) <- 
+          -- Can fail with openFile: resource exhausted (Cannot allocate memory)
+          -- after thousands of compiles during random testing.
+          catch compileA (\_ -> threadDelay 10000 >> compileA)
         when (verbose == Verbose) (putStrLn $ A.reportSchedule sched)
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
@@ -282,7 +285,9 @@ simCCode streams programName simExtValues mbInterpretedLines
   executePeriod (_, fdout, _) _ mbInLines 0 = do
     threadWaitRead fdout -- VERY IMPORTANT to wait until something is available.
                          -- fdRead doesn't seem to be blocking.
-    let getLines acc = do (cLines,_) <- fdRead fdout 1
+    let getLines acc = do (cLines,_) <- 
+                            catch (fdRead fdout 1) 
+                                  (\_ -> threadWaitRead fdout >> fdRead fdout 1)
                           if cLines == "\n" then return acc
                             else getLines (acc ++ cLines)
     cLines <- getLines ""
