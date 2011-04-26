@@ -4,8 +4,9 @@
 module Language.Copilot.AtomToC(getPrePostCode) where
 
 import Language.Copilot.AdHocC
-
 import Language.Copilot.Core
+
+import Language.Atom (Type(Bool))
 
 import Data.Maybe (fromMaybe)
 import Data.List
@@ -50,7 +51,7 @@ preCode extDeclarations = unlines $
   [ includeBracket "stdio.h"
   , includeBracket "stdlib.h"
   , includeBracket "string.h"
---  , includeBracket "inttypes.h"
+  , includeBracket "inttypes.h"
   , ""
   , "unsigned long long rnd;"
   ]
@@ -82,11 +83,13 @@ postCode cName streams inputExts =
   [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
   , "    " ++ printfNewline 
-         "Please pass a single argument to the simulator containing the number of rounds to execute it." 
-         []
+                (   "Please pass a single argument to the simulator"
+                 ++ " containing the number of rounds to execute it.")
+                []
   , "    return 1;"
   , "  }"
-  , "  rnd = atoi(argv[1]);"
+  , "  rnd = strtol(argv[1], NULL, 10); //Yes, we really should do more "
+      ++ "error-checking here."
   , "  int i;"
   , "  for(i = 0; i < rnd ; i++) {"
   , "    " ++ printf "period: %i   " ["i"]
@@ -95,49 +98,44 @@ postCode cName streams inputExts =
   ++ ["    " ++ tmpCFileName cName ++ "();"]
   ++ outputVars cName streams 
   ++ 
-  [ --"    " ++ printfNewline "" []
---  , "    fflush(stdout);"
-    "  }"
+  [ "  }"
   , "  //Important to let the Haskell program know we're done with stdout."
-  , printfNewline "" []
+  , "  " ++ printfNewline "" []
   , "  return EXIT_SUCCESS;"
   , "}"
   ]
-  -- where
-  --   cleanString =
-  --       [ "void clean(const char *buffer, FILE *fp) {"
-  --       , "  char *p = strchr(buffer,'\\n');"
-  --       , "  if (p != NULL)"
-  --       , "    *p = 0;"
-  --       , "  else {"
-  --       , "    int c;"
-  --       , "    while ((c = fgetc(fp)) != '\\n' && c != EOF);"
-  --       , "  }"
-  --       , "}"
-  --       , ""
-  --       ]
 
+-- | Get variable values to sample.
 inputExtVars :: SimValues -> String -> [String]
 inputExtVars exts indent =
     foldStreamableMaps decl exts []
     where
-        decl :: Streamable a => Var -> [a] -> [String] -> [String]
-        decl v l ls =
-            let string = "string_" ++ v in
-            (indent ++ "char " ++ string ++ " [50] = \"\";") :
-            (indent ++ "if(fgets (" ++ string ++ ", sizeof(" ++ string 
-                    ++ "), stdin) != NULL)") :
-            (indent ++ indent ++ "sscanf (" ++ string ++ ", \"" 
-                    ++ typeId (head l) ++ "\", &" ++ v ++ ");") :
---            (indent ++ "clean (" ++ string ++ ", stdin);") : 
-            ls
+      decl :: Streamable a => Var -> [a] -> [String] -> [String]
+      decl v l ls =
+        let spec = if null l then error "Impossible error in inputExtVars" 
+                     else head l
+            (frmt, mMacro) = scnId spec            
+            aBool   = atomType spec == Bool
+            mTmp    = if aBool then "__tmpCopilotBool_" ++ v else v
+            scan    =    indent ++ "scanf(" ++ "\"" ++ frmt ++ "\"" ++ mMacro 
+                      ++ ", " ++ "&" ++ mTmp ++ ");" in
+        (if aBool 
+           then    indent ++"//We can't scanf directly into a Bool, "
+                ++ "so we get an int then cast.\n" 
+                ++ (indent ++ "int " ++ mTmp ++ ";\n")
+                ++ scan ++ "\n"
+                ++ indent ++ v ++ " = (bool) " ++ mTmp ++ ";"
+              
+           else scan) : ls
 
+-- | Print the Copilot stream values to standard out.
 outputVars :: Name -> StreamableMaps Spec -> [String]
 outputVars cName streams =
     foldStreamableMaps decl streams []
     where
-        decl :: forall a. Streamable a 
-             => Var -> Spec a -> [String] -> [String]
-        decl v _ ls =
-            ("    " ++ printf (v ++ ": " ++ typeIdPrec (unit::a) ++ "   ") 
-            [vPre cName ++ v]) : ls
+      decl :: forall a. Streamable a => Var -> Spec a -> [String] -> [String]
+      decl v _ ls =
+        let (frmt, mMacro) = prtIdPrec (unit::a) 
+            prtf = printf (v ++ ": " ++ frmt ++ "\" " ++ mMacro ++ "\"   ") 
+                          [vPre cName ++ v] in
+        ("    " ++ prtf) : ls
