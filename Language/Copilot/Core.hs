@@ -244,24 +244,25 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- | A default value for the type @a@. Its value is not important.
     unit :: a
     
-    -- | A constructor to produce an @Atom@ value
+    -- | A constructor to produce an 'Atom' value
     atomConstructor :: Var -> a -> A.Atom (A.V a)
 
-    -- | A constructor to get an @Atom@ value from an external variable
+    -- | A constructor to get an 'Atom' value from an external variable
     externalAtomConstructor :: Var -> A.V a
 
-    -- | The argument only coerces the type, it is discarded.  Returns the
-    -- format for outputting a value of this type with printf in C
-    --
-    -- For example "%f" for a float
-    typeId :: a -> String
+    -- | Format specifiers for printing in C.  Results in @(format, macro)@,
+    -- where format is of the form @"% ..."@, and @macro@ is either an empty |
+    -- string or a macro from inttypes.h (e.g., @PRIu8@ or @SCNu8@ for |
+    -- printing and scanning, respectively.
+    prtId :: a -> (String, String)
+    scnId :: a -> (String, String)
     
     -- | The same, only adds the wanted precision for floating points.
-    typeIdPrec :: a -> String
-    typeIdPrec x = typeId x
+    prtIdPrec :: a -> (String, String)
+    prtIdPrec x = prtId x
     
     -- | The argument only coerces the type, it is discarded.
-    -- Returns the corresponding /Atom/ type.
+    -- Returns the corresponding 'Atom' type.
     atomType :: a -> A.Type
     
     -- | Like Show, except that the formatting is exactly the same as the one of
@@ -275,99 +276,120 @@ instance Streamable Bool where
     unit = False
     atomConstructor = A.bool
     externalAtomConstructor = A.bool'
-    typeId _ = "%i"
+    prtId _ = ("%u", "")
+    scnId _ = ("%u", "")
     atomType _ = A.Bool
     showAsC x = printf "%u" (if x then 1::Int else 0)
+
 instance Streamable Int8 where
     getSubMap = i8Map
     updateSubMap f sm = sm {i8Map = f $ i8Map sm}
     unit = 0
     atomConstructor = A.int8
     externalAtomConstructor = A.int8'
-    typeId _ = "%d"
+    prtId _ = ("%", "PRId8")
+    scnId _ = ("%", "SCNd8")
     atomType _ = A.Int8
     showAsC x = printf "%d" (toInteger x)
+
 instance Streamable Int16 where
     getSubMap = i16Map
     updateSubMap f sm = sm {i16Map = f $ i16Map sm}
     unit = 0
     atomConstructor = A.int16
     externalAtomConstructor = A.int16'
-    typeId _ = "%d"
+    prtId _ = ("%", "PRId16")
+    scnId _ = ("%", "SCNd16")
     atomType _ = A.Int16
     showAsC x = printf "%d" (toInteger x)
+
 instance Streamable Int32 where
     getSubMap = i32Map
     updateSubMap f sm = sm {i32Map = f $ i32Map sm}
     unit = 0
     atomConstructor = A.int32
     externalAtomConstructor = A.int32'
-    typeId _ = "%d"
+    prtId _ = ("%", "PRId32")
+    scnId _ = ("%", "SCNd32")
     atomType _ = A.Int32
     showAsC x = printf "%d" (toInteger x)
+
 instance Streamable Int64 where
     getSubMap = i64Map
     updateSubMap f sm = sm {i64Map = f $ i64Map sm}
     unit = 0
     atomConstructor = A.int64
     externalAtomConstructor = A.int64'
-    typeId _ = "%lld"
+    prtId _ = ("%", "PRId64")
+    scnId _ = ("%", "SCNd64")
     atomType _ = A.Int64
     showAsC x = printf "%d" (toInteger x)
+
 instance Streamable Word8 where
     getSubMap = w8Map
     updateSubMap f sm = sm {w8Map = f $ w8Map sm}
     unit = 0
     atomConstructor = A.word8
     externalAtomConstructor = A.word8'
-    typeId _ = "%u"
+    prtId _ = ("%", "PRIu8")
+    scnId _ = ("%", "SCNu8")
     atomType _ = A.Word8
     showAsC x = printf "%u" (toInteger x)
+
 instance Streamable Word16 where
     getSubMap = w16Map
     updateSubMap f sm = sm {w16Map = f $ w16Map sm}
     unit = 0
     atomConstructor = A.word16
     externalAtomConstructor = A.word16'
-    typeId _ = "%u"
+    prtId _ = ("%", "PRIu16")
+    scnId _ = ("%", "SCNu16")
     atomType _ = A.Word16
     showAsC x = printf "%u" (toInteger x)
+
 instance Streamable Word32 where
     getSubMap = w32Map
     updateSubMap f sm = sm {w32Map = f $ w32Map sm}
     unit = 0
     atomConstructor = A.word32
     externalAtomConstructor = A.word32'
-    typeId _ = "%u"
+    prtId _ = ("%", "PRIu32")
+    scnId _ = ("%", "SCNu32")
     atomType _ = A.Word32
     showAsC x = printf "%u" (toInteger x)
+
 instance Streamable Word64 where
     getSubMap = w64Map
     updateSubMap f sm = sm {w64Map = f $ w64Map sm}
     unit = 0
     atomConstructor = A.word64
     externalAtomConstructor = A.word64'
-    typeId _ = "%llu"
+    prtId _ = ("%", "PRIu64")
+    scnId _ = ("%", "SCNu64")
     atomType _ = A.Word64
     showAsC x = printf "%u" (toInteger x)
+
 instance Streamable Float where
     getSubMap = fMap
     updateSubMap f sm = sm {fMap = f $ fMap sm}
     unit = 0
     atomConstructor = A.float
     externalAtomConstructor = A.float'
-    typeId _ = "%f"
-    typeIdPrec _ = "%.5f"
+    prtId _ = ("%f", "")
+    scnId _ = ("%f", "")
+    prtIdPrec _ = ("%.5f", "")
     atomType _ = A.Float
     showAsC x = printf "%.5f" x
+
 instance Streamable Double where
     getSubMap = dMap
     updateSubMap f sm = sm {dMap = f $ dMap sm}
     unit = 0
     atomConstructor = A.double
     externalAtomConstructor = A.double'
-    typeId _ = "%lf"
-    typeIdPrec _ = "%.10lf"
+    prtId _ = ("%lf", "")
+    scnId _ = ("%lf", "")
+    prtIdPrec _ = ("%.10lf", "")
     atomType _ = A.Double
     showAsC x = printf "%.10f" x
 
