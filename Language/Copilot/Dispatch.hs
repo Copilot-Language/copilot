@@ -22,11 +22,11 @@ import qualified Language.Atom as A
 import qualified Data.Map as M
 
 import System.Directory 
-import System.Process
-import Control.Concurrent (threadWaitRead)
-import System.Posix.Types (Fd(..))
-import System.Posix.IO (handleToFd, dup, fdRead, fdWrite, closeFd)
-import System.IO (stderr)
+import System.Process 
+--import Control.Concurrent (threadWaitRead)
+--import System.Posix.Types (Fd(..))
+--import System.Posix.IO (handleToFd, dup, fdRead, fdWrite, closeFd)
+import System.IO (stderr, hSetBuffering, hClose, hGetLine, hPutStr)
 import Control.Monad
 import Data.Maybe (isJust, fromJust)
 
@@ -218,10 +218,10 @@ simCCode streams programName simExtValues mbInterpretedLines
          iterations verbose = do
   (Just hin, Just hout, _, prc) <- createProcess processConfig
 
-  -- Convert to using POSIX file descriptors.  The reason is that we use
-  -- threadWaitRead below, which requires fds.
-  fdin  <- handleToFd hin >>= dup
-  fdout <- handleToFd hout >>= dup
+  -- -- Convert to using POSIX file descriptors.  The reason is that we use
+  -- -- threadWaitRead below, which requires fds.
+  -- fdin  <- handleToFd hin >>= dup
+  -- fdout <- handleToFd hout >>= dup
 
   when (verbose == Verbose) (putStrLn $ "\nTesting program:\n" 
                                           ++ unlines showStreams)
