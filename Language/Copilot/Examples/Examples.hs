@@ -71,6 +71,12 @@ t5 = do
   trigger y "y_trigger" void
   trigger z "z0_trigger" x
   trigger z "z1_trigger" (y <> constW16 3 <> x)
+
+t6 :: Streams
+t6 = do
+  let x = extB "x"
+      y = varB "y"
+  y .= x
   
 yy :: Streams
 yy = do
