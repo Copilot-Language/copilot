@@ -2,9 +2,8 @@
 
 -- | Used by the end-user to easily give its arguments to dispatch.
 module Language.Copilot.Interface (
-    Options(), baseOpts, randomTest, test, interpret, compile, verify
-  , interface , help
-  , setC, setO, setP, setI, setCode --, setN
+    Options(), baseOpts, randomTest, randomTests, test, interpret, compile
+  , verify, interface, help, setC, setO, setP, setI, setCode --, setN
   , setV, setR, setDir, setGCC, setArrs, setClock, setSim, Verbose(..)
   -- * For setting the environments
   , setE, setEB, setEW8, setEW16, setEW32, setEW64
@@ -26,6 +25,8 @@ import System.Exit
 import System.Cmd
 import Data.Maybe
 import qualified Data.Map as M (empty)
+--import Control.Concurrent (forkOS, killThread)
+--import Control.Concurrent.MVar
 
 data Options = Options {
   optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams, then
@@ -85,6 +86,19 @@ baseOpts = Options {
 
 -- Functions for making it easier for configuring copilot in the frequent use
 -- cases
+
+-- | Run 'randomTest' @n@ iterations on each of @i@ random programs.
+randomTests :: Int -> Int -> Options -> IO ()
+randomTests n i opts = do 
+  randomTests' i
+  where 
+  randomTests' 0 = do putStrLn 
+                        $ "Executed " ++ show i ++ " tests without an error."
+  randomTests' j = do 
+    catch (randomTest n opts) 
+          (\_ -> error $    "Executed " ++ show (i-j) 
+                   ++ " tests before an unexpected system error.")
+    randomTests' (j-1) 
 
 -- | Generate a random Copilot program and compare the interpreter against the
 -- compiler on that program.
