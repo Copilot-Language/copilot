@@ -23,10 +23,9 @@ import qualified Data.Map as M
 
 import System.Directory 
 import System.Process 
---import Control.Concurrent (threadWaitRead)
---import System.Posix.Types (Fd(..))
---import System.Posix.IO (handleToFd, dup, fdRead, fdWrite, closeFd)
-import System.IO (stderr, hSetBuffering, hClose, hGetLine, hPutStr)
+import Control.Concurrent (threadDelay)
+import System.IO 
+  (stderr, hSetBuffering, hClose, hGetLine, hPutStrLn, BufferMode(..), Handle)
 import Control.Monad
 import Data.Maybe (isJust, fromJust)
 
@@ -34,7 +33,6 @@ data AtomToC = AtomToC
     { cName :: Name -- ^ Name of the C file to generate
     , gccOpts :: String -- ^ Options to pass to the compiler
     , getPeriod :: Maybe Period -- ^ The optional period
---    , interpreted :: Interpreted -- ^ Interpret the program or not
     , outputDir :: String -- ^ Where to put the executable
     , compiler :: String -- ^ Which compiler to use
     , randomProg :: Bool -- ^ Was the program randomly generated?
@@ -190,9 +188,13 @@ copilotToC elems allExts simExtValues opts verbose =
             , A.hardwareClock = clock opts
             , A.cStateName = "copilotState" ++ cFileName
             }
+        compileA = A.compile cFileName atomConfig program
     in do
         putStrLn $ "Compiling Copilot specs to C  ..."
-        (sched, _, _, _, _) <- A.compile cFileName atomConfig program
+        (sched, _, _, _, _) <- 
+          -- Can fail with openFile: resource exhausted (Cannot allocate memory)
+          -- after thousands of compiles during random testing.
+          catch compileA (\_ -> threadDelay 10000 >> compileA)
         when (verbose == Verbose) (putStrLn $ A.reportSchedule sched)
         putStrLn $ "Generated " ++ cFileName ++ ".c and " ++ cFileName ++ ".h"
 
@@ -218,18 +220,22 @@ simCCode streams programName simExtValues mbInterpretedLines
          iterations verbose = do
   (Just hin, Just hout, _, prc) <- createProcess processConfig
 
-  -- -- Convert to using POSIX file descriptors.  The reason is that we use
-  -- -- threadWaitRead below, which requires fds.
-  -- fdin  <- handleToFd hin >>= dup
-  -- fdout <- handleToFd hout >>= dup
-
   when (verbose == Verbose) (putStrLn $ "\nTesting program:\n" 
                                           ++ unlines showStreams)
+
+  -- Buffer by lines
+  hSetBuffering hin LineBuffering
+
   -- Make the initial set of external variable values to send to the C program.
-  inputVals <- foldStreamableMaps (inputVar fdin) simExtValues (return emptySM)
+  inputVals <- foldStreamableMaps (inputVar hin) simExtValues (return emptySM)
 
   -- -1 Because we did an initial set of external vars.
-  executePeriod (fdin, fdout, prc) inputVals mbInterpretedLines (iterations - 1) 
+  executePeriod (hin, hout, prc) inputVals mbInterpretedLines (iterations - 1) 
+
+  hClose hout
+  _ <- waitForProcess prc
+  putStrLn "Execution complete." 
+
   where 
 
   -- Create a subprocess to execute the C program.  stdin and stdout for the C
@@ -244,18 +250,11 @@ simCCode streams programName simExtValues mbInterpretedLines
   -- variable, the actions pipe the head of the list to the C simulator, then
   -- update the external variable map with the tail of the list.
   inputVar :: Streamable a 
-           => Fd -> Var -> [a] -> IO SimValues -> IO SimValues
+           => Handle -> Var -> [a] -> IO SimValues -> IO SimValues
   inputVar _ _ [] _ = 
     error "Error: no more input values for external variables exist!"
-  inputVar fdin v (val:vals) ioSimVals = do
-    _ <- fdWrite fdin (showAsC val ++ " \n") -- needs a line ternminator.
-                                             -- Warning: only least 8-bits of
-                                             -- chars written.  Returns bytes
-                                             -- written: could do better error
-                                             -- checking to ensure they're all
-                                             -- sent.  ioSimVals >>= (return
-                                             -- (updateSubMap (\m -> M.insert v
-                                             -- vals m)))
+  inputVar hin v (val:vals) ioSimVals = do
+    _ <- hPutStrLn hin (showAsC val) 
     valMap <- ioSimVals
     return $ updateSubMap (\m -> M.insert v vals m) valMap
 
@@ -263,36 +262,19 @@ simCCode streams programName simExtValues mbInterpretedLines
   -- outputs to the results of the interpreter at each period, if we're in
   -- testing mode.
   -- 
-  -- XXX I don't quite understand the Posix pipes we're using, but essentially,
-  -- you have to do all your output to the executable, then all of your input
-  -- from the executable, with a threadWaitPeriod inbetween.  You can't
-  -- interleave things, or you'll get race conditions.  You can probably get
-  -- this to work if you set up a duplex pipe (two pipes), but I couldn't figure
-  -- out how to do this in the little time I looked at the Haskell API.  The
-  -- code below works, but don't change it to interleave input/output unless you
-  -- know what you're doing.  A less fragile version might use temporary
-  -- files...
-  executePeriod :: (Fd, Fd, ProcessHandle) -> SimValues -> Maybe [String] 
+  -- XXX The code below works, but don't change it unless you know what you're
+  -- doing.  A less fragile version might use temporary files.
+  executePeriod :: (Handle, Handle, ProcessHandle) -> SimValues -> Maybe [String] 
                 -> Int -> IO ()
-  executePeriod (fdin, fdout, prc) _ mbInLines 0 = do
-    threadWaitRead fdout -- VERY IMPORTANT to wait until something is available.
-                         -- fdRead doesn't seem to be blocking.
-    let getLines acc = do (cLines,_) <- fdRead fdout 1
-                          if cLines == "\n" then return acc
-                            else getLines (acc ++ cLines)
-    cLines <- getLines ""
+  executePeriod (hin, hout, _) _ mbInLines 0 = do
+    hClose hin -- Important to close hin before getting hout.
+    cLines <- hGetLine hout
     when (isJust mbInLines) 
          (compareOutputs ((concat . fromJust) mbInLines) cLines)
                          
-    -- when (verbose == Verbose) (putStrLn cLines)
-    -- Ok, we're done with the file descriptors, so close them.
-    closeFd fdin
-    closeFd fdout
-    _ <- waitForProcess prc 
-    putStrLn "Execution complete." 
-  executePeriod ps@(fdin, _, _) inputVals mbInLines n = do
+  executePeriod ps@(hin, _, _) inputVals mbInLines n = do
     nextInputVals <- 
-      foldStreamableMaps (inputVar fdin) inputVals (return emptySM)
+      foldStreamableMaps (inputVar hin) inputVals (return emptySM)
     let nextLines = case mbInLines of
                       Nothing -> Nothing
                       Just [] -> error "Impossible : empty ExecutePeriod"
@@ -312,7 +294,7 @@ simCCode streams programName simExtValues mbInterpretedLines
   compareOutputs inLine line =
     unless (inLine == line) $
      error $ unlines
-       [ "\n*** Failed on the randomly-generated Copilot specification: ***\n"
+       [ "\n*** Failed on the Copilot specification: ***\n"
        , unlines showStreams
        , ""
        , "Failure: interpreter /= compiler"
