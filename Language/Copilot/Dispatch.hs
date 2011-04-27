@@ -292,8 +292,11 @@ simCCode streams programName simExtValues mbInterpretedLines
   -- by the interpreter and parser.  Ideally, this would be made more robust.
   compareOutputs :: String -> String -> IO ()
   compareOutputs inLine line =
-    unless (inLine == line) $
-     error $ unlines
+    unless (inLine == line) 
+           -- Print to both 
+           (hPutStrLn stderr failure >> error "Aborted testing on failure.")
+    where 
+    failure = unlines
        [ "\n*** Failed on the Copilot specification: ***\n"
        , unlines showStreams
        , ""

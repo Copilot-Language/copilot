@@ -83,15 +83,20 @@ ft0 = do
 -------------------------------------------------------------------
 makeProcs :: IO ()
 makeProcs = do
-  compile proc0 "proc0" $ 
-    setCode (Just (headers P.++ send0), Just mainStr) baseOpts
-  compile proc1 "proc1" $ 
-    setCode (Just (headers P.++ send1), Nothing) baseOpts
-  compile proc2 "proc2" $ 
-    setCode (Just (headers P.++ send2), Nothing) baseOpts
+  distCompile proc0 "proc0" send0 (Just mainStr)
+  distCompile proc1 "proc1" send1 Nothing
+  distCompile proc2 "proc2" send2 Nothing
   exitCode <- system "gcc -o proc -Wall proc0.c proc1.c proc2.c"
   print exitCode
+
+distCompile :: Streams -> String -> String -> Maybe String -> IO ()
+distCompile streams fileName addHeaders mMain =
+  compile streams fileName $ 
+    setCode ( Just (headers P.++ addHeaders)
+            , mMain) 
+            baseOpts
   where headers = includes P.++ vars P.++ decls
+  
 
 -- | Distributed majority voting among three processors.
 proc0, proc1, proc2 :: Streams
