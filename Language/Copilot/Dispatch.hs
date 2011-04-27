@@ -291,9 +291,9 @@ simCCode streams programName simExtValues mbInterpretedLines
   -- XXX This is pretty fragile, and depends on the string representations given
   -- by the interpreter and parser.  Ideally, this would be made more robust.
   compareOutputs :: String -> String -> IO ()
-  compareOutputs inLine line =
+  compareOutputs inLine line = do
     unless (inLine == line) 
-           -- Print to both 
+           -- Print to standard error, so you can push the testing to /dev/null.
            (hPutStrLn stderr failure >> error "Aborted testing on failure.")
     where 
     failure = unlines
