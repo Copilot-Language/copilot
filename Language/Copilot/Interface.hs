@@ -25,8 +25,8 @@ import System.Exit
 import System.Cmd
 import Data.Maybe
 import qualified Data.Map as M (empty)
---import Control.Concurrent (forkOS, killThread)
---import Control.Concurrent.MVar
+import Control.Monad (when)
+import System.Process (runCommand, waitForProcess)
 
 data Options = Options {
   optStreams :: Maybe (StreamableMaps Spec), -- ^ If there's no Streams, then
@@ -68,7 +68,7 @@ baseOpts :: Options
 baseOpts = Options {
         optStreams = Nothing,
         optSimVals = Nothing,
-        optCompile = "",
+        optCompile = "-Wall",
         optPeriod = Nothing,
         optInterpret = False,
         optIterations = Nothing,
@@ -105,14 +105,27 @@ randomTests n i opts = do
 randomTest :: Int -> Options -> IO ()
 randomTest n opts = do
   r <- randomRIO (0, maxBound)
-  interface $ setC "-Wall" $ setI $ setR r $ setSim n opts
+  interface $ setI $ setR r $ setSim n opts
     
--- | Compare the interpreter and the compiler on a specific program.
-test :: Streams -> Name -> Int -> Options -> IO ()
-test streams fileName n opts =
-  interface $ setC "-Wall" $ setO fileName $ setSim n
+-- | Compare the interpreter and the compiler on a specific program, possibly
+-- using @gcov@ <http://gcc.gnu.org/onlinedocs/gcc/Gcov.html> to check coverage
+-- of the generated C program.
+test :: Streams -> Name -> Int -> Bool -> Options -> IO ()
+test streams fileName n b opts = do
+  interface $ setO fileName $ setSim n
     $ setTriggers (getTriggers streams) 
-      $ setI $ opts {optStreams = Just (getSpecs streams)}
+      $ setI $ opts { optStreams = Just (getSpecs streams)
+                    , optCompile = copts}
+  when b (do h <- runCommand ("gcov -b " ++ fileName) 
+             putStrLn ""
+             putStrLn "***********************************"
+             putStrLn "  Coverage statistics from gcov:"
+             putStrLn "***********************************"
+             _ <- waitForProcess h
+             return ())
+  where  
+  copts = if b then "-Wall -fprofile-arcs -ftest-coverage" 
+            else optCompiler opts
 
 -- | Interpret a program.
 interpret :: Streams -> Int -> Options -> IO ()
@@ -122,7 +135,7 @@ interpret streams n opts =
 -- | Compile a program.
 compile :: Streams -> Name -> Options -> IO ()
 compile streams fileName opts = 
-  interface $ setC "-Wall" $ setO fileName 
+  interface $ setO fileName 
     $ setTriggers (getTriggers streams) 
       $ opts {optStreams = Just (getSpecs streams)}
 
