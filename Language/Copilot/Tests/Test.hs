@@ -15,7 +15,9 @@ import System.Process
 import System.IO 
   (stderr, hSetBuffering, hClose, hGetLine, hPutStrLn, BufferMode(..), Handle)
 
+-- | How many times do we "unroll" the Copilot program?
 type Iterations = Int
+
 data Verbose = OnlyErrors | DefaultVerbose | Verbose deriving Eq
 
 -- | Execute the generated C code using provided values for external

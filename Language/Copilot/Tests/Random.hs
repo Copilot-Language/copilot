@@ -30,13 +30,15 @@ weightsContinueVar, weightsContinueExtVar :: [(Bool, Int)]
 weightsContinueVar = [(True, 3), (False, 1)]
 weightsContinueExtVar = [(True, 1), (False, 1)]
 
--- These determines the frequency of each atom type for the streams and the monitored variables
+-- These determines the frequency of each atom type for the streams and the
+-- monitored variables XXX We're not testing floats and doubles, because it's
+-- impossible to guarantee precision.
 weightsVarTypes, weightsExtVarTypes :: [(A.Type, Int)]
 weightsVarTypes = 
-    [(A.Bool, 5), (A.Word64, 3), (A.Int64, 3), (A.Float, 0), (A.Double, 4),
+    [(A.Bool, 1), (A.Word64, 1), (A.Int64, 1), (A.Float, 0), (A.Double, 0),
             (A.Int8, 1), (A.Int16, 1), (A.Int32, 1), (A.Word8, 1), (A.Word16, 1), (A.Word32, 1)]
 weightsExtVarTypes = 
-    [(A.Bool, 5), (A.Word64, 3), (A.Int64, 3), (A.Float, 0), (A.Double, 4),
+    [(A.Bool, 1), (A.Word64, 1), (A.Int64, 1), (A.Float, 0), (A.Double, 0),
             (A.Int8, 1), (A.Int16, 1), (A.Int32, 1), (A.Word8, 1), (A.Word16, 1), (A.Word32, 1)]
             
 -- These determines the frequency of each constructor in the random streams
