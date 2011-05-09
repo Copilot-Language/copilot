@@ -1,3 +1,4 @@
+
 name:                copilot
 version:             1.0.3
 cabal-version:       >= 1.6
@@ -66,6 +67,7 @@ library
                      Language.Copilot.Help
                      Language.Copilot.Analyser
                      Language.Copilot.PrettyPrinter
+                     Language.Copilot.Tests.Test
                      Language.Copilot.Tests.Random
                      Language.Copilot.Dispatch
                      Language.Copilot.Interface
