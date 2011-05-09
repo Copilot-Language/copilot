@@ -1,0 +1,46 @@
+cabal-version:       >=1.2
+name:                copilot-language
+version:             0.1
+synopsis:            A Haskell-embedded DSL for monitoring hard real-time distributed systems.
+description:         Blah blah blah...
+license:             BSD3
+license-file:        LICENSE
+author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller, Nis Nordby Wegmann
+maintainer:          niswegmann@gmail.com
+stability:           Experimental
+category:            Language, Embedded
+build-type:          Simple
+
+library
+  hs-source-dirs: src
+
+  build-depends:
+    array >= 0.3,
+    base >= 4,
+    containers,
+    fgl >= 5.4,
+    mtl,
+    type-equality >= 0.1
+
+  exposed-modules:
+    Language.Copilot
+    Language.Copilot.Array
+    Language.Copilot.Node
+    Language.Copilot.Interface
+    Language.Copilot.Interpret
+    Language.Copilot.Prelude
+    Language.Copilot.Spec
+    Language.Copilot.Streamable
+    Language.Copilot.Type
+    Language.Copilot.Validate
+
+  other-modules:
+    Language.Copilot.Reify
+
+  ghc-options:
+    -fwarn-tabs
+    -O2
+    -auto-all
+    -caf-all
+    -Wall
+--    -fno-warn-orphans
