@@ -63,47 +63,66 @@ data Node :: (* -> *) -> * -> * where
 
 data Fun1 :: * -> * -> * where
   -- Boolean
-  Not :: Fun1 Bool Bool
+  Not     :: Fun1 Bool Bool
   -- Numeric
-  Abs :: (Streamable a, Num a) => Fun1 a a
-  Sgn :: (Streamable a, Num a) => Fun1 a a
+  Abs     :: (Streamable a, Num a) => Fun1 a a
+  Signum  :: (Streamable a, Num a) => Fun1 a a
   -- Fractional
-  Rcp :: (Streamable a, Fractional a) => Fun1 a a
+  Recip   :: (Streamable a, Fractional a) => Fun1 a a
+  -- Floating
+  Exp     :: (Streamable a, Floating a) => Fun1 a a
+  Sqrt    :: (Streamable a, Floating a) => Fun1 a a
+  Log     :: (Streamable a, Floating a) => Fun1 a a
+  Sin     :: (Streamable a, Floating a) => Fun1 a a
+  Tan     :: (Streamable a, Floating a) => Fun1 a a
+  Cos     :: (Streamable a, Floating a) => Fun1 a a
+  Asin    :: (Streamable a, Floating a) => Fun1 a a
+  Atan    :: (Streamable a, Floating a) => Fun1 a a
+  Acos    :: (Streamable a, Floating a) => Fun1 a a
+  Sinh    :: (Streamable a, Floating a) => Fun1 a a
+  Tanh    :: (Streamable a, Floating a) => Fun1 a a
+  Cosh    :: (Streamable a, Floating a) => Fun1 a a
+  Asinh   :: (Streamable a, Floating a) => Fun1 a a
+  Atanh   :: (Streamable a, Floating a) => Fun1 a a
+  Acosh   :: (Streamable a, Floating a) => Fun1 a a
+
+data Fun2 :: * -> * -> * -> * where
+  -- Boolean
+  And     :: Fun2 Bool Bool Bool
+  Or      :: Fun2 Bool Bool Bool
+  -- Numeric
+  Add     :: (Streamable a, Num a) => Fun2 a a a
+  Sub     :: (Streamable a, Num a) => Fun2 a a a
+  Mul     :: (Streamable a, Num a) => Fun2 a a a
+  -- Fractional
+  Div     :: (Streamable a, Fractional a) => Fun2 a a a
+  -- Integral
+  Mod     :: (Streamable a, Integral a) => Fun2 a a a
+  -- Equality
+  Eq      :: (Streamable a, Eq a)  => Fun2 a a Bool
+  Ne      :: (Streamable a, Eq a)  => Fun2 a a Bool
+  -- Relational
+  Lt      :: (Streamable a, Ord a) => Fun2 a a Bool
+  Gt      :: (Streamable a, Ord a) => Fun2 a a Bool
+  Le      :: (Streamable a, Ord a) => Fun2 a a Bool
+  Ge      :: (Streamable a, Ord a) => Fun2 a a Bool
+  -- Array
+  Index   :: (Streamable a, Streamable i, Integral i) => Fun2 (Array a) i a
+  -- Floating
+  Pow     :: (Streamable a, Floating a) => Fun2 a a a
+  LogBase :: (Streamable a, Floating a) => Fun2 a a a
+
+data Fun3 :: * -> * -> * -> * -> * where
+  -- Mutex (a.k.a. if-then-else)
+  Mux :: Streamable a => Fun3 Bool a a a
 
 deriving instance Eq (Fun1 a b)
 
 deriving instance Show (Fun1 a b)
 
-data Fun2 :: * -> * -> * -> * where
-  -- Boolean
-  And :: Fun2 Bool Bool Bool
-  Or  :: Fun2 Bool Bool Bool
-  -- Numeric
-  Add :: (Streamable a, Num a) => Fun2 a a a
-  Sub :: (Streamable a, Num a) => Fun2 a a a
-  Mul :: (Streamable a, Num a) => Fun2 a a a
-  -- Fractional
-  Div :: (Streamable a, Fractional a) => Fun2 a a a
-  -- Integral
-  Mod :: (Streamable a, Integral a) => Fun2 a a a
-  -- Equality
-  Eq  :: (Streamable a, Eq a)  => Fun2 a a Bool
-  Ne  :: (Streamable a, Eq a)  => Fun2 a a Bool
-  -- Relational
-  Lt  :: (Streamable a, Ord a) => Fun2 a a Bool
-  Gt  :: (Streamable a, Ord a) => Fun2 a a Bool
-  Le  :: (Streamable a, Ord a) => Fun2 a a Bool
-  Ge  :: (Streamable a, Ord a) => Fun2 a a Bool
-  -- Array
-  Idx :: (Streamable a, Streamable i, Integral i) => Fun2 (Array a) i a
-
 deriving instance Eq (Fun2 a b c)
 
 deriving instance Show (Fun2 a b c)
-
-data Fun3 :: * -> * -> * -> * -> * where
-  -- Mutex (a.k.a. if-then-else)
-  Mux :: Streamable a => Fun3 Bool a a a
 
 deriving instance Eq (Fun3 a b c d)
 

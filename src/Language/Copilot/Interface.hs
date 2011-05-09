@@ -63,47 +63,45 @@ fun3 f (Stream a) (Stream b) (Stream c) = Stream . In $ Fun3 f a b c
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
-  show _ = error "'Prelude.show' isn't implemented for 'Stream'!"
+  show _ = error "'Prelude.show' isn't implemented for streams!"
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance P.Eq (Stream a) where
-  (==) = error "'Prelude.(==)' isn't implemented for 'Stream'!"
-  (/=) = error "'Prelude.(/=)' isn't implemented for 'Stream'!"
+  (==) = error "'Prelude.(==)' isn't implemented for streams!"
+  (/=) = error "'Prelude.(/=)' isn't implemented for streams!"
 
 instance (Streamable a, Num a) => Num (Stream a) where
-  (+) = fun2 Add
-  (-) = fun2 Sub
-  (*) = fun2 Mul
-  abs = fun1 Abs
-  signum = fun1 Sgn
+  (+)     = fun2 Add
+  (-)     = fun2 Sub
+  (*)     = fun2 Mul
+  abs     = fun1 Abs
+  signum  = fun1 Signum
   fromInteger = const . fromInteger
 
 instance (Streamable a, Fractional a) => Fractional (Stream a) where
-  (/) = fun2 Div
-  recip = fun1 Rcp
+  (/)     = fun2 Div
+  recip   = fun1 Recip
   fromRational = const . fromRational
 
-{-
 instance (Streamable a, Floating a) => Floating (Stream a) where
-  pi = const pi
-  exp = fun1 exp "exp"
-  sqrt = fun1 sqrt "sqrt"
-  log = fun1 log "log"
-  (**) = fun2 (**) "**"
-  logBase = fun2 logBase "logBase"
-  sin = fun1 sin "sin"
-  tan = fun1 tan "tan"
-  cos = fun1 cos "cos"
-  asin = fun1 asin "asin"
-  atan = fun1 atan "atan"
-  acos = fun1 acos "acos"
-  sinh = fun1 sinh "sinh"
-  tanh = fun1 tanh "tanh"
-  cosh = fun1 cosh "cosh"
-  asinh = fun1 asinh "asinh"
-  atanh = fun1 atanh "atanh"
-  acosh = fun1 acosh "acosh"
--}
+  pi      = const pi
+  exp     = fun1 Exp
+  sqrt    = fun1 Sqrt
+  log     = fun1 Log
+  (**)    = fun2 Pow
+  logBase = fun2 LogBase
+  sin     = fun1 Sin
+  tan     = fun1 Tan
+  cos     = fun1 Cos
+  asin    = fun1 Asin
+  atan    = fun1 Atan
+  acos    = fun1 Acos
+  sinh    = fun1 Sinh
+  tanh    = fun1 Tanh
+  cosh    = fun1 Cosh
+  asinh   = fun1 Asinh
+  atanh   = fun1 Atanh
+  acosh   = fun1 Acosh
 
 infixr 3 ++
 
@@ -163,7 +161,7 @@ array = Stream . In . Const . Array
 
 (!!) :: (Streamable a, Streamable i, Integral i)
   => Stream (Array a) -> Stream i -> Stream a
-(!!) = fun2 Idx
+(!!) = fun2 Index
 
 interpret :: Integer -> Streamable a => Stream a -> IO ()
 interpret i (Stream n) =
