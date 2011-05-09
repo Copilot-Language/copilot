@@ -13,12 +13,13 @@ module Language.Copilot.Node
   , Fun2 (..)
   , Fun3 (..)
   , fmap2
---  , fold2
+  , foldMap2
+  , foldr2
   , traverse2
   ) where
 
 import Control.Applicative (Applicative (..), (<$>))
---import Data.Monoid (Monoid (..))
+import Data.Monoid (Monoid (..), Endo (..))
 import Language.Copilot.Streamable (Streamable)
 import Language.Copilot.Array (Array)
 
@@ -113,16 +114,35 @@ fmap2
   :: (forall b . Streamable b => f b -> g b)
   -> Node f a
   -> Node g a
-fmap2 _ (Const x)         = Const x
-fmap2 f (Append xs t)     = Append xs (f t)
-fmap2 f (Drop k t)        = Drop k (f t)
-fmap2 _ (Extern cs)       = Extern cs
-fmap2 f (Fun1 g t)        = Fun1 g (f t)
-fmap2 f (Fun2 g t1 t2)    = Fun2 g (f t1) (f t2)
-fmap2 f (Fun3 g t1 t2 t3) = Fun3 g (f t1) (f t2) (f t3)
+fmap2 f n0 = case n0 of
+  Const x         -> Const x
+  Append xs t     -> Append xs (f t)
+  Drop k t        -> Drop k (f t)
+  Extern cs       -> Extern cs
+  Fun1 g t        -> Fun1 g (f t)
+  Fun2 g t1 t2    -> Fun2 g (f t1) (f t2)
+  Fun3 g t1 t2 t3 -> Fun3 g (f t1) (f t2) (f t3)
 
---foldMap2
---  ::
+foldMap2
+  :: Monoid m
+  => (forall b . f b -> m)
+  -> Node f a
+  -> m
+foldMap2 f n0 = case n0 of
+  Const _         -> mempty
+  Append _  t     -> f t
+  Drop _ t        -> f t
+  Extern _        -> mempty
+  Fun1 _ t        -> f t
+  Fun2 _ t1 t2    -> f t1 `mappend` f t2
+  Fun3 _ t1 t2 t3 -> f t1 `mappend` f t2 `mappend` f t3
+
+foldr2
+  :: (forall a . f a -> b -> b)
+  -> b
+  -> Node f c
+  -> b
+foldr2 f acc n0 = appEndo (foldMap2 (Endo . f) n0) acc
 
 traverse2
   :: Applicative m
