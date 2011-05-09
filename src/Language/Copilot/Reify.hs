@@ -23,6 +23,7 @@ import qualified Prelude as P
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
 import Unsafe.Coerce (unsafeCoerce)
 
+-- !!! Map2 needs it own module with a proper interface !!!
 data Map2 :: * -> (* -> *) -> * where
   Map2 :: Streamable a => IntMap (f a) -> Map2 x f
 

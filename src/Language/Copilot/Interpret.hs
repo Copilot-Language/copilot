@@ -1,6 +1,7 @@
 -- |
 
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Language.Copilot.Interpret
   ( interpret
@@ -8,30 +9,24 @@ module Language.Copilot.Interpret
 
 import Language.Copilot.Node (Node (..), Fun1 (..), Fun2 (..), Fun3 (..))
 import Language.Copilot.Array (Array (..))
-import Language.Copilot.Spec (Spec (..), Map2, Key, lookup, fmap2)
+import Language.Copilot.Spec (Spec (..), lookup, fmap2)
 import Language.Copilot.Streamable (Streamable)
 import Prelude hiding (lookup)
 
 interpret :: Streamable a => Spec a -> [a]
 interpret (Spec m k0) =
-    eval env (lookup k0 m)
+    lookup k0 env
   where
-    env = fmap2 (eval env) m
+    env = fmap2 (eval (\ k -> lookup k env)) m
 
-eval :: Map2 x [] -> Node (Key x) a -> [a]
-eval m e0 = case e0 of
+eval :: (forall b . Streamable b => f b -> [b]) -> Node f a -> [a]
+eval f n0 = case n0 of
   Const x         -> repeat x
-  Append xs k     -> xs ++ (lookup k m)
-  Drop i k        -> drop i (lookup k m)
-  Fun1 f k1       -> fmap (fun1 f)
-                       (lookup k1 m)
-  Fun2 f k1 k2    -> zipWith (fun2 f)
-                       (lookup k1 m)
-                       (lookup k2 m)
-  Fun3 f k1 k2 k3 -> zipWith3 (fun3 f)
-                       (lookup k1 m)
-                       (lookup k2 m)
-                       (lookup k3 m)
+  Append xs k     -> xs ++ f k
+  Drop i k        -> drop i (f k)
+  Fun1 g k        -> fmap (fun1 g) (f k)
+  Fun2 g k1 k2    -> zipWith (fun2 g) (f k1) (f k2)
+  Fun3 g k1 k2 k3 -> zipWith3 (fun3 g) (f k1) (f k2) (f k3)
   Extern _        -> error "eval: Extern"
 
 fun1
