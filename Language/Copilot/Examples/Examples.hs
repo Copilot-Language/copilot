@@ -15,10 +15,15 @@ import qualified Prelude as P
 import Language.Copilot 
 -- import Language.Copilot.Variables
 
+aa :: Streams
+aa = do 
+  let x = varW64 "x"
+  x .= [0] ++ x + 2
+
 fib :: Streams
 fib = do
   let f = varW64 "f"
-      t   = varB "t"
+      t = varB "t"
   f .= [0,1] ++ f + (drop 1 f)
   t .= even f
     where even :: Spec Word64 -> Spec Bool
@@ -373,7 +378,16 @@ extT6 = do
   y .= [7] ++ z
   w .= x
 
-
+foo :: Streams
+foo = do
+  let x = varW16 "x"
+  let y = varW16 "y"
+  let z = varW16 "z"
+  let w = varW16 "w"
+  x .= [1,2] ++ x
+  y .= [3,4] ++ y
+  z .= x + y
+  w .= z + z
 
 -- test external idx before after and in the stream it references
 -- test multiple defs
