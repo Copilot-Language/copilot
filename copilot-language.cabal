@@ -20,6 +20,7 @@ library
     containers,
     fgl >= 5.4,
     mtl,
+    Stream >= 0.4,
     type-equality >= 0.1
 
   exposed-modules:

@@ -57,4 +57,4 @@ test0 :: Stream Int64
 test0 = drop 10000 fib
 
 main :: IO ()
-main = execute 10 test0
+main = interpret 10 test0

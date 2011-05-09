@@ -1,7 +1,7 @@
 -- |
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
+--{-# LANGUAGE GADTs #-}
+--{-# LANGUAGE FlexibleInstances #-}
 
 module Language.Copilot.Interface
   ( Stream
@@ -23,7 +23,7 @@ module Language.Copilot.Interface
   , Array
   , array
   , (!!)
-  , execute
+  , interpret
   ) where
 
 import Language.Copilot.Prelude
@@ -32,7 +32,7 @@ import Language.Copilot.Streamable (Streamable)
 import Language.Copilot.Array (Array (..))
 import Language.Copilot.Reify (reify)
 import Language.Copilot.Spec (Spec (..))
-import Language.Copilot.Interpret (interpret)
+import qualified Language.Copilot.Interpret as I
 import qualified Prelude as P
 
 -- | A wrapper for expressions
@@ -165,8 +165,8 @@ array = Stream . In . Const . Array
   => Stream (Array a) -> Stream i -> Stream a
 (!!) = fun2 Idx
 
-execute :: Int -> Streamable a => Stream a -> IO ()
-execute i (Stream n) =
+interpret :: Integer -> Streamable a => Stream a -> IO ()
+interpret i (Stream n) =
   do
     (m, k) <- reify n
-    print $ take i $ interpret (Spec m k)
+    print $ I.interpret i (Spec m k)
