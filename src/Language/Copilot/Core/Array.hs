@@ -3,16 +3,22 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Language.Copilot.Array
+module Language.Copilot.Core.Array
   ( Array (..)
   ) where
 
-import Data.Typeable (Typeable)
+import Control.DeepSeq (NFData)
+--import Data.Typeable (Typeable)
 
-data Array :: * -> * where
-  Array :: [a] -> Array a
-  deriving (Eq, Show, Typeable)
+newtype Array a = Array [a]
+  deriving
+    ( Eq
+    , NFData
+    , Show
+--    , Typeable
+    )
 
 instance (Num a) => Num (Array a) where
   Array xs + Array ys = Array $ zipWith (+) xs ys

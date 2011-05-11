@@ -4,7 +4,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE KindSignatures #-}
 
-module Language.Copilot.Reify
+module Language.Copilot.Interface.Reify
   ( reify
   , Map2
   , Key
@@ -16,8 +16,8 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.IORef
   (IORef, newIORef, readIORef, writeIORef, modifyIORef, atomicModifyIORef)
-import Language.Copilot.Node hiding (fmap2)
-import Language.Copilot.Streamable (Streamable)
+import Language.Copilot.Core.Node hiding (fmap2)
+import Language.Copilot.Core.Streamable (Streamable)
 import Prelude hiding (lookup)
 import qualified Prelude as P
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
@@ -27,9 +27,9 @@ import Unsafe.Coerce (unsafeCoerce)
 data Map2 :: * -> (* -> *) -> * where
   Map2 :: Streamable a => IntMap (f a) -> Map2 x f
 
-data Key x a = Key Int
+newtype Key x a = Key Int
 
-data DynStableName = DynStableName (StableName ())
+newtype DynStableName = DynStableName (StableName ())
 
 instance Eq DynStableName where
   (DynStableName sn1) == (DynStableName sn2) = sn1 == sn2

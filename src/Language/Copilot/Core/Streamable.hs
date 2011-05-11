@@ -1,14 +1,21 @@
 -- |
 
-module Language.Copilot.Streamable (Streamable) where
+module Language.Copilot.Core.Streamable (Streamable) where
 
+import Control.DeepSeq (NFData)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Word (Word8, Word16, Word32, Word64)
-import Data.Typeable (Typeable)
-import Language.Copilot.Array (Array)
-import Language.Copilot.Type (Typed)
+--import Data.Typeable (Typeable)
+import Language.Copilot.Core.Array (Array)
+import Language.Copilot.Core.Type (Typed)
 
-class (Eq a, Show a, Typeable a, Typed a) => Streamable a
+class
+  ( NFData a
+  , Eq a
+  , Show a
+--  , Typeable a
+  , Typed a
+  ) => Streamable a
 
 instance Streamable Bool
 instance Streamable Int8

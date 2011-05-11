@@ -7,50 +7,43 @@ module Language.Copilot.Interpret
   ( interpret
   ) where
 
--- !! Has nothing to do with Language.Copilot.Interface.Stream !!
--- See 'http://hackage.haskell.org/package/Stream'.
--- The reason we use streams (instead lists) in the evaluator
--- is to obviate the need for dealing with list lengths.
-import Data.Stream (Stream)
-import qualified Data.Stream as S
-
-import Control.Applicative (Applicative ((<*>)), (<$>))
-import Language.Copilot.Node (Node (..), Fun1 (..), Fun2 (..), Fun3 (..))
-import Language.Copilot.Array (Array (..))
-import Language.Copilot.Spec (Spec (..), lookup, fmap2)
-import Language.Copilot.Streamable (Streamable)
+import Control.DeepSeq (NFData, deepseq)
+import Language.Copilot.Core.Node (Node (..), Fun1 (..), Fun2 (..), Fun3 (..))
+import Language.Copilot.Core.Array (Array (..))
+import Language.Copilot.Core.Spec (Spec (..), lookup, fmap2)
+import Language.Copilot.Core.Streamable (Streamable)
 import Prelude hiding (lookup)
 
 -- | Interprets a CoPilot-specification.
 interpret
-  :: Streamable a
   -- Number of periods to evaluate:
-  => Integer
+  :: Integer
   -- The specification to be evaluated:
   -> Spec a
   -- The resulting list:
   -> [a]
-interpret n (Spec m k0) = S.take (fromInteger n) $ lookup k0 env
+interpret n (Spec m k0) = take (fromInteger n) $ lookup k0 env
   where
-    env = fmap2 (eval (\ k -> lookup k env)) m
+    env = fmap2 (eval (\ k -> strict $ lookup k env)) m
 
--- A continuation-style evaluator.
+-- A continuation-style evaluator:
 eval
   -- A continuation for evaluating the children of the node:
-  :: (forall b . Streamable b => f b -> Stream b)
-  -- The node to be evaluated:
-  -> Node f a
-  -- The resulting stream:
-  -> Stream a
+  :: (forall b . Streamable b => f b -> [b])
+  -> Node f a -- The node to be evaluated.
+  -> [a]      -- The resulting stream.
 eval con n0 = case n0 of
-  Const x         -> S.repeat x
-  Append xs k     -> foldr (S.<:>) (con k) xs
-  Drop i k        -> S.drop i (con k)
-  -- Streams implement the applicative functor interface as zip's:
-  Fun1 f k        -> fun1 f <$> con k
-  Fun2 f k1 k2    -> fun2 f <$> con k1 <*> con k2
-  Fun3 f k1 k2 k3 -> fun3 f <$> con k1 <*> con k2 <*> con k3
+  Const x         -> repeat x
+  Append xs k     -> xs ++ con k-- foldr (S.<:>) (con k) xs
+  Drop i k        -> drop i (con k)
+  Fun1 f k        -> fmap     (fun1 f) (con k)
+  Fun2 f k1 k2    -> zipWith  (fun2 f) (con k1) (con k2)
+  Fun3 f k1 k2 k3 -> zipWith3 (fun3 f) (con k1) (con k2) (con k3)
   Extern _        -> error "eval: Extern"
+
+strict :: NFData a => [a] -> [a]
+strict (x : xs) = x `deepseq` (x : strict xs)
+strict []       = []
 
 fun1 :: Fun1 a b -> a -> b
 fun1 Not     = not

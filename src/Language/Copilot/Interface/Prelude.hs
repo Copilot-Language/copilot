@@ -1,7 +1,7 @@
 -- | Reexports 'Prelude' from package "base"
 -- hiding identifiers redefined by Copilot.
 
-module Language.Copilot.Prelude
+module Language.Copilot.Interface.Prelude
   ( module Prelude
   ) where
 

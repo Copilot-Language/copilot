@@ -5,7 +5,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Language.Copilot.Node
+module Language.Copilot.Core.Node
   ( Mu2 (..)
   , Node (..)
   , Fun1 (..)
@@ -19,8 +19,8 @@ module Language.Copilot.Node
 
 import Control.Applicative (Applicative (..), (<$>))
 import Data.Monoid (Monoid (..), Endo (..))
-import Language.Copilot.Streamable (Streamable)
-import Language.Copilot.Array (Array)
+import Language.Copilot.Core.Array (Array)
+import Language.Copilot.Core.Streamable (Streamable)
 
 data Mu2 ff a = In (ff (Mu2 ff) a)
 

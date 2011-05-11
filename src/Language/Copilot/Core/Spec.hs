@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 
-module Language.Copilot.Spec
+module Language.Copilot.Core.Spec
   ( Spec (..)
   , Map2
   , Key
@@ -11,9 +11,9 @@ module Language.Copilot.Spec
   , fmap2
   ) where
 
-import Language.Copilot.Node (Node)
-import Language.Copilot.Reify (Map2, Key, lookup, fmap2)
-import Language.Copilot.Streamable (Streamable)
+import Language.Copilot.Core.Node (Node)
+import Language.Copilot.Interface.Reify (Map2, Key, lookup, fmap2)
+import Language.Copilot.Core.Streamable (Streamable)
 import Prelude ()
 
 --data Trigger where

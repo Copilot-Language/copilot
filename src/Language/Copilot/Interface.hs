@@ -1,13 +1,11 @@
 -- |
 
---{-# LANGUAGE GADTs #-}
---{-# LANGUAGE FlexibleInstances #-}
-
 module Language.Copilot.Interface
-  ( Stream
-  , Spec
+  ( module Data.Int
+  , module Data.Word
+  , Stream
   , Streamable
-  , Event
+  , Spec
   , (++)
   , (&&), (||)
   , (==), (/=)
@@ -26,19 +24,21 @@ module Language.Copilot.Interface
   , interpret
   ) where
 
-import Language.Copilot.Prelude
-import Language.Copilot.Node (Node (..), Mu2 (..), Fun1 (..), Fun2 (..), Fun3 (..))
-import Language.Copilot.Streamable (Streamable)
-import Language.Copilot.Array (Array (..))
-import Language.Copilot.Reify (reify)
-import Language.Copilot.Spec (Spec (..))
+import Data.Int
+import Data.Word
+import Language.Copilot.Core
+  ( Node (..), Mu2 (..)
+  , Fun1 (..), Fun2 (..), Fun3 (..)
+  , Streamable, Spec (..)
+  )
+import Language.Copilot.Core.Array (Array (..))
+import Language.Copilot.Interface.Prelude
+import Language.Copilot.Interface.Reify (reify)
 import qualified Language.Copilot.Interpret as I
 import qualified Prelude as P
 
 -- | A wrapper for expressions
 newtype Stream a = Stream (Mu2 Node a)
-
-type Event a = Stream (Maybe a)
 
 fun1 :: (Streamable a, Streamable b)
   => Fun1 a b

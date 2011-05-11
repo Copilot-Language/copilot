@@ -4,7 +4,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Language.Copilot.Type
+module Language.Copilot.Core.Type
   ( Type (..)
   , Typed (..)
   ) where
@@ -13,7 +13,7 @@ import Control.Monad (mzero)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Type.Equality (EqT (eqT), (:=:) (Refl))
 import Data.Word (Word8, Word16, Word32, Word64)
-import qualified Language.Copilot.Array as A
+import qualified Language.Copilot.Core.Array as A
 import Unsafe.Coerce (unsafeCoerce)
 
 data Type :: * -> * where

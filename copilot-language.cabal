@@ -15,28 +15,31 @@ library
   hs-source-dirs: src
 
   build-depends:
-    array >= 0.3,
+    --array >= 0.3,
     base >= 4,
+    --haskell2010,
     containers,
+    deepseq,
     fgl >= 5.4,
-    mtl,
-    Stream >= 0.4,
     type-equality >= 0.1
 
   exposed-modules:
     Language.Copilot
-    Language.Copilot.Array
-    Language.Copilot.Node
+    Language.Copilot.Core
+    Language.Copilot.Core.Array
+    Language.Copilot.Core.Node
+    Language.Copilot.Core.Spec
+    Language.Copilot.Core.Streamable
+    Language.Copilot.Core.Type
     Language.Copilot.Interface
+--    Language.Copilot.Interface.Clock
+--    Language.Copilot.Interface.Event
+    Language.Copilot.Interface.Prelude
+    Language.Copilot.Interface.Validate
     Language.Copilot.Interpret
-    Language.Copilot.Prelude
-    Language.Copilot.Spec
-    Language.Copilot.Streamable
-    Language.Copilot.Type
-    Language.Copilot.Validate
 
   other-modules:
-    Language.Copilot.Reify
+    Language.Copilot.Interface.Reify
 
   ghc-options:
     -fwarn-tabs
@@ -44,4 +47,3 @@ library
     -auto-all
     -caf-all
     -Wall
---    -fno-warn-orphans
