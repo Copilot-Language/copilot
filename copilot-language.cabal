@@ -39,6 +39,7 @@ library
     Language.Copilot.Interface.Validate
 
   other-modules:
+    Language.Copilot.Interface.DynStableName
     Language.Copilot.Interface.Stream
     Language.Copilot.Interpret
 

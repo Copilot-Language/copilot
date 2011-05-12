@@ -22,8 +22,8 @@ import Language.Copilot.Core hiding (Array)
 import Language.Copilot.Interface.Stream (Stream (Stream))
 import Prelude hiding (lookup)
 import qualified Prelude as P
-import System.Mem.StableName (StableName, makeStableName, hashStableName)
-import Unsafe.Coerce (unsafeCoerce)
+import Language.Copilot.Interface.DynStableName
+  (StableName, makeStableName, hashStableName)
 
 data Dyn :: (* -> *) -> * where
   Dyn :: Typed a => f a -> Dyn f
@@ -61,19 +61,6 @@ data Spec a = Spec (Map_ (Node Key_)) (Key_ a)
 instance Specification Spec where
   runSpec (Spec m k) f = f m k
 
-newtype DynStableName = DynStableName (StableName ())
-
-instance Eq DynStableName where
-  (DynStableName sn1) == (DynStableName sn2) = sn1 == sn2
-
-makeDynStableName :: a -> IO DynStableName
-makeDynStableName a = do
-  sn <- makeStableName a
-  return $ DynStableName (unsafeCoerce sn)
-
-hashDynStableName :: DynStableName -> Int
-hashDynStableName (DynStableName sn) = hashStableName sn
-
 reify
   :: Streamable a
   => Stream a
@@ -91,15 +78,15 @@ reify (Stream e) =
 dfs
   :: Streamable a
   => IORef Int
-  -> IORef (IntMap [(DynStableName, Int)])
+  -> IORef (IntMap [(StableName, Int)])
   -> IORef (IntMap (Dyn (Node Key_)))
   -> Mu2 Node a
   -> IO (Key_ a)
 dfs refCount refTable refMap (In x) =
   do
-    stn <- makeDynStableName x
+    stn <- makeStableName x
     tab <- readIORef refTable
-    case M.lookup (hashDynStableName stn) tab >>= P.lookup stn of
+    case M.lookup (hashStableName stn) tab >>= P.lookup stn of
       -- we have viseted the node before:
       Just k ->
         do
@@ -110,7 +97,7 @@ dfs refCount refTable refMap (In x) =
         do
           k <- atomicModifyIORef refCount $ \ n -> (succ n, n)
           writeIORef refTable $
-            M.insertWith (++) (hashDynStableName stn) [(stn, k)] tab
+            M.insertWith (++) (hashStableName stn) [(stn, k)] tab
           y <- traverse2 (dfs refCount refTable refMap) x
           modifyIORef refMap $ M.insert k (toDyn y)
           return $ Key_ k
