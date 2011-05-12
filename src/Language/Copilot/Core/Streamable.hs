@@ -1,6 +1,8 @@
 -- |
 
-module Language.Copilot.Core.Streamable (Streamable) where
+module Language.Copilot.Core.Streamable
+  ( Streamable
+  ) where
 
 import Control.DeepSeq (NFData)
 import Data.Int (Int8, Int16, Int32, Int64)

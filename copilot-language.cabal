@@ -15,6 +15,7 @@ library
   hs-source-dirs: src
 
   build-depends:
+    array,
     base >= 4,
     --haskell2010,
     containers,
@@ -26,20 +27,20 @@ library
     Language.Copilot
     Language.Copilot.Core
     Language.Copilot.Core.Array
+    Language.Copilot.Core.Functor2
+    Language.Copilot.Core.HeteroMap
     Language.Copilot.Core.Node
     Language.Copilot.Core.Specification
     Language.Copilot.Core.Streamable
     Language.Copilot.Core.Type
     Language.Copilot.Interface
---    Language.Copilot.Interface.Clock
---    Language.Copilot.Interface.Event
     Language.Copilot.Interface.Prelude
     Language.Copilot.Interface.Reify
     Language.Copilot.Interface.Validate
-    Language.Copilot.Interpret
 
   other-modules:
     Language.Copilot.Interface.Stream
+    Language.Copilot.Interpret
 
   ghc-options:
     -fwarn-tabs

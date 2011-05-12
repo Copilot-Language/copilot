@@ -14,7 +14,7 @@ import Prelude hiding (lookup, map)
 -- | Interprets a CoPilot-specification.
 interpret
   -- Number of periods to evaluate:
-  :: (NFData a, Typed a, Specification spec)
+  :: (Streamable a, Specification spec)
   => Integer
   -- The specification to be evaluated:
   -> spec a
@@ -23,12 +23,12 @@ interpret
 interpret n spec =
   runSpec spec $ \ m k0 ->
     let
-      env = hmap (eval $ evalKey env) m
+      env = fmap2 (eval $ evalKey env) m
     in
       take (fromInteger n) $ strict $ hlookup k0 env
 
 evalKey
-  :: (Rank2HeteroMap map, Typed a)
+  :: (HeteroMap map, Typed a)
   => map []
   -> Key map a
   -> [a]
