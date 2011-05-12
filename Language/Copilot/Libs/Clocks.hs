@@ -22,17 +22,16 @@ module Language.Copilot.Libs.Clocks
   ( clock, period, phase
   ) where
 
-import Prelude (Int, error, String, show, (.), fromIntegral)
-import Prelude (($))
+import Prelude (error, show)
 import qualified Prelude as P
 import Data.List (replicate)
 import Data.Int
 
-import Language.Copilot 
-import Language.Copilot.Core hiding (Period)
+import Language.Copilot
+-- import Language.Copilot.Core hiding (Period)
 
 -- For testing.
-import Language.Copilot.Interface (interpret, baseOpts)
+-- import Language.Copilot.Interface (interpret, baseOpts)
 
 data Period = Period Int
 data Phase = Phase Int
