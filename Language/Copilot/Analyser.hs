@@ -412,7 +412,6 @@ checkVarName varName =
     let checkVarName' = nondigit
                         >> many ( nondigit <|> digit )
                         >> eof
-                        >> return ()
         nondigit      = char '_' <|> letter
     in
     case parse checkVarName' varName varName of
