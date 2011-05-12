@@ -1,27 +1,30 @@
 -- |
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Language.Copilot.Core.Spec
-  ( Spec (..)
-  , Map2
-  , Key
-  , lookup
-  , fmap2
+  ( Rank2HeteroMap (..)
+  , RunSpec
+  , Spec (..)
   ) where
 
 import Language.Copilot.Core.Node (Node)
-import Language.Copilot.Interface.Reify (Map2, Key, lookup, fmap2)
-import Language.Copilot.Core.Streamable (Streamable)
-import Prelude ()
+import Language.Copilot.Core.Type (Typed)
 
---data Trigger where
---  Trigger :: Streamable a => String -> Key x a -> Trigger
+class Rank2HeteroMap m where
+  type Key m :: * -> *
+  hlookup :: Typed a => Key m a -> m f -> f a
+  hmap :: (forall a . f a -> g a) -> m f -> m g
 
-data Spec a where
-  Spec
-    :: Streamable a
-    => Map2 x (Node (Key x))
-    -> Key x a
-    -> Spec a
+type RunSpec a =
+  forall b .
+    (
+      forall m . Rank2HeteroMap m
+        => m (Node (Key m))
+        -> Key m a
+        -> b
+    )
+      -> b
+
+data Spec a = Spec (RunSpec a)

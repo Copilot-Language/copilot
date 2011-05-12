@@ -15,9 +15,7 @@ library
   hs-source-dirs: src
 
   build-depends:
-    --array >= 0.3,
     base >= 4,
-    --haskell2010,
     containers,
     deepseq,
     fgl >= 5.4,
@@ -35,11 +33,11 @@ library
 --    Language.Copilot.Interface.Clock
 --    Language.Copilot.Interface.Event
     Language.Copilot.Interface.Prelude
+    Language.Copilot.Interface.Reify
     Language.Copilot.Interface.Validate
     Language.Copilot.Interpret
 
   other-modules:
-    Language.Copilot.Interface.Reify
 
   ghc-options:
     -fwarn-tabs

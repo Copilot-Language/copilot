@@ -2,6 +2,7 @@
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Language.Copilot.Interpret
   ( interpret
@@ -9,22 +10,33 @@ module Language.Copilot.Interpret
 
 import Control.DeepSeq (NFData, deepseq)
 import Language.Copilot.Core.Node (Node (..), Fun1 (..), Fun2 (..), Fun3 (..))
-import Language.Copilot.Core.Array (Array (..))
-import Language.Copilot.Core.Spec (Spec (..), lookup, fmap2)
+import Language.Copilot.Core.Array (Array (Array))
+import Language.Copilot.Core.Spec (Rank2HeteroMap (..), Spec (..))
 import Language.Copilot.Core.Streamable (Streamable)
-import Prelude hiding (lookup)
+import Prelude hiding (lookup, map)
 
 -- | Interprets a CoPilot-specification.
 interpret
   -- Number of periods to evaluate:
-  :: Integer
+  :: Streamable a
+  => Integer
   -- The specification to be evaluated:
   -> Spec a
   -- The resulting list:
   -> [a]
-interpret n (Spec m k0) = take (fromInteger n) $ lookup k0 env
-  where
-    env = fmap2 (eval (\ k -> strict $ lookup k env)) m
+interpret n (Spec runSpec) =
+  runSpec $ \ m k0 ->
+    let
+      env = hmap (eval $ evalKey env) m
+    in
+      take (fromInteger n) $ strict $ hlookup k0 env
+
+evalKey
+  :: (Rank2HeteroMap m, Streamable a)
+  => m []
+  -> Key m a
+  -> [a]
+evalKey = flip hlookup
 
 -- A continuation-style evaluator:
 eval

@@ -1,5 +1,7 @@
 -- |
 
+{-# LANGUAGE RankNTypes #-}
+
 module Language.Copilot.Interface.Validate
   ( validate
   ) where

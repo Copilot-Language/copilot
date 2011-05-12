@@ -1,11 +1,13 @@
 -- |
 
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Language.Copilot.Interface
   ( module Data.Int
   , module Data.Word
   , Stream
   , Streamable
-  , Spec
   , (++)
   , (&&), (||)
   , (==), (/=)
@@ -29,7 +31,7 @@ import Data.Word
 import Language.Copilot.Core
   ( Node (..), Mu2 (..)
   , Fun1 (..), Fun2 (..), Fun3 (..)
-  , Streamable, Spec (..)
+  , Streamable
   )
 import Language.Copilot.Core.Array (Array (..))
 import Language.Copilot.Interface.Prelude
@@ -163,8 +165,8 @@ array = Stream . In . Const . Array
   => Stream (Array a) -> Stream i -> Stream a
 (!!) = fun2 Index
 
-interpret :: Integer -> Streamable a => Stream a -> IO ()
-interpret i (Stream n) =
+interpret :: Streamable a => Integer -> Stream a -> IO ()
+interpret i (Stream e) =
   do
-    (m, k) <- reify n
-    print $ I.interpret i (Spec m k)
+    sp <- reify e
+    print (I.interpret i sp)
