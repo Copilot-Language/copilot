@@ -1,7 +1,6 @@
 -- |
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Language.Copilot.Interpret
@@ -9,39 +8,36 @@ module Language.Copilot.Interpret
   ) where
 
 import Control.DeepSeq (NFData, deepseq)
-import Language.Copilot.Core.Node (Node (..), Fun1 (..), Fun2 (..), Fun3 (..))
-import Language.Copilot.Core.Array (Array (Array))
-import Language.Copilot.Core.Spec (Rank2HeteroMap (..), Spec (..))
-import Language.Copilot.Core.Streamable (Streamable)
+import Language.Copilot.Core
 import Prelude hiding (lookup, map)
 
 -- | Interprets a CoPilot-specification.
 interpret
   -- Number of periods to evaluate:
-  :: Streamable a
+  :: (NFData a, Typed a, Specification spec)
   => Integer
   -- The specification to be evaluated:
-  -> Spec a
+  -> spec a
   -- The resulting list:
   -> [a]
-interpret n (Spec runSpec) =
-  runSpec $ \ m k0 ->
+interpret n spec =
+  runSpec spec $ \ m k0 ->
     let
       env = hmap (eval $ evalKey env) m
     in
       take (fromInteger n) $ strict $ hlookup k0 env
 
 evalKey
-  :: (Rank2HeteroMap m, Streamable a)
-  => m []
-  -> Key m a
+  :: (Rank2HeteroMap map, Typed a)
+  => map []
+  -> Key map a
   -> [a]
 evalKey = flip hlookup
 
 -- A continuation-style evaluator:
 eval
   -- A continuation for evaluating the children of the node:
-  :: (forall b . Streamable b => f b -> [b])
+  :: (forall b . Typed b => f b -> [b])
   -> Node f a -- The node to be evaluated.
   -> [a]      -- The resulting stream.
 eval con n0 = case n0 of
@@ -92,7 +88,7 @@ fun2 Lt      = (<)
 fun2 Gt      = (>)
 fun2 Le      = (<=)
 fun2 Ge      = (>=)
-fun2 Index   = \ (Array xs) k -> xs !! (fromIntegral k)
+fun2 Index   = flip indexArray
 fun2 Pow     = (**)
 fun2 LogBase = logBase
 

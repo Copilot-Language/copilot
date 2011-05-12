@@ -12,13 +12,14 @@ module Language.Copilot.Core.Node
   , Fun2 (..)
   , Fun3 (..)
   , fmap2
-  , foldMap2
-  , foldr2
+--  , foldMap2
+--  , foldr2
   , traverse2
   ) where
 
-import Control.Applicative (Applicative (..), (<$>))
-import Data.Monoid (Monoid (..), Endo (..))
+--import Control.Applicative (Applicative (..), (<$>))
+import Control.Monad (ap)
+--import Data.Monoid (Monoid (..), Endo (..))
 import Language.Copilot.Core.Array (Array)
 import Language.Copilot.Core.Streamable (Streamable)
 
@@ -65,56 +66,56 @@ data Fun1 :: * -> * -> * where
   -- Boolean
   Not     :: Fun1 Bool Bool
   -- Numeric
-  Abs     :: (Streamable a, Num a) => Fun1 a a
-  Signum  :: (Streamable a, Num a) => Fun1 a a
+  Abs     :: Num a => Fun1 a a
+  Signum  :: Num a => Fun1 a a
   -- Fractional
-  Recip   :: (Streamable a, Fractional a) => Fun1 a a
+  Recip   :: Fractional a => Fun1 a a
   -- Floating
-  Exp     :: (Streamable a, Floating a) => Fun1 a a
-  Sqrt    :: (Streamable a, Floating a) => Fun1 a a
-  Log     :: (Streamable a, Floating a) => Fun1 a a
-  Sin     :: (Streamable a, Floating a) => Fun1 a a
-  Tan     :: (Streamable a, Floating a) => Fun1 a a
-  Cos     :: (Streamable a, Floating a) => Fun1 a a
-  Asin    :: (Streamable a, Floating a) => Fun1 a a
-  Atan    :: (Streamable a, Floating a) => Fun1 a a
-  Acos    :: (Streamable a, Floating a) => Fun1 a a
-  Sinh    :: (Streamable a, Floating a) => Fun1 a a
-  Tanh    :: (Streamable a, Floating a) => Fun1 a a
-  Cosh    :: (Streamable a, Floating a) => Fun1 a a
-  Asinh   :: (Streamable a, Floating a) => Fun1 a a
-  Atanh   :: (Streamable a, Floating a) => Fun1 a a
-  Acosh   :: (Streamable a, Floating a) => Fun1 a a
+  Exp     :: Floating a => Fun1 a a
+  Sqrt    :: Floating a => Fun1 a a
+  Log     :: Floating a => Fun1 a a
+  Sin     :: Floating a => Fun1 a a
+  Tan     :: Floating a => Fun1 a a
+  Cos     :: Floating a => Fun1 a a
+  Asin    :: Floating a => Fun1 a a
+  Atan    :: Floating a => Fun1 a a
+  Acos    :: Floating a => Fun1 a a
+  Sinh    :: Floating a => Fun1 a a
+  Tanh    :: Floating a => Fun1 a a
+  Cosh    :: Floating a => Fun1 a a
+  Asinh   :: Floating a => Fun1 a a
+  Atanh   :: Floating a => Fun1 a a
+  Acosh   :: Floating a => Fun1 a a
 
 data Fun2 :: * -> * -> * -> * where
   -- Boolean
   And     :: Fun2 Bool Bool Bool
   Or      :: Fun2 Bool Bool Bool
   -- Numeric
-  Add     :: (Streamable a, Num a) => Fun2 a a a
-  Sub     :: (Streamable a, Num a) => Fun2 a a a
-  Mul     :: (Streamable a, Num a) => Fun2 a a a
+  Add     :: Num a => Fun2 a a a
+  Sub     :: Num a => Fun2 a a a
+  Mul     :: Num a => Fun2 a a a
   -- Fractional
-  Div     :: (Streamable a, Fractional a) => Fun2 a a a
+  Div     :: Fractional a => Fun2 a a a
   -- Integral
-  Mod     :: (Streamable a, Integral a) => Fun2 a a a
+  Mod     :: Integral a => Fun2 a a a
   -- Equality
-  Eq      :: (Streamable a, Eq a)  => Fun2 a a Bool
-  Ne      :: (Streamable a, Eq a)  => Fun2 a a Bool
+  Eq      :: Eq a  => Fun2 a a Bool
+  Ne      :: Eq a  => Fun2 a a Bool
   -- Relational
-  Lt      :: (Streamable a, Ord a) => Fun2 a a Bool
-  Gt      :: (Streamable a, Ord a) => Fun2 a a Bool
-  Le      :: (Streamable a, Ord a) => Fun2 a a Bool
-  Ge      :: (Streamable a, Ord a) => Fun2 a a Bool
+  Lt      :: Ord a => Fun2 a a Bool
+  Gt      :: Ord a => Fun2 a a Bool
+  Le      :: Ord a => Fun2 a a Bool
+  Ge      :: Ord a => Fun2 a a Bool
   -- Array
-  Index   :: (Streamable a, Streamable i, Integral i) => Fun2 (Array a) i a
+  Index   :: Integral i => Fun2 (Array a) i a
   -- Floating
-  Pow     :: (Streamable a, Floating a) => Fun2 a a a
-  LogBase :: (Streamable a, Floating a) => Fun2 a a a
+  Pow     :: Floating a => Fun2 a a a
+  LogBase :: Floating a => Fun2 a a a
 
 data Fun3 :: * -> * -> * -> * -> * where
   -- Mutex (a.k.a. if-then-else)
-  Mux :: Streamable a => Fun3 Bool a a a
+  Mux :: Fun3 Bool a a a
 
 deriving instance Eq (Fun1 a b)
 
@@ -129,7 +130,7 @@ deriving instance Eq (Fun3 a b c d)
 deriving instance Show (Fun3 a b c d)
 
 fmap2
-  :: (forall b . Streamable b => f b -> g b)
+  :: (forall b . f b -> g b)
   -> Node f a
   -> Node g a
 fmap2 f n0 = case n0 of
@@ -141,6 +142,7 @@ fmap2 f n0 = case n0 of
   Fun2 g t1 t2    -> Fun2 g (f t1) (f t2)
   Fun3 g t1 t2 t3 -> Fun3 g (f t1) (f t2) (f t3)
 
+{-
 foldMap2
   :: Monoid m
   => (forall b . f b -> m)
@@ -161,17 +163,18 @@ foldr2
   -> Node f c
   -> b
 foldr2 f acc n0 = appEndo (foldMap2 (Endo . f) n0) acc
+-}
 
 traverse2
-  :: Applicative m
+  :: (Functor m, Monad m)
   => (forall b . Streamable b => f b -> m (g b))
   -> Node f a
   -> m (Node g a)
 traverse2 f n0 = case n0 of
-  Const x         -> pure $ Const x
-  Append xs t     -> Append xs <$> f t
-  Drop k t        -> Drop k <$> f t
-  Extern cs       -> pure $ Extern cs
-  Fun1 g t        -> Fun1 g <$> f t
-  Fun2 g t1 t2    -> Fun2 g <$> f t1 <*> f t2
-  Fun3 g t1 t2 t3 -> Fun3 g <$> f t1 <*> f t2 <*> f t3
+  Const x         -> return $ Const x
+  Append xs t     -> Append xs `fmap` f t
+  Drop k t        -> Drop k `fmap` f t
+  Extern cs       -> return $ Extern cs
+  Fun1 g t        -> Fun1 g `fmap` f t
+  Fun2 g t1 t2    -> Fun2 g `fmap` f t1 `ap` f t2
+  Fun3 g t1 t2 t3 -> Fun3 g `fmap` f t1 `ap` f t2 `ap` f t3

@@ -1,23 +1,20 @@
 -- |
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Language.Copilot.Core.Array
-  ( Array (..)
+  ( Array
+  , indexArray
+  , newArray
   ) where
 
 import Control.DeepSeq (NFData)
---import Data.Typeable (Typeable)
 
 newtype Array a = Array [a]
   deriving
     ( Eq
     , NFData
     , Show
---    , Typeable
     )
 
 instance (Num a) => Num (Array a) where
@@ -27,3 +24,9 @@ instance (Num a) => Num (Array a) where
   abs (Array xs)      = Array $ map abs xs
   signum (Array xs)   = Array $ map abs xs
   fromInteger k       = Array $ [fromInteger k]
+
+indexArray :: Integral i => i -> Array a -> a
+indexArray i (Array xs) = xs !! (fromIntegral i)
+
+newArray :: [a] -> Array a
+newArray xs = Array xs

@@ -16,6 +16,7 @@ library
 
   build-depends:
     base >= 4,
+    --haskell2010,
     containers,
     deepseq,
     fgl >= 5.4,
@@ -26,7 +27,7 @@ library
     Language.Copilot.Core
     Language.Copilot.Core.Array
     Language.Copilot.Core.Node
-    Language.Copilot.Core.Spec
+    Language.Copilot.Core.Specification
     Language.Copilot.Core.Streamable
     Language.Copilot.Core.Type
     Language.Copilot.Interface
@@ -38,6 +39,7 @@ library
     Language.Copilot.Interpret
 
   other-modules:
+    Language.Copilot.Interface.Stream
 
   ghc-options:
     -fwarn-tabs

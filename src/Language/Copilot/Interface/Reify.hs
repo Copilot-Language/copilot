@@ -1,9 +1,8 @@
 -- |
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ImpredicativeTypes #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Language.Copilot.Interface.Reify
@@ -16,6 +15,7 @@ import Data.IORef
   (IORef, newIORef, readIORef, writeIORef, modifyIORef, atomicModifyIORef)
 import Data.Type.Equality
 import Language.Copilot.Core
+import Language.Copilot.Interface.Stream (Stream (Stream))
 import Prelude hiding (lookup)
 import qualified Prelude as P
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
@@ -34,6 +34,11 @@ fromDyn (Dyn x) =
 
 dynMap :: (forall a . f a -> g a) -> Dyn f -> Dyn g
 dynMap f (Dyn x) = Dyn (f x)
+
+data Spec_ a = Spec_ (Map_ (Node Key_)) (Key_ a)
+
+instance Specification Spec_ where
+  runSpec (Spec_ m k) f = f m k
 
 data Map_ f = Map_ (IntMap (Dyn f))
 
@@ -66,16 +71,16 @@ hashDynStableName (DynStableName sn) = hashStableName sn
 
 reify
   :: Streamable a
-  => Mu2 Node a
-  -> IO (Spec a)
-reify x =
+  => Stream a
+  -> IO (Spec_ a)
+reify (Stream e) =
   do
     refCount <- newIORef 1
     refTable <- newIORef M.empty
     refMap <- newIORef . Map_ $ M.empty
-    k <- dfs refCount refTable refMap x
+    k <- dfs refCount refTable refMap e
     m <- readIORef refMap
-    return $ Spec $ \ f -> f m k
+    return $ Spec_ m k
 
 dfs
   :: Streamable a
