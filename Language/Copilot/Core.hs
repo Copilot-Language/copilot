@@ -1,20 +1,20 @@
-{-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables, FlexibleContexts, 
+{-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables, FlexibleContexts,
     FlexibleInstances, TypeSynonymInstances #-}
 
 -- | Provides basic types and functions for other parts of /Copilot/.
 --
 -- If you wish to add a new type, you need to make it an instance of @'Streamable'@,
--- to add it to @'foldStreamableMaps'@, @'mapStreamableMaps'@, and optionnaly 
+-- to add it to @'foldStreamableMaps'@, @'mapStreamableMaps'@, and optionnaly
 -- to add an ext[Type], a [type] and a var[Type]
--- functions in Language.hs to make it easier to use. 
+-- functions in Language.hs to make it easier to use.
 module Language.Copilot.Core (
         Period, Var, Name, Port(..), Ext(..),
         Exs, ExtRet(..), Args, ArgConstVar(..),
-        Spec(..), Streams, Stream, 
+        Spec(..), Streams, Stream,
         Trigger(..), Triggers, LangElems(..),
 	Streamable(..), StreamableMaps(..), emptySM,
-        isEmptySM, getMaybeElem, getElem, 
-        foldStreamableMaps, 
+        isEmptySM, getMaybeElem, getElem,
+        foldStreamableMaps,
         mapStreamableMaps, mapStreamableMapsM,
         filterStreamableMaps, normalizeVar, getVars, SimValues,
         getAtomType, getSpecs, getTriggers, vPre, funcShow,
@@ -50,16 +50,16 @@ data Spec a where
     Const :: Streamable a => a -> Spec a
 
     ExtVar :: Streamable a => A.Type -> Ext -> Spec a
-    ExtArr :: (Streamable a, Streamable b, A.IntegralE b) 
+    ExtArr :: (Streamable a, Streamable b, A.IntegralE b)
          => A.Type -> (Ext, Spec b) -> Spec a
 
-    F  :: (Streamable a, Streamable b) 
+    F  :: (Streamable a, Streamable b)
        => (b -> a) -> (A.E b -> A.E a) -> Spec b -> Spec a
-    F2 :: (Streamable a, Streamable b, Streamable c) 
-       =>      (b -> c -> a) -> (A.E b -> A.E c -> A.E a) 
+    F2 :: (Streamable a, Streamable b, Streamable c)
+       =>      (b -> c -> a) -> (A.E b -> A.E c -> A.E a)
             -> Spec b -> Spec c -> Spec a
-    F3 :: (Streamable a, Streamable b, Streamable c, Streamable d) 
-       =>      (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a) 
+    F3 :: (Streamable a, Streamable b, Streamable c, Streamable d)
+       =>      (b -> c -> d -> a) -> (A.E b -> A.E c -> A.E d -> A.E a)
             -> Spec b -> Spec c -> Spec d -> Spec a
 
     Append :: Streamable a => [a] -> Spec a -> Spec a
@@ -73,7 +73,7 @@ data ArgConstVar = V Var
                  | C String
   deriving Eq
 
-instance Show ArgConstVar where 
+instance Show ArgConstVar where
   show args = case args of
                 V v -> normalizeVar v
                 C c -> "_const_" ++ c ++ "_"
@@ -87,17 +87,17 @@ data Trigger =
           -- passed to the trigger.  The vars are used to put the arguments in
           -- the correct order, since the values are stored in a map, destroying
           -- their order.
-          , trigArgs :: Args} 
+          , trigArgs :: Args}
 
 type Triggers = M.Map String Trigger
 
-instance Show Trigger where 
+instance Show Trigger where
   show (Trigger s fnName args) =
     "trigger_" ++ notConstVarErr s show ++ "_" ++ fnName ++ "_" ++ normalizeVar (show args)
 
   -- getMaybeVar :: Streamable a => Spec a -> Var
   -- getMaybeVar (Var v) = v
-  -- getMaybeVar s = 
+  -- getMaybeVar s =
   --   error $ "Expected a Copilot variable but provided " ++ show s ++ " instead."
 
 -- XXX change the constructors to SimpleVar and Function (or something like that)
@@ -116,14 +116,14 @@ instance Show Ext where
 -- | External variable, function, or array, together with it's type
 type Exs = (A.Type, Ext, ExtRet)
 
-data ExtRet = ExtRetV 
+data ExtRet = ExtRetV
             | ExtRetA ArgConstVar
   deriving Eq
 
 -- | For calling a function with Atom variables.
 funcShow :: Name -> String -> Args -> String
-funcShow cName fname args = 
-  fname ++ "(" ++ (unwords $ intersperse "," 
+funcShow cName fname args =
+  fname ++ "(" ++ (unwords $ intersperse ","
     (map (\arg -> case arg of
                     v@(V _) -> vPre cName ++ show v
                     C c -> c
@@ -131,7 +131,7 @@ funcShow cName fname args =
 
 instance Eq Ext where
   (==) (ExtV v0) (ExtV v1) = v0 == v1
-  (==) (Fun f0 l0) (Fun f1 l1) = f0 == f1 && l0 == l1  
+  (==) (Fun f0 l0) (Fun f1 l1) = f0 == f1 && l0 == l1
   (==) _ _ = False
 
 -- These belong in Language.hs, but we don't want orphan instances.
@@ -160,7 +160,7 @@ instance (Streamable a, A.NumE a, Fractional a) => Fractional (Spec a) where
 
 instance Eq a => Eq (Spec a) where
     (==) (ExtVar t v) (ExtVar t' v') = t == t' && v == v' -- && ph == ph'
-    (==) (ExtArr t (v, idx)) (ExtArr t' (v', idx')) = 
+    (==) (ExtArr t (v, idx)) (ExtArr t' (v', idx')) =
            t == t' && v == v' && show idx == show idx' -- && ph == ph'
     (==) (Var v) (Var v') = v == v'
     (==) (Const x) (Const x') = x == x'
@@ -175,21 +175,21 @@ instance Eq a => Eq (Spec a) where
 vPre :: Name -> String
 vPre cName = "copilotState" ++ cName ++ "." ++ cName ++ "."
 
--- -- | An instruction to send data on a port at a given phase.  
+-- -- | An instruction to send data on a port at a given phase.
 -- -- data Send a = Sendable a => Send (Var, Phase, Port)
--- data Send a =  
---   Send { sendVar  :: Spec a 
+-- data Send a =
+--   Send { sendVar  :: Spec a
 --        , sendPort :: Port
 --        , sendName :: String}
 
--- instance Streamable a => Show (Send a) where 
---   show (Send s (Port port) portName) = 
+-- instance Streamable a => Show (Send a) where
+--   show (Send s (Port port) portName) =
 --     portName ++ "_port_" ++ show port ++ "_var_" ++ getMaybeVar s
-                            
+
 -- | Holds all the different kinds of language elements that are pushed into the
 -- Writer monad.  This currently includes the actual specs and trigger
 -- directives. (Use the functions in Language.hs to make sends and triggers.)
-data LangElems = LangElems 
+data LangElems = LangElems
        { strms :: StreamableMaps Spec
        , trigs :: Triggers}
 
@@ -198,12 +198,12 @@ data LangElems = LangElems
 type Streams = Writer LangElems ()
 
 getSpecs :: Streams -> StreamableMaps Spec
-getSpecs streams = 
+getSpecs streams =
   let (LangElems ss _) = execWriter streams
   in  ss
 
 getTriggers :: Streams -> Triggers
-getTriggers streams = 
+getTriggers streams =
   let (LangElems _ triggers) = execWriter streams
   in  triggers
 
@@ -217,7 +217,7 @@ notConstVarErr s f = f $
   case s of
     Var v -> V v
     Const c -> C (showAsC c)
-    _     -> error $ "You provided specification \n" ++ "  " ++ show s 
+    _     -> error $ "You provided specification \n" ++ "  " ++ show s
                         ++ "\n where you needed to give a Copilot variable or constant."
 
 
@@ -227,7 +227,7 @@ notConstVarErr s f = f $
 ---- General functions on streams ----------------------------------------------
 
 -- | A type is streamable iff a stream may emit values of that type
--- 
+--
 -- There are very strong links between @'Streamable'@ and @'StreamableMaps'@ :
 -- the types aggregated in @'StreamableMaps'@ are exactly the @'Streamable'@
 -- types and that invariant should be kept (see methods)
@@ -238,12 +238,12 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
 
     -- | Provides a way to modify (mostly used for insertions) the Map in a
     -- StreamableMaps which store values of the type
-    updateSubMap :: (M.Map Var (b a) -> M.Map Var (b a)) 
+    updateSubMap :: (M.Map Var (b a) -> M.Map Var (b a))
                  -> StreamableMaps b -> StreamableMaps b
 
     -- | A default value for the type @a@. Its value is not important.
     unit :: a
-    
+
     -- | A constructor to produce an 'Atom' value
     atomConstructor :: Var -> a -> A.Atom (A.V a)
 
@@ -256,20 +256,20 @@ class (A.Expr a, A.Assign a, Show a) => Streamable a where
     -- printing and scanning, respectively.
     prtId :: a -> (String, String)
     scnId :: a -> (String, String)
-    
+
     -- | The same, only adds the wanted precision for floating points.
     prtIdPrec :: a -> (String, String)
     prtIdPrec x = prtId x
-    
+
     -- | The argument only coerces the type, it is discarded.
     -- Returns the corresponding 'Atom' type.
     atomType :: a -> A.Type
-    
+
     -- | Like Show, except that the formatting is exactly the same as the one of
     -- C for example the booleans are first converted to 0 or 1, and floats and
     -- doubles have the good precision.
     showAsC :: a -> String
- 
+
 instance Streamable Bool where
     getSubMap = bMap
     updateSubMap f sm = sm {bMap = f $ bMap sm}
@@ -402,7 +402,7 @@ getMaybeElem v sm = M.lookup v $ getSubMap sm
 -- Launch an exception if the index is not in it
 {-# INLINE getElem #-}
 getElem :: Streamable a => Var -> StreamableMaps b -> b a
-getElem v sm = 
+getElem v sm =
   case getMaybeElem v sm of
     Nothing -> error $ "Error in application of getElem from Core.hs for variable "
                  ++ v ++ "."
@@ -417,12 +417,12 @@ getAtomType s =
 -- | This function is used to iterate on all the values in all the maps stored
 -- by a @'StreamableMaps'@, accumulating a value over time
 {-# INLINE foldStreamableMaps #-}
-foldStreamableMaps :: forall b c. 
-    (Streamable a => Var -> c a -> b -> b) -> 
+foldStreamableMaps :: forall b c.
+    (Streamable a => Var -> c a -> b -> b) ->
     StreamableMaps c -> b -> b
 foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
     let acc0  = M.foldrWithKey f acc  bm
-        acc1  = M.foldrWithKey f acc0 i8m        
+        acc1  = M.foldrWithKey f acc0 i8m
         acc2  = M.foldrWithKey f acc1 i16m
         acc3  = M.foldrWithKey f acc2 i32m
         acc4  = M.foldrWithKey f acc3 i64m
@@ -430,13 +430,13 @@ foldStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) acc =
         acc6  = M.foldrWithKey f acc5 w16m
         acc7  = M.foldrWithKey f acc6 w32m
         acc8  = M.foldrWithKey f acc7 w64m
-        acc9  = M.foldrWithKey f acc8 fm      
+        acc9  = M.foldrWithKey f acc8 fm
         acc10 = M.foldrWithKey f acc9 dm
     in acc10
 
 {-# INLINE mapStreamableMaps #-}
-mapStreamableMaps :: forall s s'. 
-    (forall a. Streamable a => Var -> s a -> s' a) -> 
+mapStreamableMaps :: forall s s'.
+    (forall a. Streamable a => Var -> s a -> s' a) ->
     StreamableMaps s -> StreamableMaps s'
 mapStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
     SM {
@@ -454,8 +454,8 @@ mapStreamableMaps f (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
         }
 
 {-# INLINE mapStreamableMapsM #-}
-mapStreamableMapsM :: forall s s' m. Monad m => 
-    (Streamable a => Var -> s a -> m (s' a)) -> 
+mapStreamableMapsM :: forall s s' m. Monad m =>
+    (Streamable a => Var -> s a -> m (s' a)) ->
     StreamableMaps s -> m (StreamableMaps s')
 mapStreamableMapsM f sm =
     foldStreamableMaps (
@@ -468,14 +468,14 @@ mapStreamableMapsM f sm =
 -- | Only keeps in @sm@ the values whose key+type are in @l@.  Also returns a
 -- bool saying whether all the elements in sm were in l.  Works even if some
 -- elements in @l@ are not in @sm@.  Not optimised at all.
-filterStreamableMaps :: 
+filterStreamableMaps ::
   forall c b. StreamableMaps c -> [(A.Type, Var, b)] -> (StreamableMaps c, Bool)
 filterStreamableMaps sm l =
     let (sm2, l2) = foldStreamableMaps filterElem sm (emptySM, []) in
     (sm2, (l' \\ nub l2) == [])
     where
-        filterElem :: forall a. Streamable a => Var -> c a -> 
-            (StreamableMaps c, [(A.Type, Var)]) -> 
+        filterElem :: forall a. Streamable a => Var -> c a ->
+            (StreamableMaps c, [(A.Type, Var)]) ->
             (StreamableMaps c, [(A.Type, Var)])
         filterElem v s (sm', l2) =
             let x = (atomType (unit::a), v) in
@@ -510,29 +510,29 @@ instance Monoid (StreamableMaps Spec) where
 
 instance Monoid LangElems where
   mempty = LangElems emptySM M.empty
-  mappend (LangElems x z) (LangElems x' z') = 
-    LangElems (overlap x x') (M.union z z') 
-overlap :: StreamableMaps s -> StreamableMaps s -> StreamableMaps s 
-overlap x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) 
+  mappend (LangElems x z) (LangElems x' z') =
+    LangElems (overlap x x') (M.union z z')
+overlap :: StreamableMaps s -> StreamableMaps s -> StreamableMaps s
+overlap x@(SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm)
         y@(SM bm' i8m' i16m' i32m' i64m' w8m' w16m' w32m' w64m' fm' dm') =
   let multDefs = (getVars x `intersect` getVars y)
   in  if null multDefs then union
-        else error $    "Copilot error: The variables " 
+        else error $    "Copilot error: The variables "
                      ++ show multDefs ++ " have multiple definitions."
-  where union = SM (M.union bm bm') (M.union i8m i8m') (M.union i16m i16m') 
-                   (M.union i32m i32m') (M.union i64m i64m') (M.union w8m w8m') 
-                   (M.union w16m w16m') (M.union w32m w32m') (M.union w64m w64m') 
+  where union = SM (M.union bm bm') (M.union i8m i8m') (M.union i16m i16m')
+                   (M.union i32m i32m') (M.union i64m i64m') (M.union w8m w8m')
+                   (M.union w16m w16m') (M.union w32m w32m') (M.union w64m w64m')
                    (M.union fm fm') (M.union dm dm')
 
 -- | Get the Copilot variables.
 getVars :: StreamableMaps s -> [Var]
-getVars streams = foldStreamableMaps (\k _ ks -> k:ks) streams []                         
+getVars streams = foldStreamableMaps (\k _ ks -> k:ks) streams []
 
--- | An empty streamableMaps. 
+-- | An empty streamableMaps.
 emptySM :: StreamableMaps a
 emptySM = SM
     {
-        bMap = M.empty, 
+        bMap = M.empty,
         i8Map = M.empty,
         i16Map = M.empty,
         i32Map = M.empty,
@@ -542,12 +542,12 @@ emptySM = SM
         w32Map = M.empty,
         w64Map = M.empty,
         fMap = M.empty,
-        dMap = M.empty 
+        dMap = M.empty
     }
 
 -- | Verifies if its argument is equal to emptySM
 isEmptySM :: StreamableMaps a -> Bool
-isEmptySM (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) = 
+isEmptySM (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
     M.null bm &&
         M.null i8m &&
         M.null i16m &&
@@ -558,13 +558,13 @@ isEmptySM (SM bm i8m i16m i32m i64m w8m w16m w32m w64m fm dm) =
         M.null w32m &&
         M.null w64m &&
         M.null fm &&
-        M.null dm 
+        M.null dm
 
--- | Replace all accepted special characters by sequences of underscores.  
+-- | Replace all accepted special characters by sequences of underscores.
 normalizeVar :: Var -> Var
-normalizeVar v = 
+normalizeVar v =
   map (\c -> if (c `elem` ".[]()") then '_' else c)
-      (filter (\c -> c /= ',' && c /= ' ') v) 
+      (filter (\c -> c /= ',' && c /= ' ') v)
 
 -- | For each typed variable, this type holds all its successive values in a
 -- (probably) infinite list.
@@ -582,32 +582,32 @@ showIndented s n =
 
 showRaw :: Spec a -> Int -> String
 showRaw (ExtVar t v) _ = "ExtVar " ++ show t ++ " " ++ show v -- ++ " " ++ show ph
-showRaw (ExtArr t (v, idx)) _ = 
+showRaw (ExtArr t (v, idx)) _ =
   "ExtArr " ++ show t ++ " (" ++ show v ++ " ! (" ++ show idx ++ "))" -- ++ show ph
 showRaw (Var v) _ = "Var " ++ v
 showRaw (Const e) _ = show e
-showRaw (F _ _ s0) n = 
-    "F op? (\n" ++ 
-        showIndented s0 (n + 1) ++ "\n" ++ 
+showRaw (F _ _ s0) n =
+    "F op? (\n" ++
+        showIndented s0 (n + 1) ++ "\n" ++
         (concat $ replicate n "  ") ++ ")"
-showRaw (F2 _ _ s0 s1) n = 
+showRaw (F2 _ _ s0 s1) n =
     "F2 op? (\n" ++
-        showIndented s0 (n + 1) ++ "\n" ++ 
-        showIndented s1 (n + 1) ++ "\n" ++ 
+        showIndented s0 (n + 1) ++ "\n" ++
+        showIndented s1 (n + 1) ++ "\n" ++
         (concat $ replicate n "  ") ++ ")"
-showRaw (F3 _ _ s0 s1 s2) n = 
-    "F3 op? (\n" ++ 
-        showIndented s0 (n + 1) ++ "\n" ++ 
-        showIndented s1 (n + 1) ++ "\n" ++ 
-        showIndented s2 (n + 1) ++ "\n" ++ 
+showRaw (F3 _ _ s0 s1 s2) n =
+    "F3 op? (\n" ++
+        showIndented s0 (n + 1) ++ "\n" ++
+        showIndented s1 (n + 1) ++ "\n" ++
+        showIndented s2 (n + 1) ++ "\n" ++
         (concat $ replicate n "  ") ++ ")"
-showRaw (Append ls s0) n = 
+showRaw (Append ls s0) n =
     "Append " ++ show ls ++ " (\n" ++
-        showIndented s0 (n + 1) ++ "\n" ++ 
+        showIndented s0 (n + 1) ++ "\n" ++
         (concat $ replicate n "  ") ++ ")"
-showRaw (Drop i s0) n = 
+showRaw (Drop i s0) n =
     "Drop " ++ show i ++ " (\n" ++
-        showIndented s0 (n + 1) ++ "\n" ++ 
+        showIndented s0 (n + 1) ++ "\n" ++
         (concat $ replicate n "  ") ++ ")"
 
 

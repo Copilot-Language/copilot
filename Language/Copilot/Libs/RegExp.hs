@@ -15,7 +15,6 @@ import Control.Monad.State (evalState, get, modify)
 import Language.Copilot.Core
 import qualified Language.Copilot.Language as C
 
-import Debug.Trace
 
 -- The symbols in a regular expression, "Any" is any value of type t
 -- (matches any symbol, the "point" character in a regular expression).
@@ -165,7 +164,7 @@ parseVarSym :: GenParser Char () ( RegExp VarName )
 parseVarSym = do { varName <- between lquote rquote $
                               cPrefix nondigit ( many $ nondigit <|> digit )
                  ; return . RSymbol . NumSym Nothing . Sym
-                   $ trace ( "varName: " ++ varName ) $ VarName varName
+                   $ VarName varName
                  }
 
 

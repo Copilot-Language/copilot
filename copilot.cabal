@@ -40,8 +40,8 @@ library
     ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constraints.
-    build-depends:     
-                       base >= 4.0 
+    build-depends:
+                       base >= 4.0
                      , atom >= 1.0.8
                      , containers >= 0.2.0.1
                      , process >= 1.0.0.0

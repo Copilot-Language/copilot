@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Defines a main() and print statements to easily execute generated Copilot specs.
-module Language.Copilot.AtomToC(getPrePostCode, AtomToC(..)) where
+module Language.Copilot.AtomToC(getPrePostCode, preHCode, AtomToC(..)) where
 
 import Language.Copilot.AdHocC
 import Language.Copilot.Core
@@ -13,7 +13,7 @@ import Data.List
 
 -- | Datatype corresponding to the 'Options' datatype in 'Interface.hs', but
 -- only including the compilation-relevant fields.
-data AtomToC = AtomToC 
+data AtomToC = AtomToC
     { cName :: Name -- ^ Name of the C file to generate
     , gccOpts :: String -- ^ Options to pass to the compiler
     , getPeriod :: Maybe Period -- ^ The optional period
@@ -36,14 +36,14 @@ data AtomToC = AtomToC
 -- inputExts represents the monitored variables which are to be fed to the
 -- standard input of the C program.  only used for the testing with random
 -- streams and values.
-getPrePostCode :: Bool -> (Maybe String, Maybe String) -> Name 
-               -> StreamableMaps Spec -> [Exs] -> [(Ext,Int)] -> SimValues 
+getPrePostCode :: Bool -> (Maybe String, Maybe String) -> Name
+               -> StreamableMaps Spec -> [Exs] -> [(Ext,Int)] -> SimValues
                -> Period -> (String, String)
-getPrePostCode simulatation (pre, post) cname streams allExts 
+getPrePostCode simulatation (pre, post) cname streams allExts
                arrdecs inputExts p =
     ( (if simulatation then preCode (extDecls allExts arrdecs)
          else "") ++ fromMaybe "" pre
-    , fromMaybe "" post ++ periodLoop cname p 
+    , fromMaybe "" post ++ periodLoop cname p
       ++ if simulatation then (postCode cname streams inputExts)
            else ""
     )
@@ -51,20 +51,20 @@ getPrePostCode simulatation (pre, post) cname streams allExts
 -- Make the declarations for external vars
 extDecls :: [Exs] -> [(Ext,Int)] -> [String]
 extDecls allExtVars arrdecs =
-    let uniqueExtVars = nubBy (\ (x, y, _) (x', y', _) -> x == x' && y == y') 
-                              allExtVars 
+    let uniqueExtVars = nubBy (\ (x, y, _) (x', y', _) -> x == x' && y == y')
+                              allExtVars
         getDec :: Exs -> String
         getDec (t, (ExtV v), ExtRetV) = varDecl t [v]
         getDec (_, (Fun _ _), ExtRetV) = ""
-        getDec (t, arr, ExtRetA _) = 
-          case getIdx arr of 
+        getDec (t, arr, ExtRetA _) =
+          case getIdx arr of
             Nothing -> error $ "Please use the setArrs option to provide a list of " ++
                           "pairs (a,idx) where a is the name of an external array and idx " ++
                           "is its static size to declare.  There is no size for array " ++
                           show arr ++ "."
-            Just idx  -> arrDecl t [(show arr, idx)] 
+            Just idx  -> arrDecl t [(show arr, idx)]
         getIdx arr = lookup arr arrdecs
-    in 
+    in
     map getDec uniqueExtVars
 
 preCode :: [String] -> String
@@ -78,7 +78,12 @@ preCode extDeclarations = unlines $
   ]
   ++ extDeclarations
 
--- | Generate a temporary C file name. 
+-- | Export the period loop function in the header file
+preHCode :: String -> String
+preHCode cname =
+  "void " ++ tmpCFileName cname ++ " ();\n"
+
+-- | Generate a temporary C file name.
 tmpCFileName :: String -> String
 tmpCFileName name = "__" ++ name
 
@@ -94,7 +99,7 @@ periodLoop cname p = unlines
   ]
 
 postCode :: Name -> StreamableMaps Spec -> SimValues -> String
-postCode cname streams inputExts = 
+postCode cname streams inputExts =
   unlines $
   [""] ++
   -- (if isEmptySM inputExts
@@ -103,7 +108,7 @@ postCode cname streams inputExts =
   -- make a loop to complete a period of computation.
   [ "int main(int argc, char *argv[]) {"
   , "  if (argc != 2) {"
-  , "    " ++ printfNewline 
+  , "    " ++ printfNewline
                 (   "Please pass a single argument to the simulator"
                  ++ " containing the number of rounds to execute it.")
                 []
@@ -117,8 +122,8 @@ postCode cname streams inputExts =
   ]
   ++ inputExtVars inputExts "    "
   ++ ["    " ++ tmpCFileName cname ++ "();"]
-  ++ outputVars cname streams 
-  ++ 
+  ++ outputVars cname streams
+  ++
   [ "  }"
   , "  //Important to let the Haskell program know we're done with stdout."
   , "  " ++ printfNewline "" []
@@ -133,20 +138,20 @@ inputExtVars exts indent =
     where
       decl :: Streamable a => Var -> [a] -> [String] -> [String]
       decl v l ls =
-        let spec = if null l then error "Impossible error in inputExtVars" 
+        let spec = if null l then error "Impossible error in inputExtVars"
                      else head l
-            (frmt, mMacro) = scnId spec            
+            (frmt, mMacro) = scnId spec
             aBool   = atomType spec == Bool
             mTmp    = if aBool then "__tmpCopilotBool_" ++ v else v
-            scan    =    indent ++ "scanf(" ++ "\"" ++ frmt ++ "\"" ++ mMacro 
+            scan    =    indent ++ "scanf(" ++ "\"" ++ frmt ++ "\"" ++ mMacro
                       ++ ", " ++ "&" ++ mTmp ++ ");" in
-        (if aBool 
+        (if aBool
            then    indent ++"//We can't scanf directly into a Bool, "
-                ++ "so we get an int then cast.\n" 
+                ++ "so we get an int then cast.\n"
                 ++ (indent ++ "int " ++ mTmp ++ ";\n")
                 ++ scan ++ "\n"
                 ++ indent ++ v ++ " = (bool) " ++ mTmp ++ ";"
-              
+
            else scan) : ls
 
 -- | Print the Copilot stream values to standard out.
@@ -156,7 +161,7 @@ outputVars cname streams =
     where
       decl :: forall a. Streamable a => Var -> Spec a -> [String] -> [String]
       decl v _ ls =
-        let (frmt, mMacro) = prtIdPrec (unit::a) 
-            prtf = printf (v ++ ": " ++ frmt ++ "\" " ++ mMacro ++ "\"   ") 
+        let (frmt, mMacro) = prtIdPrec (unit::a)
+            prtf = printf (v ++ ": " ++ frmt ++ "\" " ++ mMacro ++ "\"   ")
                           [vPre cname ++ v] in
         ("    " ++ prtf) : ls

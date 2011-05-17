@@ -19,7 +19,7 @@
 -- The phase must be less than the period.
 
 module Language.Copilot.Libs.Clocks
-  ( clock, period, phase
+  ( clk, period, phase
   ) where
 
 import Prelude (error, show)
@@ -42,10 +42,10 @@ period = Period
 phase :: Int -> Phase
 phase = Phase
 
--- clock generates a clock that counts n ticks by using a
+-- clk generates a clock that counts n ticks by using a
 -- prophecy array of size n
-clock :: Spec Bool -> (Period, Phase) -> Streams
-clock v (Period per, Phase ph) =
+clk :: Spec Bool -> (Period, Phase) -> Streams
+clk v (Period per, Phase ph) =
   if (per P.< 1) then error ("Error in stream " P.++ (show v)
                              P.++ ": period must be 1 or greater.")
     else if (ph P.< 0) then error ("Error in stream " P.++ (show v)
@@ -55,10 +55,10 @@ clock v (Period per, Phase ph) =
              else v .= ((replicate ph False)
                        P.++ (True : (replicate ((per - ph) - 1) False)) ++ v)
 
--- -- clock generates a clock that counts n ticks by using a
+-- -- clk' generates a clock that counts n ticks by using a
 -- -- 32 bit counter variable
--- clock' :: String -> Spec Bool -> (Period, Phase) -> Streams
--- clock' clockName v (Period per, Phase ph) = do
+-- clk' :: String -> Spec Bool -> (Period, Phase) -> Streams
+-- clk' clockName v (Period per, Phase ph) = do
 --   { let counter = varI32 ( clockName P.++ "_counter" )
 --   ; counter .= [ 0 ] ++ ( mux ( counter /= ( fromIntegral ) per - 1 )
 --                               ( counter + 1 )

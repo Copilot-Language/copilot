@@ -17,7 +17,7 @@ module Language.Copilot.Language (
         Num(..),
         -- * Division
         Fractional((/)),
-        mux, 
+        mux,
         -- * Copilot variable declarations.
         var, varB, varI8, varI16, varI32, varI64,
         varW8, varW16, varW32, varW64, varF, varD,
@@ -31,7 +31,7 @@ module Language.Copilot.Language (
         true, false,
         module Language.Copilot.Language.Sampling,
         -- * Constructs of the copilot language
-        drop, (++), (.=), -- (..|), 
+        drop, (++), (.=), -- (..|),
         -- * Triggers
         module Language.Copilot.Language.FunctionCalls,
         -- * Safe casting
@@ -70,14 +70,14 @@ div = F2 P.div A.div_
 -- | As mod and div, except that if the division would be by 0, the first
 -- argument is used as a default.
 mod0, div0 :: (Streamable a, A.IntegralE a) => a -> Spec a -> Spec a -> Spec a
-mod0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.div` d 
-                          else x0 `P.div` x1) 
+mod0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.div` d
+                          else x0 `P.div` x1)
             (\ e0 e1 -> A.mod0_ e0 e1 d)
-div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d 
-                          else x0 `P.mod` x1) 
+div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
+                          else x0 `P.mod` x1)
             (\ e0 e1 -> A.div0_ e0 e1 d)
 
-  
+
 -- class (Streamable a, A.OrdE a) => SpecOrd a where
 --   (<)
 
@@ -94,8 +94,8 @@ div0 d = F2 (\ x0 x1 -> if x1 P.== 0 then x0 `P.mod` d
 (||), (&&), (^), (==>) :: Spec Bool -> Spec Bool -> Spec Bool
 (||) = F2 (P.||) (A.||.)
 (&&) = F2 (P.&&) (A.&&.)
-(^) = F2 
-    (\ x y -> (x P.&& P.not y) P.|| (y P.&& P.not x)) 
+(^) = F2
+    (\ x y -> (x P.&& P.not y) P.|| (y P.&& P.not x))
     (\ x y -> (x A.&&. A.not_ y) A.||. (y A.&&. A.not_ x))
 (==>) = F2 (\ x y -> y P.|| P.not x) A.imply
 
@@ -128,7 +128,7 @@ varI32 = Var
 varI64 :: Var -> Spec Int64
 varI64 = Var
 varW8 :: Var -> Spec Word8
-varW8 = Var 
+varW8 = Var
 varW16 :: Var -> Spec Word16
 varW16 = Var
 varW32 :: Var -> Spec Word32
@@ -142,11 +142,11 @@ varD = Var
 
 -- | Define a stream variable.
 (.=) :: Streamable a => Spec a -> Spec a -> Streams
-v .= s = 
+v .= s =
   case v of
-    (Var v') -> tell $ LangElems (updateSubMap (M.insert v' s) emptySM) 
+    (Var v') -> tell $ LangElems (updateSubMap (M.insert v' s) emptySM)
                                  M.empty
-    _ -> error $ "Given spec " P.++ show v 
+    _ -> error $ "Given spec " P.++ show v
                    P.++ " but expected a variable in a Copilot definition (.=)."
 
 -- | Coerces a type that is 'Streamable' into a Copilot constant.
@@ -162,7 +162,7 @@ constI32 = Const
 constI64 :: Int64 -> Spec Int64
 constI64 = Const
 constW8 :: Word8 -> Spec Word8
-constW8 = Const 
+constW8 = Const
 constW16 :: Word16 -> Spec Word16
 constW16 = Const
 constW32 :: Word32 -> Spec Word32
@@ -201,8 +201,8 @@ infixr 2 .=
 "Copilot.Language Times1L" forall s. (P.*) (Const 1) s = s
 "Copilot.Language Times0R" forall s. (P.*) s (Const 0) = Const 0
 "Copilot.Language Times0L" forall s. (P.*) (Const 0) s = Const 0
-"Copilot.Language FracBy0" forall s. (P./) s (Const 0.0) = P.error "division by zero !" 
-"Copilot.Language FracBy1" forall s. (P./) s (Const 1.0) = s 
+"Copilot.Language FracBy0" forall s. (P./) s (Const 0.0) = P.error "division by zero !"
+"Copilot.Language FracBy1" forall s. (P./) s (Const 1.0) = s
 "Copilot.Language Frac0" forall s. (P./) (Const 0.0) s = (Const 0.0)
 "Copilot.Language OrFR" forall s. (||) s (Const False) = s
 "Copilot.Language OrFL" forall s. (||) (Const False) s = s
