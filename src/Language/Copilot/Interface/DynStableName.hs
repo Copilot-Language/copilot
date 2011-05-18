@@ -1,4 +1,4 @@
--- Dynamic StableName's without phantom type.
+-- Dynamic StableNames without phantom type.
 
 module Language.Copilot.Interface.DynStableName
   ( StableName

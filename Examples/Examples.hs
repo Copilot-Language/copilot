@@ -47,11 +47,5 @@ someAlarm limit order done tick = alarm
     count   = counter (tick && running) (order || done)
     alarm   = count > const limit
 
--- Demonstrates that the interpreter doesn't explode
--- exponentially when evaluating the Fibonacci sequence,
--- by skipping the first 10000 numbers:
-test0 :: Stream Word64
-test0 = drop 1000 fib
-
 main :: IO ()
-main = interpret 10 test0
+main = interpret 10 fib

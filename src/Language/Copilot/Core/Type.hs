@@ -1,19 +1,22 @@
--- |
+-- | Defines Copilot types. Must be in its own module
+-- as HeteroMap depends on HasType.
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module Language.Copilot.Core.Type
-  ( Type (..)
-  , Typed (..)
+  ( module Data.Int
+  , module Data.Word
+  , Type (..)
+  , HasType (..)
+  , Streamable
   ) where
 
-import Control.Monad (mzero)
-import Data.Int (Int8, Int16, Int32, Int64)
+import Control.DeepSeq (NFData)
+import Data.Int
 import Data.Type.Equality (EqT (eqT), (:=:) (Refl))
-import Data.Word (Word8, Word16, Word32, Word64)
-import Language.Copilot.Core.Array (Array)
+import Data.Word
 
 data Type :: * -> * where
   Bool   :: Type Bool
@@ -27,45 +30,54 @@ data Type :: * -> * where
   Word64 :: Type Word64
   Float  :: Type Float
   Double :: Type Double
-  Array  :: Typed t => Type t -> Type (Array t)
 
 deriving instance Eq (Type a)
 
 deriving instance Show (Type a)
 
-class Typed a where
-  typeOf   :: a -> Type a
-  typeOf__ :: Type a
-  typeOf _ = typeOf__
-  typeOf__ = typeOf (undefined :: a)
+class HasType a where typeOf :: Type a
 
-instance Typed Bool   where typeOf__ = Bool
-instance Typed Int8   where typeOf__ = Int8
-instance Typed Int16  where typeOf__ = Int16
-instance Typed Int32  where typeOf__ = Int32
-instance Typed Int64  where typeOf__ = Int64
-instance Typed Word8  where typeOf__ = Word8
-instance Typed Word16 where typeOf__ = Word16
-instance Typed Word32 where typeOf__ = Word32
-instance Typed Word64 where typeOf__ = Word64
-instance Typed Float  where typeOf__ = Float
-instance Typed Double where typeOf__ = Double
-instance Typed t => Typed (Array t) where typeOf__ = Array typeOf__
+instance HasType Bool   where typeOf = Bool
+instance HasType Int8   where typeOf = Int8
+instance HasType Int16  where typeOf = Int16
+instance HasType Int32  where typeOf = Int32
+instance HasType Int64  where typeOf = Int64
+instance HasType Word8  where typeOf = Word8
+instance HasType Word16 where typeOf = Word16
+instance HasType Word32 where typeOf = Word32
+instance HasType Word64 where typeOf = Word64
+instance HasType Float  where typeOf = Float
+instance HasType Double where typeOf = Double
 
 instance EqT Type where
-  eqT Bool   Bool   = return Refl
-  eqT Int8   Int8   = return Refl
-  eqT Int16  Int16  = return Refl
-  eqT Int32  Int32  = return Refl
-  eqT Int64  Int64  = return Refl
-  eqT Word8  Word8  = return Refl
-  eqT Word16 Word16 = return Refl
-  eqT Word32 Word32 = return Refl
-  eqT Word64 Word64 = return Refl
-  eqT Float  Float  = return Refl
-  eqT Double Double = return Refl
-  eqT (Array t1) (Array t2) =
-    do
-      Refl <- eqT t1 t2
-      return Refl
-  eqT _          _  = mzero
+  eqT Bool   Bool   = Just Refl
+  eqT Int8   Int8   = Just Refl
+  eqT Int16  Int16  = Just Refl
+  eqT Int32  Int32  = Just Refl
+  eqT Int64  Int64  = Just Refl
+  eqT Word8  Word8  = Just Refl
+  eqT Word16 Word16 = Just Refl
+  eqT Word32 Word32 = Just Refl
+  eqT Word64 Word64 = Just Refl
+  eqT Float  Float  = Just Refl
+  eqT Double Double = Just Refl
+  eqT _      _      = Nothing
+
+class
+  ( NFData a
+  , Eq a
+  , Show a
+  , HasType a
+  ) => Streamable a
+
+instance Streamable Bool
+instance Streamable Int8
+instance Streamable Int16
+instance Streamable Int32
+instance Streamable Int64
+instance Streamable Word8
+instance Streamable Word16
+instance Streamable Word32
+instance Streamable Word64
+instance Streamable Float
+instance Streamable Double

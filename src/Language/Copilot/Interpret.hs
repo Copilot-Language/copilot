@@ -9,45 +9,50 @@ module Language.Copilot.Interpret
 
 import Control.DeepSeq (NFData, deepseq)
 import Language.Copilot.Core
-import Prelude hiding (lookup, map)
+import Language.Copilot.Core.HeteroMap (HeteroMap, Key)
+import qualified Language.Copilot.Core.HeteroMap as H
 
 -- | Interprets a CoPilot-specification.
 interpret
   -- Number of periods to evaluate:
-  :: (Streamable a, Specification spec)
-  => Integer
+  :: (HasType a)
   -- The specification to be evaluated:
-  -> spec a
+  => WithSpec a
   -- The resulting list:
   -> [a]
-interpret n spec =
-  runSpec spec $ \ m k0 ->
-    let
-      env = fmap2 (eval $ evalKey env) m
-    in
-      take (fromInteger n) $ strict $ hlookup k0 env
+interpret (WithSpec runSpec) =
+  runSpec $ \ (Spec m n0) ->
+    eval (continue m) n0
 
-evalKey
-  :: (HeteroMap map, Typed a)
-  => map []
-  -> Key map a
+continue
+  :: (HasType b, HeteroMap map)
+  => map (CanonStream (Key map))
+  -> Key map b
+  -> [b]
+continue m k = H.lookup k env
+  where
+    env = H.mapWithKey (const $ evalAnonym $ continue m) m
+
+evalAnonym
+  :: (forall b . HasType b => key b -> [b])
+  -> CanonStream key a
   -> [a]
-evalKey = flip hlookup
+evalAnonym con a0 = case a0 of
+  CanonStream xs n -> strict $ xs ++ eval con n
 
 -- A continuation-style evaluator:
 eval
   -- A continuation for evaluating the children of the node:
-  :: (forall b . Typed b => f b -> [b])
-  -> Node f a -- The node to be evaluated.
+  :: (forall b . HasType b => f b -> [b])
+  -> Expr f a -- The node to be evaluated.
   -> [a]      -- The resulting stream.
 eval con n0 = case n0 of
-  Const x         -> repeat x
-  Append xs k     -> xs ++ con k-- foldr (S.<:>) (con k) xs
-  Drop i k        -> drop i (con k)
-  Fun1 f k        -> fmap     (fun1 f) (con k)
-  Fun2 f k1 k2    -> zipWith  (fun2 f) (con k1) (con k2)
-  Fun3 f k1 k2 k3 -> zipWith3 (fun3 f) (con k1) (con k2) (con k3)
+  Const x         -> strict $ repeat x
+  Drop i k        -> strict $ drop i (con k)
   Extern _        -> error "eval: Extern"
+  Fun1 f k        -> strict $ fmap (fun1 f) (eval con k)
+  Fun2 f k1 k2    -> strict $ zipWith  (fun2 f) (eval con k1) (eval con k2)
+  Fun3 f k1 k2 k3 -> strict $ zipWith3 (fun3 f) (eval con k1) (eval con k2) (eval con k3)
 
 strict :: NFData a => [a] -> [a]
 strict (x : xs) = x `deepseq` (x : strict xs)
@@ -88,7 +93,6 @@ fun2 Lt      = (<)
 fun2 Gt      = (>)
 fun2 Le      = (<=)
 fun2 Ge      = (>=)
-fun2 Index   = flip indexArray
 fun2 Pow     = (**)
 fun2 LogBase = logBase
 

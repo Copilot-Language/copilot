@@ -1,103 +1,103 @@
 -- |
 
--- !! THIS MODULE NEADS FURTHER CLEANING !!
-
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Language.Copilot.Interface.Reify
-  ( Spec
-  , reify
+  ( reify
   ) where
 
-import Data.Array
+import Control.Monad (liftM, liftM2, liftM3)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.IORef
-  (IORef, newIORef, readIORef, writeIORef, modifyIORef, atomicModifyIORef)
-import Data.Type.Equality
-import Language.Copilot.Core hiding (Array)
-import Language.Copilot.Interface.Stream (Stream (Stream))
-import Prelude hiding (lookup)
-import qualified Prelude as P
+import Language.Copilot.Core ( Spec (..), WithSpec (..)
+                             , CanonStream (..), Streamable )
+import qualified Language.Copilot.Core as Core
+import Language.Copilot.Interface.Stream (Stream (..))
+import Language.Copilot.Interface.DynMap (DynMap, DynKey (..))
+import qualified Language.Copilot.Interface.DynMap as D
 import Language.Copilot.Interface.DynStableName
-  (StableName, makeStableName, hashStableName)
-
-data Dyn :: (* -> *) -> * where
-  Dyn :: Typed a => f a -> Dyn f
-
-toDyn :: Typed a => f a -> Dyn f
-toDyn = Dyn
-
-fromDyn :: Typed a => Dyn f -> Maybe (f a)
-fromDyn (Dyn x) =
-  -- Proof at runtime that type 'a' is equal to type 'b'
-  eqT typeOf__ typeOf__ >>= \ w -> Just (coerce (cong w) x)
-
-instance Functor2 Dyn where
-  fmap2 f (Dyn x) = Dyn (f x)
-
-data Map_ f = Map_ (Array Int (Dyn f))
-
-newtype Key_ a = Key_ Int
-  deriving (Eq, Ord, Show)
-
-instance Functor2 Map_ where
-  fmap2 f (Map_ m) = Map_ (fmap2 f `fmap` m)
-
-instance HeteroMap Map_ where
-  type Key Map_ = Key_
-
-  hlookup (Key_ k) (Map_ m) = x
-    where
-      Just x = fromDyn (m ! k)
-
-  key2Int (Key_ k) = k
-
-data Spec a = Spec (Map_ (Node Key_)) (Key_ a)
-
-instance Specification Spec where
-  runSpec (Spec m k) f = f m k
 
 reify
   :: Streamable a
   => Stream a
-  -> IO (Spec a)
-reify (Stream e) =
+  -> IO (WithSpec a)
+reify e0 =
   do
-    refCount <- newIORef 1
-    refTable <- newIORef M.empty
-    refMap <- newIORef M.empty
-    k <- dfs refCount refTable refMap e
-    m <- readIORef refMap
-    let arr = array (0, M.size m) (M.toList m)
-    return $ Spec (Map_ arr) k
+    refCount   <- newIORef 0
+    refVisited <- newIORef M.empty
+    refDynMap  <- newIORef D.empty
+    e <- dfs refCount refVisited refDynMap e0
+    m <- readIORef refDynMap
+    return $ WithSpec $ \ f -> f (Spec m e)
 
 dfs
   :: Streamable a
   => IORef Int
   -> IORef (IntMap [(StableName, Int)])
-  -> IORef (IntMap (Dyn (Node Key_)))
-  -> Mu2 Node a
-  -> IO (Key_ a)
-dfs refCount refTable refMap (In x) =
+  -> IORef (DynMap (CanonStream DynKey))
+  -> Stream a
+  -> IO (Core.Expr DynKey a)
+dfs refCount refVisited refDynMap e0 =
+  case e0 of
+    Append _ _      -> liftM (Core.Drop 0)
+                         (canonStream refCount refVisited refDynMap e0)
+    Const x         -> return (Core.Const x)
+    Drop k e1       -> case e1 of
+                         Append _ _ -> liftM (Core.Drop k)
+                            (canonStream refCount refVisited refDynMap e1)
+                         _            ->
+                            error "dfs: Drop" -- !!! This needs to be fixed !!!
+    Extern cs       -> return (Core.Extern cs)
+    Fun1 f e        -> liftM (Core.Fun1 f)
+                         (dfs refCount refVisited refDynMap e)
+    Fun2 f e1 e2    -> liftM2 (Core.Fun2 f)
+                         (dfs refCount refVisited refDynMap e1)
+                         (dfs refCount refVisited refDynMap e2)
+    Fun3 f e1 e2 e3 -> liftM3 (Core.Fun3 f)
+                         (dfs refCount refVisited refDynMap e1)
+                         (dfs refCount refVisited refDynMap e2)
+                         (dfs refCount refVisited refDynMap e3)
+
+{-# INLINE canonStream #-}
+canonStream
+  :: Streamable a
+  => IORef Int
+  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (DynMap (CanonStream DynKey))
+  -> Stream a
+  -> IO (DynKey a)
+canonStream refCount refVisited refDynMap e0 =
   do
-    stn <- makeStableName x
-    tab <- readIORef refTable
-    case M.lookup (hashStableName stn) tab >>= P.lookup stn of
-      -- we have viseted the node before:
-      Just k ->
-        do
-          writeIORef refTable tab
-          return (Key_ k)
-      -- we haven't viseted the the node before:
-      Nothing ->
-        do
-          k <- atomicModifyIORef refCount $ \ n -> (succ n, n)
-          writeIORef refTable $
-            M.insertWith (++) (hashStableName stn) [(stn, k)] tab
-          y <- traverse2 (dfs refCount refTable refMap) x
-          modifyIORef refMap $ M.insert k (toDyn y)
-          return $ Key_ k
+    stn <- makeStableName e0
+    let Append buf e = e0 -- avoids warning
+    mk <- haveVisited stn refVisited
+    case mk of
+      Just k  -> return (DynKey k)
+      Nothing -> addToVisited refCount refVisited refDynMap stn buf e
+
+{-# INLINE haveVisited #-}
+haveVisited
+  :: StableName
+  -> IORef (IntMap [(StableName, Int)])
+  -> IO (Maybe Int)
+haveVisited stn refVisited =
+  do
+    tab <- readIORef refVisited
+    return (M.lookup (hashStableName stn) tab >>= lookup stn)
+
+{-# INLINE addToVisited #-}
+addToVisited
+  :: Streamable a
+  => IORef Int
+  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (DynMap (CanonStream DynKey))
+  -> StableName
+  -> [a]
+  -> Stream a
+  -> IO (DynKey a)
+addToVisited refCount refVisited refDynMap stn buf e0 =
+  do
+    k <- atomicModifyIORef refCount $ \ n -> (succ n, n)
+    modifyIORef refVisited $ M.insertWith (++) (hashStableName stn) [(stn, k)]
+    e <- dfs refCount refVisited refDynMap e0
+    modifyIORef refDynMap $ D.insert k (CanonStream buf e)
+    return $ DynKey k

@@ -17,7 +17,6 @@ library
   build-depends:
     array,
     base >= 4,
-    --haskell2010,
     containers,
     deepseq,
     fgl >= 5.4,
@@ -26,21 +25,17 @@ library
   exposed-modules:
     Language.Copilot
     Language.Copilot.Core
-    Language.Copilot.Core.Array
-    Language.Copilot.Core.Functor2
     Language.Copilot.Core.HeteroMap
-    Language.Copilot.Core.Node
-    Language.Copilot.Core.Specification
-    Language.Copilot.Core.Streamable
     Language.Copilot.Core.Type
     Language.Copilot.Interface
     Language.Copilot.Interface.Prelude
     Language.Copilot.Interface.Reify
-    Language.Copilot.Interface.Validate
 
   other-modules:
+    Language.Copilot.Interface.DynMap
     Language.Copilot.Interface.DynStableName
     Language.Copilot.Interface.Stream
+    Language.Copilot.Interface.Validate
     Language.Copilot.Interpret
 
   ghc-options:
