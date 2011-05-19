@@ -38,7 +38,7 @@ evalAnonym
   -> CanonStream key a
   -> [a]
 evalAnonym con a0 = case a0 of
-  CanonStream xs n -> strict $ xs ++ eval con n
+  CanonStream _ xs n -> strict $ xs ++ eval con n
 
 -- A continuation-style evaluator:
 eval

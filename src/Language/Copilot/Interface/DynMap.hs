@@ -16,7 +16,7 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.Type.Equality
 import Language.Copilot.Core (HasType (..))
-import Language.Copilot.Core.HeteroMap (HeteroMap (..), Key)
+import Language.Copilot.Core.HeteroMap (HeteroMap (..), Key, Key2Int (..))
 
 data Dyn :: (* -> *) -> * where
   Dyn
@@ -32,8 +32,6 @@ newtype DynKey a = DynKey Int
 instance HeteroMap DynMap where
   type Key DynMap = DynKey
 
-  key2int (DynKey n) = n
-
   lookup (DynKey k) (DynMap m) = x
     where
       Just x = M.lookup k m >>= fromDyn
@@ -45,6 +43,9 @@ instance HeteroMap DynMap where
   foldMapWithKey = undefined
 
   traverseWithKey _ _ = undefined
+
+instance Key2Int DynKey where
+  key2int (DynKey n) = n
 
 empty
   :: DynMap f

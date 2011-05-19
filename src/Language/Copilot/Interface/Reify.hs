@@ -99,5 +99,5 @@ addToVisited refCount refVisited refDynMap stn buf e0 =
     k <- atomicModifyIORef refCount $ \ n -> (succ n, n)
     modifyIORef refVisited $ M.insertWith (++) (hashStableName stn) [(stn, k)]
     e <- dfs refCount refVisited refDynMap e0
-    modifyIORef refDynMap $ D.insert k (CanonStream buf e)
+    modifyIORef refDynMap $ D.insert k (CanonStream (DynKey k) buf e)
     return $ DynKey k

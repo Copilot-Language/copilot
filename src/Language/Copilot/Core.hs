@@ -37,12 +37,15 @@ data WithSpec a = WithSpec
 -- | Canonized streams:
 data CanonStream :: (* -> *) -> * -> * where
   CanonStream
-    :: Streamable a
-    -- the stream buffer
-    => [a]
-    -- the expression for evaluating the stream
+    --
+    :: (Streamable a, Eq (ref a), Ord (ref a), Show (ref a))
+    -- A reference to itself:
+    => ref a
+    -- The stream buffer:
+    -> [a]
+    -- The expression for evaluating the stream:
     -> Expr ref a
-    -- the resulting stream
+    --
     -> CanonStream ref a
 
 deriving instance Show (CanonStream ref a)
@@ -54,8 +57,9 @@ data Expr :: (* -> *) -> * -> * where
     => a
     -> Expr ref a
   Drop
-    :: (Streamable a, Show (ref a))
+    :: (Streamable a, Eq (ref a), Ord (ref a), Show (ref a))
     => Int
+    -- A drop always points to a canonized stream.
     -> ref a
     -> Expr ref a
   Extern
