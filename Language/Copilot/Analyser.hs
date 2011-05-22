@@ -310,8 +310,9 @@ checkInitsArgs streams =
                                    (_, Fun _ args, _) ->
                                      mapMaybe (\arg ->
                                        case arg of
-                                         C _ -> Nothing
                                          V v0 -> Just v0
+                                         C _ -> Nothing
+                                         S _ -> Nothing
                                               ) args
                                    (_, ExtV _, _) -> [])
                 (getExternalVars streams)
@@ -320,7 +321,9 @@ checkInitsArgs streams =
                                              (_,_,ExtRetA idx) ->
                                                case idx of
                                                  V v' -> Just v'
-                                                 C _ -> Nothing)
+                                                 C _ -> Nothing
+                                                 S _ -> Nothing
+                                    )
                            (getExternalVars streams)
   in foldStreamableMaps checkInits streams Nothing
 

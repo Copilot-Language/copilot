@@ -65,18 +65,21 @@ data Spec a where
     Append :: Streamable a => [a] -> Spec a -> Spec a
     Drop   :: Streamable a => Int -> Spec a -> Spec a
 
--- | Arguments to be passed to a C function.  Either a Copilot variable or a
--- constant.  A little hacky that I store constants as strings so we don't have
--- to pass around types.  However, these data are just used to make external C
--- calls, for which we have no type info anyway, so it's a bit of a moot point.
+-- | Arguments to be passed to a C function.  Either a Copilot variable, a
+-- constant or a string for messages.  A little hacky that I store constants
+-- as strings so we don't have to pass around types.  However, these data are
+-- just used to make external C calls, for which we have no type info anyway,
+-- so it's a bit of a moot point.
 data ArgConstVar = V Var
                  | C String
+                 | S String
   deriving Eq
 
 instance Show ArgConstVar where
   show args = case args of
                 V v -> normalizeVar v
                 C c -> "_const_" ++ c ++ "_"
+                S s -> "_string_const_" ++ s
 
 type Args = [ArgConstVar]
 
@@ -127,6 +130,7 @@ funcShow cName fname args =
     (map (\arg -> case arg of
                     v@(V _) -> vPre cName ++ show v
                     C c -> c
+                    S s -> "\"" ++ s ++ "\""
          ) args)) ++ ")"
 
 instance Eq Ext where
