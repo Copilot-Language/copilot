@@ -1,90 +1,95 @@
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+-- CoPilot is licensed under a Creative Commons Attribution 3.0 Unported License.
+-- See http://creativecommons.org/licenses/by/3.0 for license terms.
+
 -- |
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Language.Copilot.Interface.Stream
   ( Stream (..)
   ) where
 
-import Language.Copilot.Core (Fun1 (..), Fun2 (..), Fun3 (..), Streamable)
+import Language.Copilot.Core (Op1 (..), Op2 (..), Op3 (..), Streamable)
 
-data Stream :: * -> * where
+data Stream ∷ * → * where
   Append
-    :: Streamable a
-    => [a]
-    -> Stream a
-    -> Stream a
+    ∷ Streamable α
+    ⇒ [α]
+    → Stream α
+    → Stream α
   Const
-    :: Streamable a
-    => a
-    -> Stream a
+    ∷ Streamable α
+    ⇒ α
+    → Stream α
   Drop
-    :: Streamable a
-    => Int
-    -> Stream a
-    -> Stream a
+    ∷ Streamable α
+    ⇒ Int
+    → Stream α
+    → Stream α
   Extern
-    :: Streamable a
-    => String
-    -> Stream a
-  Fun1
-    :: (Streamable a, Streamable b)
-    => Fun1 a b
-    -> Stream a
-    -> Stream b
-  Fun2
-    :: (Streamable a, Streamable b, Streamable c)
-    => Fun2 a b c
-    -> Stream a
-    -> Stream b
-    -> Stream c
-  Fun3
-    :: (Streamable a, Streamable b, Streamable c, Streamable d)
-    => Fun3 a b c d
-    -> Stream a
-    -> Stream b
-    -> Stream c
-    -> Stream d
+    ∷ Streamable α
+    ⇒ String
+    → Stream α
+  Op1
+    ∷ (Streamable α, Streamable β)
+    ⇒ Op1 α β
+    → Stream α
+    → Stream β
+  Op2
+    ∷ (Streamable α, Streamable β, Streamable γ)
+    ⇒ Op2 α β γ
+    → Stream α
+    → Stream β
+    → Stream γ
+  Op3
+    ∷ (Streamable α, Streamable β, Streamable γ, Streamable δ)
+    ⇒ Op3 α β γ δ
+    → Stream α
+    → Stream β
+    → Stream γ
+    → Stream δ
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
-instance Show (Stream a) where
+instance Show (Stream α) where
   show _ = error "'Prelude.show' isn't implemented for streams!"
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
-instance Eq (Stream a) where
+instance Eq (Stream α) where
   (==) = error "'Prelude.(==)' isn't implemented for streams!"
   (/=) = error "'Prelude.(/=)' isn't implemented for streams!"
 
-instance (Streamable a, Num a) => Num (Stream a) where
-  (+)     = Fun2 Add
-  (-)     = Fun2 Sub
-  (*)     = Fun2 Mul
-  abs     = Fun1 Abs
-  signum  = Fun1 Signum
+instance (Streamable α, Num α) ⇒ Num (Stream α) where
+  (+)     = Op2 (:+:)
+  (-)     = Op2 (:-:)
+  (*)     = Op2 (:*:)
+  abs     = Op1 Abs
+  signum  = Op1 Signum
   fromInteger = Const . fromInteger
 
-instance (Streamable a, Fractional a) => Fractional (Stream a) where
-  (/)     = Fun2 Div
-  recip   = Fun1 Recip
+instance (Streamable α, Fractional α) ⇒ Fractional (Stream α) where
+  (/)     = Op2 (:/:)
+  recip   = Op1 Recip
   fromRational = Const . fromRational
 
-instance (Streamable a, Floating a) => Floating (Stream a) where
+instance (Streamable α, Floating α) ⇒ Floating (Stream α) where
   pi      = Const pi
-  exp     = Fun1 Exp
-  sqrt    = Fun1 Sqrt
-  log     = Fun1 Log
-  (**)    = Fun2 Pow
-  logBase = Fun2 LogBase
-  sin     = Fun1 Sin
-  tan     = Fun1 Tan
-  cos     = Fun1 Cos
-  asin    = Fun1 Asin
-  atan    = Fun1 Atan
-  acos    = Fun1 Acos
-  sinh    = Fun1 Sinh
-  tanh    = Fun1 Tanh
-  cosh    = Fun1 Cosh
-  asinh   = Fun1 Asinh
-  atanh   = Fun1 Atanh
-  acosh   = Fun1 Acosh
+  exp     = Op1 Exp
+  sqrt    = Op1 Sqrt
+  log     = Op1 Log
+  (**)    = Op2 Pow
+  logBase = Op2 LogBase
+  sin     = Op1 Sin
+  tan     = Op1 Tan
+  cos     = Op1 Cos
+  asin    = Op1 Asin
+  atan    = Op1 Atan
+  acos    = Op1 Acos
+  sinh    = Op1 Sinh
+  tanh    = Op1 Tanh
+  cosh    = Op1 Cosh
+  asinh   = Op1 Asinh
+  atanh   = Op1 Atanh
+  acosh   = Op1 Acosh

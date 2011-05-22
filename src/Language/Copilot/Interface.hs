@@ -1,4 +1,10 @@
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+-- CoPilot is licensed under α Creative Commons Attribution 3.0 Unported License.
+-- See http://creativecommons.org/licenses/by/3.0 for license terms.
+
 -- |
+
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Language.Copilot.Interface
   ( module Data.Int
@@ -22,71 +28,71 @@ module Language.Copilot.Interface
 
 import Data.Int
 import Data.Word
-import Language.Copilot.Core (Streamable, Fun1 (..), Fun2 (..), Fun3 (..))
+import Language.Copilot.Core (Streamable, Op1 (..), Op2 (..), Op3 (..))
 import Language.Copilot.Interface.Prelude
 import Language.Copilot.Interface.Reify (reify)
 import Language.Copilot.Interface.Stream (Stream (..))
-import qualified Language.Copilot.Interpret as I
+import qualified Language.Copilot.Core.Interpret as I
 import qualified Prelude as P
 
 infixr 3 ++
 
-(++) :: Streamable a => [a] -> Stream a -> Stream a
+(++) ∷ Streamable α ⇒ [α] → Stream α → Stream α
 (++) = Append
 
-const :: Streamable a => a -> Stream a
+const ∷ Streamable α ⇒ α → Stream α
 const = Const
 
-drop :: Streamable a => Int -> Stream a -> Stream a
+drop ∷ Streamable α ⇒ Int → Stream α → Stream α
 drop = Drop
 
-extern :: Streamable a => String -> Stream a
+extern ∷ Streamable α ⇒ String → Stream α
 extern = Extern
 
-not :: Stream Bool -> Stream Bool
-not = Fun1 Not
+not ∷ Stream Bool → Stream Bool
+not = Op1 Not
 
-(&&) :: Stream Bool -> Stream Bool -> Stream Bool
-(&&) = Fun2 And
+(&&) ∷ Stream Bool → Stream Bool → Stream Bool
+(&&) = Op2 (:&&:)
 
-(||) :: Stream Bool -> Stream Bool -> Stream Bool
-(||) = Fun2 Or
+(||) ∷ Stream Bool → Stream Bool → Stream Bool
+(||) = Op2 (:||:)
 
-(==) :: (Streamable a, P.Eq a) => Stream a -> Stream a -> Stream Bool
-(==) = Fun2 Eq
+(==) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
+(==) = Op2 (:==:)
 
-(/=) :: (Streamable a, P.Eq a) => Stream a -> Stream a -> Stream Bool
-(/=) = Fun2 Ne
+(/=) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
+(/=) = Op2 (:/=:)
 
-(<=) :: (Streamable a, P.Ord a) => Stream a -> Stream a -> Stream Bool
-(<=) = Fun2 Le
+(<=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
+(<=) = Op2 (:<=:)
 
-(>=) :: (Streamable a, P.Ord a) => Stream a -> Stream a -> Stream Bool
-(>=) = Fun2 Ge
+(>=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
+(>=) = Op2 (:>=:)
 
-(<) :: (Streamable a, P.Ord a) => Stream a -> Stream a -> Stream Bool
-(<) = Fun2 Lt
+(<) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
+(<) = Op2 (:<:)
 
-(>) :: (Streamable a, P.Ord a) => Stream a -> Stream a -> Stream Bool
-(>) = Fun2 Gt
+(>) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
+(>) = Op2 (:>:)
 
-mod :: (Streamable a, Integral a) => Stream a -> Stream a -> Stream a
-mod = Fun2 Mod
+mod ∷ (Streamable α, Integral α) ⇒ Stream α → Stream α → Stream α
+mod = Op2 Mod
 
-mux :: Streamable a => Stream Bool -> Stream a -> Stream a -> Stream a
-mux = Fun3 Mux
+mux ∷ Streamable α ⇒ Stream Bool → Stream α → Stream α → Stream α
+mux = Op3 Mux
 
-true :: Stream Bool
+true ∷ Stream Bool
 true = Const True
 
-false :: Stream Bool
+false ∷ Stream Bool
 false = Const False
 
 interpret
-  :: Streamable a
-  => Integer
-  -> Stream a
-  -> IO ()
+  ∷ Streamable α
+  ⇒ Integer
+  → Stream α
+  → IO ()
 interpret i e =
   do
     sp <- reify e

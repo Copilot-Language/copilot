@@ -17,16 +17,15 @@ library
   build-depends:
     array,
     base >= 4,
+    copilot-core,
     containers,
     deepseq,
     fgl >= 5.4,
-    type-equality >= 0.1
+    type-equality >= 0.1,
+    type-level-numbers >= 0.1.0.2
 
   exposed-modules:
     Language.Copilot
-    Language.Copilot.Core
-    Language.Copilot.Core.HeteroMap
-    Language.Copilot.Core.Type
     Language.Copilot.Interface
     Language.Copilot.Interface.Prelude
     Language.Copilot.Interface.Reify
@@ -36,7 +35,6 @@ library
     Language.Copilot.Interface.DynStableName
     Language.Copilot.Interface.Stream
     Language.Copilot.Interface.Validate
-    Language.Copilot.Interpret
 
   ghc-options:
     -fwarn-tabs
