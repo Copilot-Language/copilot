@@ -1,6 +1,6 @@
-# Licence
+# License
 
-Copyright (c) 2011 [National Institute of Aerospace](http://www.nianet.org/) / [Galois, Inc](http://corp.galois.com/).
+Copyright © 2011 [National Institute of Aerospace](http://www.nianet.org/) / [Galois, Inc](http://corp.galois.com/).
 
 CoPilot is licensed under a [Creative Commons Attribution 3.0 Unported License](http://creativecommons.org/licenses/by/3.0).
 
