@@ -25,6 +25,7 @@ import qualified Language.Atom as A
 
 import Data.Int
 import Data.Word
+import Data.Char
 import Data.List hiding (union)
 import qualified Data.Map as M
 import Text.Printf
@@ -79,7 +80,7 @@ instance Show ArgConstVar where
   show args = case args of
                 V v -> normalizeVar v
                 C c -> "_const_" ++ c ++ "_"
-                S s -> "_string_const_" ++ s
+                S s -> "_string_const_" ++ normalizeVar' s
 
 type Args = [ArgConstVar]
 
@@ -569,6 +570,11 @@ normalizeVar :: Var -> Var
 normalizeVar v =
   map (\c -> if (c `elem` ".[]()") then '_' else c)
       (filter (\c -> c /= ',' && c /= ' ') v)
+
+-- | Replace special characters by sequences of underscores, for string
+-- parameters of triggers.
+normalizeVar' :: String -> String
+normalizeVar' = map ( \ c -> if ( isAlpha c ) then c else '_' )
 
 -- | For each typed variable, this type holds all its successive values in a
 -- (probably) infinite list.
