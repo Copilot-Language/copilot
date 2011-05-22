@@ -3,8 +3,7 @@ name:                copilot-language
 version:             0.1
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time distributed systems.
 description:         Blah blah blah...
-license:             BSD3
-license-file:        LICENSE
+license-file:        LICENSE.txt
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller, Nis Nordby Wegmann
 maintainer:          niswegmann@gmail.com
 stability:           Experimental
