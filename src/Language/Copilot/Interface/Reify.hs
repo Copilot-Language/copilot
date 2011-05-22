@@ -22,9 +22,9 @@ import qualified Language.Copilot.Interface.DynMap as D
 import Language.Copilot.Interface.DynStableName
 
 reify
-  ∷ Streamable a
-  ⇒ Stream a
-  → IO (WithSpec a)
+  ∷ Streamable α
+  ⇒ Stream α
+  → IO (WithSpec α)
 reify e0 =
   do
     refCount   <- newIORef 0
@@ -35,12 +35,12 @@ reify e0 =
     return $ WithSpec $ \ f → f (Spec m e)
 
 dfs
-  ∷ Streamable a
+  ∷ Streamable α
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
   → IORef (DynMap (Strm DynKey))
-  → Stream a
-  → IO (Core.Expr DynKey a)
+  → Stream α
+  → IO (Core.Expr DynKey α)
 dfs refCount refVisited refDynMap e0 =
   case e0 of
     Append _ _     → liftM (Core.Drop 0)
@@ -63,12 +63,12 @@ dfs refCount refVisited refDynMap e0 =
 
 {-# INLINE canonStream #-}
 canonStream
-  ∷ Streamable a
+  ∷ Streamable α
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
   → IORef (DynMap (Strm DynKey))
-  → Stream a
-  → IO (DynKey a)
+  → Stream α
+  → IO (DynKey α)
 canonStream refCount refVisited refDynMap e0 =
   do
     stn <- makeStableName e0
@@ -90,14 +90,14 @@ haveVisited stn refVisited =
 
 {-# INLINE addToVisited #-}
 addToVisited
-  ∷ Streamable a
+  ∷ Streamable α
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
   → IORef (DynMap (Strm DynKey))
   → StableName
-  → [a]
-  → Stream a
-  → IO (DynKey a)
+  → [α]
+  → Stream α
+  → IO (DynKey α)
 addToVisited refCount refVisited refDynMap stn buf e0 =
   do
     k <- atomicModifyIORef refCount $ \ n → (succ n, n)
