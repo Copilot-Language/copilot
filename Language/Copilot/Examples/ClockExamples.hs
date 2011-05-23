@@ -12,7 +12,8 @@ clkTest = do
   let y = varB "y"
   let a = varW8 "a"
   let b = varW8 "b"
-  x `clock` (period 3, phase 1)
-  y `clock` (period 4, phase 3)
+  x `clk` (period 3, phase 1)
+  y `clk` (period 4, phase 3)
   a .= [0] ++ mux x (a + 2) a
   b .= [1] ++ mux y (b + 2) b
+  y `clk` (period 4, phase 3)
