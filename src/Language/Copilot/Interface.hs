@@ -11,7 +11,6 @@ module Language.Copilot.Interface
   , module Data.Word
   , Stream
   , Streamable
-  , interpret
   , (++)
   , (&&), (||)
   , (==), (/=)
@@ -24,6 +23,8 @@ module Language.Copilot.Interface
   , mux
   , true
   , false
+  , interpret
+  , prettyPrint
   ) where
 
 import Data.Int
@@ -33,6 +34,7 @@ import Language.Copilot.Interface.Prelude
 import Language.Copilot.Interface.Reify (reify)
 import Language.Copilot.Interface.Stream (Stream (..))
 import qualified Language.Copilot.Core.Interpret as I
+import qualified Language.Copilot.Core.PrettyPrint as PP
 import qualified Prelude as P
 
 infixr 3 ++
@@ -95,6 +97,16 @@ interpret
   → IO ()
 interpret i e =
   do
-    sp <- reify e
-    let xs = take (fromInteger i) $ I.interpret sp
+    spec <- reify e
+    let xs = take (fromInteger i) $ I.interpret spec
     print xs
+
+prettyPrint
+  ∷ Streamable α
+  ⇒ Stream α
+  → IO ()
+prettyPrint e =
+  do
+    spec <- reify e
+    let cs = PP.prettyPrint spec
+    putStr cs

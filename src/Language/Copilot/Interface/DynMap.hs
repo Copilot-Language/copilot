@@ -23,11 +23,18 @@ import Data.Type.Equality
 import Language.Copilot.Core (HasType (..))
 import Language.Copilot.Core.HeteroMap (HeteroMap (..), Key, Key2Int (..))
 
-data Dyn ∷ (* → *) → * where
-  Dyn
-    ∷ HasType α
-    ⇒ f α
-    → Dyn f
+data Dyn f = ∀ α . HasType α ⇒ Dyn (f α)
+
+--data Dyn ∷ (* → *) → * where
+--  Dyn
+--    ∷ HasType α
+--    ⇒ f α
+--    → Dyn f
+
+--unDyn
+--  ∷ Dyn f
+--  → (forall α . HasType α ⇒ f α)
+--unDyn (Dyn x) = x
 
 newtype DynMap f = DynMap (IntMap (Dyn f))
 
@@ -41,16 +48,23 @@ instance HeteroMap DynMap where
     where
       Just x = M.lookup k m >>= fromDyn
 
-  mapWithKey f (DynMap m) =
-    DynMap $
-      M.mapWithKey (\ k x → mapDyn (f (DynKey k)) x) m
+  mapWithKey f (DynMap m) = DynMap $
+    M.mapWithKey (\ k x → mapDyn (f (DynKey k)) x) m
+
+  fold f b0 (DynMap m) = M.fold
+    (\ dyn b -> accDyn f dyn b) b0 m
+
+  foldWithKey f b0 (DynMap m) = M.foldWithKey
+    (\ k x b → accDyn (f (DynKey k)) x b) b0 m
 
   foldMapWithKey = undefined
+
+  foldMapWithKeyM = undefined
 
   traverseWithKey _ _ = undefined
 
 instance Key2Int DynKey where
-  key2int (DynKey n) = n
+  key2Int (DynKey n) = n
 
 empty ∷ DynMap f
 empty = DynMap M.empty
@@ -82,3 +96,8 @@ mapDyn
   → Dyn f
   → Dyn g
 mapDyn f (Dyn x) = Dyn (f x)
+
+accDyn
+  ∷ (∀ α . f α → β → β)
+  → (Dyn f → β → β)
+accDyn f (Dyn x) b = f x b

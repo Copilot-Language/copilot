@@ -14,7 +14,7 @@ import Control.Monad (liftM, liftM2, liftM3)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.IORef
-import Language.Copilot.Core ( Spec (..), WithSpec (..), Strm (..), Streamable )
+import Language.Copilot.Core (Spec (..), WithSpec (..), Strm (..), Streamable)
 import qualified Language.Copilot.Core as Core
 import Language.Copilot.Interface.Stream (Stream (..))
 import Language.Copilot.Interface.DynMap (DynMap, DynKey (..))

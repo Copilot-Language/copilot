@@ -54,7 +54,7 @@ data Stream ∷ * → * where
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream α) where
-  show _ = error "'Prelude.show' isn't implemented for streams!"
+  show _ = "Stream"
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Eq (Stream α) where

@@ -23,7 +23,7 @@ fib = [1, 1] ++ fib + drop 1 fib
 
 -- A 'pure' function on streams, in the sense that in contains
 -- no internal state:
-even ∷ (Streamable a, Integral a)  ⇒ Stream a → Stream Bool
+even ∷ (Streamable α, Integral α)  ⇒ Stream α → Stream Bool
 even x = x `mod` 2 == 0
 
 -- The CoPilot equivalent of a boolean flipflop.
@@ -33,7 +33,7 @@ flipflop x = y
     y = [False] ++ mux x (not y) y
 
 -- A resetable counter.
-counter ∷ Stream Bool → Stream Bool → Stream Int32
+counter ∷ (Num α, Streamable α) ⇒ Stream Bool → Stream Bool → Stream α
 counter tick reset = y
   where
     zy = [0] ++ y
@@ -59,4 +59,7 @@ y ∷ Stream Bool
 y = [False, False, False, True] ++ y
 
 main ∷ IO ()
-main = interpret 10 (counter x y)
+main =
+  do
+    --interpret 10 (counter x y)
+    prettyPrint $ mux (even fib) nats fib + counter x y
