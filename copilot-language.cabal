@@ -28,14 +28,19 @@ library
   exposed-modules:
     Language.Copilot
     Language.Copilot.Interface
+    Language.Copilot.Interface.Operators.Boolean
+    Language.Copilot.Interface.Operators.Eq
+    Language.Copilot.Interface.Operators.Extern
+    Language.Copilot.Interface.Operators.Mux
+    Language.Copilot.Interface.Operators.Ord
+    Language.Copilot.Interface.Operators.Temporal
     Language.Copilot.Interface.Prelude
     Language.Copilot.Interface.Reify
+    Language.Copilot.Library.Clock
 
   other-modules:
---    Language.Copilot.Interface.DynMap
-    Language.Copilot.Interface.DynStableName
+    Language.Copilot.Interface.Reify.DynStableName
     Language.Copilot.Interface.Stream
-    Language.Copilot.Interface.Validate
 
   ghc-options:
     -fwarn-tabs

@@ -6,7 +6,7 @@
 
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.DynStableName
+module Language.Copilot.Interface.Reify.DynStableName
   ( StableName
   , makeStableName
   , hashStableName

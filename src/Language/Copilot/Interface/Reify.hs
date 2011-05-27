@@ -19,7 +19,7 @@ import qualified Language.Copilot.Core as Core
 import qualified Language.Copilot.Core.Dynamic.Map as D
 import qualified Language.Copilot.Core.HeteroMap as H
 import Language.Copilot.Interface.Stream (Stream (..))
-import Language.Copilot.Interface.DynStableName
+import Language.Copilot.Interface.Reify.DynStableName
 
 newtype WrapExpr α = WrapExpr { unWrapExpr ∷ Expr__ α }
 

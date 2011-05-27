@@ -9,86 +9,33 @@
 module Language.Copilot.Interface
   ( module Data.Int
   , module Data.Word
+  , module Language.Copilot.Core
+  , module Language.Copilot.Interface.Operators.Boolean
+  , module Language.Copilot.Interface.Operators.Eq
+  , module Language.Copilot.Interface.Operators.Extern
+  , module Language.Copilot.Interface.Operators.Mux
+  , module Language.Copilot.Interface.Operators.Ord
+  , module Language.Copilot.Interface.Operators.Temporal
   , Stream
-  , Streamable
-  , (++)
-  , (&&), (||)
-  , (==), (/=)
-  , (<=), (>=), (<), (>)
-  , const
-  , drop
-  , extern
-  , not
-  , mod
-  , mux
-  , true
-  , false
+  , constant
 --  , interpret
   , prettyPrint
   ) where
 
 import Data.Int
 import Data.Word
-import Language.Copilot.Core (Streamable, Op1 (..), Op2 (..), Op3 (..))
-import Language.Copilot.Interface.Prelude
-import Language.Copilot.Interface.Reify (reify)
-import Language.Copilot.Interface.Stream (Stream (..))
+import Language.Copilot.Core (Streamable)
+import Language.Copilot.Interface.Operators.Boolean
+import Language.Copilot.Interface.Operators.Eq
+import Language.Copilot.Interface.Operators.Extern
+import Language.Copilot.Interface.Operators.Mux
+import Language.Copilot.Interface.Operators.Ord
+import Language.Copilot.Interface.Operators.Temporal
+import Language.Copilot.Interface.Reify
+import Language.Copilot.Interface.Stream (Stream, constant)
+
 --import qualified Language.Copilot.Core.Interpret as I
 import qualified Language.Copilot.Core.PrettyPrint as PP
-import qualified Prelude as P
-
-infixr 3 ++
-
-(++) ∷ Streamable α ⇒ [α] → Stream α → Stream α
-(++) = Append
-
-const ∷ Streamable α ⇒ α → Stream α
-const = Const
-
-drop ∷ Streamable α ⇒ Int → Stream α → Stream α
-drop = Drop
-
-extern ∷ Streamable α ⇒ String → Stream α
-extern = Extern
-
-not ∷ Stream Bool → Stream Bool
-not = Op1 not'
-
-(&&) ∷ Stream Bool → Stream Bool → Stream Bool
-(&&) = Op2 (&&.)
-
-(||) ∷ Stream Bool → Stream Bool → Stream Bool
-(||) = Op2 (||.)
-
-(==) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
-(==) = Op2 (==.)
-
-(/=) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
-(/=) = Op2 (/=.)
-
-(<=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(<=) = Op2 (<=.)
-
-(>=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(>=) = Op2 (>=.)
-
-(<) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(<) = Op2 (<.)
-
-(>) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(>) = Op2 (>.)
-
-mod ∷ (Streamable α, Integral α) ⇒ Stream α → Stream α → Stream α
-mod = Op2 mod'
-
-mux ∷ Streamable α ⇒ Stream Bool → Stream α → Stream α → Stream α
-mux = Op3 if_then_else
-
-true ∷ Stream Bool
-true = Const True
-
-false ∷ Stream Bool
-false = Const False
 
 {-
 interpret
@@ -107,8 +54,4 @@ prettyPrint
   ∷ Streamable α
   ⇒ Stream α
   → IO ()
-prettyPrint e =
-  do
-    spec <- reify e
-    let cs = PP.prettyPrint spec
-    putStr cs
+prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
