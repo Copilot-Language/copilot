@@ -4,79 +4,89 @@
 
 -- |
 
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
 module Language.Copilot.Interface.Reify
   ( reify
   ) where
 
-import Control.Monad (liftM, liftM2, liftM3)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.IORef
-import Language.Copilot.Core (Spec (..), WithSpec (..), Strm (..), Streamable)
+import Language.Copilot.Core (Spec (..), Strm (..), Trig (..), Streamable, Expr__, lit)
 import qualified Language.Copilot.Core as Core
+import qualified Language.Copilot.Core.Dynamic.Map as D
+import qualified Language.Copilot.Core.HeteroMap as H
 import Language.Copilot.Interface.Stream (Stream (..))
-import Language.Copilot.Interface.DynMap (DynMap, DynKey (..))
-import qualified Language.Copilot.Interface.DynMap as D
 import Language.Copilot.Interface.DynStableName
+
+newtype WrapExpr α = WrapExpr { unWrapExpr ∷ Expr__ α }
 
 reify
   ∷ Streamable α
   ⇒ Stream α
-  → IO (WithSpec α)
+  → IO Spec
 reify e0 =
   do
     refCount   <- newIORef 0
     refVisited <- newIORef M.empty
-    refDynMap  <- newIORef D.empty
-    e <- dfs refCount refVisited refDynMap e0
-    m <- readIORef refDynMap
-    return $ WithSpec $ \ f → f (Spec m e)
+    refMap     <- newIORef D.empty
+    w <- dfs refCount refVisited refMap e0
+    m <- readIORef refMap
+    return $ Spec m [Trig "out" (lit False) (unWrapExpr w)]
 
 dfs
-  ∷ Streamable α
+  ∷ (Streamable α)
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
-  → IORef (DynMap (Strm DynKey))
+  → IORef (D.Map Strm)
   → Stream α
-  → IO (Core.Expr DynKey α)
-dfs refCount refVisited refDynMap e0 =
+  → IO (WrapExpr α)
+dfs refCount refVisited refMap e0 =
   case e0 of
-    Append _ _     → liftM (Core.Drop 0)
-                       (canonStream refCount refVisited refDynMap e0)
-    Const x        → return (Core.Const x)
-    Drop k e1      → case e1 of
-                       Append _ _ → liftM (Core.Drop k)
-                         (canonStream refCount refVisited refDynMap e1)
-                       _ → error "dfs: Drop" -- !!! This needs to be fixed !!!
-    Extern cs      → return (Core.Extern cs)
-    Op1 f e        → liftM (Core.Op1 f)
-                       (dfs refCount refVisited refDynMap e)
-    Op2 f e1 e2    → liftM2 (Core.Op2 f)
-                       (dfs refCount refVisited refDynMap e1)
-                       (dfs refCount refVisited refDynMap e2)
-    Op3 f e1 e2 e3 → liftM3 (Core.Op3 f)
-                       (dfs refCount refVisited refDynMap e1)
-                       (dfs refCount refVisited refDynMap e2)
-                       (dfs refCount refVisited refDynMap e3)
+    Append _ _      → do s <- canonStream refCount refVisited refMap e0
+                         return $ WrapExpr $ Core.drp 0 s
+    Const x         → return $ WrapExpr $ Core.lit x
+    Drop k e1       → case e1 of
+                        Append _ _ →
+                          do
+                            s <- canonStream refCount refVisited refMap e1
+                            return $ WrapExpr $ Core.drp k s
+                        _ → error "dfs: Drop" -- !!! This needs to be fixed !!!
+    Extern cs       → return $ WrapExpr $ Core.ext cs
+    Op1 op e        → do
+                        w <- dfs refCount refVisited refMap e
+                        return $ WrapExpr $ Core.op1 op (unWrapExpr w)
+    Op2 op e1 e2    → do
+                        w1 <- dfs refCount refVisited refMap e1
+                        w2 <- dfs refCount refVisited refMap e2
+                        return $ WrapExpr $ Core.op2 op
+                          (unWrapExpr w1) (unWrapExpr w2)
+    Op3 op e1 e2 e3 → do
+                        w1 <- dfs refCount refVisited refMap e1
+                        w2 <- dfs refCount refVisited refMap e2
+                        w3 <- dfs refCount refVisited refMap e3
+                        return $ WrapExpr $ Core.op3 op
+                          (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
 
 {-# INLINE canonStream #-}
 canonStream
+--  ∷ (Streamable α, Core.Expr η)
   ∷ Streamable α
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
-  → IORef (DynMap (Strm DynKey))
+  → IORef (D.Map (Strm))
   → Stream α
-  → IO (DynKey α)
-canonStream refCount refVisited refDynMap e0 =
+  → IO H.Key
+canonStream refCount refVisited refMap e0 =
   do
     stn <- makeStableName e0
     let Append buf e = e0 -- avoids warning
     mk <- haveVisited stn refVisited
     case mk of
-      Just k  → return (DynKey k)
-      Nothing → addToVisited refCount refVisited refDynMap stn buf e
+      Just k  → return (H.Key k)
+      Nothing → addToVisited refCount refVisited refMap stn buf e
 
 {-# INLINE haveVisited #-}
 haveVisited
@@ -90,18 +100,19 @@ haveVisited stn refVisited =
 
 {-# INLINE addToVisited #-}
 addToVisited
+--  ∷ (Streamable α, Core.Expr η)
   ∷ Streamable α
   ⇒ IORef Int
   → IORef (IntMap [(StableName, Int)])
-  → IORef (DynMap (Strm DynKey))
+  → IORef (D.Map (Strm))
   → StableName
   → [α]
   → Stream α
-  → IO (DynKey α)
-addToVisited refCount refVisited refDynMap stn buf e0 =
+  → IO H.Key
+addToVisited refCount refVisited refMap stn buf e0 =
   do
     k <- atomicModifyIORef refCount $ \ n → (succ n, n)
     modifyIORef refVisited $ M.insertWith (++) (hashStableName stn) [(stn, k)]
-    e <- dfs refCount refVisited refDynMap e0
-    modifyIORef refDynMap $ D.insert k (Strm Core.typeOf buf e)
-    return $ DynKey k
+    w <- dfs refCount refVisited refMap e0
+    modifyIORef refMap $ D.insert k (Strm buf (unWrapExpr w))
+    return (H.Key k)

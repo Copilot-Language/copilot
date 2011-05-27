@@ -4,37 +4,27 @@
 
 -- |
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.DynMap
-  ( DynMap
-  , DynKey (..)
-  , empty
-  , insert
-  ) where
+module Language.Copilot.Interface.DynMap where
+--  ( DynMap
+--  , DynKey (..)
+--  , empty
+--  , insert
+--  ) where
 
+{-
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
-import Data.Type.Equality
+import Data.Type.Equality (eqT, coerce, cong)
+import qualified Data.Traversable as T
 import Language.Copilot.Core (HasType (..))
 import Language.Copilot.Core.HeteroMap (HeteroMap (..), Key, Key2Int (..))
 
 data Dyn f = ∀ α . HasType α ⇒ Dyn (f α)
-
---data Dyn ∷ (* → *) → * where
---  Dyn
---    ∷ HasType α
---    ⇒ f α
---    → Dyn f
-
---unDyn
---  ∷ Dyn f
---  → (forall α . HasType α ⇒ f α)
---unDyn (Dyn x) = x
 
 newtype DynMap f = DynMap (IntMap (Dyn f))
 
@@ -48,20 +38,35 @@ instance HeteroMap DynMap where
     where
       Just x = M.lookup k m >>= fromDyn
 
-  mapWithKey f (DynMap m) = DynMap $
-    M.mapWithKey (\ k x → mapDyn (f (DynKey k)) x) m
+  map f (DynMap m) =
+      DynMap $ M.map g m
+    where
+     g dyn = mapDyn f dyn
 
-  fold f b0 (DynMap m) = M.fold
-    (\ dyn b -> accDyn f dyn b) b0 m
+  mapWithKey f (DynMap m) =
+      DynMap $ M.mapWithKey g m
+    where
+      g k dyn = mapDyn (f (DynKey k)) dyn
 
-  foldWithKey f b0 (DynMap m) = M.foldWithKey
-    (\ k x b → accDyn (f (DynKey k)) x b) b0 m
+  fold f b0 (DynMap m) =
+      M.fold g b0 m
+    where
+      g dyn b = accDyn f dyn b
 
-  foldMapWithKey = undefined
+  foldWithKey f b0 (DynMap m) =
+      M.foldWithKey g b0 m
+    where
+      g k dyn b = accDyn (f (DynKey k)) dyn b
 
-  foldMapWithKeyM = undefined
+  traverse f (DynMap m) =
+      DynMap `fmap` T.traverse g m
+    where
+      g dyn = appDyn f dyn
 
-  traverseWithKey _ _ = undefined
+  traverseWithKey f (DynMap m) =
+      (DynMap . M.fromList) `fmap` T.traverse g (M.toList m)
+    where
+      g (k, dyn) = (,) k `fmap` (appDyn (f (DynKey k)) dyn)
 
 instance Key2Int DynKey where
   key2Int (DynKey n) = n
@@ -101,3 +106,10 @@ accDyn
   ∷ (∀ α . f α → β → β)
   → (Dyn f → β → β)
 accDyn f (Dyn x) b = f x b
+
+appDyn
+  ∷ Functor t
+  ⇒ (∀ α . f α → t (g α))
+  → (Dyn f → t (Dyn g))
+appDyn f (Dyn x) = Dyn `fmap` (f x)
+-}

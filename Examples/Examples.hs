@@ -12,6 +12,8 @@ module Examples where
 import qualified Prelude as P
 import "copilot-language" Language.Copilot.Interface.Prelude hiding (even)
 import "copilot-language" Language.Copilot.Interface
+import "copilot-language" Language.Copilot.Interface.Reify (reify)
+--import qualified Language.Copilot.Compiler.SBV as SBV
 
 -- The sequence of natural numbers:
 nats ∷ Stream Word64
@@ -61,5 +63,6 @@ y = [False, False, False, True] ++ y
 main ∷ IO ()
 main =
   do
-    --interpret 10 (counter x y)
+    --interpret 10 fib
+    --prettyPrint fib
     prettyPrint $ mux (even fib) nats fib + counter x y

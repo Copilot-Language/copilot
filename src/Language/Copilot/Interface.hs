@@ -23,7 +23,7 @@ module Language.Copilot.Interface
   , mux
   , true
   , false
-  , interpret
+--  , interpret
   , prettyPrint
   ) where
 
@@ -33,7 +33,7 @@ import Language.Copilot.Core (Streamable, Op1 (..), Op2 (..), Op3 (..))
 import Language.Copilot.Interface.Prelude
 import Language.Copilot.Interface.Reify (reify)
 import Language.Copilot.Interface.Stream (Stream (..))
-import qualified Language.Copilot.Core.Interpret as I
+--import qualified Language.Copilot.Core.Interpret as I
 import qualified Language.Copilot.Core.PrettyPrint as PP
 import qualified Prelude as P
 
@@ -52,37 +52,37 @@ extern ∷ Streamable α ⇒ String → Stream α
 extern = Extern
 
 not ∷ Stream Bool → Stream Bool
-not = Op1 Not
+not = Op1 not'
 
 (&&) ∷ Stream Bool → Stream Bool → Stream Bool
-(&&) = Op2 (:&&:)
+(&&) = Op2 (&&.)
 
 (||) ∷ Stream Bool → Stream Bool → Stream Bool
-(||) = Op2 (:||:)
+(||) = Op2 (||.)
 
 (==) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
-(==) = Op2 (:==:)
+(==) = Op2 (==.)
 
 (/=) ∷ (Streamable α, P.Eq α) ⇒ Stream α → Stream α → Stream Bool
-(/=) = Op2 (:/=:)
+(/=) = Op2 (/=.)
 
 (<=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(<=) = Op2 (:<=:)
+(<=) = Op2 (<=.)
 
 (>=) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(>=) = Op2 (:>=:)
+(>=) = Op2 (>=.)
 
 (<) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(<) = Op2 (:<:)
+(<) = Op2 (<.)
 
 (>) ∷ (Streamable α, P.Ord α) ⇒ Stream α → Stream α → Stream Bool
-(>) = Op2 (:>:)
+(>) = Op2 (>.)
 
 mod ∷ (Streamable α, Integral α) ⇒ Stream α → Stream α → Stream α
-mod = Op2 Mod
+mod = Op2 mod'
 
 mux ∷ Streamable α ⇒ Stream Bool → Stream α → Stream α → Stream α
-mux = Op3 Mux
+mux = Op3 if_then_else
 
 true ∷ Stream Bool
 true = Const True
@@ -90,6 +90,7 @@ true = Const True
 false ∷ Stream Bool
 false = Const False
 
+{-
 interpret
   ∷ Streamable α
   ⇒ Integer
@@ -100,6 +101,7 @@ interpret i e =
     spec <- reify e
     let xs = take (fromInteger i) $ I.interpret spec
     print xs
+-}
 
 prettyPrint
   ∷ Streamable α

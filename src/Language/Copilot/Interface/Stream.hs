@@ -6,13 +6,15 @@
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
 module Language.Copilot.Interface.Stream
   ( Stream (..)
   ) where
 
-import Language.Copilot.Core (Op1 (..), Op2 (..), Op3 (..), Streamable)
+import Language.Copilot.Core (Streamable)
+import qualified Language.Copilot.Core as Core
 
 data Stream ∷ * → * where
   Append
@@ -35,18 +37,18 @@ data Stream ∷ * → * where
     → Stream α
   Op1
     ∷ (Streamable α, Streamable β)
-    ⇒ Op1 α β
+    ⇒ (∀ θ . Core.Op1 θ => θ α β)
     → Stream α
     → Stream β
   Op2
     ∷ (Streamable α, Streamable β, Streamable γ)
-    ⇒ Op2 α β γ
+    ⇒ (∀ θ . Core.Op2 θ => θ α β γ)
     → Stream α
     → Stream β
     → Stream γ
   Op3
     ∷ (Streamable α, Streamable β, Streamable γ, Streamable δ)
-    ⇒ Op3 α β γ δ
+    ⇒ (∀ θ . Core.Op3 θ => θ α β γ δ)
     → Stream α
     → Stream β
     → Stream γ
@@ -62,18 +64,21 @@ instance Eq (Stream α) where
   (/=) = error "'Prelude.(/=)' isn't implemented for streams!"
 
 instance (Streamable α, Num α) ⇒ Num (Stream α) where
-  (+)     = Op2 (:+:)
-  (-)     = Op2 (:-:)
-  (*)     = Op2 (:*:)
-  abs     = Op1 Abs
-  signum  = Op1 Signum
+  (+)     = Op2 (Core.+.)
+  (-)     = Op2 (Core.-.)
+  (*)     = Op2 (Core.*.)
+  abs     = Op1 Core.abs'
+  signum  = Op1 Core.signum'
   fromInteger = Const . fromInteger
 
+{-
 instance (Streamable α, Fractional α) ⇒ Fractional (Stream α) where
   (/)     = Op2 (:/:)
   recip   = Op1 Recip
   fromRational = Const . fromRational
+-}
 
+{-
 instance (Streamable α, Floating α) ⇒ Floating (Stream α) where
   pi      = Const pi
   exp     = Op1 Exp
@@ -93,3 +98,4 @@ instance (Streamable α, Floating α) ⇒ Floating (Stream α) where
   asinh   = Op1 Asinh
   atanh   = Op1 Atanh
   acosh   = Op1 Acosh
+-}
