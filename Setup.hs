@@ -1,0 +1,2 @@
+import Distribution
+main = defaultMain
