@@ -4,7 +4,8 @@ version:             0.1
 synopsis:            An intermediate representation for CoPilot.
 description:         An intermediate representation for CoPilot which uses strict Haskell2010,
                      except for existentially and universally quantified types.
-license-file:        LICENSE.txt
+license:             BSD3
+license-file:        LICENSE
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller, Nis Nordby Wegmann
 maintainer:          niswegmann@gmail.com
 stability:           Experimental

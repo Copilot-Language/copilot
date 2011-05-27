@@ -1,6 +1,4 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
--- CoPilot is licensed under a Creative Commons Attribution 3.0 Unported License.
--- See http://creativecommons.org/licenses/by/3.0 for license terms.
 
 -- | An implementation of dynamic types using "Language.Copilot.Core.Type.Equality".
 -- The theory behind this technique is described the following paper:
