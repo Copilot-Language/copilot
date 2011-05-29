@@ -4,16 +4,16 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Operators.Ord
+module Copilot.Language.Operators.Ord
   ( Ord (..)
   ) where
 
 import qualified Prelude as P
-import Language.Copilot.Interface.Operators.Boolean
-import Language.Copilot.Interface.Operators.Eq
-import Language.Copilot.Interface.Prelude
+import Copilot.Language.Operators.Boolean
+import Copilot.Language.Operators.Eq
+import Copilot.Language.Prelude
 
-class (Boolean β, Eq β α) ⇒ Ord β α where
+class (Boolean β, Eq α β) ⇒ Ord α β where
   (<=) ∷ α → α → β
   (>=) ∷ α → α → β
   (<)  ∷ α → α → β
@@ -21,7 +21,7 @@ class (Boolean β, Eq β α) ⇒ Ord β α where
 --  min  ∷ α → α → α
 --  max  ∷ α → α → α
 
-instance P.Ord α ⇒ Ord Bool α where
+instance P.Ord α ⇒ Ord α Bool where
   (<=) = (P.<=)
   (>=) = (P.>=)
   (<)  = (P.<)

@@ -4,20 +4,20 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Operators.Eq
+module Copilot.Language.Operators.Eq
   ( Eq (..)
   ) where
 
 import qualified Prelude as P
-import Language.Copilot.Interface.Operators.Boolean
-import Language.Copilot.Interface.Prelude
+import Copilot.Language.Operators.Boolean
+import Copilot.Language.Prelude
 
-class Boolean β ⇒ Eq β α where
+class Boolean β ⇒ Eq α β where
   (==) ∷ α → α → β
   (/=) ∷ α → α → β
   x == y = not (x /= y)
   x /= y = not (x == y)
 
-instance P.Eq α ⇒ Eq Bool α where
+instance P.Eq α ⇒ Eq α Bool where
   (==) = (P.==)
   (/=) = (P./=)

@@ -6,10 +6,8 @@
 module Examples where
 
 import qualified Prelude as P
-import "copilot-language" Language.Copilot.Interface.Prelude hiding (even)
-import "copilot-language" Language.Copilot.Interface
-import "copilot-language" Language.Copilot.Interface.Reify (reify)
---import qualified Language.Copilot.Compiler.SBV as SBV
+import "copilot-language" Copilot.Language.Prelude hiding (even)
+import "copilot-language" Copilot.Language
 
 -- The sequence of natural numbers:
 nats ∷ Stream Word64
@@ -21,8 +19,8 @@ fib = [1, 1] ++ fib + drop 1 fib
 
 -- A 'pure' function on streams, in the sense that in contains
 -- no internal state:
-even ∷ (Streamable α, Integral α)  ⇒ Stream α → Stream Bool
-even x = x `mod` 2 == 0
+--even ∷ (Streamable α, Integral α)  ⇒ Stream α → Stream Bool
+--even x = x `mod` 2 == 0
 
 -- The CoPilot equivalent of a boolean flipflop.
 flipflop ∷ Stream Bool → Stream Bool
@@ -48,17 +46,37 @@ someAlarm limit order done tick = alarm
               mux ([False] ++ alarm) false $
               [False] ++ running
     count   = counter (tick && running) (order || done)
-    alarm   = count > const limit
+    alarm   = count > constant limit
 
 x ∷ Stream Bool
-x = [True] ++ x
+x = true
 
 y ∷ Stream Bool
 y = [False, False, False, True] ++ y
 
+-- We can use (&&), (||), (==), (++), etc., both on streams
+-- and ordinary Haskell values:
+
+imply :: Bool -> Bool -> Bool
+imply p q = not p || q
+
+fibList :: [Integer]
+fibList = [1, 1] ++ zipWith (+) fibList (drop 1 fibList)
+
+spec :: Specification
+spec =
+  [
+    trigger "fib"      x fib
+  ,
+    trigger "nats"     y nats
+  ,
+    trigger "counter"  x (counter x y :: Stream Int64)
+  ,
+    trigger "booleans" x y
+  ]
+
 main ∷ IO ()
 main =
   do
-    --interpret 10 fib
-    --prettyPrint fib
-    prettyPrint $ mux (even fib) nats fib + counter x y
+    interpret 100 spec
+    prettyPrint spec

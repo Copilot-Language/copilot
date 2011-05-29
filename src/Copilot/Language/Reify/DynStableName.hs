@@ -2,7 +2,7 @@
 
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Reify.DynStableName
+module Copilot.Language.Reify.DynStableName
   ( StableName
   , makeStableName
   , hashStableName

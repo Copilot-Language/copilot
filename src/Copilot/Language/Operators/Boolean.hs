@@ -2,12 +2,12 @@
 
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Operators.Boolean
+module Copilot.Language.Operators.Boolean
   ( Boolean (..)
   ) where
 
 import qualified Prelude as P
-import Language.Copilot.Interface.Prelude
+import Copilot.Language.Prelude
 
 class Boolean α where
   (&&)     ∷ α → α → α

@@ -8,26 +8,29 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Stream
+module Copilot.Language.Stream
   ( Stream (..)
+  , Trigger (..)
+  , trigger
   , constant
   ) where
 
-import Language.Copilot.Core (Streamable)
-import qualified Language.Copilot.Core as Core
-import Language.Copilot.Interface.Operators.Boolean
-import Language.Copilot.Interface.Operators.Eq
-import Language.Copilot.Interface.Operators.Extern
-import Language.Copilot.Interface.Operators.Mux
-import Language.Copilot.Interface.Operators.Ord
-import Language.Copilot.Interface.Operators.Temporal
-import Language.Copilot.Interface.Prelude
+import Copilot.Core (Streamable)
+import qualified Copilot.Core as Core
+import Copilot.Language.Operators.Boolean
+import Copilot.Language.Operators.Eq
+import Copilot.Language.Operators.Extern
+import Copilot.Language.Operators.Mux
+import Copilot.Language.Operators.Ord
+import Copilot.Language.Operators.Temporal
+import Copilot.Language.Prelude
 import qualified Prelude as P
 
 data Stream ∷ * → * where
   Append
     ∷ Streamable α
     ⇒ [α]
+    → Maybe (Stream Bool)
     → Stream α
     → Stream α
   Const
@@ -62,6 +65,22 @@ data Stream ∷ * → * where
     → Stream γ
     → Stream δ
 
+data Trigger where
+  Trigger
+    ∷ Streamable α
+    ⇒ Core.Name
+    → Stream Bool
+    → Stream α
+    → Trigger
+
+trigger
+  ∷ Streamable α
+  ⇒ String
+  → Stream Bool
+  → Stream α
+  → Trigger
+trigger = Trigger
+
 constant ∷ Streamable α ⇒ α → Stream α
 constant = Const
 
@@ -74,50 +93,54 @@ instance P.Eq (Stream α) where
   (==)        = error "'Prelude.(==)' isn't implemented for streams!"
   (/=)        = error "'Prelude.(/=)' isn't implemented for streams!"
 
-{-
-instance (Streamable α, Boolean α) => Boolean (Stream α) where
-  (&&)        = Op2 (Core.&&.)
-  (||)        = Op2 (Core.||.)
-  not         = Op1 Core.not'
-  true        = Const true
-  false       = Const false
-  fromBool    = Const . fromBool
--}
-
+--
+-- Unfortunately we can't instantiate boolean streams like this:
+--
+--   instance (Streamable α, Boolean α) => Boolean (Stream α) where
+--     (&&)        = Op2 (Core.&&.)
+--     (||)        = Op2 (Core.||.)
+--     not         = Op1 Core.not'
+--     true        = Const true
+--     false       = Const false
+--     fromBool    = Const . fromBool
+--
+-- ...as we would be required to use the 'Boolean' class in the
+-- core-representation by doing so.
+--
 instance Boolean (Stream Bool) where
-  (&&)        = Op2 (Core.&&.)
-  (||)        = Op2 (Core.||.)
-  not         = Op1 Core.not'
+  (&&)        = Op2 (Core.and)
+  (||)        = Op2 (Core.or)
+  not         = Op1 Core.not
   true        = Const true
   false       = Const false
   fromBool    = Const . fromBool
 
-instance Streamable α ⇒ Mux (Stream Bool) (Stream α) where
-  mux         = Op3 (Core.if_then_else)
+instance Streamable α ⇒ Mux (Stream α) (Stream Bool) where
+  mux         = Op3 (Core.mux)
 
 instance (Streamable α, Num α) ⇒ Num (Stream α) where
-  (+)         = Op2 (Core.+.)
-  (-)         = Op2 (Core.-.)
-  (*)         = Op2 (Core.*.)
-  abs         = Op1 Core.abs'
-  signum      = Op1 Core.signum'
+  (+)         = Op2 (Core.add)
+  (-)         = Op2 (Core.sub)
+  (*)         = Op2 (Core.mul)
+  abs         = Op1 Core.abs
+  signum      = Op1 Core.sign
   fromInteger = Const . fromInteger
 
-instance (Streamable α, P.Eq α) ⇒ Eq (Stream Bool) (Stream α) where
-  (==)        = Op2 (Core.==.)
-  (/=)        = Op2 (Core./=.)
+instance (Streamable α, P.Eq α) ⇒ Eq (Stream α) (Stream Bool) where
+  (==)        = Op2 (Core.eq)
+  (/=)        = Op2 (Core.ne)
 
-instance (Streamable α, P.Ord α) ⇒ Ord (Stream Bool) (Stream α) where
-  (<=)        = Op2 (Core.<=.)
-  (>=)        = Op2 (Core.>=.)
-  (<)         = Op2 (Core.<.)
-  (>)         = Op2 (Core.>.)
+instance (Streamable α, P.Ord α) ⇒ Ord (Stream α) (Stream Bool) where
+  (<=)        = Op2 (Core.le)
+  (>=)        = Op2 (Core.ge)
+  (<)         = Op2 (Core.lt)
+  (>)         = Op2 (Core.gt)
 
-instance Streamable β ⇒ Temporal β Stream where
-  (++)        = Append
+instance Streamable β ⇒ Temporal Stream β where
+  (++)        = (`Append` Nothing)
   drop        = Drop 
 
-instance Streamable β ⇒ Extern β Stream where
+instance Extern Stream where
   extern      = Extern
 
 {-

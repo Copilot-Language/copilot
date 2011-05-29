@@ -5,14 +5,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Language.Copilot.Interface.Operators.Mux
+module Copilot.Language.Operators.Mux
   ( Mux (..)
   ) where
 
-import Language.Copilot.Interface.Operators.Boolean
+import Copilot.Language.Operators.Boolean
 
-class Boolean β ⇒ Mux β α where
+class Boolean β ⇒ Mux α β where
   mux ∷ β → α → α → α
 
-instance Mux Bool α where
+instance Mux α Bool where
   mux v x y = if v then x else y

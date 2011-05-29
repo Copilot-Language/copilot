@@ -27,21 +27,21 @@ library
     type-level-numbers >= 0.1.0.2
 
   exposed-modules:
-    Language.Copilot
-    Language.Copilot.Interface
-    Language.Copilot.Interface.Operators.Boolean
-    Language.Copilot.Interface.Operators.Eq
-    Language.Copilot.Interface.Operators.Extern
-    Language.Copilot.Interface.Operators.Mux
-    Language.Copilot.Interface.Operators.Ord
-    Language.Copilot.Interface.Operators.Temporal
-    Language.Copilot.Interface.Prelude
-    Language.Copilot.Interface.Reify
-    Language.Copilot.Library.Clock
+    Copilot
+    Copilot.Language
+    Copilot.Language.Operators.Boolean
+    Copilot.Language.Operators.Eq
+    Copilot.Language.Operators.Extern
+    Copilot.Language.Operators.Mux
+    Copilot.Language.Operators.Ord
+    Copilot.Language.Operators.Temporal
+    Copilot.Language.Prelude
+    Copilot.Language.Reify
+    Copilot.Library.Clock
 
   other-modules:
-    Language.Copilot.Interface.Reify.DynStableName
-    Language.Copilot.Interface.Stream
+    Copilot.Language.Reify.DynStableName
+    Copilot.Language.Stream
 
   ghc-options:
     -fwarn-tabs
