@@ -1,6 +1,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
--- | An implementation of dynamic types using "Language.Copilot.Core.Type.Equality".
+-- | An implementation of dynamic types using "Copilot.Core.Type.Equality".
 -- The theory behind this technique is described the following paper:
 --
 -- * Baars, Arthur I. and Swierstra, S. Doaitse,
@@ -8,19 +8,20 @@
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types #-}
 
-module Language.Copilot.Core.Dynamic
-  ( Dynamic (..)
-  , DynamicF (..)
+module Copilot.Core.Type.Dynamic
+  ( Dynamic
+  , DynamicF
   , toDynamic
   , fromDynamic
   , toDynamicF
   , fromDynamicF
   ) where
 
-import Language.Copilot.Core.Type
-import Language.Copilot.Core.Type.Equality
+import Copilot.Core.Type.Equality
 
+{-
 data Dynamic = forall α . Dynamic α (Type α)
 
 data DynamicF f = forall α . DynamicF (f α) (Type α)
@@ -42,17 +43,17 @@ fromDynamicF (DynamicF fx t) =
   case t =~= typeOf of
     Just eq -> Just (coerce (cong eq) fx)
     Nothing -> Nothing
+-}
 
-{-
-data Dynamic τ = forall α . α ::: τ α
+data Dynamic τ = forall α . Dynamic α (τ α)
 
 data DynamicF f τ = forall α . DynamicF (f α) (τ α)
 
 toDynamic :: α -> τ α -> Dynamic τ
-toDynamic x t = x ::: t
+toDynamic = Dynamic
 
 fromDynamic :: EqualType τ => τ α -> Dynamic τ -> Maybe α
-fromDynamic t2 (x ::: t1) =
+fromDynamic t2 (Dynamic x t1) =
   case t1 =~= t2 of
     Just eq -> Just (coerce eq x)
     Nothing -> Nothing
@@ -63,6 +64,5 @@ toDynamicF = DynamicF
 fromDynamicF :: EqualType τ => τ α -> DynamicF f τ -> Maybe (f α)
 fromDynamicF t2 (DynamicF fx t1) =
   case t1 =~= t2 of
-    Just eq -> Just (coerceF eq fx)
+    Just eq -> Just (coerce (cong eq) fx)
     Nothing -> Nothing
--}

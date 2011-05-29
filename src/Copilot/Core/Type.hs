@@ -5,17 +5,19 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
-module Language.Copilot.Core.Type
+module Copilot.Core.Type
   ( module Data.Int
   , module Data.Word
   , Type (..)
   , Typed (..)
+  , Uninitialized (..)
   , Streamable
   ) where
 
+import Control.DeepSeq (NFData)
 import Data.Int
 import Data.Word
-import Language.Copilot.Core.Type.Equality
+import Copilot.Core.Type.Equality
 
 data Type α
   = BoolT   (Equal α Bool)
@@ -33,17 +35,17 @@ data Type α
 class Typed α where
   typeOf :: Type α
 
-instance Typed Bool   where typeOf = BoolT   (CoerceF id)
-instance Typed Int8   where typeOf = Int8T   (CoerceF id)
-instance Typed Int16  where typeOf = Int16T  (CoerceF id)
-instance Typed Int32  where typeOf = Int32T  (CoerceF id)
-instance Typed Int64  where typeOf = Int64T  (CoerceF id)
-instance Typed Word8  where typeOf = Word8T  (CoerceF id)
-instance Typed Word16 where typeOf = Word16T (CoerceF id)
-instance Typed Word32 where typeOf = Word32T (CoerceF id)
-instance Typed Word64 where typeOf = Word64T (CoerceF id)
-instance Typed Float  where typeOf = FloatT  (CoerceF id)
-instance Typed Double where typeOf = DoubleT (CoerceF id)
+instance Typed Bool   where typeOf = BoolT   (mkEqual id)
+instance Typed Int8   where typeOf = Int8T   (mkEqual id)
+instance Typed Int16  where typeOf = Int16T  (mkEqual id)
+instance Typed Int32  where typeOf = Int32T  (mkEqual id)
+instance Typed Int64  where typeOf = Int64T  (mkEqual id)
+instance Typed Word8  where typeOf = Word8T  (mkEqual id)
+instance Typed Word16 where typeOf = Word16T (mkEqual id)
+instance Typed Word32 where typeOf = Word32T (mkEqual id)
+instance Typed Word64 where typeOf = Word64T (mkEqual id)
+instance Typed Float  where typeOf = FloatT  (mkEqual id)
+instance Typed Double where typeOf = DoubleT (mkEqual id)
 
 instance EqualType Type where
   (=~=) (BoolT x)   (BoolT y)   = Just (trans x (symm y))
@@ -57,7 +59,20 @@ instance EqualType Type where
   (=~=) (Word64T x) (Word64T y) = Just (trans x (symm y))
   (=~=) _           _           = Nothing
 
-class (Show α, Typed α) => Streamable α
+class Uninitialized α where
+  uninitialized :: α
+
+instance Uninitialized Bool   where uninitialized = False
+instance Uninitialized Int8   where uninitialized = 0
+instance Uninitialized Int16  where uninitialized = 0
+instance Uninitialized Int32  where uninitialized = 0
+instance Uninitialized Int64  where uninitialized = 0
+instance Uninitialized Word8  where uninitialized = 0
+instance Uninitialized Word16 where uninitialized = 0
+instance Uninitialized Word32 where uninitialized = 0
+instance Uninitialized Word64 where uninitialized = 0
+
+class (NFData α, Show α, Typed α, Uninitialized α) => Streamable α
 
 instance Streamable Bool
 instance Streamable Int8
@@ -68,4 +83,3 @@ instance Streamable Word8
 instance Streamable Word16
 instance Streamable Word32
 instance Streamable Word64
-

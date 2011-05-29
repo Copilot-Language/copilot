@@ -2,11 +2,13 @@ cabal-version:       >=1.10
 name:                copilot-core
 version:             0.1
 synopsis:            An intermediate representation for CoPilot.
-description:         An intermediate representation for CoPilot which uses strict Haskell2010,
-                     except for existentially and universally quantified types.
+description:
+  Intermediate representation for CoPilot. Strictly follows Haskell 2010 except
+  for universal and existential quantification.
+author:
+  Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller, Nis Nordby Wegmann
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller, Nis Nordby Wegmann
 maintainer:          niswegmann@gmail.com
 stability:           Experimental
 category:            Language, Embedded
@@ -19,20 +21,19 @@ library
 
   build-depends:
     containers,
-    haskell2010
+    deepseq,
+    haskell2010,
+    pretty
 
   exposed-modules:
-    Language.Copilot.Core
-    Language.Copilot.Core.Type
-    Language.Copilot.Core.Type.Equality
-    Language.Copilot.Core.Dynamic
-    Language.Copilot.Core.Dynamic.Map
-    Language.Copilot.Core.HeteroMap
-    Language.Copilot.Core.Interpret
-    Language.Copilot.Core.PrettyPrint
+    Copilot.Core
+    Copilot.Core.Type
+    Copilot.Core.Type.Dynamic
+    Copilot.Core.Type.Equality
+    Copilot.Core.Interpret
+    Copilot.Core.PrettyPrint
 
   other-modules:
-    Language.Copilot.Core.PrettyPrint.HughesPJ
 
   ghc-options:
     -fwarn-tabs
