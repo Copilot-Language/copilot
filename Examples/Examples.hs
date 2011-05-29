@@ -1,13 +1,12 @@
 -- |
 
-{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
 module Examples where
 
 import qualified Prelude as P
-import "copilot-language" Copilot.Language.Prelude hiding (even)
-import "copilot-language" Copilot.Language
+import Copilot.Language.Prelude hiding (even)
+import Copilot.Language
 
 -- The sequence of natural numbers:
 nats ∷ Stream Word64
