@@ -1,3 +1,5 @@
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+
 -- |
 
 {-# LANGUAGE FlexibleInstances #-}
@@ -18,13 +20,9 @@ class (Boolean β, Eq α β) ⇒ Ord α β where
   (>=) ∷ α → α → β
   (<)  ∷ α → α → β
   (>)  ∷ α → α → β
---  min  ∷ α → α → α
---  max  ∷ α → α → α
 
 instance P.Ord α ⇒ Ord α Bool where
   (<=) = (P.<=)
   (>=) = (P.>=)
   (<)  = (P.<)
   (>)  = (P.>)
---  min  = P.min
---  max  = P.max

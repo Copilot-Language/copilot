@@ -22,7 +22,7 @@ fib = [1, 1] ++ fib + drop 1 fib
 --even ∷ (Streamable α, Integral α)  ⇒ Stream α → Stream Bool
 --even x = x `mod` 2 == 0
 
--- The CoPilot equivalent of a boolean flipflop.
+-- The Copilot equivalent of a boolean flipflop.
 flipflop ∷ Stream Bool → Stream Bool
 flipflop x = y
   where

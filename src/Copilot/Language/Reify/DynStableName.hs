@@ -1,3 +1,5 @@
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+
 -- Dynamic StableNames without phantom type.
 
 {-# LANGUAGE UnicodeSyntax #-}
