@@ -24,11 +24,11 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core
-  ( module Copilot.Core.Type
-  , Expr (..)
+  ( Expr (..)
   , Op1 (..)
   , Op2 (..)
   , Op3 (..)
+  , Op4 (..)
   , Name
   , Id
   , Stream (..)
@@ -37,8 +37,11 @@ module Copilot.Core
   )
   where
 
+import Copilot.Core.Saturable
 import Copilot.Core.Type
---import qualified Copilot.Core.HeteroMap as H
+import Copilot.Core.Uninitializable
+import Data.Int
+import Data.Word
 
 -- | The expression class.
 class Expr η where
@@ -73,6 +76,11 @@ class Expr η where
     :: (Streamable α, Streamable β, Streamable γ, Streamable δ)
     => (forall θ . Op3 θ => θ α β γ δ)
     -> η α -> η β -> η γ -> η δ
+  -- | Quaternary operator.
+  op4
+    :: (Streamable α, Streamable β, Streamable γ, Streamable δ, Streamable ξ)
+    => (forall θ . Op4 θ => θ α β γ δ ξ)
+    -> η α -> η β -> η γ -> η δ -> η ξ
 
 -- | Unary operators.
 class Op1 θ where
@@ -81,6 +89,16 @@ class Op1 θ where
   -- Numeric operators.
   abs  :: Num α => θ α α
   sign :: Num α => θ α α
+  -- Tuple operators:
+  untup2_1 :: θ (α, β) α
+  untup2_2 :: θ (α, β) β
+  untup3_1 :: θ (α, β, γ) α
+  untup3_2 :: θ (α, β, γ) β
+  untup3_3 :: θ (α, β, γ) γ
+  untup4_1 :: θ (α, β, γ, δ) α
+  untup4_2 :: θ (α, β, γ, δ) β
+  untup4_3 :: θ (α, β, γ, δ) γ
+  untup4_4 :: θ (α, β, γ, δ) δ
 
 -- | Binary operators.
 class Op2 θ where
@@ -102,12 +120,22 @@ class Op2 θ where
   ge   :: Ord α => θ α α Bool
   lt   :: Ord α => θ α α Bool
   gt   :: Ord α => θ α α Bool
+  -- Tuple operator:
+  tup2 :: θ α β (α, β)
 
 -- | Ternary operators.
 class Op3 θ where
+  -- Conditional operator:
   mux  :: θ Bool α α α
+  -- Tuple operator:
+  tup3 :: θ α β γ (α, β, γ)
 
--- | A name of a trigeer or an external variable or function.
+-- | Quaternary operators.
+class Op4 θ where
+  -- Tuple operator:
+  tup4 :: θ α β γ δ (α, β, γ, δ)
+
+-- | A name of a trigger, an external variable, or an external function.
 type Name = String
 
 -- | A stream identifier.
@@ -134,3 +162,29 @@ data Spec = Spec
   { specStreams  :: [Stream]
   , specTriggers :: [Trigger]
   }
+
+class
+  ( Saturable α
+  , Show α
+  , Typed α
+  , Uninitializable α
+  ) => Streamable α
+
+instance Streamable Bool
+instance Streamable Int8
+instance Streamable Int16
+instance Streamable Int32
+instance Streamable Int64
+instance Streamable Word8
+instance Streamable Word16
+instance Streamable Word32
+instance Streamable Word64
+
+instance (Streamable α, Streamable β)
+  => Streamable (α, β)
+
+instance (Streamable α, Streamable β, Streamable γ)
+  => Streamable (α, β, γ)
+
+instance (Streamable α, Streamable β, Streamable γ, Streamable δ)
+  => Streamable (α, β, γ, δ)

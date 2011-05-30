@@ -27,4 +27,4 @@ We are grateful for NASA Contract NNL08AD13T to [Galois, Inc](http://corp.galois
 License
 =======
 
-CoPilot is distributed under a BSD3 license. The license terms are stated in the [LICENSE](http://github.com/niswegmann/copilot-language/tree/master/LICENSE)-file.
+Copilot is distributed under a BSD3 license. The license terms are stated in the [LICENSE](http://github.com/niswegmann/copilot-language/tree/master/LICENSE)-file.
