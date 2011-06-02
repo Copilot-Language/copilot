@@ -3,12 +3,6 @@
 --------------------------------------------------------------------------------
 
 -- |
---
--- Phase 0: Sample external variables.
--- Phase 1: Update internal state variables for streams.
--- Phase 2: Fire triggers (if any).
--- Phase 3: Update internal indexes and buffers for streams.
---
 
 module Copilot.Compile.C99
   ( compile
