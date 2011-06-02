@@ -78,6 +78,12 @@ ft0 = do
       ls = [8, 3, 7, 4, 2, 4, 1, 0]
   v3 .= ftAvg ls 3
 
+-- Use CBMC to find the overflow
+ftAvgOverflow :: Streams
+ftAvgOverflow = do
+  let v = varW16 "v"
+  v .= ftAvg [40000, 40000, 40000, 40000] 1
+
 -------------------------------------------------------------------
 -- distributed example
 -------------------------------------------------------------------
