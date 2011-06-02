@@ -28,7 +28,7 @@ data Phase
   deriving (Bounded, Eq, Enum, Ord, Show)
 
 numberOfPhases :: Int
-numberOfPhases = 4 -- succ (fromEnum (maxBound :: Phase))
+numberOfPhases = succ (fromEnum (maxBound :: Phase))
 
 --------------------------------------------------------------------------------
 
