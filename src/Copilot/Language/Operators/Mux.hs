@@ -1,11 +1,12 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- |
 
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE UnicodeSyntax #-}
 
 module Copilot.Language.Operators.Mux
   ( Mux (..)
@@ -13,8 +14,14 @@ module Copilot.Language.Operators.Mux
 
 import Copilot.Language.Operators.Boolean
 
-class Boolean β ⇒ Mux α β where
-  mux ∷ β → α → α → α
+--------------------------------------------------------------------------------
+
+class Boolean β => Mux α β where
+  mux :: β -> α -> α -> α
+
+--------------------------------------------------------------------------------
 
 instance Mux α Bool where
   mux v x y = if v then x else y
+
+--------------------------------------------------------------------------------
