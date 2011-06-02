@@ -21,30 +21,6 @@ module Copilot.Core.Type.Dynamic
 
 import Copilot.Core.Type.Equality
 
-{-
-data Dynamic = forall α . Dynamic α (Type α)
-
-data DynamicF f = forall α . DynamicF (f α) (Type α)
-
-toDynamic :: Typed α => α -> Dynamic
-toDynamic x = Dynamic x typeOf
-
-fromDynamic :: Typed α => Dynamic -> Maybe α
-fromDynamic (Dynamic x t) =
-  case t =~= typeOf of
-    Just eq -> Just (coerce eq x)
-    Nothing -> Nothing
-
-toDynamicF :: Typed α => f α -> DynamicF f
-toDynamicF x = DynamicF x typeOf
-
-fromDynamicF :: Typed α => DynamicF f -> Maybe (f α)
-fromDynamicF (DynamicF fx t) =
-  case t =~= typeOf of
-    Just eq -> Just (coerce (cong eq) fx)
-    Nothing -> Nothing
--}
-
 data Dynamic τ = forall α . Dynamic α (τ α)
 
 data DynamicF f τ = forall α . DynamicF (f α) (τ α)

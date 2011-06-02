@@ -13,6 +13,7 @@ maintainer:          niswegmann@gmail.com
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
+extra-source-files:  README.md
 
 library
   default-language: Haskell2010
@@ -26,14 +27,14 @@ library
 
   exposed-modules:
     Copilot.Core
+    Copilot.Core.Expr
+    Copilot.Core.Spec
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
-    Copilot.Core.Interpret
-    Copilot.Core.PrettyPrint
-    Copilot.Core.Saturable
-    Copilot.Core.Tuple
-    Copilot.Core.Uninitializable
+--    Copilot.Core.Interpret
+--    Copilot.Core.PrettyPrint
+    Copilot.Core.Uninitialized
 
   other-modules:
 

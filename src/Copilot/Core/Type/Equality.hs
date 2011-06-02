@@ -15,6 +15,7 @@ module Copilot.Core.Type.Equality
   , EqualType (..)
   , mkEqual
   , coerce
+  , coerce2
   , refl
   , trans
   , symm
@@ -43,6 +44,9 @@ newtype Id x = Id { unId :: x }
 -- | Coerce a type to another using an equality proof.
 coerce :: Equal α β -> α -> β
 coerce (Refl f) = unId . f . Id
+
+coerce2 :: Equal α β -> f α -> f β
+coerce2 (Refl f) = f
 
 -- | Equality proofs are reflexive.
 refl :: Equal α α
