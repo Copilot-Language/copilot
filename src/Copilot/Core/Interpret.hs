@@ -42,7 +42,7 @@ class Applicative f where
 newtype EvalExpr α = EvalExpr { evalExpr_ :: Env Name -> Env Id -> [α] }
 
 instance Applicative EvalExpr where
-  pure x = EvalExpr $ \ _ _ -> repeat x
+  pure x    = EvalExpr $ \ _ _ -> repeat x
   e1 <*> e2 = EvalExpr $ \ exts strms ->
     zipWith ($) (evalExpr_ e1 exts strms) (evalExpr_ e2 exts strms)
 
@@ -111,11 +111,11 @@ type Output = (Bool, [String])
 --------------------------------------------------------------------------------
 
 evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
-evalStream exts strms (Stream id buffer _ e1 t) = (id, toDynamicF xs t)
+evalStream exts strms (Stream id buffer _ e2 t) = (id, toDynamicF xs t)
 
   where
 
-  xs = buffer ++ evalExpr exts strms e1
+  xs = buffer ++ evalExpr exts strms e2
 --  ys =
 --    case mguard of
 --      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
@@ -135,9 +135,9 @@ evalTrigger exts strms (Trigger _ e args) = zip bs vs
 
   bs :: [Bool]
   bs = evalExpr exts strms e
-  
+
   vs :: [[String]]
-  vs = map evalTriggerArg args
+  vs = transpose $ map evalTriggerArg args
 
   evalTriggerArg :: TriggerArg -> [String]
   evalTriggerArg (TriggerArg e1 _) = map show (evalExpr exts strms e1)
