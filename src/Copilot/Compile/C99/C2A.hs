@@ -20,12 +20,12 @@ import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
 
-c2aExpr :: MetaTable -> (forall η . C.Expr η => η α) -> A.E α
+c2aExpr :: MetaTable -> (forall η . C.Expr η => η a) -> A.E a
 c2aExpr m e = c2aExpr_ e m
 
 --------------------------------------------------------------------------------
 
-c2aType :: C.Type α -> A.Type
+c2aType :: C.Type a -> A.Type
 c2aType t =
   case t of
     C.Bool   _ -> A.Bool
@@ -37,17 +37,17 @@ c2aType t =
 
 --------------------------------------------------------------------------------
 
-newtype C2AExpr α = C2AExpr
-  { c2aExpr_ :: MetaTable -> A.E α }
+newtype C2AExpr a = C2AExpr
+  { c2aExpr_ :: MetaTable -> A.E a }
 
-newtype C2AOp1 α β = C2AOp1
-  { c2aOp1 :: A.E α -> A.E β }
+newtype C2AOp1 a b = C2AOp1
+  { c2aOp1 :: A.E a -> A.E b }
 
-newtype C2AOp2 α β γ = C2AOp2
-  { c2aOp2 :: A.E α -> A.E β -> A.E γ }
+newtype C2AOp2 a b c = C2AOp2
+  { c2aOp2 :: A.E a -> A.E b -> A.E c }
 
-newtype C2AOp3 α β γ δ = C2AOp3
-  { c2aOp3 :: A.E α -> A.E β -> A.E γ -> A.E δ }
+newtype C2AOp3 a b c d = C2AOp3
+  { c2aOp3 :: A.E a -> A.E b -> A.E c -> A.E d }
 
 --------------------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ instance C.Expr C2AExpr where
 
     where
 
-    drop1 :: C.Type α -> StreamInfo -> A.E α
+    drop1 :: C.Type a -> StreamInfo -> A.E a
     drop1 t1
       StreamInfo
         { streamInfoQueue = que

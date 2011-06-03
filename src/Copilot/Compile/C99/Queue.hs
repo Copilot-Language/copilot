@@ -13,13 +13,13 @@ module Copilot.Compile.C99.Queue
 import Data.Word (Word8)
 import Language.Atom
 
-data Queue α = Queue
-  { queueRingBuffer :: A α
+data Queue a = Queue
+  { queueRingBuffer :: A a
   , queuePointer    :: V Word8
   , size            :: Word8
   }
 
-dropFirstElemAndSnoc :: Assign α => E α -> Queue α -> Atom ()
+dropFirstElemAndSnoc :: Assign a => E a -> Queue a -> Atom ()
 dropFirstElemAndSnoc x
   Queue
     { queueRingBuffer = buf
@@ -30,7 +30,7 @@ dropFirstElemAndSnoc x
     (buf ! value p) <== x
     p <== mux (value p + 1 >=. fromIntegral sz) 0 (value p + 1)
 
-lookahead :: Expr α => Int -> Queue α -> E α
+lookahead :: Expr a => Int -> Queue a -> E a
 lookahead i
   Queue
     { queueRingBuffer = buf
@@ -42,7 +42,7 @@ lookahead i
   in
     buf !. k
 
-queue :: Expr α => String -> [α] -> Atom (Queue α)
+queue :: Expr a => String -> [a] -> Atom (Queue a)
 queue name xs =
   do
     buf <- array ("queue_buffer_" ++ name) xs

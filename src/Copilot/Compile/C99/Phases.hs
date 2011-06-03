@@ -80,7 +80,7 @@ updateStates meta
     in
       updateState1 t1 id (c2aExpr meta e) strmInfo
 
-  updateState1 :: Core.Type α -> Core.Id -> A.E α -> StreamInfo -> Atom ()
+  updateState1 :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
   updateState1 t1 id e1
     StreamInfo
       { streamInfoTempVar = tmp

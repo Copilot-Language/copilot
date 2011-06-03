@@ -26,18 +26,18 @@ import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
 
-data StreamInfo = forall α . StreamInfo
-  { streamInfoQueue   :: Q.Queue α
-  , streamInfoTempVar :: A.V α
-  , streamInfoType    :: C.Type α }
+data StreamInfo = forall a . StreamInfo
+  { streamInfoQueue   :: Q.Queue a
+  , streamInfoTempVar :: A.V a
+  , streamInfoType    :: C.Type a }
 
 type StreamInfoMap = Map C.Id   StreamInfo
 
 --------------------------------------------------------------------------------
 
-data ExternInfo = forall α . ExternInfo
-  { externInfoVar     :: A.V α
-  , externInfoType    :: C.Type α }
+data ExternInfo = forall a . ExternInfo
+  { externInfoVar     :: A.V a
+  , externInfoType    :: C.Type a }
 
 type ExternInfoMap = Map C.Name ExternInfo
 
@@ -93,7 +93,7 @@ allocStream (C.Stream id buf _ _ t) =
 
 --------------------------------------------------------------------------------
 
-newtype AllocExts α = AllocExts { allocExts :: Atom ExternInfoMap }
+newtype AllocExts a = AllocExts { allocExts :: Atom ExternInfoMap }
 
 instance C.Expr AllocExts where
 

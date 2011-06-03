@@ -19,14 +19,14 @@ import Copilot.Core.Type.Equality
 
 --------------------------------------------------------------------------------
 
-mkInst :: Equal α β -> f β -> f α
+mkInst :: Equal a b -> f b -> f a
 mkInst p con = coerce2 (symm p) con
 
 --------------------------------------------------------------------------------
 
-data ExprInst α = A.Expr α => ExprInst
+data ExprInst a = A.Expr a => ExprInst
 
-exprInst :: C.Type α -> ExprInst α
+exprInst :: C.Type a -> ExprInst a
 exprInst t =
   case t of
     C.Bool   p -> mkInst p ExprInst
@@ -38,9 +38,9 @@ exprInst t =
 
 --------------------------------------------------------------------------------
 
-data AssignInst α = A.Assign α => AssignInst
+data AssignInst a = A.Assign a => AssignInst
 
-assignInst :: C.Type α -> AssignInst α
+assignInst :: C.Type a -> AssignInst a
 assignInst t =
   case t of
     C.Bool   p -> mkInst p AssignInst
@@ -52,9 +52,9 @@ assignInst t =
 
 --------------------------------------------------------------------------------
 
-data EqEInst α = A.EqE α => EqEInst
+data EqEInst a = A.EqE a => EqEInst
 
-eqEInst :: Eq α => C.Type α -> EqEInst α
+eqEInst :: Eq a => C.Type a -> EqEInst a
 eqEInst t =
   case t of
     C.Bool   p -> mkInst p EqEInst
@@ -66,9 +66,9 @@ eqEInst t =
 
 --------------------------------------------------------------------------------
 
-data OrdEInst α = A.OrdE α => OrdEInst
+data OrdEInst a = A.OrdE a => OrdEInst
 
-ordEInst :: Ord α => C.Type α -> OrdEInst α
+ordEInst :: Ord a => C.Type a -> OrdEInst a
 ordEInst t =
   case t of
     C.Bool   _ -> error "ordEInst!"
@@ -80,9 +80,9 @@ ordEInst t =
 
 --------------------------------------------------------------------------------
 
-data NumEInst α = A.NumE α => NumEInst
+data NumEInst a = A.NumE a => NumEInst
 
-numEInst :: Num α => C.Type α -> NumEInst α
+numEInst :: Num a => C.Type a -> NumEInst a
 numEInst t =
   case t of
     C.Bool   _ -> error "numEInst!" -- !! this can't happen !!
@@ -94,9 +94,9 @@ numEInst t =
 
 --------------------------------------------------------------------------------
 
-data IntegralEInst α = A.IntegralE α => IntegralEInst
+data IntegralEInst a = A.IntegralE a => IntegralEInst
 
-integralEInst :: Integral α => C.Type α -> IntegralEInst α
+integralEInst :: Integral a => C.Type a -> IntegralEInst a
 integralEInst t =
   case t of
     C.Bool   _ -> error "integralEInst!" -- !! this can't happen !!
