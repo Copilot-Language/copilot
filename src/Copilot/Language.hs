@@ -19,14 +19,14 @@ module Copilot.Language
   , constant
   , trigger
   , stream
---  , interpret
+  , interpret
 --  , prettyPrint
   ) where
 
 import Data.Int
 import Data.Word
-import Copilot.Core (Typed)
---import qualified Copilot.Core.Interpret as I
+import Copilot.Core (Name, Typed)
+import qualified Copilot.Core.Interpret as I
 --import qualified Copilot.Core.PrettyPrint as PP
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
@@ -34,20 +34,21 @@ import Copilot.Language.Operators.Extern
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
---import Copilot.Language.Reify
+import Copilot.Language.Reify
 import Copilot.Language.Stream (Stream, Trigger, constant, trigger, stream)
-{-
+
 --------------------------------------------------------------------------------
 
 interpret
-  :: Integer
+  :: I.Env Name
+  -> Integer
   -> [Trigger]
   -> IO ()
-interpret i e =
+interpret exts i e =
   do
     spec <- reify e
-    putStrLn $ I.interpret (fromIntegral i) spec
-
+    putStrLn $ I.interpret (fromIntegral i) exts spec
+{-
 --------------------------------------------------------------------------------
 
 prettyPrint

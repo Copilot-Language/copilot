@@ -52,7 +52,7 @@ x :: Stream Bool
 x = true
 
 y :: Stream Bool
-y = [False, False, False, True] ++ y
+y = [True, True, False] ++ y
 
 -- We can use (&&), (||), (==), (++), etc., both on streams
 -- and ordinary Haskell values:
@@ -66,7 +66,11 @@ fibList = [1, 1] ++ zipWith (+) fibList (drop 1 fibList)
 spec :: [Trigger]
 spec =
   [
-    trigger "trigger" true [stream fib, stream nats]
+    trigger "trigger" y
+      [ stream $ (counter x (drop 1 y) :: Stream Word64)
+-- , stream $ (extern "period" :: Stream Word64)
+      , stream $ fib
+      ]
   ]
 
 main :: IO ()
