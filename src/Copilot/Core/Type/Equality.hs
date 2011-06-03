@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | Leibnizian equality on types.
 -- The theory behind this technique is described the following paper:
@@ -27,18 +29,26 @@ module Copilot.Core.Type.Equality
   --  , rewrite
   ) where
 
+--------------------------------------------------------------------------------
+
 -- | An equality proof 'Equal' /a/ /b/ is a proof that /a/ is equal to /b/.
 newtype Equal α β = Refl { unRefl :: forall f . f α -> f β }
+
+--------------------------------------------------------------------------------
 
 -- | A type class for constructing equality proofs.
 class EqualType τ where
   (=~=) :: τ α -> τ β -> Maybe (Equal α β)
+
+--------------------------------------------------------------------------------
 
 -- | Constructor for building equality proofs.
 -- Leibnizian equality states that two things are equal
 -- if you can substite one for the other in all contexts.
 mkEqual :: (forall f . f α -> f β) -> Equal α β
 mkEqual = Refl
+
+--------------------------------------------------------------------------------
 
 newtype Id x = Id { unId :: x }
 -- | Coerce a type to another using an equality proof.
@@ -48,18 +58,26 @@ coerce (Refl f) = unId . f . Id
 coerce2 :: Equal α β -> f α -> f β
 coerce2 (Refl f) = f
 
+--------------------------------------------------------------------------------
+
 -- | Equality proofs are reflexive.
 refl :: Equal α α
 refl = Refl id
+
+--------------------------------------------------------------------------------
 
 -- | Equality proofs are transitive.
 trans :: Equal α β -> Equal β γ -> Equal α γ
 trans (Refl f) (Refl g) = Refl (g . f)
 
+--------------------------------------------------------------------------------
+
 newtype Symm f α β = Symm { unSymm :: f β α }
 -- | Equality proofs are symmetric.
 symm :: Equal α β -> Equal β α
 symm (Refl f) = unSymm (f (Symm refl))
+
+--------------------------------------------------------------------------------
 
 -- Lifting:
 newtype Lift  f α β       = Lift  { unLift  :: Equal (f α)       (f β) }
@@ -78,6 +96,8 @@ lift3 (Refl f) = unlift3 (f (Lift3 refl))
 
 lift4 :: Equal α β -> Equal (f α γ δ ξ) (f β γ δ ξ)
 lift4 (Refl f) = unlift4 (f (Lift4 refl))
+
+--------------------------------------------------------------------------------
 
 -- | Equality proofs are congruential.
 cong
@@ -100,6 +120,8 @@ cong4
   -> Equal (f α1 β1 γ1 δ1) (f α2 β2 γ2 δ2)
 cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 
+--------------------------------------------------------------------------------
+
 -- | Substitution using an equality proof.
 --
 -- Using the substitution rule we can use equality proofs to prove to the
@@ -113,23 +135,20 @@ cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 --
 -- data NumWit a = Num a => NumWit -- witness
 --
--- newtype WrapNumWit a = WrapNumWit { unWrapNumWit :: NumWit a }
+-- mkNumWit :: U β => Equal α β -> NumWit α
+-- mkNumWit = (`coerce` NumWit) . cong . symm
 --
--- numInst :: Num b => Equal a b -> NumInst a
--- numInst p = subst WrapNumInst unWrapNumInst (symm p) NumInst
---
--- numInstT :: T a -> Maybe (NumInst a)
--- numInstT (B _) = Nothing
--- numInstT (I p) = Just (numInst p)
--- numInstT (R p) = Just (numInst p)
+-- numWitT :: T a -> Maybe (NumWit a)
+-- numWitT (B _) = Nothing
+-- numWitT (I p) = Just (mkNumWit p)
+-- numWitT (R p) = Just (mkNumWit p)
 --
 -- add :: T a -> a -> a -> Maybe a
--- add t x y = case numInstT t of
---   Just NumInst -> Just (x + y)
---   Nothing      -> Nothing
+-- add t x y = case numWitT t of
+--   Just NumWit -> Just (x + y)
+--   Nothing     -> Nothing
 -- @
 subst :: (fα -> f α) -> (f β -> fβ) -> Equal α β -> fα -> fβ
 subst from to (Refl f) = to . f . from
 
---rewrite :: Equal a b -> Equal c (f a) -> Equal c (f b)
---rewrite a_b c_fa = let fa_fb = arg a_b in trans c_fa fa_fb
+--------------------------------------------------------------------------------

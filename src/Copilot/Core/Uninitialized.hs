@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | 
 
@@ -14,6 +16,8 @@ import Copilot.Core.Type.Equality
 import Data.Int
 import Data.Word
 
+--------------------------------------------------------------------------------
+
 class U α where
   u :: α
 
@@ -28,6 +32,8 @@ instance U Word32 where u = 0
 instance U Word64 where u = 0
 instance U Float  where u = 0
 instance U Double where u = 0
+
+--------------------------------------------------------------------------------
 
 data UInst α = U α => UInst
 
@@ -49,5 +55,9 @@ uInst t =
     Float  p -> mkUInst p
     Double p -> mkUInst p
 
+--------------------------------------------------------------------------------
+
 uninitialized :: Type α -> α
 uninitialized t = case uInst t of UInst -> u
+
+--------------------------------------------------------------------------------

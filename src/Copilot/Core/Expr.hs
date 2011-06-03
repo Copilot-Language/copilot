@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
@@ -15,11 +17,17 @@ module Copilot.Core.Expr
 import Copilot.Core.Type (Type)
 import Data.Word (Word8)
 
+--------------------------------------------------------------------------------
+
 -- | A stream identifier.
 type Id = Int
 
+--------------------------------------------------------------------------------
+
 -- | A name of a trigger, an external variable, or an external function.
 type Name = String
+
+--------------------------------------------------------------------------------
 
 -- | The expression class.
 class Expr η where
@@ -53,6 +61,8 @@ class Expr η where
     :: (forall θ . Op3 θ => θ α β γ δ)
     -> η α -> η β -> η γ -> η δ
 
+--------------------------------------------------------------------------------
+
 -- | Unary operators.
 class Op1 θ where
   -- Boolean operators.
@@ -60,6 +70,8 @@ class Op1 θ where
   -- Numeric operators.
   abs  :: Num α => Type α -> θ α α
   sign :: Num α => Type α -> θ α α
+
+--------------------------------------------------------------------------------
 
 -- | Binary operators.
 class Op2 θ where
@@ -82,25 +94,11 @@ class Op2 θ where
   lt   :: Ord α => Type α -> θ α α Bool
   gt   :: Ord α => Type α -> θ α α Bool
 
+--------------------------------------------------------------------------------
+
 -- | Ternary operators.
 class Op3 θ where
   -- Conditional operator:
   mux  :: Type α -> θ Bool α α α
 
-{-
-class
-  ( Show α
-  , Typed α
-  , Uninitializable α
-  ) => Streamable α
-
-instance Streamable Bool
-instance Streamable Int8
-instance Streamable Int16
-instance Streamable Int32
-instance Streamable Int64
-instance Streamable Word8
-instance Streamable Word16
-instance Streamable Word32
-instance Streamable Word64
--}
+--------------------------------------------------------------------------------

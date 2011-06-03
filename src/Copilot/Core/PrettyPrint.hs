@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | A pretty printer for Copilot specifications.
 
@@ -11,6 +13,8 @@ module Copilot.Core.PrettyPrint
 import Copilot.Core
 import Prelude hiding (id)
 import Text.PrettyPrint.HughesPJ
+
+--------------------------------------------------------------------------------
 
 newtype PPExpr α         = PPExpr { ppExpr :: Doc }
 newtype PPOp1  α β       = PPOp1  { ppOp1  :: Doc -> Doc }
@@ -51,19 +55,27 @@ instance Op3 PPOp3 where
     text "then " <+> doc2 <+>
     text "else " <+> doc3
 
+--------------------------------------------------------------------------------
+  
 ppInfix :: String -> Doc -> Doc -> Doc
 ppInfix cs doc1 doc2 = parens $ doc1 <+> text cs <+> doc2
 
 ppPrefix :: String -> Doc -> Doc
 ppPrefix cs = (text cs <+>)
 
+--------------------------------------------------------------------------------
+
 ppStream :: Stream -> Doc
 ppStream (Stream _ id buffer _ e) =
   text "s" <> int id <+> text (show buffer) <+> text "=" <+> ppExpr e
 
+--------------------------------------------------------------------------------
+
 ppTrigger :: Trigger -> Doc
 ppTrigger (Trigger _ name _ e) =
   text "trigger:" <+> text name <+> text "=" <+> ppExpr e
+
+--------------------------------------------------------------------------------
 
 ppSpec :: Spec -> Doc
 ppSpec spec = cs $$ ds
@@ -71,6 +83,10 @@ ppSpec spec = cs $$ ds
     cs = foldr (($$) . ppStream)  empty (specStreams spec)
     ds = foldr (($$) . ppTrigger) empty (specTriggers spec)
 
+--------------------------------------------------------------------------------
+
 -- | Pretty-prints a Copilot specification.
 prettyPrint :: Spec -> String
 prettyPrint = render . ppSpec
+
+--------------------------------------------------------------------------------

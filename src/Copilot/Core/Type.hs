@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | 
 
@@ -13,6 +15,8 @@ module Copilot.Core.Type
 import Copilot.Core.Type.Equality
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Word (Word8, Word16, Word32, Word64)
+
+--------------------------------------------------------------------------------
 
 data Type α
   = Bool   (Equal α Bool)
@@ -39,6 +43,8 @@ instance EqualType Type where
   (=~=) (Word64 x) (Word64 y) = Just (trans x (symm y))
   (=~=) _ _ = Nothing
 
+--------------------------------------------------------------------------------
+
 class Typed α where
   typeOf :: Type α
 
@@ -53,3 +59,5 @@ instance Typed Word32 where typeOf = Word32 (mkEqual id)
 instance Typed Word64 where typeOf = Word64 (mkEqual id)
 instance Typed Float  where typeOf = Float  (mkEqual id)
 instance Typed Double where typeOf = Double (mkEqual id)
+
+--------------------------------------------------------------------------------

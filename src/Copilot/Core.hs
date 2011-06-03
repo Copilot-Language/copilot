@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | Intermediate representation for Copilot specifications.
 -- The form of the representation is based on this paper:
@@ -35,3 +37,5 @@ import Copilot.Core.Type
 import Copilot.Core.Uninitialized
 import Data.Int
 import Data.Word
+
+--------------------------------------------------------------------------------
