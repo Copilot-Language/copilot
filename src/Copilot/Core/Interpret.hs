@@ -1,4 +1,6 @@
+--------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
 -- | An tagless interpreter for Copilot specifications.
 
