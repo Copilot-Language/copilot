@@ -9,12 +9,12 @@ module Copilot.Compile.C99.C2A
   , c2aType
   ) where
 
-import Copilot.Compile.C99.Witness
+import qualified Copilot.Compile.C99.Queue as Q
+import qualified Copilot.Compile.C99.Witness as W
 import Copilot.Compile.C99.MetaTable
 import qualified Copilot.Core as C
 import Copilot.Core.Type.Equality ((=~=), coerce, cong)
 import qualified Data.Map as M
-import Language.Atom ((!.), value, mod_)
 import qualified Language.Atom as A
 import Prelude hiding (id)
 
@@ -73,19 +73,15 @@ instance C.Expr C2AExpr where
     drop1 :: C.Type α -> StreamInfo -> A.E α
     drop1 t1
       StreamInfo
-        { streamInfoBufferArray = arr
-        , streamInfoBufferIndex = idx
-        , streamInfoBufferSize  = sz
-        , streamInfoType        = t2
+        { streamInfoQueue = que
+        , streamInfoType  = t2
         } =
       let
         Just p = (=~=) t2 t1
-        k = fromIntegral i
-        m = (value idx + k + 1) `mod_` sz
       in
-        case exprInst t2 of
-          ExprInst ->
-            coerce (cong p) (arr !. m)
+        case W.exprInst t2 of
+          W.ExprInst ->
+            coerce (cong p) (Q.lookahead (fromIntegral i) que)
 
   ----------------------------------------------------
 
@@ -126,27 +122,26 @@ instance C.Expr C2AExpr where
   ----------------------------------------------------
 
 instance C.Op1 C2AOp1 where
-  not    = C2AOp1 $                                          A.not_
-  abs  t = C2AOp1 $ case numEInst      t of NumEInst      -> abs
-  sign t = C2AOp1 $ case numEInst      t of NumEInst      -> signum
+  not    = C2AOp1                                                A.not_
+  abs  t = C2AOp1 $ case W.numEInst      t of W.NumEInst      -> abs
+  sign t = C2AOp1 $ case W.numEInst      t of W.NumEInst      -> signum
 
 instance C.Op2 C2AOp2 where
-  and    = C2AOp2 $                                          (A.&&.)
-  or     = C2AOp2 $                                          (A.||.)
-  add t  = C2AOp2 $ case numEInst      t of NumEInst      -> (+)
-  sub t  = C2AOp2 $ case numEInst      t of NumEInst      -> (-)
-  mul t  = C2AOp2 $ case numEInst      t of NumEInst      -> (*)
-  div t  = C2AOp2 $ case integralEInst t of IntegralEInst -> A.div_
-  mod t  = C2AOp2 $ case integralEInst t of IntegralEInst -> A.mod_
-  eq t   = C2AOp2 $ case eqEInst       t of EqEInst       -> (A.==.)
-  ne t   = C2AOp2 $ case eqEInst       t of EqEInst       -> (A./=.)
-  le t   = C2AOp2 $ case ordEInst      t of OrdEInst      -> (A.<=.)
-  ge t   = C2AOp2 $ case ordEInst      t of OrdEInst      -> (A.>=.)
-  lt t   = C2AOp2 $ case ordEInst      t of OrdEInst      -> (A.<.)
-  gt t   = C2AOp2 $ case ordEInst      t of OrdEInst      -> (A.>.)
-
+  and    = C2AOp2                                                (A.&&.)
+  or     = C2AOp2                                                (A.||.)
+  add t  = C2AOp2 $ case W.numEInst      t of W.NumEInst      -> (+)
+  sub t  = C2AOp2 $ case W.numEInst      t of W.NumEInst      -> (-)
+  mul t  = C2AOp2 $ case W.numEInst      t of W.NumEInst      -> (*)
+  div t  = C2AOp2 $ case W.integralEInst t of W.IntegralEInst -> A.div_
+  mod t  = C2AOp2 $ case W.integralEInst t of W.IntegralEInst -> A.mod_
+  eq t   = C2AOp2 $ case W.eqEInst       t of W.EqEInst       -> (A.==.)
+  ne t   = C2AOp2 $ case W.eqEInst       t of W.EqEInst       -> (A./=.)
+  le t   = C2AOp2 $ case W.ordEInst      t of W.OrdEInst      -> (A.<=.)
+  ge t   = C2AOp2 $ case W.ordEInst      t of W.OrdEInst      -> (A.>=.)
+  lt t   = C2AOp2 $ case W.ordEInst      t of W.OrdEInst      -> (A.<.)
+  gt t   = C2AOp2 $ case W.ordEInst      t of W.OrdEInst      -> (A.>.)
 
 instance C.Op3 C2AOp3 where
-  mux t  = C2AOp3 $ case exprInst      t of ExprInst      -> A.mux
+  mux t  = C2AOp3 $ case W.exprInst      t of W.ExprInst      -> A.mux
 
 --------------------------------------------------------------------------------

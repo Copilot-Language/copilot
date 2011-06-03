@@ -9,13 +9,14 @@ module Copilot.Compile.C99.Phases
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
 import Copilot.Compile.C99.MetaTable
   (MetaTable (..), StreamInfo (..), ExternInfo (..))
+import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
 import Copilot.Core.Type.Equality ((=~=), coerce, cong)
-import Language.Atom (Atom, (<==), (>=.), atom, action, cond, exactPhase, value)
-import qualified Language.Atom as Atom
 import Data.List (intersperse)
 import qualified Data.Map as M
+import Language.Atom (Atom, (<==), atom, cond, exactPhase)
+import qualified Language.Atom as A
 import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
@@ -34,7 +35,7 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 
 schedulePhases :: MetaTable -> Core.Spec -> Atom ()
 schedulePhases meta spec =
-  Atom.period numberOfPhases $
+  A.period numberOfPhases $
     sampleExterns meta      >>
     updateStates  meta spec >>
     fireTriggers  meta spec >>
@@ -54,7 +55,7 @@ sampleExterns =
       atom ("sample_" ++ name) $
         do
           W.AssignInst <- return $ W.assignInst t
-          v <== Atom.value (Atom.var' name (c2aType t))
+          v <== A.value (A.var' name (c2aType t))
 
 --------------------------------------------------------------------------------
 
@@ -79,7 +80,7 @@ updateStates meta
     in
       updateState1 t1 id (c2aExpr meta e) strmInfo
 
-  updateState1 :: Core.Type α -> Core.Id -> Atom.E α -> StreamInfo -> Atom ()
+  updateState1 :: Core.Type α -> Core.Id -> A.E α -> StreamInfo -> Atom ()
   updateState1 t1 id e1
     StreamInfo
       { streamInfoTempVar = tmp
@@ -114,15 +115,15 @@ fireTriggers meta
       atom ("fire_trigger_" ++ name) $
         do
           cond (c2aExpr meta e0)
-          action fnCall (reverse $ fmap triggerArg2UE args)
+          A.action fnCall (reverse $ fmap triggerArg2UE args)
 
       where
 
-      triggerArg2UE :: Core.TriggerArg -> Atom.UE
+      triggerArg2UE :: Core.TriggerArg -> A.UE
       triggerArg2UE (Core.TriggerArg e t) =
         case W.exprInst t of
           W.ExprInst ->
-            Atom.ue $ c2aExpr meta e
+            A.ue $ c2aExpr meta e
 
       fnCall :: [String] -> String
       fnCall xs = name ++ "(" ++ concat (intersperse "," xs) ++ ")"
@@ -151,17 +152,14 @@ updateBuffers meta
   updateBuffer1 :: Core.Id -> StreamInfo -> Atom ()
   updateBuffer1 id
     StreamInfo
-      { streamInfoBufferArray = arr
-      , streamInfoBufferIndex = idx
-      , streamInfoTempVar     = tmp
-      , streamInfoBufferSize  = sz
-      , streamInfoType        = t
+      { streamInfoQueue      = que
+      , streamInfoTempVar    = tmp
+      , streamInfoType       = t
       } =
     exactPhase (fromEnum UpdateBuffers) $
       atom ("update_buffer_s" ++ show id) $
         do
           W.AssignInst <- return (W.assignInst t)
-          (arr Atom.! value idx) <== value tmp
-          idx <== Atom.mux (value idx + 1 >=. sz) 0 (value idx + 1)
+          Q.dropFirstElemAndSnoc (A.value tmp) que
 
 --------------------------------------------------------------------------------

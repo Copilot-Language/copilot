@@ -29,6 +29,7 @@ library
     Copilot.Compile.C99.C2A
     Copilot.Compile.C99.MetaTable
     Copilot.Compile.C99.Phases
+    Copilot.Compile.C99.Queue
     Copilot.Compile.C99.Witness
 
   other-modules:
