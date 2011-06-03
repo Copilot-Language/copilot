@@ -4,9 +4,6 @@
 
 -- | 
 
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Type
   ( Type (..)
   , Typed (..)
@@ -18,18 +15,18 @@ import Data.Word (Word8, Word16, Word32, Word64)
 
 --------------------------------------------------------------------------------
 
-data Type α
-  = Bool   (Equal α Bool)
-  | Int8   (Equal α Int8)
-  | Int16  (Equal α Int16)
-  | Int32  (Equal α Int32)
-  | Int64  (Equal α Int64)
-  | Word8  (Equal α Word8)
-  | Word16 (Equal α Word16)
-  | Word32 (Equal α Word32)
-  | Word64 (Equal α Word64)
-  | Float  (Equal α Float)
-  | Double (Equal α Double)
+data Type a
+  = Bool   (Equal a Bool)
+  | Int8   (Equal a Int8)
+  | Int16  (Equal a Int16)
+  | Int32  (Equal a Int32)
+  | Int64  (Equal a Int64)
+  | Word8  (Equal a Word8)
+  | Word16 (Equal a Word16)
+  | Word32 (Equal a Word32)
+  | Word64 (Equal a Word64)
+  | Float  (Equal a Float)
+  | Double (Equal a Double)
 
 instance EqualType Type where
   (=~=) (Bool x)   (Bool y)   = Just (trans x (symm y))
@@ -45,8 +42,8 @@ instance EqualType Type where
 
 --------------------------------------------------------------------------------
 
-class Typed α where
-  typeOf :: Type α
+class Typed a where
+  typeOf :: Type a
 
 instance Typed Bool   where typeOf = Bool   (mkEqual id)
 instance Typed Int8   where typeOf = Int8   (mkEqual id)

@@ -10,7 +10,6 @@
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.Type.Dynamic
   ( Dynamic
@@ -25,12 +24,12 @@ import Copilot.Core.Type.Equality
 
 --------------------------------------------------------------------------------
 
-data Dynamic τ = forall α . Dynamic α (τ α)
+data Dynamic τ = forall a . Dynamic a (τ a)
 
-toDynamic :: α -> τ α -> Dynamic τ
+toDynamic :: a -> τ a -> Dynamic τ
 toDynamic = Dynamic
 
-fromDynamic :: EqualType τ => τ α -> Dynamic τ -> Maybe α
+fromDynamic :: EqualType τ => τ a -> Dynamic τ -> Maybe a
 fromDynamic t2 (Dynamic x t1) =
   case t1 =~= t2 of
     Just eq -> Just (coerce eq x)
@@ -38,12 +37,12 @@ fromDynamic t2 (Dynamic x t1) =
 
 --------------------------------------------------------------------------------
 
-data DynamicF f τ = forall α . DynamicF (f α) (τ α)
+data DynamicF f τ = forall a . DynamicF (f a) (τ a)
 
-toDynamicF :: f α -> τ α -> DynamicF f τ
+toDynamicF :: f a -> τ a -> DynamicF f τ
 toDynamicF = DynamicF
 
-fromDynamicF :: EqualType τ => τ α -> DynamicF f τ -> Maybe (f α)
+fromDynamicF :: EqualType τ => τ a -> DynamicF f τ -> Maybe (f a)
 fromDynamicF t2 (DynamicF fx t1) =
   case t1 =~= t2 of
     Just eq -> Just (coerce (cong eq) fx)

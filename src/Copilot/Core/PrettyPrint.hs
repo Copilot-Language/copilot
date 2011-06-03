@@ -16,10 +16,10 @@ import Text.PrettyPrint.HughesPJ
 
 --------------------------------------------------------------------------------
 
-newtype PPExpr α         = PPExpr { ppExpr :: Doc }
-newtype PPOp1  α β       = PPOp1  { ppOp1  :: Doc -> Doc }
-newtype PPOp2  α β γ     = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
-newtype PPOp3  α β γ δ   = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
+newtype PPExpr a         = PPExpr { ppExpr :: Doc }
+newtype PPOp1  a b       = PPOp1  { ppOp1  :: Doc -> Doc }
+newtype PPOp2  a b c     = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
+newtype PPOp3  a b c d   = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
 
 instance Expr PPExpr where
   const _ x          = PPExpr $ text (show x)

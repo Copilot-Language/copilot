@@ -2,7 +2,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.Expr
@@ -30,75 +29,75 @@ type Name = String
 --------------------------------------------------------------------------------
 
 -- | The expression class.
-class Expr η where
+class Expr e where
   -- | A constant.
   const
-    :: Show α
-    => Type α
-    -> α
-    -> η α
+    :: Show a
+    => Type a
+    -> a
+    -> e a
   -- | The temporal look-ahead operator.
   drop
-    :: Type α
+    :: Type a
     -> Word8
     -> Id
-    -> η α
+    -> e a
   -- | An external variable.
   extern
-    :: Type α
+    :: Type a
     -> Name
-    -> η α
+    -> e a
   -- | An unary operator.
   op1
-    :: (forall θ . Op1 θ => θ α β)
-    -> η α -> η β
+    :: (forall op . Op1 op => op a b)
+    -> e a -> e b
   -- | A binary operator.
   op2
-    :: (forall θ . Op2 θ => θ α β γ)
-    -> η α -> η β -> η γ
+    :: (forall op . Op2 op => op a b c)
+    -> e a -> e b -> e c
   -- | A Ternary operator.
   op3
-    :: (forall θ . Op3 θ => θ α β γ δ)
-    -> η α -> η β -> η γ -> η δ
+    :: (forall op . Op3 op => op a b c d)
+    -> e a -> e b -> e c -> e d
 
 --------------------------------------------------------------------------------
 
 -- | Unary operators.
-class Op1 θ where
+class Op1 op where
   -- Boolean operators.
-  not  :: θ Bool Bool
+  not  :: op Bool Bool
   -- Numeric operators.
-  abs  :: Num α => Type α -> θ α α
-  sign :: Num α => Type α -> θ α α
+  abs  :: Num a => Type a -> op a a
+  sign :: Num a => Type a -> op a a
 
 --------------------------------------------------------------------------------
 
 -- | Binary operators.
-class Op2 θ where
+class Op2 op where
   -- Boolean operators.
-  and  :: θ Bool Bool Bool
-  or   :: θ Bool Bool Bool
+  and  :: op Bool Bool Bool
+  or   :: op Bool Bool Bool
   -- Numeric operators.
-  add  :: Num α => Type α -> θ α α α
-  sub  :: Num α => Type α -> θ α α α
-  mul  :: Num α => Type α -> θ α α α
+  add  :: Num a => Type a -> op a a a
+  sub  :: Num a => Type a -> op a a a
+  mul  :: Num a => Type a -> op a a a
   -- Integral operators.
-  mod  :: Integral α => Type α -> θ α α α 
-  div  :: Integral α => Type α -> θ α α α 
+  mod  :: Integral a => Type a -> op a a a 
+  div  :: Integral a => Type a -> op a a a 
   -- Equality operators.
-  eq   :: Eq α => Type α -> θ α α Bool
-  ne   :: Eq α => Type α -> θ α α Bool
+  eq   :: Eq a => Type a -> op a a Bool
+  ne   :: Eq a => Type a -> op a a Bool
   -- Relational operators.
-  le   :: Ord α => Type α -> θ α α Bool
-  ge   :: Ord α => Type α -> θ α α Bool
-  lt   :: Ord α => Type α -> θ α α Bool
-  gt   :: Ord α => Type α -> θ α α Bool
+  le   :: Ord a => Type a -> op a a Bool
+  ge   :: Ord a => Type a -> op a a Bool
+  lt   :: Ord a => Type a -> op a a Bool
+  gt   :: Ord a => Type a -> op a a Bool
 
 --------------------------------------------------------------------------------
 
 -- | Ternary operators.
-class Op3 θ where
+class Op3 op where
   -- Conditional operator:
-  mux  :: Type α -> θ Bool α α α
+  mux  :: Type a -> op Bool a a a
 
 --------------------------------------------------------------------------------

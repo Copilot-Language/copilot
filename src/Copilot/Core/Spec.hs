@@ -18,27 +18,27 @@ import Copilot.Core.Type (Type)
 --------------------------------------------------------------------------------
 
 -- | A stream.
-data Stream = forall α . Show α => Stream
+data Stream = forall a . Show a => Stream
   { streamId       :: Id
-  , streamBuffer   :: [α]
-  , streamGuard    :: forall η . Expr η => Maybe (η Bool)
-  , streamExpr     :: forall η . Expr η => η α
-  , streamExprType :: Type α }
+  , streamBuffer   :: [a]
+  , streamGuard    :: forall e . Expr e => Maybe (e Bool)
+  , streamExpr     :: forall e . Expr e => e a
+  , streamExprType :: Type a }
 
 --------------------------------------------------------------------------------
 
 -- | A trigger.
 data Trigger = Trigger
   { triggerName    :: Name
-  , triggerGuard   :: forall η . Expr η => η Bool
+  , triggerGuard   :: forall e . Expr e => e Bool
   , triggerArgs    :: [TriggerArg] }
 
 --------------------------------------------------------------------------------
 
 -- | An argument to a trigger.
-data TriggerArg = forall α . Show α => TriggerArg
-  { triggerArgExpr :: forall η . Expr η => η α
-  , triggerArgType :: Type α }
+data TriggerArg = forall a . Show a => TriggerArg
+  { triggerArgExpr :: forall e . Expr e => e a
+  , triggerArgType :: Type a }
 
 --------------------------------------------------------------------------------
 

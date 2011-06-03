@@ -9,7 +9,6 @@
 -- \"/Typing dynamic typing/\",
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.Type.Equality
@@ -32,92 +31,92 @@ module Copilot.Core.Type.Equality
 --------------------------------------------------------------------------------
 
 -- | An equality proof 'Equal' /a/ /b/ is a proof that /a/ is equal to /b/.
-newtype Equal α β = Refl { unRefl :: forall f . f α -> f β }
+newtype Equal a b = Refl { unRefl :: forall f . f a -> f b }
 
 --------------------------------------------------------------------------------
 
 -- | A type class for constructing equality proofs.
 class EqualType τ where
-  (=~=) :: τ α -> τ β -> Maybe (Equal α β)
+  (=~=) :: τ a -> τ b -> Maybe (Equal a b)
 
 --------------------------------------------------------------------------------
 
 -- | Constructor for building equality proofs.
 -- Leibnizian equality states that two things are equal
 -- if you can substite one for the other in all contexts.
-mkEqual :: (forall f . f α -> f β) -> Equal α β
+mkEqual :: (forall f . f a -> f b) -> Equal a b
 mkEqual = Refl
 
 --------------------------------------------------------------------------------
 
 newtype Id x = Id { unId :: x }
 -- | Coerce a type to another using an equality proof.
-coerce :: Equal α β -> α -> β
+coerce :: Equal a b -> a -> b
 coerce (Refl f) = unId . f . Id
 
-coerce2 :: Equal α β -> f α -> f β
+coerce2 :: Equal a b -> f a -> f b
 coerce2 (Refl f) = f
 
 --------------------------------------------------------------------------------
 
 -- | Equality proofs are reflexive.
-refl :: Equal α α
+refl :: Equal a a
 refl = Refl id
 
 --------------------------------------------------------------------------------
 
 -- | Equality proofs are transitive.
-trans :: Equal α β -> Equal β γ -> Equal α γ
+trans :: Equal a b -> Equal b c -> Equal a c
 trans (Refl f) (Refl g) = Refl (g . f)
 
 --------------------------------------------------------------------------------
 
-newtype Symm f α β = Symm { unSymm :: f β α }
+newtype Symm f a b = Symm { unSymm :: f b a }
 -- | Equality proofs are symmetric.
-symm :: Equal α β -> Equal β α
+symm :: Equal a b -> Equal b a
 symm (Refl f) = unSymm (f (Symm refl))
 
 --------------------------------------------------------------------------------
 
 -- Lifting:
-newtype Lift  f α β       = Lift  { unLift  :: Equal (f α)       (f β) }
-newtype Lift2 f γ α β     = Lift2 { unlift2 :: Equal (f α γ)     (f β γ) }  
-newtype Lift3 f γ δ α β   = Lift3 { unlift3 :: Equal (f α γ δ)   (f β γ δ) }
-newtype Lift4 f ξ γ δ α β = Lift4 { unlift4 :: Equal (f α γ δ ξ) (f β γ δ ξ) }
+newtype Lift  f a b       = Lift  { unLift  :: Equal (f a)       (f b) }
+newtype Lift2 f c a b     = Lift2 { unlift2 :: Equal (f a c)     (f b c) }  
+newtype Lift3 f c d a b   = Lift3 { unlift3 :: Equal (f a c d)   (f b c d) }
+newtype Lift4 f ξ c d a b = Lift4 { unlift4 :: Equal (f a c d ξ) (f b c d ξ) }
 
-lift :: Equal α β -> Equal (f α) (f β)
+lift :: Equal a b -> Equal (f a) (f b)
 lift (Refl f) = unLift (f (Lift refl))
 
-lift2 :: Equal α β  -> Equal (f α γ) (f β γ)
+lift2 :: Equal a b  -> Equal (f a c) (f b c)
 lift2 (Refl f) = unlift2 (f (Lift2 refl))
 
-lift3 :: Equal α β -> Equal (f α γ δ) (f β γ δ)
+lift3 :: Equal a b -> Equal (f a c d) (f b c d)
 lift3 (Refl f) = unlift3 (f (Lift3 refl))
 
-lift4 :: Equal α β -> Equal (f α γ δ ξ) (f β γ δ ξ)
+lift4 :: Equal a b -> Equal (f a c d ξ) (f b c d ξ)
 lift4 (Refl f) = unlift4 (f (Lift4 refl))
 
 --------------------------------------------------------------------------------
 
 -- | Equality proofs are congruential.
 cong
-  :: Equal α1 α2
-  -> Equal (f α1) (f α2)
+  :: Equal a1 a2
+  -> Equal (f a1) (f a2)
 cong = lift
 
 cong2
-  :: Equal α1 α2 -> Equal β1 β2
-  -> Equal (f α1 β1) (f α2 β2)
+  :: Equal a1 a2 -> Equal b1 b2
+  -> Equal (f a1 b1) (f a2 b2)
 cong2 p q = lift2 p `unRefl` lift q
 
 cong3
-  :: Equal α1 α2 -> Equal β1 β2 -> Equal γ1 γ2
-  -> Equal (f α1 β1 γ1) (f α2 β2 γ2)
+  :: Equal a1 a2 -> Equal b1 b2 -> Equal c1 c2
+  -> Equal (f a1 b1 c1) (f a2 b2 c2)
 cong3 p q r = lift3 p `unRefl` lift2 q `unRefl` lift r
 
 cong4
-  :: Equal α1 α2 -> Equal β1 β2 -> Equal γ1 γ2 -> Equal δ1 δ2
-  -> Equal (f α1 β1 γ1 δ1) (f α2 β2 γ2 δ2)
+  :: Equal a1 a2 -> Equal b1 b2 -> Equal c1 c2 -> Equal d1 d2
+  -> Equal (f a1 b1 c1 d1) (f a2 b2 c2 d2)
 cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 
 --------------------------------------------------------------------------------
@@ -135,7 +134,7 @@ cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 --
 -- data NumWit a = Num a => NumWit -- witness
 --
--- mkNumWit :: U β => Equal α β -> NumWit α
+-- mkNumWit :: U b => Equal a b -> NumWit a
 -- mkNumWit = (`coerce` NumWit) . cong . symm
 --
 -- numWitT :: T a -> Maybe (NumWit a)
@@ -148,7 +147,7 @@ cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 --   Just NumWit -> Just (x + y)
 --   Nothing     -> Nothing
 -- @
-subst :: (fα -> f α) -> (f β -> fβ) -> Equal α β -> fα -> fβ
+subst :: (fa -> f a) -> (f b -> fb) -> Equal a b -> fa -> fb
 subst from to (Refl f) = to . f . from
 
 --------------------------------------------------------------------------------

@@ -4,7 +4,7 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE ExistentialQuantification #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.Interpret
@@ -27,7 +27,7 @@ type Env k = [(k, DynamicF [] Type)]
 --------------------------------------------------------------------------------
 
 class Strict f where
-  strict :: f α -> f α
+  strict :: f a -> f a
 
 instance Strict [] where
   strict []     = []
@@ -36,12 +36,12 @@ instance Strict [] where
 --------------------------------------------------------------------------------
 
 class Applicative f where
-  pure  :: α -> f α
-  (<*>) :: f (α -> β) -> f α -> f β
+  pure  :: a -> f a
+  (<*>) :: f (a -> b) -> f a -> f b
 
 --------------------------------------------------------------------------------
 
-newtype EvalExpr α = EvalExpr { evalExpr_ :: Env Name -> Env Id -> [α] }
+newtype EvalExpr a = EvalExpr { evalExpr_ :: Env Name -> Env Id -> [a] }
 
 instance Applicative EvalExpr where
   pure x    = EvalExpr $ \ _ _ -> repeat x
@@ -61,7 +61,7 @@ instance Expr EvalExpr where
   op2 op e1 e2    = strict $ pure (apply2 op) <*> e1 <*> e2
   op3 op e1 e2 e3 = strict $ pure (apply3 op) <*> e1 <*> e2 <*> e3
 
-evalExtern :: Type α -> Name -> Env Name -> [α]
+evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
   case lookup name exts of
     Nothing -> error $ "Undefined external variable: " ++ name
@@ -70,7 +70,7 @@ evalExtern t name exts =
         Nothing -> error $ "Ill-typed external variable: " ++ name
         Just xs -> xs
 
-evalExpr :: Env Name -> Env Id -> (forall e . Expr e => e α) -> [α]
+evalExpr :: Env Name -> Env Id -> (forall e . Expr e => e a) -> [a]
 evalExpr exts strms (EvalExpr f) = f exts strms
 
 --------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ instance Op1 (->) where
 
 --------------------------------------------------------------------------------
 
-newtype Apply2 α β γ = Apply2 { apply2 :: α -> β -> γ }
+newtype Apply2 a b c = Apply2 { apply2 :: a -> b -> c }
 
 instance Op2 Apply2 where
   and      = Apply2 (&&)
@@ -101,7 +101,7 @@ instance Op2 Apply2 where
 
 --------------------------------------------------------------------------------
 
-newtype Apply3 α β γ δ = Apply3 { apply3 :: α -> β -> γ -> δ }
+newtype Apply3 a b c d = Apply3 { apply3 :: a -> b -> c -> d }
 
 instance Op3 Apply3 where
   mux _    = Apply3 $ \ v x y -> if v then x else y
@@ -123,7 +123,7 @@ evalStream exts strms (Stream id buffer _ e2 t) = (id, toDynamicF xs t)
 --      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
 --      Nothing -> xs
 
---  withGuard :: α -> [Bool] -> [α] -> [α]
+--  withGuard :: a -> [Bool] -> [a] -> [a]
 --  withGuard _ (True:vs)  (x:xs) = x : withGuard x vs xs
 --  withGuard z (False:vs) xs     = z : withGuard z vs xs
 --  withGuard _ _          _      = error "withGuard: empty stream."
