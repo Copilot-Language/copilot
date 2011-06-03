@@ -32,7 +32,7 @@ library
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
---    Copilot.Core.Interpret
+    Copilot.Core.Interpret
 --    Copilot.Core.PrettyPrint
     Copilot.Core.Uninitialized
 
