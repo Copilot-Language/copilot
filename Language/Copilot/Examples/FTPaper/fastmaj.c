@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 uint64_t x0 = 1;
 uint64_t x1 = 2;
@@ -41,22 +42,25 @@ uint64_t maj(void) {
   arr[4] = x4;
   
   for(loop = 0; loop < 5; loop++) {
-    if (candidate == arr[loop]) 
-      cnt++;
-    else if (cnt == 0) {
-      candidate = arr[loop];
-      cnt++;
-    }
-    else cnt--;
+    bool b_cand = candidate == arr[loop];
+    bool b_cnt = cnt == 0;
+    cnt = (b_cand || b_cnt) ? cnt + 1 : cnt;
+    candidate = b_cnt ? arr[loop] : candidate;
   }
+    /* if (candidate == arr[loop])  */
+    /*   cnt++; */
+    /* else if (cnt == 0) { */
+    /*   candidate = arr[loop]; */
+    /*   cnt++; */
+    /* } */
+    /* else cnt--; */
+
   return candidate;
 }
 
 int main(void) {
   uint64_t i;
   for(i = 0; i < 10000000LLU; i++) {
-    //    maj();
-    /* printf("vals: %llu, %llu, %llu, %llu, %llu\n", x0,x1,x2,x3,x4); */
     printf("maj: %llu\n\n", maj());
 
     x0up();
