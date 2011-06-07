@@ -10,6 +10,7 @@ module Copilot.Compile.C99
 
 import Copilot.Compile.C99.MetaTable (allocMetaTable)
 import Copilot.Compile.C99.Phases (schedulePhases)
+import Copilot.Compile.C99.PreCode (preCode)
 import qualified Copilot.Core as Core
 import Language.Atom (Atom)
 import qualified Language.Atom as Atom
@@ -17,15 +18,20 @@ import qualified Language.Atom as Atom
 --------------------------------------------------------------------------------
 
 compile :: String -> Core.Spec -> IO ()
-compile pname spec =
+compile programName spec =
   do
-    (schedule, _, _, _, _) <- Atom.compile pname Atom.defaults p
+    (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
     putStrLn $ Atom.reportSchedule schedule
 
   where
 
-  p :: Atom ()
-  p =
+  atomDefaults :: Atom.Config
+  atomDefaults =
+    Atom.defaults
+      { Atom.cCode = \ _ _ _ -> (preCode spec, "") }
+
+  atomProgram :: Atom ()
+  atomProgram =
     do
       meta <- allocMetaTable spec
       schedulePhases meta spec

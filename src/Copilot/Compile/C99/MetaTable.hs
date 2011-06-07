@@ -13,10 +13,11 @@ module Copilot.Compile.C99.MetaTable
   , allocMetaTable
   ) where
 
-import Control.Monad (liftM, liftM2)
+import Control.Monad (liftM)
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
+import Copilot.Core.Spec.Externals (Extern (..), externals)
 import Copilot.Core.Uninitialized (uninitialized)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -31,7 +32,7 @@ data StreamInfo = forall a . StreamInfo
   , streamInfoTempVar :: A.V a
   , streamInfoType    :: C.Type a }
 
-type StreamInfoMap = Map C.Id   StreamInfo
+type StreamInfoMap = Map C.Id StreamInfo
 
 --------------------------------------------------------------------------------
 
@@ -53,31 +54,16 @@ allocMetaTable :: C.Spec -> A.Atom MetaTable
 allocMetaTable spec =
   do
     streamInfoMap_ <-
-      liftM M.unions $ mapM allocStream (C.specStreams spec)
+      liftM M.fromList $ mapM allocStream (C.specStreams spec)
 
     externInfoMap_ <-
-      liftM M.unions $ liftM2 (++)
-        ( mapM allocExtsInStream  (C.specStreams spec)  )
-        ( mapM allocExtsInTrigger (C.specTriggers spec) )
+      liftM M.fromList $ mapM allocExtern (externals spec)
 
     return (MetaTable streamInfoMap_ externInfoMap_)
 
-  where
-
-  allocExtsInStream :: C.Stream -> Atom ExternInfoMap
-  allocExtsInStream (C.Stream _ _ _ e _) = allocExts e
-
-  allocExtsInTrigger :: C.Trigger -> Atom ExternInfoMap
-  allocExtsInTrigger (C.Trigger _ e1 args) =
-    liftM2 M.union (allocExts e1) $
-      liftM M.unions (mapM allocExtsInTriggerArg args)
-
-  allocExtsInTriggerArg :: C.TriggerArg -> Atom ExternInfoMap
-  allocExtsInTriggerArg (C.TriggerArg e _) = allocExts e
-
 --------------------------------------------------------------------------------
 
-allocStream :: C.Stream -> Atom StreamInfoMap
+allocStream :: C.Stream -> Atom (C.Id, StreamInfo)
 allocStream (C.Stream id buf _ _ t) =
   do
     W.ExprInst <- return (W.exprInst t)
@@ -89,27 +75,16 @@ allocStream (C.Stream id buf _ _ t) =
           { streamInfoQueue       = que
           , streamInfoTempVar     = tmp
           , streamInfoType        = t }
-    return $ M.singleton id strmInfo
+    return (id, strmInfo)
 
 --------------------------------------------------------------------------------
 
-newtype AllocExts a = AllocExts { allocExts :: Atom ExternInfoMap }
-
-instance C.Expr AllocExts where
-
-  const _ _      = AllocExts $ return M.empty
-  drop _ _ _     = AllocExts $ return M.empty
-  extern t name  = AllocExts $
-    do
-      W.ExprInst <- return (W.exprInst t)
-      v <- A.var (mkExternName name) (uninitialized t)
-      return $ M.singleton name $ ExternInfo v t
-  op1 _ e        = AllocExts $ allocExts e
-  op2 _ e1 e2    = AllocExts $
-    liftM2 M.union (allocExts e1) (allocExts e2)
-  op3 _ e1 e2 e3 = AllocExts $
-    liftM M.unions $ sequence
-      [ allocExts e1, allocExts e2, allocExts e3 ]
+allocExtern :: Extern -> Atom (C.Name, ExternInfo)
+allocExtern (Extern name t) =
+  do
+    W.ExprInst <- return (W.exprInst t)
+    v <- A.var (mkExternName name) (uninitialized t)
+    return (name, ExternInfo v t)
 
 --------------------------------------------------------------------------------
 
