@@ -4,21 +4,25 @@ module Language.Copilot.Examples.Examples where
 
 import Data.Word
 import Prelude (($))
-import qualified Prelude as Prelude
 import qualified Prelude as P
 
 -- for specifying options
--- import Data.Map (fromList) 
+-- import Data.Map (fromList)
 --import Data.Maybe (Maybe (..))
 --import System.Random
 
-import Language.Copilot 
+import Language.Copilot
 -- import Language.Copilot.Variables
+
+aa :: Streams
+aa = do
+  let x = varW64 "x"
+  x .= [0] ++ x + 2
 
 fib :: Streams
 fib = do
   let f = varW64 "f"
-      t   = varB "t"
+      t = varB "t"
   f .= [0,1] ++ f + (drop 1 f)
   t .= even f
     where even :: Spec Word64 -> Spec Bool
@@ -77,7 +81,7 @@ t6 = do
   let x = extB "x"
       y = varB "y"
   y .= x
-  
+
 yy :: Streams
 yy = do
   let a = varW32 "a"
@@ -108,8 +112,8 @@ xx = do
       c = varW32 "c"
       e = extW32 "ext"
       d = varB "d"
-      f = extW32 (fun "fun1" void) 
-      h = extArrW16 (fun "g" b) a 
+      f = extW32 (fun "fun1" void)
+      h = extArrW16 (fun "g" b) a
       g = extW16 (fun "fun2" (true <> b <> constW16 3))
       w = varB "w"
   a .= e + f
@@ -130,9 +134,9 @@ distrib = do
       b = varB "b"
   -- spec
   a .= [0,1] ++ a + 1
-  b .= mod a 2 == 0 
+  b .= mod a 2 == 0
   -- sends
-  trigger true "portA" a 
+  trigger true "portA" a
   trigger true "portB" b
 
 monitor :: Streams
@@ -159,15 +163,15 @@ gcd n0 n1 = do
     where alg x0 x1 x2 = [x0] ++ mux (x1 > x2) (x1 - x2) x1
 
 -- greatest common divisor of two external vars.  Compare to
--- Language.Atom.Example Try 
+-- Language.Atom.Example Try
 --
--- interpret gcd' 40 $ setE (emptySM {w16Map = 
---      fromList [("n", [9,9..]), ("m", [7,7..])]}) baseOpts 
+-- interpret gcd' 40 $ setE (emptySM {w16Map =
+--      fromList [("n", [9,9..]), ("m", [7,7..])]}) baseOpts
 --
 -- Note we have to start streams a and b with a dummy value 0 before they can
 -- sample the external variables.
 gcd' :: Streams
-gcd' = do 
+gcd' = do
   -- externals
   let n = extW16 "n"
       m = extW16 "m"
@@ -176,7 +180,7 @@ gcd' = do
       b = varW16 "b"
       init = varB "init"
       ans  = varB "ans"
-  
+
   a .= alg n (sub a b) init
   b .= alg m (sub b a) init
   ans .= a == b && not init
@@ -212,12 +216,12 @@ testCoercions3 = do
   z .= cast (not true)
 
 i8 :: Streams
-i8 = let v = varI8 "v" in v .= [0, 1] ++ v + 1 
-    
+i8 = let v = varI8 "v" in v .= [0, 1] ++ v + 1
+
 trap :: Streams
 trap = do
   let target = varW32 "target"
-  target .= [0] ++ target + 1 
+  target .= [0] ++ target + 1
 
   let x = varW32 "x"
   let y = varW32 "y"
@@ -225,14 +229,14 @@ trap = do
   y .= [0,0] ++ x + target
 
 -- vicious :: Streams
--- vicious = do 
---     "varExt" .= extW32 "ext" 5 
---     "vicious" .= [0,1,2,3] ++ drop 4 (varW32 "varExt") + drop 1 (var "varExt") + var "varExt" 
+-- vicious = do
+--     "varExt" .= extW32 "ext" 5
+--     "vicious" .= [0,1,2,3] ++ drop 4 (varW32 "varExt") + drop 1 (var "varExt") + var "varExt"
 
 -- testVicious :: Streams
 -- testVicious = do
---     "counter" .= [0] ++ varW32 "counter" + 1 
---     "testVicious" .= [0,0,0,0,0,0,0,0,0,0] ++ drop 8 (varW32 "counter") 
+--     "counter" .= [0] ++ varW32 "counter" + 1
+--     "testVicious" .= [0,0,0,0,0,0,0,0,0,0] ++ drop 8 (varW32 "counter")
 
 -- -- The issue is when a variable v with a prophecy array of length n deps on
 -- -- an external variable pv with a weight w, and that w > - n + 1 Here, w = 0 and
@@ -247,9 +251,9 @@ trap = do
 -- -- easier for now to just forbid it. But it could become an issue.
 -- isBugged :: Streams
 -- isBugged = do
---     "v" .= extW16 "ext" 5 
---     "v2" .= [0,1,3] ++ drop 1 (varW16 "v") 
-    
+--     "v" .= extW16 "ext" 5
+--     "v2" .= [0,1,3] ++ drop 1 (varW16 "v")
+
 
 -- -- The next two examples are currently refused, because they include a
 -- -- non-negative weighted closed path. But they could be compiled.  More
@@ -261,29 +265,29 @@ trap = do
 -- -- requirement of a Copilot monitor.
 -- shouldBeRight :: Streams
 -- shouldBeRight = do
---     "v1" .= [0] ++ varI32 "v1" + 1 
---     "v2" .= drop 2 (varI32 "v1") 
+--     "v1" .= [0] ++ varI32 "v1" + 1
+--     "v2" .= drop 2 (varI32 "v1")
 
 -- shouldBeRight2 :: Streams
 -- shouldBeRight2 = do
---     "loop1" .= [0] ++ varI32 "loop2" + 2 
---     "loop2" .= [1] ++ varI32 "loop1" - 1 
---     "other" .= drop 3 (varI32 "loop1") 
+--     "loop1" .= [0] ++ varI32 "loop2" + 2
+--     "loop2" .= [1] ++ varI32 "loop1" - 1
+--     "other" .= drop 3 (varI32 "loop1")
 
 -- testing external array references
 testArr :: Streams
-testArr = do 
-  -- a .= [True] ++ extArrB ("ff", varW16 b) 5 && extArrB ("ff", varW16 b) 1 
+testArr = do
+  -- a .= [True] ++ extArrB ("ff", varW16 b) 5 && extArrB ("ff", varW16 b) 1
   --       && extArrB ("ff", varW16 b) 2
-  -- b .= [7] ++ varW16 b + 3 + extArrW16 ("gg", varW16 f) 2 
-  -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4 
+  -- b .= [7] ++ varW16 b + 3 + extArrW16 ("gg", varW16 f) 2
+  -- b .= [0] ++ extArrW16 ("gg", varW16 b) 4
   -- c .= [True] ++ var c
-  -- d .= varB c 
+  -- d .= varB c
   let e = varW16 "e"
   e .= [6,7,8] ++ 3 -- + extArrW16 ("gg", varW16 b) 2
---  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2 
+--  f .= extArrW16 ("gg", varW16 e) 2 + extArrW16 ("gg", varW16 e) 2
   let g = varB "g"
-  let gg = extArrW16 "gg" e 
+  let gg = extArrW16 "gg" e
   g .= gg < 13
   -- h .= [0] ++ drop 1 (varW16 g)
 
@@ -293,10 +297,10 @@ t99 :: Streams
 t99 = do
   let ext = extW32 "ext"
       a = varW32 "a"
-  a .= [0,1] ++ a + ext + ext + ext 
+  a .= [0,1] ++ a + ext + ext + ext
 
   let b = varB "b"
-  b .= [True, False] ++ 2 + a < 5 + ext 
+  b .= [True, False] ++ 2 + a < 5 + ext
 
 t11 :: Streams
 t11 = do
@@ -314,12 +318,12 @@ extT :: Streams
 extT = do
   let x = extW16 "x"
   let y = varW16 "y"
-  y .= x 
+  y .= x
 
 -- Examples:
-interpretExtT :: Prelude.IO ()
+interpretExtT :: P.IO ()
 interpretExtT =
-  interpret extT 10 $ 
+  interpret extT 10 $
 --    setE (emptySM {w16Map = fromList [("x", [8,9..])]})
       setEW16 "x" [8,9..]
       baseOpts
@@ -334,14 +338,14 @@ extT2 :: Streams
 extT2 = do
   let y = varW16 "y"
       x = extW16 (fun "f" y)
-  y .= x 
+  y .= x
 
 -- Should pass.
 extT3 :: Streams
 extT3 = do
   let y = varW16 "y"
       x = extW16 (fun "f" y)
-  y .= [3] ++ x 
+  y .= [3] ++ x
 
 -- Should fail.
 extT4 :: Streams
@@ -373,7 +377,16 @@ extT6 = do
   y .= [7] ++ z
   w .= x
 
-
+foo :: Streams
+foo = do
+  let x = varW16 "x"
+  let y = varW16 "y"
+  let z = varW16 "z"
+  let w = varW16 "w"
+  x .= [1,2] ++ x
+  y .= [3,4] ++ y
+  z .= x + y
+  w .= z + z
 
 -- test external idx before after and in the stream it references
 -- test multiple defs

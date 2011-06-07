@@ -1,3 +1,4 @@
+
 name:                copilot
 version:             1.0.3
 cabal-version:       >= 1.6
@@ -39,8 +40,8 @@ library
     ghc-options:     -Wall
     -- These build depends represent my current system.  This will probably
     -- build on packages outside these constraints.
-    build-depends:     
-                       base >= 4.0 
+    build-depends:
+                       base >= 4.0
                      , atom >= 1.0.8
                      , containers >= 0.2.0.1
                      , process >= 1.0.0.0
@@ -66,6 +67,7 @@ library
                      Language.Copilot.Help
                      Language.Copilot.Analyser
                      Language.Copilot.PrettyPrinter
+                     Language.Copilot.Tests.Test
                      Language.Copilot.Tests.Random
                      Language.Copilot.Dispatch
                      Language.Copilot.Interface
@@ -75,6 +77,7 @@ library
                      Language.Copilot.Libs.Indexes
                      Language.Copilot.Libs.Statistics
                      Language.Copilot.Libs.Vote
+                     Language.Copilot.Libs.Clocks
                      Language.Copilot.Libs.RegExp
                      Language.Copilot.Examples.Examples
                      Language.Copilot.Examples.LTLExamples

@@ -13,7 +13,7 @@ module Language.Copilot.Interface (
 import Language.Copilot.Core
 import Language.Copilot.Language.RandomOps (opsF, opsF2, opsF3)
 import Language.Copilot.Tests.Random
-import Language.Copilot.Dispatch 
+import Language.Copilot.Dispatch
 import Language.Copilot.Help
 import qualified Language.Atom as A (Clock)
 
@@ -47,6 +47,8 @@ data Options = Options {
                           -- binary).
   optPrePostCode :: (Maybe String, Maybe String), -- ^ Code to append above and
                                                   -- below the C file.
+  optPrePostHCode :: (Maybe String, Maybe String), -- ^ Code to append above and
+                                                  -- below the header file.
   optSimulate :: Bool, -- ^ Do we want a simulation driver?
   optTriggers :: Triggers, -- ^ A list of Copilot variable C function name
                            -- pairs.  The C funciton is called if the Copilot
@@ -78,6 +80,7 @@ baseOpts = Options {
         optCompiler = "gcc",
         optOutputDir = "./",
         optPrePostCode = (Nothing, Nothing),
+        optPrePostHCode = (Nothing, Nothing),
         optSimulate = False,
         optTriggers = M.empty,
         optArrs = [],
@@ -89,16 +92,16 @@ baseOpts = Options {
 
 -- | Run 'randomTest' @n@ iterations on each of @i@ random programs.
 randomTests :: Int -> Int -> Options -> IO ()
-randomTests n i opts = do 
+randomTests n i opts = do
   randomTests' i
-  where 
-  randomTests' 0 = do putStrLn 
+  where
+  randomTests' 0 = do putStrLn
                         $ "Executed " ++ show i ++ " tests without an error."
-  randomTests' j = do 
-    catch (randomTest n opts) 
-          (\_ -> error $    "Executed " ++ show (i-j) 
+  randomTests' j = do
+    catch (randomTest n opts)
+          (\_ -> error $    "Executed " ++ show (i-j)
                    ++ " tests before an unexpected system error.")
-    randomTests' (j-1) 
+    randomTests' (j-1)
 
 -- | Generate a random Copilot program and compare the interpreter against the
 -- compiler on that program.
@@ -106,25 +109,25 @@ randomTest :: Int -> Options -> IO ()
 randomTest n opts = do
   r <- randomRIO (0, maxBound)
   interface $ setI $ setR r $ setSim n opts
-    
+
 -- | Compare the interpreter and the compiler on a specific program, possibly
 -- using @gcov@ <http://gcc.gnu.org/onlinedocs/gcc/Gcov.html> to check coverage
 -- of the generated C program.
 test :: Streams -> Name -> Int -> Bool -> Options -> IO ()
 test streams fileName n b opts = do
   interface $ setO fileName $ setSim n
-    $ setTriggers (getTriggers streams) 
+    $ setTriggers (getTriggers streams)
       $ setI $ opts { optStreams = Just (getSpecs streams)
                     , optCompile = copts}
-  when b (do h <- runCommand ("gcov -b " ++ fileName) 
+  when b (do h <- runCommand ("gcov -b " ++ fileName)
              putStrLn ""
              putStrLn "***********************************"
              putStrLn "  Coverage statistics from gcov:"
              putStrLn "***********************************"
              _ <- waitForProcess h
              return ())
-  where  
-  copts = if b then "-Wall -fprofile-arcs -ftest-coverage" 
+  where
+  copts = if b then "-Wall -fprofile-arcs -ftest-coverage"
             else optCompiler opts
 
 -- | Interpret a program.
@@ -134,9 +137,9 @@ interpret streams n opts =
 
 -- | Compile a program.
 compile :: Streams -> Name -> Options -> IO ()
-compile streams fileName opts = 
-  interface $ setO fileName 
-    $ setTriggers (getTriggers streams) 
+compile streams fileName opts =
+  interface $ setO fileName
+    $ setTriggers (getTriggers streams)
       $ opts {optStreams = Just (getSpecs streams)}
 
 -- | Verify the output of a compiled program using @CBMC@.
@@ -150,19 +153,19 @@ verify file n opts = do
   putStrLn "  --overflow-check     enable arithmetic over- and underflow checks"
   putStrLn "  --nan-check          check floating-point for NaN"
   putStrLn ""
-  putStrLn $ "Assuming main() as the entry point unless specified otherwise " 
+  putStrLn $ "Assuming main() as the entry point unless specified otherwise "
              ++ "(--function f)"
   putStrLn cmd
   code <- system cmd
   case code of
     ExitSuccess -> return ()
     _           -> do putStrLn ""
-                      putStrLn $ "An error was returned by cbmc.  This may have " 
-                                 ++ "be due to cbmc not finding the file " 
+                      putStrLn $ "An error was returned by cbmc.  This may have "
+                                 ++ "be due to cbmc not finding the file "
                                  ++ file ++ ".  Perhaps cbmc is not installed on"
                                  ++ " your system, is not in your path, cbmc"
                                  ++ " cannot be called from the command line"
-                                 ++ " on your system, or " ++ file 
+                                 ++ " on your system, or " ++ file
                                  ++ " does not exist.  See "
                                  ++ "<http://www.cprover.org/cbmc/> "
                                  ++ "for more information on cbmc."
@@ -179,7 +182,7 @@ setTriggers :: Triggers -> Options -> Options
 setTriggers triggers opts = opts {optTriggers = triggers}
 
 setE :: Streamable a => Var -> [a] -> Options -> Options
-setE v ls opts = 
+setE v ls opts =
   opts {optSimVals = Just $ updateSubMap (\m -> insert v ls m) mp}
   where mp = if isNothing (optSimVals opts) then emptySM
                else fromJust $ optSimVals opts
@@ -195,7 +198,7 @@ setEI32 = setE
 setEI64 :: Var -> [Int64] -> Options -> Options
 setEI64 = setE
 setEW8 :: Var -> [Word8] -> Options -> Options
-setEW8 = setE 
+setEW8 = setE
 setEW16 :: Var -> [Word16] -> Options -> Options
 setEW16 = setE
 setEW32 :: Var -> [Word32] -> Options -> Options
@@ -297,7 +300,7 @@ interface opts =
         --     putStrLn $ "Random seed :" ++ show seed
         -- dispatch is doing all the heavy plumbing between
         -- analyser, compiler, interpreter, gcc and the generated program
-        dispatch (LangElems streams triggers) vars backEnd iterations verbose 
+        dispatch (LangElems streams triggers) vars backEnd iterations verbose
 
 createSeed :: Options -> IO Int
 createSeed opts =
@@ -326,12 +329,12 @@ getBackend opts seed =
            then Test backendOpts
            else Interpreter
     else Compile backendOpts
-  where 
+  where
     backendOpts =
-        AtomToC { cName = 
-                  optCName opts ++ if isJust $ optRandomSeed opts 
+        AtomToC { cName =
+                  optCName opts ++ if isJust $ optRandomSeed opts
                                      then show seed else ""
-                , randomProg = isJust $ optRandomSeed opts 
+                , randomProg = isJust $ optRandomSeed opts
                 , gccOpts     =  optCompile opts
                 , getPeriod   = optPeriod opts
                 , outputDir   = optOutputDir opts

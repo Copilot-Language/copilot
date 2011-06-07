@@ -6,18 +6,18 @@ module Language.Copilot.AdHocC (
        , includeBracket, includeQuote, printf, printfNewline
     ) where
 
-import Data.List (intersperse) 
+import Data.List (intersperse)
 import Language.Atom (Type(..))
 import Language.Atom.Code (cType) -- C99
 
 -- | Takes a type and a list of variable names and declares them.
 varDecl :: Type -> [String] -> String
-varDecl t vars = 
+varDecl t vars =
     cType t ++ " " ++ unwords (intersperse "," vars) ++ ";"
 
 -- | Takes a type and a list of array names and their sizes declares them.
 arrDecl :: Type -> [(String, Int)] -> String
-arrDecl t arrs = 
+arrDecl t arrs =
     cType t ++ " " ++ unwords (intersperse "," mkArrs) ++ ";"
   where mkArrs = map (\(a,size) -> a ++ "[" ++ show size ++ "]") arrs
 
@@ -29,10 +29,10 @@ varInit t var val = cType t ++ " " ++ var ++ " = " ++ show val ++ ";"
 -- | Takes a type and an array and initializes it.  It is YOUR responsibility to
 -- ensure that @vals@ is of type @t@.
 arrayInit :: Show a => Type -> String -> [a] -> String
-arrayInit t var vals = 
+arrayInit t var vals =
   cType t ++ " " ++ var ++ "[" ++ show (length vals)
         ++ "] = " ++ bracesListShow ++ ";"
-  where 
+  where
   -- Show a list with braces {} rather than brackets [].
   bracesListShow :: String
   bracesListShow =
@@ -59,8 +59,8 @@ printfPre :: String -> String
 printfPre = ("printf(\"" ++)
 
 printfPost :: [String] -> String
-printfPost vars = 
-  let sep = if null vars then " " else ", " 
+printfPost vars =
+  let sep = if null vars then " " else ", "
   in "\"" ++ sep ++ unwords (intersperse "," vars) ++ ");"
 
 newline :: String
