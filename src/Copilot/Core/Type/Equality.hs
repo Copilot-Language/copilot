@@ -123,8 +123,8 @@ cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 
 -- | Substitution using an equality proof.
 --
--- Using the substitution rule we can use equality proofs to prove to the
--- Haskell type system that a type is an instance of a type-class:
+-- By using substitution we can prove to the Haskell type system at runtime
+-- that a polymorphic type variable instantiates a type-class:
 --
 -- @
 -- data T a
@@ -132,7 +132,7 @@ cong4 p q r w = lift4 p `unRefl` lift3 q `unRefl` lift2 r `unRefl` lift w
 --   | I (Equal a Int)    -- integers
 --   | R (Equal a Double) -- reals
 --
--- data NumWit a = Num a => NumWit -- witness
+-- data NumWit a = Num a => NumWit -- A witness that /a/ instantiates 'Num'.
 --
 -- mkNumWit :: U b => Equal a b -> NumWit a
 -- mkNumWit = (`coerce` NumWit) . cong . symm
