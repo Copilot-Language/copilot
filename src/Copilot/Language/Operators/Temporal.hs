@@ -19,13 +19,13 @@ import Copilot.Language.Prelude
 
 infixr 3 ++
 
-class Temporal α β where
-  (++) :: [β] -> α β -> α β
-  drop :: Int -> α β -> α β
+class Temporal a b where
+  (++) :: [b] -> a b -> a b
+  drop :: Int -> a b -> a b
 
 --------------------------------------------------------------------------------
 
-instance Temporal [] β where
+instance Temporal [] b where
   (++) = (P.++)
   drop = (P.drop)
 

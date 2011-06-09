@@ -1,7 +1,6 @@
--- |
+{-# LANGUAGE RebindableSyntax #-}
 
-
-module Examples where
+module Main where
 
 import Prelude ()
 import Copilot.Language
@@ -9,69 +8,73 @@ import Copilot.Language.Prelude hiding (even)
 import Copilot.Language.Reify (reify)
 import Copilot.Compile.C99 (compile)
 
--- The sequence of natural numbers:
-nats :: Stream Word64
-nats = [0] ++ (1 + nats)
-
--- The Fibonacci sequence:
-fib :: Stream Word64
-fib = [1, 1] ++ fib + drop 1 fib
-
--- A 'pure' function on streams, in the sense that in contains
--- no internal state:
---even :: (Streamable α, Integral α) => Stream α -> Stream Bool
---even x = x `mod` 2 == 0
-
--- The Copilot equivalent of a boolean flipflop.
-flipflop :: Stream Bool -> Stream Bool
-flipflop x = y
-  where
-    y = [False] ++ mux x (not y) y
-
--- A resetable counter.
-counter :: (Num α, Typed α, Show α) => Stream Bool -> Stream Bool -> Stream α
-counter tick reset = y
-  where
-    zy = [0] ++ y
-    y  = mux reset 0 $
-         mux tick (zy + 1) $
-         zy
-
--- An alarm.
-someAlarm :: Int32 -> Stream Bool -> Stream Bool -> Stream Bool -> Stream Bool
-someAlarm limit order done tick = alarm
-  where
-    running = mux order true $
-              mux done  false $
-              mux ([False] ++ alarm) false $
-              [False] ++ running
-    count   = counter (tick && running) (order || done)
-    alarm   = count > constant limit
-
-x :: Stream Bool
-x = true
-
-y :: Stream Bool
-y = [True, True, False] ++ y
-
--- We can use (&&), (||), (==), (++), etc., both on streams
--- and ordinary Haskell values:
+--
+-- Some utility functions:
+--
 
 imply :: Bool -> Bool -> Bool
 imply p q = not p || q
 
-fibList :: [Integer]
-fibList = [1, 1] ++ zipWith (+) fibList (drop 1 fibList)
+flipflop :: Stream Bool -> Stream Bool
+flipflop x = y
+  where
+    y = [False] ++ if x then not y else y
+
+counter :: (Num a, Typed a) => Stream Bool -> Stream a
+counter reset = y
+  where
+    zy = [0] ++ y
+    y  = if reset then 0 else zy + 1
+
+booleans :: Stream Bool
+booleans = [True, True, False] ++ booleans
+
+fib :: Stream Word64
+fib = [1, 1] ++ fib + drop 1 fib
+
+sumExterns :: Stream Word64
+sumExterns =
+  let
+    e1 = extern "e1"
+    e2 = extern "e2"
+  in
+    e1 + e2
+
+--
+-- An example of a specification:
+--
 
 spec :: [Trigger]
 spec =
   [
-    trigger "trigger" y
-      [ stream $ (counter x (drop 1 y) :: Stream Word64)
--- , stream $ (extern "period" :: Stream Word64)
-      , stream $ fib
-      ]
+
+  -- first trigger:
+    trigger "f" booleans
+      [ triggerArg fib
+      , triggerArg sumExterns ]
+
+  -- second trigger:
+  , trigger "g" (flipflop booleans)
+      [ triggerArg (sumExterns + counter false + 25) ]
+
+  -- this trigger shouldn't fire:
+  , trigger "h" (extern "e3" /= fib)
+      [ triggerArg (0 :: Stream Int8) ]
   ]
 
+e1, e2, e3 :: [Word64]
+e1 = [0..]
+e2 = 5 : 4 : e2
+e3 = [1, 1] ++ zipWith (+) e3 (drop 1 e3)
+
 main :: IO ()
-main = reify spec >>= compile "test"
+main =
+  do
+    putStrLn "PrettyPrinter:"
+    putStrLn ""
+    prettyPrint spec
+    putStrLn ""
+    putStrLn ""
+    putStrLn "Interpreter:"
+    putStrLn ""
+    interpret 100 [input "e1" e1, input "e2" e2, input "e3" e3] spec

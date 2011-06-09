@@ -20,10 +20,10 @@ import Copilot.Language.Reify.DynStableName
 
 --------------------------------------------------------------------------------
 
-newtype WrapExpr α = WrapExpr
-  { unWrapExpr :: forall η . Core.Expr η => η α }
+newtype WrapExpr a = WrapExpr
+  { unWrapExpr :: forall e . Core.Expr e => e a }
 
-wrapExpr :: (forall η . Core.Expr η => η α) -> WrapExpr α
+wrapExpr :: (forall e . Core.Expr e => e a) -> WrapExpr a
 wrapExpr = WrapExpr
 
 --------------------------------------------------------------------------------
@@ -64,12 +64,12 @@ mkTrigger refCount refVisited refMap (Trigger name guard args) =
 --------------------------------------------------------------------------------
 
 mkExpr
-  :: (Show α, Typed α)
+  :: Typed a
   => IORef Int
   -> IORef (IntMap [(StableName, Int)])
   -> IORef [Core.Stream]
-  -> Stream α
-  -> IO (WrapExpr α)
+  -> Stream a
+  -> IO (WrapExpr a)
 mkExpr refCount refVisited refMap e0 =
   case e0 of
     Append _ _ _    -> do s <- mkStream refCount refVisited refMap e0
@@ -101,11 +101,11 @@ mkExpr refCount refVisited refMap e0 =
 
 {-# INLINE mkStream #-}
 mkStream
-  :: (Show α, Typed α)
+  :: Typed a
   => IORef Int
   -> IORef (IntMap [(StableName, Int)])
   -> IORef [Core.Stream]
-  -> Stream α
+  -> Stream a
   -> IO Id
 mkStream refCount refVisited refMap e0 =
   do
@@ -127,10 +127,10 @@ mkStream refCount refVisited refMap e0 =
 
   {-# INLINE addToVisited #-}
   addToVisited
-    :: (Show α, Typed α)
+    :: Typed a
     => StableName
-    -> [α]
-    -> Stream α
+    -> [a]
+    -> Stream a
     -> IO Id
   addToVisited stn buf e =
     do

@@ -22,7 +22,7 @@ instance Eq StableName where
 
 --------------------------------------------------------------------------------
 
-makeStableName :: α -> IO StableName
+makeStableName :: a -> IO StableName
 makeStableName a = do
   sn <- S.makeStableName a
   return $ StableName (unsafeCoerce sn)

@@ -15,11 +15,11 @@ import Copilot.Core (Name, Typed)
 
 --------------------------------------------------------------------------------
 
---data ExternFunArg α = forall β . Typed β => ExternFunArg (α β)
+--data ExternFunArg a = forall b . Typed b => ExternFunArg (a b)
 
-class Extern α where
-  extern    :: (Show β, Typed β) => Name -> α β
---  externFun :: Typed β => Name -> [ExternFunArg α] -> α β
---  externArray :: (Integral i, Streamable i, Streamable β) => Name -> α i -> α β
+class Extern a where
+  extern    :: (Show b, Typed b) => Name -> a b
+--  externFun :: Typed b => Name -> [ExternFunArg a] -> a b
+--  externArray :: (Integral i, Streamable i, Streamable b) => Name -> a i -> a b
 
 --------------------------------------------------------------------------------

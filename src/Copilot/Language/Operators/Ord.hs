@@ -18,15 +18,15 @@ import Copilot.Language.Prelude
 
 --------------------------------------------------------------------------------
 
-class (Boolean β, Eq α β) => Ord α β where
-  (<=) :: α -> α -> β
-  (>=) :: α -> α -> β
-  (<)  :: α -> α -> β
-  (>)  :: α -> α -> β
+class (Boolean b, Eq a b) => Ord a b where
+  (<=) :: a -> a -> b
+  (>=) :: a -> a -> b
+  (<)  :: a -> a -> b
+  (>)  :: a -> a -> b
 
 --------------------------------------------------------------------------------
 
-instance P.Ord α => Ord α Bool where
+instance P.Ord a => Ord a Bool where
   (<=) = (P.<=)
   (>=) = (P.>=)
   (<)  = (P.<)

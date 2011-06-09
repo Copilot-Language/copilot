@@ -13,13 +13,13 @@ import Copilot.Language.Prelude
 
 --------------------------------------------------------------------------------
 
-class Boolean α where
-  (&&)     :: α -> α -> α
-  (||)     :: α -> α -> α
-  not      :: α -> α
-  true     :: α
-  false    :: α
-  fromBool :: Bool -> α
+class Boolean a where
+  (&&)     :: a -> a -> a
+  (||)     :: a -> a -> a
+  not      :: a -> a
+  true     :: a
+  false    :: a
+  fromBool :: Bool -> a
 
 --------------------------------------------------------------------------------
 

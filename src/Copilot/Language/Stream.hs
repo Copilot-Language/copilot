@@ -16,7 +16,7 @@ module Copilot.Language.Stream
   , Trigger (..)
   , TriggerArg (..)
   , trigger
-  , stream
+  , triggerArg
   , constant
   ) where
 
@@ -36,42 +36,42 @@ import qualified Prelude as P
 
 data Stream :: * -> * where
   Append
-    :: (Show α, Typed α)
-    => [α]
+    :: Typed a
+    => [a]
     -> Maybe (Stream Bool)
-    -> Stream α
-    -> Stream α
+    -> Stream a
+    -> Stream a
   Const
-    :: (Show α, Typed α)
-    => α
-    -> Stream α
+    :: Typed a
+    => a
+    -> Stream a
   Drop
-    :: (Show α, Typed α)
+    :: Typed a
     => Word8
-    -> Stream α
-    -> Stream α
+    -> Stream a
+    -> Stream a
   Extern
-    :: (Show α, Typed α)
+    :: Typed a
     => String
-    -> Stream α
+    -> Stream a
   Op1
-    :: (Typed α, Typed β, Show α, Show β)
-    => (forall θ . Core.Op1 θ => θ α β)
-    -> Stream α
-    -> Stream β
+    :: (Typed a, Typed b)
+    => (forall op . Core.Op1 op => op a b)
+    -> Stream a
+    -> Stream b
   Op2
-    :: (Typed α, Typed β, Typed γ, Show α, Show β, Show γ)
-    => (forall θ . Core.Op2 θ => θ α β γ)
-    -> Stream α
-    -> Stream β
-    -> Stream γ
+    :: (Typed a, Typed b, Typed c)
+    => (forall op . Core.Op2 op => op a b c)
+    -> Stream a
+    -> Stream b
+    -> Stream c
   Op3
-    :: (Typed α, Typed β, Typed γ, Typed δ, Show α, Show β, Show γ, Show δ)
-    => (forall θ . Core.Op3 θ => θ α β γ δ)
-    -> Stream α
-    -> Stream β
-    -> Stream γ
-    -> Stream δ
+    :: (Typed a, Typed b, Typed c, Typed d)
+    => (forall op . Core.Op3 op => op a b c d)
+    -> Stream a
+    -> Stream b
+    -> Stream c
+    -> Stream d
 
 --------------------------------------------------------------------------------
 
@@ -84,8 +84,8 @@ data Trigger where
 
 data TriggerArg where
   TriggerArg
-    :: (Show α, Typed α)
-    => Stream α
+    :: Typed a
+    => Stream a
     -> TriggerArg
 
 trigger
@@ -95,24 +95,24 @@ trigger
   -> Trigger
 trigger = Trigger
 
-stream :: (Show α, Typed α) => Stream α -> TriggerArg
-stream = TriggerArg
+triggerArg :: Typed a => Stream a -> TriggerArg
+triggerArg = TriggerArg
 
 --------------------------------------------------------------------------------
 
-constant :: (Show α, Typed α) => α -> Stream α
+constant :: Typed a => a -> Stream a
 constant = Const
 
 --------------------------------------------------------------------------------
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
-instance Show (Stream α) where
+instance Show (Stream a) where
   show _      = "Stream"
 
 --------------------------------------------------------------------------------
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
-instance P.Eq (Stream α) where
+instance P.Eq (Stream a) where
   (==)        = error "'Prelude.(==)' isn't implemented for streams!"
   (/=)        = error "'Prelude.(/=)' isn't implemented for streams!"
 
@@ -121,7 +121,7 @@ instance P.Eq (Stream α) where
 -- | Unfortunately we can't instantiate boolean streams like this:
 -- 
 -- @
---   instance (Streamable α, Boolean α) => Boolean (Stream α) where
+--   instance (Streamable a, Boolean a) => Boolean (Stream a) where
 --     (&&)        = Op2 (Core.&&.)
 --     (||)        = Op2 (Core.||.)
 --     not         = Op1 Core.not'
@@ -142,12 +142,12 @@ instance Boolean (Stream Bool) where
 
 --------------------------------------------------------------------------------
 
-instance (Typed α, Show α) => Mux (Stream α) (Stream Bool) where
+instance Typed a => Mux (Stream a) (Stream Bool) where
   mux         = Op3 (Core.mux typeOf)
 
 --------------------------------------------------------------------------------
 
-instance (Typed α, Num α) => Num (Stream α) where
+instance (Typed a, Num a) => Num (Stream a) where
   (+)         = Op2 (Core.add typeOf)
   (-)         = Op2 (Core.sub typeOf)
   (*)         = Op2 (Core.mul typeOf)
@@ -157,13 +157,13 @@ instance (Typed α, Num α) => Num (Stream α) where
 
 --------------------------------------------------------------------------------
 
-instance (Typed α, P.Eq α, Show α) => Eq (Stream α) (Stream Bool) where
+instance (Typed a, P.Eq a) => Eq (Stream a) (Stream Bool) where
   (==)        = Op2 (Core.eq typeOf)
   (/=)        = Op2 (Core.ne typeOf)
 
 --------------------------------------------------------------------------------
 
-instance (Typed α, P.Ord α, Show α) => Ord (Stream α) (Stream Bool) where
+instance (Typed a, P.Ord a) => Ord (Stream a) (Stream Bool) where
   (<=)        = Op2 (Core.le typeOf)
   (>=)        = Op2 (Core.ge typeOf)
   (<)         = Op2 (Core.lt typeOf)
@@ -171,7 +171,7 @@ instance (Typed α, P.Ord α, Show α) => Ord (Stream α) (Stream Bool) where
 
 --------------------------------------------------------------------------------
 
-instance (Typed β, Show β) => Temporal Stream β where
+instance Typed b => Temporal Stream b where
   (++)        = (`Append` Nothing)
   drop i      = Drop (fromIntegral i)
 
@@ -183,7 +183,7 @@ instance Extern Stream where
 --------------------------------------------------------------------------------
 
 {-
-instance (Streamable α, Fractional α) => Fractional (Stream α) where
+instance (Streamable a, Fractional a) => Fractional (Stream a) where
   (/)          = Op2 Core.div
   recip        = Op1 Core.recip
   fromRational = Const . fromRational
@@ -192,7 +192,7 @@ instance (Streamable α, Fractional α) => Fractional (Stream α) where
 --------------------------------------------------------------------------------
 
 {-
-instance (Streamable α, Floating α) => Floating (Stream α) where
+instance (Streamable a, Floating a) => Floating (Stream a) where
   pi           = Const pi
   exp          = Op1 Core.exp
   sqrt         = Op1 Core.sqrt

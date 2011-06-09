@@ -29,6 +29,7 @@ library
   exposed-modules:
     Copilot
     Copilot.Language
+    Copilot.Language.Interpret
     Copilot.Language.Operators.Boolean
     Copilot.Language.Operators.Eq
     Copilot.Language.Operators.Extern

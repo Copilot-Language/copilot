@@ -17,15 +17,15 @@ import Copilot.Language.Prelude
 
 --------------------------------------------------------------------------------
 
-class Boolean β => Eq α β where
-  (==) :: α -> α -> β
-  (/=) :: α -> α -> β
+class Boolean b => Eq a b where
+  (==) :: a -> a -> b
+  (/=) :: a -> a -> b
   x == y = not (x /= y)
   x /= y = not (x == y)
 
 --------------------------------------------------------------------------------
 
-instance P.Eq α => Eq α Bool where
+instance P.Eq a => Eq a Bool where
   (==) = (P.==)
   (/=) = (P./=)
 

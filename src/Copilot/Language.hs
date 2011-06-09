@@ -8,6 +8,7 @@ module Copilot.Language
   ( module Data.Int
   , module Data.Word
   , module Copilot.Core
+  , module Copilot.Language.Interpret
   , module Copilot.Language.Operators.Boolean
   , module Copilot.Language.Operators.Eq
   , module Copilot.Language.Operators.Extern
@@ -18,16 +19,15 @@ module Copilot.Language
   , Trigger
   , constant
   , trigger
-  , stream
-  , interpret
---  , prettyPrint
+  , triggerArg
+  , prettyPrint
   ) where
 
 import Data.Int
 import Data.Word
 import Copilot.Core (Name, Typed)
-import qualified Copilot.Core.Interpret as I
---import qualified Copilot.Core.PrettyPrint as PP
+import qualified Copilot.Core.PrettyPrint as PP
+import Copilot.Language.Interpret
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
@@ -35,20 +35,8 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Stream (Stream, Trigger, constant, trigger, stream)
+import Copilot.Language.Stream (Stream, Trigger, constant, trigger, triggerArg)
 
---------------------------------------------------------------------------------
-
-interpret
-  :: I.Env Name
-  -> Integer
-  -> [Trigger]
-  -> IO ()
-interpret exts i e =
-  do
-    spec <- reify e
-    putStrLn $ I.interpret (fromIntegral i) exts spec
-{-
 --------------------------------------------------------------------------------
 
 prettyPrint
@@ -56,4 +44,4 @@ prettyPrint
   -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
 
--------------------------------------------------------------------------------- -}
+--------------------------------------------------------------------------------

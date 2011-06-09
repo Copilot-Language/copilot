@@ -31,7 +31,7 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-newtype CStream ω α = CStream { unCStream :: Stream α }
+newtype CStream ω a = CStream { unCStream :: Stream a }
   deriving
     ( Num
     , P.Eq
@@ -50,13 +50,13 @@ instance Boolean (CStream ω Bool) where
 
 --------------------------------------------------------------------------------
 
-instance (P.Eq α, Typed α, Show α) => Eq (CStream ω α) (CStream ω Bool) where
+instance (P.Eq a, Typed a, Show a) => Eq (CStream ω a) (CStream ω Bool) where
   x == y    = CStream $ on (==) unCStream x y
   x /= y    = CStream $ on (==) unCStream x y
 
 --------------------------------------------------------------------------------
 
-instance (P.Ord α, Typed α, Show α) => Ord (CStream ω α) (CStream ω Bool) where
+instance (P.Ord a, Typed a, Show a) => Ord (CStream ω a) (CStream ω Bool) where
   x <= y    = CStream $ on (<=) unCStream x y
   x >= y    = CStream $ on (>=) unCStream x y
   x <  y    = CStream $ on (<)  unCStream x y
@@ -64,12 +64,12 @@ instance (P.Ord α, Typed α, Show α) => Ord (CStream ω α) (CStream ω Bool) 
 
 --------------------------------------------------------------------------------
 
-instance (Typed α, Show α) => Mux (CStream ω α) (CStream ω Bool) where
+instance (Typed a, Show a) => Mux (CStream ω a) (CStream ω Bool) where
   mux v x y = CStream $ mux (unCStream v) (unCStream x) (unCStream y)
 
 --------------------------------------------------------------------------------
 
-instance (Typed β, Show β) => Temporal (CStream ω) β where
+instance (Typed b, Show b) => Temporal (CStream ω) b where
   xs ++ y   = CStream $ (++) xs (unCStream y)
   drop i x  = CStream $ drop i (unCStream x)
 
@@ -92,13 +92,13 @@ instance Clock () where
 
 --------------------------------------------------------------------------------
 
-resample :: (Clock ω1, Clock ω2) => CStream ω1 α -> CStream ω2 α
+resample :: (Clock ω1, Clock ω2) => CStream ω1 a -> CStream ω2 a
 resample = undefined
 
 --------------------------------------------------------------------------------
 
 {-
-spec :: forall ω α . (Clock ω, Streamable α) => CStream ω α -> IO Spec
+spec :: forall ω a . (Clock ω, Streamable a) => CStream ω a -> IO Spec
 spec (CStream x) =
   let
     c = clock (undefined :: ω)

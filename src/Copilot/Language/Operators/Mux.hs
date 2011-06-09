@@ -6,22 +6,30 @@
 
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Copilot.Language.Operators.Mux
   ( Mux (..)
+  , ifThenElse
   ) where
 
 import Copilot.Language.Operators.Boolean
+import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-class Boolean β => Mux α β where
-  mux :: β -> α -> α -> α
+class Boolean b => Mux a b where
+  mux :: b -> a -> a -> a
 
 --------------------------------------------------------------------------------
 
-instance Mux α Bool where
+instance Mux a P.Bool where
   mux v x y = if v then x else y
+
+--------------------------------------------------------------------------------
+
+ifThenElse :: Mux a b => b -> a -> a -> a
+ifThenElse = mux
 
 --------------------------------------------------------------------------------
