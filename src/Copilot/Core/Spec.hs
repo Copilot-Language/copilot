@@ -18,7 +18,7 @@ import Copilot.Core.Type (Type)
 --------------------------------------------------------------------------------
 
 -- | A stream.
-data Stream = forall a . Show a => Stream
+data Stream = forall a  . Stream
   { streamId       :: Id
   , streamBuffer   :: [a]
   , streamGuard    :: forall e . Expr e => Maybe (e Bool)
@@ -36,7 +36,7 @@ data Trigger = Trigger
 --------------------------------------------------------------------------------
 
 -- | An argument to a trigger.
-data TriggerArg = forall a . Show a => TriggerArg
+data TriggerArg = forall a . TriggerArg
   { triggerArgExpr :: forall e . Expr e => e a
   , triggerArgType :: Type a }
 

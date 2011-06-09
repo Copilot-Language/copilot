@@ -11,6 +11,10 @@ module Copilot.Core.Expr
   , Op1 (..)
   , Op2 (..)
   , Op3 (..)
+  , WrapExpr (..)
+  , WrapOp1 (..)
+  , WrapOp2 (..)
+  , WrapOp3 (..)
   ) where
 
 import Copilot.Core.Type (Type)
@@ -32,8 +36,7 @@ type Name = String
 class Expr e where
   -- | A constant.
   const
-    :: Show a
-    => Type a
+    :: Type a
     -> a
     -> e a
   -- | The temporal look-ahead operator.
@@ -99,5 +102,15 @@ class Op2 op where
 class Op3 op where
   -- Conditional operator:
   mux  :: Type a -> op Bool a a a
+
+--------------------------------------------------------------------------------
+
+data WrapExpr a = WrapExpr { unWrapExpr :: forall e . Expr e => e a }
+
+--------------------------------------------------------------------------------
+
+data WrapOp1 a b     = WrapOp1 { unWrapOp1 :: forall op . Op1 op => op a b }
+data WrapOp2 a b c   = WrapOp2 { unWrapOp2 :: forall op . Op2 op => op a b c }
+data WrapOp3 a b c d = WrapOp3 { unWrapOp3 :: forall op . Op3 op => op a b c d }
 
 --------------------------------------------------------------------------------

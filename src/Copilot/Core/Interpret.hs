@@ -4,9 +4,6 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Interpret
   ( Env
   , interpret
@@ -15,6 +12,7 @@ module Copilot.Core.Interpret
 import Data.List (intersperse, transpose)
 import Copilot.Core
 import Copilot.Core.Type.Dynamic
+import Copilot.Core.Type.Show (showWithType)
 import Prelude hiding (id)
 import qualified Prelude as P
 import Text.PrettyPrint.NCol (asColumns)
@@ -26,12 +24,13 @@ type Env k = [(k, DynamicF [] Type)]
 
 --------------------------------------------------------------------------------
 
-class Strict f where
-  strict :: f a -> f a
+strictList :: [α] -> [α]
+strictList []     = []
+strictList (x:xs) = x `seq` (x : strictList xs)
 
-instance Strict [] where
-  strict []     = []
-  strict (x:xs) = x `seq` (x : strict xs)
+strictEval :: EvalExpr α -> EvalExpr α
+strictEval e = e `seq` EvalExpr $
+  \ exts strms -> strictList (evalExpr_ e exts strms)
 
 --------------------------------------------------------------------------------
 
@@ -45,21 +44,18 @@ newtype EvalExpr a = EvalExpr { evalExpr_ :: Env Name -> Env Id -> [a] }
 
 instance Applicative EvalExpr where
   pure x    = EvalExpr $ \ _ _ -> repeat x
-  e1 <*> e2 = EvalExpr $ \ exts strms ->
+  e1 <*> e2 = EvalExpr $ \ exts strms -> e1 `seq` e2 `seq`
     zipWith ($) (evalExpr_ e1 exts strms) (evalExpr_ e2 exts strms)
-
-instance Strict EvalExpr where
-  strict e = EvalExpr $ \ exts strms -> strict (evalExpr_ e exts strms)
 
 instance Expr EvalExpr where
   const _ x       = x `seq` pure x
-  drop t i id     = strict $ EvalExpr $ \ _ strms ->
+  drop t i id     = EvalExpr $ \ _ strms -> strictList $
                       let Just xs = lookup id strms >>= fromDynamicF t
                       in P.drop (fromIntegral i) xs
-  extern t name   = strict $ EvalExpr $ \ exts _ -> evalExtern t name exts
-  op1 op e1       = strict $ pure op <*> e1
-  op2 op e1 e2    = strict $ pure (apply2 op) <*> e1 <*> e2
-  op3 op e1 e2 e3 = strict $ pure (apply3 op) <*> e1 <*> e2 <*> e3
+  extern t name   = strictEval $ EvalExpr $ \ exts _ -> evalExtern t name exts
+  op1 op e1       = strictEval $ pure op <*> e1
+  op2 op e1 e2    = strictEval $ pure (apply2 op) <*> e1 <*> e2
+  op3 op e1 e2 e3 = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
 
 evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
@@ -69,9 +65,6 @@ evalExtern t name exts =
       case fromDynamicF t dyn of
         Nothing -> error $ "Ill-typed external variable: " ++ name
         Just xs -> xs
-
-evalExpr :: Env Name -> Env Id -> (forall e . Expr e => e a) -> [a]
-evalExpr exts strms (EvalExpr f) = f exts strms
 
 --------------------------------------------------------------------------------
 
@@ -113,11 +106,17 @@ type Output = (Bool, [String])
 --------------------------------------------------------------------------------
 
 evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
-evalStream exts strms (Stream id buffer _ e2 t) = (id, toDynamicF xs t)
+evalStream exts strms
+  Stream
+    { streamId       = id
+    , streamBuffer   = buffer
+    , streamExpr     = e
+    , streamExprType = t
+    } = (id, toDynamicF xs t)
 
   where
 
-  xs = buffer ++ evalExpr exts strms e2
+  xs = strictList $ buffer ++ evalExpr_ e exts strms
 --  ys =
 --    case mguard of
 --      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
@@ -131,18 +130,23 @@ evalStream exts strms (Stream id buffer _ e2 t) = (id, toDynamicF xs t)
 --------------------------------------------------------------------------------
 
 evalTrigger :: Env Name -> Env Id -> Trigger -> [Output]
-evalTrigger exts strms (Trigger _ e args) = zip bs vs
+evalTrigger exts strms
+  Trigger
+    { triggerGuard = e
+    , triggerArgs  = args
+    } = zip bs vs
 
   where
 
   bs :: [Bool]
-  bs = evalExpr exts strms e
+  bs = evalExpr_ e exts strms
 
   vs :: [[String]]
   vs = transpose $ map evalTriggerArg args
 
   evalTriggerArg :: TriggerArg -> [String]
-  evalTriggerArg (TriggerArg e1 _) = map show (evalExpr exts strms e1)
+  evalTriggerArg (TriggerArg e1 t) =
+    map (showWithType t) (evalExpr_ e1 exts strms)
 
 --------------------------------------------------------------------------------
 

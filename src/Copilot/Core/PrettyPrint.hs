@@ -4,13 +4,12 @@
 
 -- | A pretty printer for Copilot specifications.
 
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.PrettyPrint
   ( prettyPrint
   ) where
 
 import Copilot.Core
+import Copilot.Core.Type.Show (showWithType)
 import Prelude hiding (id)
 import Text.PrettyPrint.HughesPJ
 
@@ -22,9 +21,10 @@ newtype PPOp2  a b c     = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
 newtype PPOp3  a b c d   = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
 
 instance Expr PPExpr where
-  const _ x          = PPExpr $ text (show x)
+  const t x          = PPExpr $ text (showWithType t x)
+  drop _ 0 id        = PPExpr $ text "stream" <+> text "s" <> int id
   drop _ i id        = PPExpr $ text "drop" <+> text (show i) <+> text "s" <> int id
-  extern _ name      = PPExpr $ text "extern \"" <+> text name <+> text "\""
+  extern _ name      = PPExpr $ text "extern \"" <> text name <> text "\""
   op1 op e           = PPExpr $ ppOp1 op (ppExpr e)
   op2 op e1 e2       = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
   op3 op e1 e2 e3    = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
@@ -66,14 +66,41 @@ ppPrefix cs = (text cs <+>)
 --------------------------------------------------------------------------------
 
 ppStream :: Stream -> Doc
-ppStream (Stream _ id buffer _ e) =
-  text "s" <> int id <+> text (show buffer) <+> text "=" <+> ppExpr e
+ppStream
+  Stream
+    { streamId       = id
+    , streamBuffer   = buffer
+    , streamExpr     = e
+    , streamExprType = t
+    }
+      = text "stream: \"s" <>  int id <> text "\""
+    <+> text (show $ map (showWithType t) buffer)
+    <+> text "="
+    <+> ppExpr e
 
 --------------------------------------------------------------------------------
 
 ppTrigger :: Trigger -> Doc
-ppTrigger (Trigger _ name _ e) =
-  text "trigger:" <+> text name <+> text "=" <+> ppExpr e
+ppTrigger
+  Trigger
+    { triggerName  = name
+    , triggerGuard = e
+    , triggerArgs  = args }
+  =   text "trigger: \"" <> text name <> text "\""
+  <+> text "="
+  <+> ppExpr e
+  $$  nest 2 (foldr (($$) . ppTriggerArg) empty argsAndNum)
+
+  where
+
+  argsAndNum :: [(TriggerArg, Int)]
+  argsAndNum = zip args [0..]
+
+  ppTriggerArg :: (TriggerArg, Int) -> Doc
+  ppTriggerArg (TriggerArg e1 _, k)
+    =   text "arg: " <> int k
+    <+> text "="
+    <+> ppExpr e1
 
 --------------------------------------------------------------------------------
 

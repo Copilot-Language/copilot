@@ -15,17 +15,10 @@ module Copilot.Core.Type.Equality
   ( Equal
   , EqualType (..)
   , mkEqual
-  , coerce
-  , coerce2
-  , refl
-  , trans
-  , symm
-  , cong
-  , cong2
-  , cong3
-  , cong4
+  , coerce, coerce2
+  , refl, trans, symm
+  , cong, cong2, cong3, cong4
   , subst
-  --  , rewrite
   ) where
 
 --------------------------------------------------------------------------------

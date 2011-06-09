@@ -58,3 +58,33 @@ instance Typed Float  where typeOf = Float  (mkEqual id)
 instance Typed Double where typeOf = Double (mkEqual id)
 
 --------------------------------------------------------------------------------
+
+{-
+data NumInst a = Num a => NumInst
+
+numInst :: Type a -> Maybe (NumInst a)
+numInst (Bool   _) = Nothing
+numInst (Int8   p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Int16  p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Int32  p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Int64  p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Word8  p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Word16 p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Word32 p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Word64 p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Float  p) = Just $ coerce (cong (symm p)) NumInst
+numInst (Double p) = Just $ coerce (cong (symm p)) NumInst
+
+add1, add2 :: Type a -> a -> a -> Maybe a
+add1 t x y =
+  case numInst t of
+    Just NumInst -> Just (x + y)
+    Nothing      -> Nothing
+
+add2 t x y =
+  do
+    NumInst <- numInst t
+    return (x + y)
+-}
+
+--------------------------------------------------------------------------------

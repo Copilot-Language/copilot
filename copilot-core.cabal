@@ -33,9 +33,9 @@ library
 
   hs-source-dirs:    src
 
-  ghc-options:       -Wall -fwarn-tabs -auto-all -caf-all 
+  ghc-options:       -Wall -fwarn-tabs -auto-all -caf-all -fno-warn-orphans
 
-  build-depends:     haskell2010, pretty >= 1.0, pretty-ncols >= 0.1
+  build-depends:     haskell2010, pretty >= 1.0, pretty-ncols >= 0.1, QuickCheck >= 2.4, random > 1.0
 
   exposed-modules:
 
@@ -43,9 +43,13 @@ library
     Copilot.Core.Expr
     Copilot.Core.Spec
     Copilot.Core.Spec.Externals
+--    Copilot.Core.Spec.Random
+--    Copilot.Core.Spec.Random.Gen
+--    Copilot.Core.Spec.Random.Weights
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
+    Copilot.Core.Type.Show
     Copilot.Core.Interpret
---    Copilot.Core.PrettyPrint
+    Copilot.Core.PrettyPrint
     Copilot.Core.Uninitialized
