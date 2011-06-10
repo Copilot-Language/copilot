@@ -35,12 +35,20 @@ library
 
   ghc-options:       -Wall -fwarn-tabs -auto-all -caf-all -fno-warn-orphans
 
-  build-depends:     haskell2010, pretty >= 1.0, pretty-ncols >= 0.1, QuickCheck >= 2.4, random > 1.0
+  build-depends:
+    dlist,
+    haskell2010,
+    pretty >= 1.0,
+    pretty-ncols >= 0.1,
+    QuickCheck >= 2.4,
+    random > 1.0
 
   exposed-modules:
 
     Copilot.Core
     Copilot.Core.Expr
+    Copilot.Core.Interpret
+--    Copilot.Core.Interpret.Inf
     Copilot.Core.Spec
     Copilot.Core.Spec.Externals
 --    Copilot.Core.Spec.Random
@@ -50,6 +58,5 @@ library
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
     Copilot.Core.Type.Show
-    Copilot.Core.Interpret
     Copilot.Core.PrettyPrint
     Copilot.Core.Uninitialized
