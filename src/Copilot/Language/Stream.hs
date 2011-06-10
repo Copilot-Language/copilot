@@ -14,10 +14,12 @@
 module Copilot.Language.Stream
   ( Stream (..)
   , Trigger (..)
+  , Copilot
   , TriggerArg (..)
   , trigger
   , triggerArg
   , constant
+  , getList
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -31,7 +33,7 @@ import Copilot.Language.Operators.Temporal
 import Copilot.Language.Prelude
 import Data.Word (Word8)
 import qualified Prelude as P
-
+import Control.Monad.Writer (Writer, execWriter, tell)
 --------------------------------------------------------------------------------
 
 data Stream :: * -> * where
@@ -88,12 +90,14 @@ data TriggerArg where
     => Stream a
     -> TriggerArg
 
+type Copilot = Writer [Trigger] ()
+
 trigger
   :: String
   -> Stream Bool
   -> [TriggerArg]
-  -> Trigger
-trigger = Trigger
+  -> Copilot 
+trigger s b args = tell [Trigger s b args]
 
 triggerArg :: Typed a => Stream a -> TriggerArg
 triggerArg = TriggerArg
@@ -104,6 +108,9 @@ constant :: Typed a => a -> Stream a
 constant = Const
 
 --------------------------------------------------------------------------------
+
+getList :: Copilot -> [Trigger]
+getList = execWriter
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
