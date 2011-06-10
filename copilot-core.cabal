@@ -33,7 +33,17 @@ library
 
   hs-source-dirs:    src
 
-  ghc-options:       -Wall -fwarn-tabs -auto-all -caf-all -fno-warn-orphans
+  ghc-options:
+    -Wall
+    -fwarn-tabs
+    -auto-all
+    -caf-all
+    -fno-warn-orphans
+
+    -- Hopefully we can remove these as the Haskell Standard evolves:
+
+    -XExistentialQuantification
+    -XRank2Types
 
   build-depends:
     dlist,

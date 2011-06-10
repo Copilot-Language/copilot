@@ -2,8 +2,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Operators
   ( Op1 (..)
   , Op2 (..)
@@ -80,7 +78,7 @@ class Op3 op where
 
 --------------------------------------------------------------------------------
 
--- Wrappers.
+-- Operator wrappers.
 
 data WrapOp1 a b     = WrapOp1 { unWrapOp1 :: forall op . Op1 op => op a b }
 data WrapOp2 a b c   = WrapOp2 { unWrapOp2 :: forall op . Op2 op => op a b c }

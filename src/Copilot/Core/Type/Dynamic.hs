@@ -9,9 +9,6 @@
 -- \"/Typing dynamic typing/\",
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Type.Dynamic
   ( Dynamic
   , DynamicF

@@ -2,8 +2,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Expr
   ( Id
   , Name
@@ -60,7 +58,7 @@ class Expr e where
 
 --------------------------------------------------------------------------------
 
--- Wrapper.
+-- Expression wrapper.
 
 data WrapExpr a = WrapExpr { unWrapExpr :: forall e . Expr e => e a }
 

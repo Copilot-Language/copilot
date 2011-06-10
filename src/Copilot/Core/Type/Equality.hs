@@ -9,8 +9,6 @@
 -- \"/Typing dynamic typing/\",
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
-{-# LANGUAGE Rank2Types #-}
-
 module Copilot.Core.Type.Equality
   ( Equal
   , EqualType (..)
