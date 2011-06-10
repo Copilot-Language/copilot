@@ -33,6 +33,7 @@ instance Op1 PPOp1 where
   not      = PPOp1 $ ppPrefix "not"
   abs _    = PPOp1 $ ppPrefix "abs"
   sign _   = PPOp1 $ ppPrefix "signum"
+  recip _  = PPOp1 $ ppPrefix "recip"
 
 instance Op2 PPOp2 where
   and      = PPOp2 $ ppInfix "&&"
@@ -40,8 +41,9 @@ instance Op2 PPOp2 where
   add _    = PPOp2 $ ppInfix "+"
   sub _    = PPOp2 $ ppInfix "-"
   mul _    = PPOp2 $ ppInfix "*"
+  div _    = PPOp2 $ ppInfix "div"
   mod _    = PPOp2 $ ppInfix "mod"
-  div _    = PPOp2 $ ppInfix "mod"
+  fdiv _   = PPOp2 $ ppInfix "/"
   eq _     = PPOp2 $ ppInfix "=="
   ne _     = PPOp2 $ ppInfix "/="
   le _     = PPOp2 $ ppInfix "<="

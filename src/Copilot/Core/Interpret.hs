@@ -72,6 +72,7 @@ instance Op1 (->) where
   not      = P.not
   abs _    = P.abs
   sign _   = P.signum
+  recip _  = P.recip
 
 --------------------------------------------------------------------------------
 
@@ -85,6 +86,7 @@ instance Op2 Apply2 where
   mul _    = Apply2 (*)
   mod _    = Apply2 P.mod
   div _    = Apply2 P.div
+  fdiv _   = Apply2 (P./)
   eq _     = Apply2 (==)
   ne _     = Apply2 (/=)
   le _     = Apply2 (<=)
