@@ -31,7 +31,7 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-newtype CStream ω a = CStream { unCStream :: Stream a }
+newtype CStream w a = CStream { unCStream :: Stream a }
   deriving
     ( Num
     , P.Eq
@@ -40,7 +40,7 @@ newtype CStream ω a = CStream { unCStream :: Stream a }
 
 --------------------------------------------------------------------------------
 
-instance Boolean (CStream ω Bool) where
+instance Boolean (CStream w Bool) where
   x && y    = CStream $ on (&&) unCStream x y
   x || y    = CStream $ on (||) unCStream x y
   not       = CStream . not . unCStream
@@ -50,13 +50,13 @@ instance Boolean (CStream ω Bool) where
 
 --------------------------------------------------------------------------------
 
-instance (P.Eq a, Typed a, Show a) => Eq (CStream ω a) (CStream ω Bool) where
+instance (P.Eq a, Typed a, Show a) => Eq (CStream w a) (CStream w Bool) where
   x == y    = CStream $ on (==) unCStream x y
   x /= y    = CStream $ on (==) unCStream x y
 
 --------------------------------------------------------------------------------
 
-instance (P.Ord a, Typed a, Show a) => Ord (CStream ω a) (CStream ω Bool) where
+instance (P.Ord a, Typed a, Show a) => Ord (CStream w a) (CStream w Bool) where
   x <= y    = CStream $ on (<=) unCStream x y
   x >= y    = CStream $ on (>=) unCStream x y
   x <  y    = CStream $ on (<)  unCStream x y
@@ -64,25 +64,25 @@ instance (P.Ord a, Typed a, Show a) => Ord (CStream ω a) (CStream ω Bool) wher
 
 --------------------------------------------------------------------------------
 
-instance (Typed a, Show a) => Mux (CStream ω a) (CStream ω Bool) where
+instance (Typed a, Show a) => Mux (CStream w a) (CStream w Bool) where
   mux v x y = CStream $ mux (unCStream v) (unCStream x) (unCStream y)
 
 --------------------------------------------------------------------------------
 
-instance (Typed b, Show b) => Temporal (CStream ω) b where
+instance (Typed b, Show b) => Temporal (CStream w) b where
   xs ++ y   = CStream $ (++) xs (unCStream y)
   drop i x  = CStream $ drop i (unCStream x)
 
 --------------------------------------------------------------------------------
 
-instance Extern (CStream ω) where
+instance Extern (CStream w) where
   extern    = CStream . extern
 
 --------------------------------------------------------------------------------
 
-class Clock ω where
-  type Master ω :: *
-  clock :: (Master ω ~ ω0, Clock ω0) => ω -> CStream ω0 Bool
+class Clock w where
+  type Master w :: *
+  clock :: (Master w ~ w0, Clock w0) => w -> CStream w0 Bool
 
 --------------------------------------------------------------------------------
 
@@ -92,16 +92,16 @@ instance Clock () where
 
 --------------------------------------------------------------------------------
 
-resample :: (Clock ω1, Clock ω2) => CStream ω1 a -> CStream ω2 a
+resample :: (Clock w1, Clock w2) => CStream w1 a -> CStream w2 a
 resample = undefined
 
 --------------------------------------------------------------------------------
 
 {-
-spec :: forall ω a . (Clock ω, Streamable a) => CStream ω a -> IO Spec
+spec :: forall w a . (Clock w, Streamable a) => CStream w a -> IO Spec
 spec (CStream x) =
   let
-    c = clock (undefined :: ω)
+    c = clock (undefined :: w)
     y = mux c x z
     z = [undefined] ++ y
   in

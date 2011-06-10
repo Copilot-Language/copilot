@@ -16,8 +16,8 @@ module Copilot.Language
   , module Copilot.Language.Operators.Mux
   , module Copilot.Language.Operators.Ord
   , module Copilot.Language.Operators.Temporal
+  , Spec
   , Stream
-  , Copilot
   , constant
   , trigger
   , arg
@@ -37,13 +37,12 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Stream (Stream, Copilot, Trigger, constant, trigger, arg, getList)
+import Copilot.Language.Spec (Spec, trigger, arg)
+import Copilot.Language.Stream (Stream, constant)
 
 --------------------------------------------------------------------------------
 
-prettyPrint
-  :: Copilot
-  -> IO ()
-prettyPrint e = fmap PP.prettyPrint (reify $ getList e) >>= putStr
+prettyPrint :: Spec () -> IO ()
+prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
 
 --------------------------------------------------------------------------------

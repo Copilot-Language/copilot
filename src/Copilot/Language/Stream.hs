@@ -13,13 +13,7 @@
 
 module Copilot.Language.Stream
   ( Stream (..)
-  , Trigger (..)
-  , Copilot
-  , TriggerArg (..)
-  , trigger
-  , arg
   , constant
-  , getList
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -34,7 +28,7 @@ import Copilot.Language.Operators.Temporal
 import Copilot.Language.Prelude
 import Data.Word (Word8)
 import qualified Prelude as P
-import Control.Monad.Writer (Writer, execWriter, tell)
+
 --------------------------------------------------------------------------------
 
 data Stream :: * -> * where
@@ -60,49 +54,18 @@ data Stream :: * -> * where
   Op1
     :: (Typed a, Typed b)
     => (forall op . Core.Op1 op => op a b)
-    -> Stream a
-    -> Stream b
+    -> Stream a -> Stream b
   Op2
     :: (Typed a, Typed b, Typed c)
     => (forall op . Core.Op2 op => op a b c)
-    -> Stream a
-    -> Stream b
-    -> Stream c
+    -> Stream a -> Stream b -> Stream c
   Op3
     :: (Typed a, Typed b, Typed c, Typed d)
     => (forall op . Core.Op3 op => op a b c d)
-    -> Stream a
-    -> Stream b
+    -> Stream a 
+    -> Stream b 
     -> Stream c
     -> Stream d
-
---------------------------------------------------------------------------------
-
-data Trigger where
-  Trigger
-    :: Core.Name
-    -> Stream Bool
-    -> [TriggerArg]
-    -> Trigger
-
-data TriggerArg where
-  TriggerArg
-    :: Typed a
-    => Stream a
-    -> TriggerArg
-
-type Copilot = Writer [Trigger] ()
-
-trigger
-  :: String
-  -> Stream Bool
-  -> [TriggerArg]
-  -> Copilot 
-trigger s b args = tell [Trigger s b args]
-
--- | Creates a trigger argument.
-arg :: Typed a => Stream a -> TriggerArg
-arg = TriggerArg
 
 --------------------------------------------------------------------------------
 
@@ -110,9 +73,6 @@ constant :: Typed a => a -> Stream a
 constant = Const
 
 --------------------------------------------------------------------------------
-
-getList :: Copilot -> [Trigger]
-getList = execWriter
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
@@ -127,20 +87,6 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
--- | Unfortunately we can't instantiate boolean streams like this:
--- 
--- @
---   instance (Streamable a, Boolean a) => Boolean (Stream a) where
---     (&&)        = Op2 (Core.&&.)
---     (||)        = Op2 (Core.||.)
---     not         = Op1 Core.not'
---     true        = Const true
---     false       = Const false
---     fromBool    = Const . fromBool
--- @
---
--- ...as we would be required to use the 'Boolean' class in the
--- core-representation by doing so.
 instance Boolean (Stream Bool) where
   (&&)        = Op2 Core.and
   (||)        = Op2 Core.or
@@ -204,26 +150,24 @@ instance (Typed a, Fractional a) => Fractional (Stream a) where
 
 --------------------------------------------------------------------------------
 
-{-
-instance (Streamable a, Floating a) => Floating (Stream a) where
+instance (Typed a, Floating a) => Floating (Stream a) where
   pi           = Const pi
-  exp          = Op1 Core.exp
-  sqrt         = Op1 Core.sqrt
-  log          = Op1 Core.log
-  (**)         = Op2 Core.pow
-  logBase      = Op2 Core.logb
-  sin          = Op1 Core.sin
-  tan          = Op1 Core.tan
-  cos          = Op1 Core.cos
-  asin         = Op1 Core.asin
-  atan         = Op1 Core.atan
-  acos         = Op1 Core.acos
-  sinh         = Op1 Core.sinh
-  tanh         = Op1 Core.tanh
-  cosh         = Op1 Core.cosh
-  asinh        = Op1 Core.asinh
-  atanh        = Op1 Core.atanh
-  acosh        = Op1 Core.acosh
--}
+  exp          = Op1 (Core.exp typeOf)
+  sqrt         = Op1 (Core.sqrt typeOf)
+  log          = Op1 (Core.log typeOf)
+  (**)         = Op2 (Core.pow typeOf)
+  logBase      = Op2 (Core.logb typeOf)
+  sin          = Op1 (Core.sin typeOf)
+  tan          = Op1 (Core.tan typeOf)
+  cos          = Op1 (Core.cos typeOf)
+  asin         = Op1 (Core.asin typeOf)
+  atan         = Op1 (Core.atan typeOf)
+  acos         = Op1 (Core.acos typeOf)
+  sinh         = Op1 (Core.sinh typeOf)
+  tanh         = Op1 (Core.tanh typeOf)
+  cosh         = Op1 (Core.cosh typeOf)
+  asinh        = Op1 (Core.asinh typeOf)
+  atanh        = Op1 (Core.atanh typeOf)
+  acosh        = Op1 (Core.acosh typeOf)
 
 --------------------------------------------------------------------------------
