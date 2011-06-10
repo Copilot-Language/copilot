@@ -147,26 +147,24 @@ instance (Typed a, Fractional a) => Fractional (Stream a) where
 
 --------------------------------------------------------------------------------
 
-{-
-instance (Streamable a, Floating a) => Floating (Stream a) where
+instance (Typed a, Floating a) => Floating (Stream a) where
   pi           = Const pi
-  exp          = Op1 Core.exp
-  sqrt         = Op1 Core.sqrt
-  log          = Op1 Core.log
-  (**)         = Op2 Core.pow
-  logBase      = Op2 Core.logb
-  sin          = Op1 Core.sin
-  tan          = Op1 Core.tan
-  cos          = Op1 Core.cos
-  asin         = Op1 Core.asin
-  atan         = Op1 Core.atan
-  acos         = Op1 Core.acos
-  sinh         = Op1 Core.sinh
-  tanh         = Op1 Core.tanh
-  cosh         = Op1 Core.cosh
-  asinh        = Op1 Core.asinh
-  atanh        = Op1 Core.atanh
-  acosh        = Op1 Core.acosh
--}
+  exp          = Op1 (Core.exp typeOf)
+  sqrt         = Op1 (Core.sqrt typeOf)
+  log          = Op1 (Core.log typeOf)
+  (**)         = Op2 (Core.pow typeOf)
+  logBase      = Op2 (Core.logb typeOf)
+  sin          = Op1 (Core.sin typeOf)
+  tan          = Op1 (Core.tan typeOf)
+  cos          = Op1 (Core.cos typeOf)
+  asin         = Op1 (Core.asin typeOf)
+  atan         = Op1 (Core.atan typeOf)
+  acos         = Op1 (Core.acos typeOf)
+  sinh         = Op1 (Core.sinh typeOf)
+  tanh         = Op1 (Core.tanh typeOf)
+  cosh         = Op1 (Core.cosh typeOf)
+  asinh        = Op1 (Core.asinh typeOf)
+  atanh        = Op1 (Core.atanh typeOf)
+  acosh        = Op1 (Core.acosh typeOf)
 
 --------------------------------------------------------------------------------
