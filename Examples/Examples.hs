@@ -1,3 +1,9 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+-- |
+
 {-# LANGUAGE RebindableSyntax #-}
 
 module Main where
@@ -7,6 +13,8 @@ import Copilot.Language
 import Copilot.Language.Prelude hiding (even)
 import Copilot.Language.Reify (reify)
 import Copilot.Compile.C99 (compile)
+
+--------------------------------------------------------------------------------
 
 --
 -- Some utility functions:
@@ -40,28 +48,30 @@ sumExterns =
   in
     e1 + e2
 
+--------------------------------------------------------------------------------
+
 --
--- An example of a specification:
+-- An example of a complete copilot specification.
 --
 
-spec :: [Trigger]
+-- A specification:
+spec :: Spec ()
 spec =
-  [
-
-  -- first trigger:
+  do
+    -- A trigger with two arguments:
     trigger "f" booleans
       [ triggerArg fib
       , triggerArg sumExterns ]
 
-  -- second trigger:
-  , trigger "g" (flipflop booleans)
+    -- A trigger with a single argument:
+    trigger "g" (flipflop booleans)
       [ triggerArg (sumExterns + counter false + 25) ]
 
-  -- this trigger shouldn't fire:
-  , trigger "h" (extern "e3" /= fib)
+    -- A trigger with a single argument:
+    trigger "h" (extern "e3" /= fib)
       [ triggerArg (0 :: Stream Int8) ]
-  ]
 
+-- Some infinite lists for simulating external variables:
 e1, e2, e3 :: [Word64]
 e1 = [0..]
 e2 = 5 : 4 : e2
@@ -78,3 +88,5 @@ main =
     putStrLn "Interpreter:"
     putStrLn ""
     interpret 100 [input "e1" e1, input "e2" e2, input "e3" e3] spec
+
+--------------------------------------------------------------------------------

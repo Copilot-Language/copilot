@@ -13,10 +13,6 @@
 
 module Copilot.Language.Stream
   ( Stream (..)
-  , Trigger (..)
-  , TriggerArg (..)
-  , trigger
-  , triggerArg
   , constant
   ) where
 
@@ -58,46 +54,15 @@ data Stream :: * -> * where
   Op1
     :: (Typed a, Typed b)
     => (forall op . Core.Op1 op => op a b)
-    -> Stream a
-    -> Stream b
+    -> Stream a -> Stream b
   Op2
     :: (Typed a, Typed b, Typed c)
     => (forall op . Core.Op2 op => op a b c)
-    -> Stream a
-    -> Stream b
-    -> Stream c
+    -> Stream a -> Stream b -> Stream c
   Op3
     :: (Typed a, Typed b, Typed c, Typed d)
     => (forall op . Core.Op3 op => op a b c d)
-    -> Stream a
-    -> Stream b
-    -> Stream c
-    -> Stream d
-
---------------------------------------------------------------------------------
-
-data Trigger where
-  Trigger
-    :: Core.Name
-    -> Stream Bool
-    -> [TriggerArg]
-    -> Trigger
-
-data TriggerArg where
-  TriggerArg
-    :: Typed a
-    => Stream a
-    -> TriggerArg
-
-trigger
-  :: String
-  -> Stream Bool
-  -> [TriggerArg]
-  -> Trigger
-trigger = Trigger
-
-triggerArg :: Typed a => Stream a -> TriggerArg
-triggerArg = TriggerArg
+    -> Stream a -> Stream b -> Stream c -> Stream d
 
 --------------------------------------------------------------------------------
 
@@ -119,20 +84,6 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
--- | Unfortunately we can't instantiate boolean streams like this:
--- 
--- @
---   instance (Streamable a, Boolean a) => Boolean (Stream a) where
---     (&&)        = Op2 (Core.&&.)
---     (||)        = Op2 (Core.||.)
---     not         = Op1 Core.not'
---     true        = Const true
---     false       = Const false
---     fromBool    = Const . fromBool
--- @
---
--- ...as we would be required to use the 'Boolean' class in the
--- core-representation by doing so.
 instance Boolean (Stream Bool) where
   (&&)        = Op2 Core.and
   (||)        = Op2 Core.or

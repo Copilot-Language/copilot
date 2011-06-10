@@ -15,7 +15,7 @@ module Copilot.Language.Interpret
 import Copilot.Core.Type (Typed, typeOf)
 import Copilot.Core.Type.Dynamic (toDynamicF)
 import qualified Copilot.Core.Interpret as I
-import Copilot.Language.Stream (Trigger)
+import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
 
 data Input where
@@ -27,11 +27,11 @@ input = Input
 interpret
   :: Integer
   -> [Input]
-  -> [Trigger]
+  -> Spec ()
   -> IO ()
-interpret i inputs triggers =
+interpret i inputs spec =
   do
-    spec <- reify triggers
-    putStrLn $ I.interpret (fromIntegral i) exts spec
+    coreSpec <- reify spec
+    putStrLn $ I.interpret (fromIntegral i) exts coreSpec
   where
     exts = map (\ (Input name xs) -> (name, toDynamicF xs typeOf)) inputs

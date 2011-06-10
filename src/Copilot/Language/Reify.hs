@@ -13,9 +13,10 @@ module Copilot.Language.Reify
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.IORef
-import Copilot.Core (Spec (..), Typed, Id, typeOf)
+import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
-import Copilot.Language.Stream (Stream (..), Trigger (..), TriggerArg (..))
+import Copilot.Language.Spec (Spec, runSpec, Trigger (..), TriggerArg (..))
+import Copilot.Language.Stream (Stream (..))
 import Copilot.Language.Reify.DynStableName
 
 --------------------------------------------------------------------------------
@@ -28,15 +29,16 @@ wrapExpr = WrapExpr
 
 --------------------------------------------------------------------------------
 
-reify :: [Trigger] -> IO Spec
-reify triggers =
+reify :: Spec () -> IO Core.Spec
+reify spec =
   do
+    let triggers = runSpec spec
     refCount   <- newIORef 0
     refVisited <- newIORef M.empty
     refMap     <- newIORef []
     xs <- mapM (mkTrigger refCount refVisited refMap) triggers
     ys <- readIORef refMap
-    return $ Spec (reverse ys) xs
+    return $ Core.Spec (reverse ys) xs
 
 --------------------------------------------------------------------------------
 
