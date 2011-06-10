@@ -27,6 +27,7 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
+import Copilot.Language.Operators.Integral
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
@@ -164,6 +165,12 @@ instance (Typed a, Num a) => Num (Stream a) where
 
 --------------------------------------------------------------------------------
 
+instance (Typed a, P.Integral a) => Integral (Stream a) where
+  div         = Op2 (Core.div typeOf)
+  mod         = Op2 (Core.mod typeOf)
+
+--------------------------------------------------------------------------------
+
 instance (Typed a, P.Eq a) => Eq (Stream a) (Stream Bool) where
   (==)        = Op2 (Core.eq typeOf)
   (/=)        = Op2 (Core.ne typeOf)
@@ -189,12 +196,10 @@ instance Extern Stream where
 
 --------------------------------------------------------------------------------
 
-{-
-instance (Streamable a, Fractional a) => Fractional (Stream a) where
-  (/)          = Op2 Core.div
-  recip        = Op1 Core.recip
+instance (Typed a, Fractional a) => Fractional (Stream a) where
+  (/)          = Op2 (Core.fdiv typeOf)
+  recip        = Op1 (Core.recip typeOf)
   fromRational = Const . fromRational
--}
 
 --------------------------------------------------------------------------------
 

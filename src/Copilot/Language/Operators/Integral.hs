@@ -4,17 +4,27 @@
 
 -- |
 
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Copilot.Language.Operators.Extern
-  ( Extern (..)
+module Copilot.Language.Operators.Integral
+  ( Integral (..)
   ) where
 
-import Copilot.Core (Name, Typed)
+import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-class Extern a where
-  extern :: (Show b, Typed b) => Name -> a b
+class Integral a where
+  div :: a -> a -> a
+  mod :: a -> a -> a
+
+--------------------------------------------------------------------------------
+
+{-
+instance P.Integral a => Integral a where
+  div = P.div
+  mod = P.mod
+-}
 
 --------------------------------------------------------------------------------
