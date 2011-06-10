@@ -18,7 +18,6 @@ import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
 import Copilot.Core.Spec.Externals (Extern (..), externals)
-import Copilot.Core.Uninitialized (uninitialized)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Language.Atom (Atom)
@@ -68,7 +67,7 @@ allocStream (C.Stream id buf _ _ t) =
   do
     W.ExprInst <- return (W.exprInst t)
     que <- Q.queue (mkQueueName   id) buf
-    tmp <- A.var   (mkTempVarName id) (uninitialized t)
+    tmp <- A.var   (mkTempVarName id) (C.uninitialized t)
     let
       strmInfo =
         StreamInfo
@@ -83,7 +82,7 @@ allocExtern :: Extern -> Atom (C.Name, ExternInfo)
 allocExtern (Extern name t) =
   do
     W.ExprInst <- return (W.exprInst t)
-    v <- A.var (mkExternName name) (uninitialized t)
+    v <- A.var (mkExternName name) (C.uninitialized t)
     return (name, ExternInfo v t)
 
 --------------------------------------------------------------------------------
