@@ -4,6 +4,7 @@
 
 module Copilot.Core.Spec
   ( Stream (..)
+  , Observer (..)
   , Trigger (..)
   , TriggerArg (..)
   , Spec (..)
@@ -51,7 +52,7 @@ data TriggerArg = forall a . TriggerArg
 -- observers, and a list of triggers.
 data Spec = Spec
   { specStreams      :: [Stream]
---  , specObservers    :: [Observer]
+  , specObservers    :: [Observer]
   , specTriggers     :: [Trigger] }
 
 --------------------------------------------------------------------------------
