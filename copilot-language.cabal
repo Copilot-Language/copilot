@@ -19,7 +19,6 @@ library
   hs-source-dirs: src
 
   build-depends:
-    mtl >= 2,
     array,
     base >= 4.0,
     copilot-core,
