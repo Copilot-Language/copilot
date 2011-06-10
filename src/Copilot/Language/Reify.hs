@@ -10,14 +10,15 @@ module Copilot.Language.Reify
   ( reify
   ) where
 
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as M
-import Data.IORef
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Spec (Spec, runSpec, Trigger (..), TriggerArg (..))
 import Copilot.Language.Stream (Stream (..))
 import Copilot.Language.Reify.DynStableName
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as M
+import Data.IORef
+import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
 
@@ -32,13 +33,17 @@ wrapExpr = WrapExpr
 reify :: Spec () -> IO Core.Spec
 reify spec =
   do
-    let triggers = runSpec spec
-    refCount   <- newIORef 0
-    refVisited <- newIORef M.empty
-    refMap     <- newIORef []
-    xs <- mapM (mkTrigger refCount refVisited refMap) triggers
-    ys <- readIORef refMap
-    return $ Core.Spec (reverse ys) xs
+    let triggers  = runSpec spec
+    refCount     <- newIORef 0
+    refVisited   <- newIORef M.empty
+    refMap       <- newIORef []
+    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) triggers
+    coreStreams  <- readIORef refMap
+    return $
+      Core.Spec
+        { Core.specStreams   = reverse coreStreams
+        , Core.specObservers = []
+        , Core.specTriggers  = coreTriggers }
 
 --------------------------------------------------------------------------------
 
@@ -53,7 +58,11 @@ mkTrigger refCount refVisited refMap (Trigger name guard args) =
   do
     w1 <- mkExpr refCount refVisited refMap guard
     args' <- mapM mkTriggerArg args
-    return $ Core.Trigger name (unWrapExpr w1) args'
+    return $
+      Core.Trigger
+        { Core.triggerName  = name
+        , Core.triggerGuard = unWrapExpr w1 
+        , Core.triggerArgs  = args' }
 
   where
 
@@ -136,12 +145,17 @@ mkStream refCount refVisited refMap e0 =
     -> IO Id
   addToVisited stn buf e =
     do
-      id_ <- atomicModifyIORef refCount $ \ n -> (succ n, n)
+      id <- atomicModifyIORef refCount $ \ n -> (succ n, n)
       modifyIORef refVisited $
-        M.insertWith (++) (hashStableName stn) [(stn, id_)]
+        M.insertWith (++) (hashStableName stn) [(stn, id)]
       w <- mkExpr refCount refVisited refMap e
-      modifyIORef refMap $
-        (:) (Core.Stream id_ buf Nothing (unWrapExpr w) typeOf)
-      return id_
+      modifyIORef refMap $ (:)
+        Core.Stream
+          { Core.streamId         = id
+          , Core.streamBuffer     = buf
+          , Core.streamGuard      = Nothing
+          , Core.streamExpr       = unWrapExpr w
+          , Core.streamExprType   = typeOf }
+      return id
 
 --------------------------------------------------------------------------------
