@@ -29,8 +29,8 @@ newtype Equal a b = Refl { unRefl :: forall f . f a -> f b }
 --------------------------------------------------------------------------------
 
 -- | A type class for constructing equality proofs.
-class EqualType τ where
-  (=~=) :: τ a -> τ b -> Maybe (Equal a b)
+class EqualType t where
+  (=~=) :: t a -> t b -> Maybe (Equal a b)
 
 --------------------------------------------------------------------------------
 

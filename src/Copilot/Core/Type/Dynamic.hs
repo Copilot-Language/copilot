@@ -10,6 +10,7 @@
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.Type.Dynamic
   ( Dynamic
@@ -18,18 +19,19 @@ module Copilot.Core.Type.Dynamic
   , fromDynamic
   , toDynamicF
   , fromDynamicF
+  , mapDynamicF
   ) where
 
 import Copilot.Core.Type.Equality
 
 --------------------------------------------------------------------------------
 
-data Dynamic τ = forall a . Dynamic a (τ a)
+data Dynamic t = forall a . Dynamic a (t a)
 
-toDynamic :: a -> τ a -> Dynamic τ
+toDynamic :: a -> t a -> Dynamic t
 toDynamic = Dynamic
 
-fromDynamic :: EqualType τ => τ a -> Dynamic τ -> Maybe a
+fromDynamic :: EqualType t => t a -> Dynamic t -> Maybe a
 fromDynamic t2 (Dynamic x t1) =
   case t1 =~= t2 of
     Just eq -> Just (coerce eq x)
@@ -37,15 +39,22 @@ fromDynamic t2 (Dynamic x t1) =
 
 --------------------------------------------------------------------------------
 
-data DynamicF f τ = forall a . DynamicF (f a) (τ a)
+data DynamicF f t = forall a . DynamicF (f a) (t a)
 
-toDynamicF :: f a -> τ a -> DynamicF f τ
+toDynamicF :: f a -> t a -> DynamicF f t
 toDynamicF = DynamicF
 
-fromDynamicF :: EqualType τ => τ a -> DynamicF f τ -> Maybe (f a)
+fromDynamicF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)
 fromDynamicF t2 (DynamicF fx t1) =
   case t1 =~= t2 of
     Just eq -> Just (coerce (cong eq) fx)
     Nothing -> Nothing
+
+mapDynamicF
+  :: EqualType t
+  => (forall a . f a -> g a)
+  -> DynamicF f t
+  -> DynamicF g t
+mapDynamicF f (DynamicF fx t) = DynamicF (f fx) t
 
 --------------------------------------------------------------------------------
