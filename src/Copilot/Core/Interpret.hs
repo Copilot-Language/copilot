@@ -73,6 +73,21 @@ instance Op1 (->) where
   abs _    = P.abs
   sign _   = P.signum
   recip _  = P.recip
+  exp _    = P.exp
+  sqrt _   = P.sqrt
+  log _    = P.log
+  sin _    = P.sin
+  tan _    = P.tan
+  cos _    = P.cos
+  asin _   = P.asin
+  atan _   = P.atan
+  acos _   = P.acos
+  sinh _   = P.sinh
+  tanh _   = P.tanh
+  cosh _   = P.cosh
+  asinh _  = P.asinh
+  atanh _  = P.atanh
+  acosh _  = P.acosh
 
 --------------------------------------------------------------------------------
 
@@ -87,6 +102,8 @@ instance Op2 Apply2 where
   mod _    = Apply2 P.mod
   div _    = Apply2 P.div
   fdiv _   = Apply2 (P./)
+  pow _    = Apply2 (P.**)
+  logb _   = Apply2 P.logBase
   eq _     = Apply2 (==)
   ne _     = Apply2 (/=)
   le _     = Apply2 (<=)

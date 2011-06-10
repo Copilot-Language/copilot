@@ -26,6 +26,22 @@ class Op1 op where
   sign  :: Num a => Type a -> op a a
   -- Fractional operators.
   recip :: Fractional a => Type a -> op a a
+  -- Floating operators.
+  exp   :: Floating a => Type a -> op a a
+  sqrt  :: Floating a => Type a -> op a a
+  log   :: Floating a => Type a -> op a a
+  sin   :: Floating a => Type a -> op a a
+  tan   :: Floating a => Type a -> op a a
+  cos   :: Floating a => Type a -> op a a
+  asin  :: Floating a => Type a -> op a a
+  atan  :: Floating a => Type a -> op a a
+  acos  :: Floating a => Type a -> op a a
+  sinh  :: Floating a => Type a -> op a a
+  tanh  :: Floating a => Type a -> op a a
+  cosh  :: Floating a => Type a -> op a a
+  asinh :: Floating a => Type a -> op a a
+  atanh :: Floating a => Type a -> op a a
+  acosh :: Floating a => Type a -> op a a
 
 --------------------------------------------------------------------------------
 
@@ -43,6 +59,9 @@ class Op2 op where
   div   :: Integral a => Type a -> op a a a
   -- Fractional operators.
   fdiv  :: Fractional a => Type a -> op a a a
+  -- Floating operators.
+  pow   :: Floating a => Type a -> op a a a
+  logb  :: Floating a => Type a -> op a a a
   -- Equality operators.
   eq    :: Eq a => Type a -> op a a Bool
   ne    :: Eq a => Type a -> op a a Bool
