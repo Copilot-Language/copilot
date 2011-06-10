@@ -42,7 +42,7 @@ import Copilot.Language.Stream (Stream, constant)
 
 --------------------------------------------------------------------------------
 
-prettyPrint :: Spec () -> IO ()
+prettyPrint :: Spec -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
 
 --------------------------------------------------------------------------------

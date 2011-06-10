@@ -30,7 +30,7 @@ wrapExpr = WrapExpr
 
 --------------------------------------------------------------------------------
 
-reify :: Spec () -> IO Core.Spec
+reify :: Spec -> IO Core.Spec
 reify spec =
   do
     let triggers  = runSpec spec

@@ -24,13 +24,12 @@ import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-newtype Spec a = Spec { unSpec :: Writer [Trigger] a }
-  deriving Monad
+type Spec = Writer [Trigger] ()
 
 --------------------------------------------------------------------------------
 
-runSpec :: Spec () -> [Trigger]
-runSpec = execWriter . unSpec
+runSpec :: Spec -> [Trigger]
+runSpec = execWriter 
 
 --------------------------------------------------------------------------------
 
@@ -55,8 +54,8 @@ trigger
   :: String
   -> Stream Bool
   -> [TriggerArg]
-  -> Spec ()
-trigger name e args = Spec $ tell [Trigger name e args]
+  -> Spec 
+trigger name e args = tell [Trigger name e args]
 
 --------------------------------------------------------------------------------
 
