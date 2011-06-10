@@ -14,7 +14,7 @@ module Copilot.Language.Spec
   , TriggerArg (..)
   , runSpec
   , trigger
-  , triggerArg
+  , arg
   ) where
 
 import Control.Monad.Writer
@@ -60,7 +60,7 @@ trigger name e args = Spec $ tell [Trigger name e args]
 
 --------------------------------------------------------------------------------
 
-triggerArg :: Typed a => Stream a -> TriggerArg
-triggerArg = TriggerArg
+arg :: Typed a => Stream a -> TriggerArg
+arg = TriggerArg
 
 --------------------------------------------------------------------------------
