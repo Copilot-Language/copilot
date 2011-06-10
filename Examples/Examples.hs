@@ -8,7 +8,7 @@
 
 module Main where
 
-import Prelude ()
+import qualified Prelude as P
 import Copilot.Language
 import Copilot.Language.Prelude hiding (even)
 import Copilot.Language.Reify (reify)
@@ -27,6 +27,9 @@ flipflop :: Stream Bool -> Stream Bool
 flipflop x = y
   where
     y = [False] ++ if x then not y else y
+
+even :: (P.Integral a, Typed a) => Stream a -> Stream Bool
+even x = x `mod` 2 == 0
 
 counter :: (Num a, Typed a) => Stream Bool -> Stream a
 counter reset = y
