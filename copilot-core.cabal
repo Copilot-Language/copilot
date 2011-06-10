@@ -49,6 +49,7 @@ library
     Copilot.Core.Expr
     Copilot.Core.Interpret
 --    Copilot.Core.Interpret.Inf
+    Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Externals
 --    Copilot.Core.Spec.Random

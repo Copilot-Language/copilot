@@ -24,6 +24,7 @@
 
 module Copilot.Core
   ( module Copilot.Core.Expr
+  , module Copilot.Core.Operators
   , module Copilot.Core.Spec
   , module Copilot.Core.Type
   , module Copilot.Core.Uninitialized
@@ -32,6 +33,7 @@ module Copilot.Core
   ) where
 
 import Copilot.Core.Expr
+import Copilot.Core.Operators
 import Copilot.Core.Spec
 import Copilot.Core.Type
 import Copilot.Core.Uninitialized
