@@ -126,22 +126,40 @@ instance C.Op1 C2AOp1 where
   abs   t = C2AOp1 $ case W.numEInst        t of W.NumEInst        -> abs
   sign  t = C2AOp1 $ case W.numEInst        t of W.NumEInst        -> signum
   recip t = C2AOp1 $ case W.numEInst        t of W.NumEInst        -> recip
+  exp   t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> exp
+  sqrt  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> sqrt
+  log   t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> log
+  sin   t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> sin
+  tan   t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> tan
+  cos   t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> cos
+  asin  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> asin
+  atan  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> atan
+  acos  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> acos
+  sinh  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> sinh
+  tanh  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> tanh
+  cosh  t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> cosh
+  asinh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> asinh
+  atanh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> atanh
+  acosh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> acosh
+
 
 instance C.Op2 C2AOp2 where
   and     = C2AOp2                                                    (A.&&.)
   or      = C2AOp2                                                    (A.||.)
-  add t   = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (+)
-  sub t   = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (-)
-  mul t   = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (*)
-  div t   = C2AOp2 $ case W.integralEInst   t of W.IntegralEInst   -> A.div_
-  mod t   = C2AOp2 $ case W.integralEInst   t of W.IntegralEInst   -> A.mod_
-  fdiv t  = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (/)
-  eq t    = C2AOp2 $ case W.eqEInst         t of W.EqEInst         -> (A.==.)
-  ne t    = C2AOp2 $ case W.eqEInst         t of W.EqEInst         -> (A./=.)
-  le t    = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.<=.)
-  ge t    = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>=.)
-  lt t    = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.<.)
-  gt t    = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>.)
+  add   t = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (+)
+  sub   t = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (-)
+  mul   t = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (*)
+  div   t = C2AOp2 $ case W.integralEInst   t of W.IntegralEInst   -> A.div_
+  mod   t = C2AOp2 $ case W.integralEInst   t of W.IntegralEInst   -> A.mod_
+  fdiv  t = C2AOp2 $ case W.numEInst        t of W.NumEInst        -> (/)
+  pow   t = C2AOp2 $ case W.floatingEInst   t of W.FloatingEInst   -> (**)
+  logb  t = C2AOp2 $ case W.floatingEInst   t of W.FloatingEInst   -> logBase
+  eq    t = C2AOp2 $ case W.eqEInst         t of W.EqEInst         -> (A.==.)
+  ne    t = C2AOp2 $ case W.eqEInst         t of W.EqEInst         -> (A./=.)
+  le    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.<=.)
+  ge    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>=.)
+  lt    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.<.)
+  gt    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>.)
 
 instance C.Op3 C2AOp3 where
   mux t   = C2AOp3 $ case W.exprInst        t of W.ExprInst        -> A.mux

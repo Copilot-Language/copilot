@@ -11,6 +11,7 @@ module Copilot.Compile.C99.Witness
   , OrdEInst (..)      , ordEInst
   , NumEInst (..)      , numEInst
   , IntegralEInst (..) , integralEInst
+  , FloatingEInst (..) , floatingEInst
   ) where
 
 import qualified Language.Atom as A
@@ -85,7 +86,7 @@ data NumEInst a = A.NumE a => NumEInst
 numEInst :: Num a => C.Type a -> NumEInst a
 numEInst t =
   case t of
-    C.Bool   _ -> error "numEInst!" -- !! this can't happen !!
+    C.Bool   _ -> error "numEInst!" -- !! supress warning !!
     C.Int8   p -> mkInst p NumEInst ; C.Int16  p -> mkInst p NumEInst
     C.Int32  p -> mkInst p NumEInst ; C.Int64  p -> mkInst p NumEInst
     C.Word8  p -> mkInst p NumEInst ; C.Word16 p -> mkInst p NumEInst
@@ -99,12 +100,23 @@ data IntegralEInst a = A.IntegralE a => IntegralEInst
 integralEInst :: Integral a => C.Type a -> IntegralEInst a
 integralEInst t =
   case t of
-    C.Bool   _ -> error "integralEInst!" -- !! this can't happen !!
+    C.Bool   _ -> error "integralEInst!" -- !! supress warning !!
     C.Int8   p -> mkInst p IntegralEInst ; C.Int16  p -> mkInst p IntegralEInst
     C.Int32  p -> mkInst p IntegralEInst ; C.Int64  p -> mkInst p IntegralEInst
     C.Word8  p -> mkInst p IntegralEInst ; C.Word16 p -> mkInst p IntegralEInst
     C.Word32 p -> mkInst p IntegralEInst ; C.Word64 p -> mkInst p IntegralEInst
-    C.Float  _ -> error "integralEInst!" -- !! this can't happen !!
-    C.Double _ -> error "integralEInst!" -- !! this can't happen !!
+    C.Float  _ -> error "integralEInst!" -- !! supress warning !!
+    C.Double _ -> error "integralEInst!" -- !! supress warning !!
+
+--------------------------------------------------------------------------------
+
+data FloatingEInst a = A.FloatingE a => FloatingEInst
+
+floatingEInst :: Floating a => C.Type a -> FloatingEInst a
+floatingEInst t =
+  case t of
+    C.Float  p -> mkInst p FloatingEInst
+    C.Double p -> mkInst p FloatingEInst
+    _          -> error "integralEInst!" -- !! supress warning !!
 
 --------------------------------------------------------------------------------

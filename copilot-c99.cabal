@@ -20,9 +20,10 @@ library
 
   build-depends:
     atom >= 1.0.9,
-    containers,
+    base >= 4.3,
+    containers >= 0.4,
     copilot-core,
-    haskell2010
+    QuickCheck >= 2.4
 
   exposed-modules:
     Copilot.Compile.C99
@@ -31,6 +32,7 @@ library
     Copilot.Compile.C99.Phases
     Copilot.Compile.C99.PreCode
     Copilot.Compile.C99.Queue
+--    Compile.Compile.C99.Test
     Copilot.Compile.C99.Witness
 
   other-modules:
