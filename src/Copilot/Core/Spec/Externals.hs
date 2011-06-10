@@ -12,8 +12,9 @@ module Copilot.Core.Spec.Externals
   ) where
 
 import Copilot.Core
-import Data.List (foldr)
-import Prelude hiding ((++), concat, foldr)
+import Data.DList (DList, empty, singleton, append, concat, toList)
+import Data.List (nubBy)
+import Prelude hiding (concat, foldr)
 
 --------------------------------------------------------------------------------
 
@@ -25,8 +26,15 @@ data Extern = forall a . Extern
 
 externals :: Spec -> [Extern]
 externals Spec { specStreams  = streams, specTriggers = triggers } =
-  toList $
-    concat (fmap extsStream  streams) ++ concat (fmap extsTrigger triggers)
+  nubBy eqExt . toList $
+    concat (fmap extsStream  streams) `append`
+    concat (fmap extsTrigger triggers)
+
+  where
+
+  eqExt :: Extern -> Extern -> Bool
+  eqExt Extern { externName = name1 } Extern { externName = name2 } =
+    name1 == name2
 
 --------------------------------------------------------------------------------
 
@@ -37,7 +45,7 @@ extsStream Stream { streamExpr = e } = extsExpr e
 
 extsTrigger :: Trigger -> DList Extern
 extsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
-  extsExpr e ++ concat (fmap extsTriggerArg args)
+  extsExpr e `append` concat (fmap extsTriggerArg args)
 
   where
 
@@ -46,35 +54,15 @@ extsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
 
 --------------------------------------------------------------------------------
 
-newtype ExtsExpr α = ExtsExpr { extsExpr :: DList Extern }
+newtype ExtsExpr a = ExtsExpr { extsExpr :: DList Extern }
 
 instance Expr ExtsExpr where
   const  _ _     = ExtsExpr $ empty
   drop   _ _ _   = ExtsExpr $ empty
   extern t name  = ExtsExpr $ singleton (Extern name t)
   op1 _ e        = ExtsExpr $ extsExpr e
-  op2 _ e1 e2    = ExtsExpr $ extsExpr e1 ++ extsExpr e2
-  op3 _ e1 e2 e3 = ExtsExpr $ extsExpr e1 ++ extsExpr e2 ++ extsExpr e3
-
---------------------------------------------------------------------------------
-
--- Difference lists:
-
-type DList a = [a] -> [a]
-
-empty :: DList a
-empty = id
-
-singleton :: a -> DList a
-singleton = (:)
-
-(++) :: DList a -> DList a -> DList a
-(++) f g = f . g
-
-concat :: [DList a] -> DList a
-concat = foldr (.) empty
-
-toList :: DList a -> [a]
-toList = ($ [])
+  op2 _ e1 e2    = ExtsExpr $ extsExpr e1 `append` extsExpr e2
+  op3 _ e1 e2 e3 = ExtsExpr $ extsExpr e1 `append` extsExpr e2
+                                          `append` extsExpr e3
 
 --------------------------------------------------------------------------------
