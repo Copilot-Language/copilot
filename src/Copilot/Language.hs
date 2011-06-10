@@ -20,7 +20,7 @@ module Copilot.Language
   , Copilot
   , constant
   , trigger
-  , triggerArg
+  , arg
   , prettyPrint
   ) where
 
@@ -37,7 +37,7 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Stream (Stream, Copilot, Trigger, constant, trigger, triggerArg, getList)
+import Copilot.Language.Stream (Stream, Copilot, Trigger, constant, trigger, arg, getList)
 
 --------------------------------------------------------------------------------
 

@@ -17,7 +17,7 @@ module Copilot.Language.Stream
   , Copilot
   , TriggerArg (..)
   , trigger
-  , triggerArg
+  , arg
   , constant
   , getList
   ) where
@@ -100,8 +100,9 @@ trigger
   -> Copilot 
 trigger s b args = tell [Trigger s b args]
 
-triggerArg :: Typed a => Stream a -> TriggerArg
-triggerArg = TriggerArg
+-- | Creates a trigger argument.
+arg :: Typed a => Stream a -> TriggerArg
+arg = TriggerArg
 
 --------------------------------------------------------------------------------
 

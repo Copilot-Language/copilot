@@ -48,16 +48,16 @@ spec :: Copilot
 spec = do
   -- first trigger:
   trigger "f" booleans
-    [ triggerArg fib
-    , triggerArg sumExterns ]
+    [ arg fib
+    , arg sumExterns ]
 
   -- second trigger:
   trigger "g" (flipflop booleans)
-    [ triggerArg (sumExterns + counter false + 25) ]
+    [ arg (sumExterns + counter false + 25) ]
 
   -- this trigger shouldn't fire:
   trigger "h" (extern "e3" /= fib)
-    [ triggerArg (0 :: Stream Int8) ]
+    [ arg (0 :: Stream Int8) ]
 
 e1, e2, e3 :: [Word64]
 e1 = [0..]
