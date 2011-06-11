@@ -1,5 +1,4 @@
 --------------------------------------------------------------------------------
-
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
@@ -11,8 +10,6 @@
 
 module Copilot.Language.Spec
   ( Spec
-  , Let (..)
-  , let_
   , Trigger (..)
   , TriggerArg (..)
   , runSpec
@@ -27,35 +24,12 @@ import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-type Spec = Writer [Expr] ()
+type Spec = Writer [Trigger] ()
 
 --------------------------------------------------------------------------------
 
-runSpec :: Spec -> [Expr]
+runSpec :: Spec -> [Trigger]
 runSpec = execWriter 
-
---------------------------------------------------------------------------------
-
-data Expr = LetExpr Let 
-          | TriggerExpr Trigger
-
---------------------------------------------------------------------------------
-
-data Let where
-  Let
-    :: Typed a
-    => String
-    -> Stream a
-    -> Let
-
---------------------------------------------------------------------------------
-
-let_ 
-  :: Typed a
-  => String
-  -> Stream a
-  -> Spec
-let_ var e = tell [LetExpr $ Let var e]
 
 --------------------------------------------------------------------------------
 
@@ -80,8 +54,8 @@ trigger
   :: String
   -> Stream Bool
   -> [TriggerArg]
-  -> Spec
-trigger name e args = tell [TriggerExpr $ Trigger name e args]
+  -> Spec 
+trigger name e args = tell [Trigger name e args]
 
 --------------------------------------------------------------------------------
 
