@@ -33,11 +33,11 @@ wrapExpr = WrapExpr
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
-    let triggers  = runSpec spec
+    let exprs  = runSpec spec
     refCount     <- newIORef 0
     refVisited   <- newIORef M.empty
     refMap       <- newIORef []
-    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) triggers
+    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) exprs
     coreStreams  <- readIORef refMap
     return $
       Core.Spec
