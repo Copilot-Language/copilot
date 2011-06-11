@@ -54,28 +54,31 @@ sumExterns =
 
 -- > interpret 10 [] vote 
 -- results in out of memory
-vote :: Spec
+vote :: Spec 
 vote = do 
+  let_ "v" (majority ls)
   trigger "maj" true
-    [ arg maj ]
+    [ arg v ]
   trigger "aMaj" true 
-    [ arg $ aMajority ls maj ]
+    [ arg (aMajority ls v) ]
   where
-  ls  = [a, b, c, d, e, f, g, h, i, j, k, l, m]
-  maj = majority ls
+  v = var "v"
+--  ls  = [a, b, c, d, e, f, g, h, i, j, k, l, m]
+  ls  = [a, b] --, c, d, e, f, g, h, i, j, k, l, m]
+  -- maj = majority ls
   a = [0] ++ a + 1 :: Stream Word32
   b = [0] ++ b + 1
-  c = [0] ++ c + 1
-  d = [0] ++ d + 1
-  e = [1] ++ e + 1
-  f = [1] ++ f + 1
-  g = [1] ++ g + 1
-  h = [1] ++ h + 1
-  i = [1] ++ i + 1
-  j = [1] ++ j + 1
-  k = [1] ++ k + 1
-  l = [1] ++ l + 1
-  m = [1] ++ m + 1
+  -- c = [0] ++ c + 1
+  -- d = [0] ++ d + 1
+  -- e = [1] ++ e + 1
+  -- f = [1] ++ f + 1
+  -- g = [1] ++ g + 1
+  -- h = [1] ++ h + 1
+  -- i = [1] ++ i + 1
+  -- j = [1] ++ j + 1
+  -- k = [1] ++ k + 1
+  -- l = [1] ++ l + 1
+  -- m = [1] ++ m + 1
 
 --------------------------------------------------------------------------------
 
@@ -84,7 +87,7 @@ vote = do
 --
 
 -- A specification:
-spec :: Spec ()
+spec :: Spec 
 spec =
   do
     -- A trigger with two arguments:
