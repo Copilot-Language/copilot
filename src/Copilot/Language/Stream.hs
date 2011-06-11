@@ -62,7 +62,10 @@ data Stream :: * -> * where
   Op3
     :: (Typed a, Typed b, Typed c, Typed d)
     => (forall op . Core.Op3 op => op a b c d)
-    -> Stream a -> Stream b -> Stream c -> Stream d
+    -> Stream a 
+    -> Stream b 
+    -> Stream c
+    -> Stream d
 
 --------------------------------------------------------------------------------
 
