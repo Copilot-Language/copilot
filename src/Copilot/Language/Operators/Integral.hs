@@ -4,27 +4,22 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Copilot.Language.Operators.Integral
-  ( Integral (..)
+  ( div
+  , mod
   ) where
 
+import Copilot.Core (Typed, typeOf)
+import qualified Copilot.Core as Core
+import Copilot.Language.Stream
 import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-class Integral a where
-  div :: a -> a -> a
-  mod :: a -> a -> a
+div :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
+div = Op2 (Core.div typeOf)
 
---------------------------------------------------------------------------------
-
-{-
-instance P.Integral a => Integral a where
-  div = P.div
-  mod = P.mod
--}
+mod :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
+mod = Op2 (Core.mod typeOf)
 
 --------------------------------------------------------------------------------

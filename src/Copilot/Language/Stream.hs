@@ -4,26 +4,17 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE UndecidableInstances #-}
+
 
 module Copilot.Language.Stream
   ( Stream (..)
-  , constant
   ) where
 
 import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
-import Copilot.Language.Operators.Eq
-import Copilot.Language.Operators.Extern
-import Copilot.Language.Operators.Integral
-import Copilot.Language.Operators.Mux
-import Copilot.Language.Operators.Ord
-import Copilot.Language.Operators.Temporal
 import Copilot.Language.Prelude
 import Data.Word (Word8)
 import qualified Prelude as P
@@ -68,11 +59,6 @@ data Stream :: * -> * where
 
 --------------------------------------------------------------------------------
 
-constant :: Typed a => a -> Stream a
-constant = Const
-
---------------------------------------------------------------------------------
-
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
   show _      = "Stream"
@@ -86,11 +72,6 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
-instance Typed a => Mux (Stream a) (Stream Bool) where
-  mux         = Op3 (Core.mux typeOf)
-
---------------------------------------------------------------------------------
-
 instance (Typed a, Num a) => Num (Stream a) where
   (+)         = Op2 (Core.add typeOf)
   (-)         = Op2 (Core.sub typeOf)
@@ -98,37 +79,6 @@ instance (Typed a, Num a) => Num (Stream a) where
   abs         = Op1 (Core.abs typeOf)
   signum      = Op1 (Core.sign typeOf)
   fromInteger = Const . fromInteger
-
---------------------------------------------------------------------------------
-
-instance (Typed a, P.Integral a) => Integral (Stream a) where
-  div         = Op2 (Core.div typeOf)
-  mod         = Op2 (Core.mod typeOf)
-
---------------------------------------------------------------------------------
-
-instance (Typed a, P.Eq a) => Eq (Stream a) (Stream Bool) where
-  (==)        = Op2 (Core.eq typeOf)
-  (/=)        = Op2 (Core.ne typeOf)
-
---------------------------------------------------------------------------------
-
-instance (Typed a, P.Ord a) => Ord (Stream a) (Stream Bool) where
-  (<=)        = Op2 (Core.le typeOf)
-  (>=)        = Op2 (Core.ge typeOf)
-  (<)         = Op2 (Core.lt typeOf)
-  (>)         = Op2 (Core.gt typeOf)
-
---------------------------------------------------------------------------------
-
-instance Typed b => Temporal Stream b where
-  (++)        = (`Append` Nothing)
-  drop i      = Drop (fromIntegral i)
-
---------------------------------------------------------------------------------
-
-instance Extern Stream where
-  extern      = Extern
 
 --------------------------------------------------------------------------------
 

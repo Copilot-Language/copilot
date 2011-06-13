@@ -4,22 +4,31 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Copilot.Language.Operators.Ord
-  ( Ord (..)
+  ( (<=)
+  , (>=)
+  , (<)
+  , (>)
   ) where
 
-import Copilot.Language.Operators.Eq
-import Prelude ()
+import Copilot.Core (Typed, typeOf)
+import qualified Copilot.Core as Core
+import Copilot.Language.Prelude
+import Copilot.Language.Stream
+import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-class Eq a b => Ord a b where
-  (<=) :: a -> a -> b
-  (>=) :: a -> a -> b
-  (<)  :: a -> a -> b
-  (>)  :: a -> a -> b
+(<=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(<=) = Op2 (Core.le typeOf)
+
+(>=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(>=) = Op2 (Core.ge typeOf)
+
+(<) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(<) = Op2 (Core.lt typeOf)
+
+(>) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(>) = Op2 (Core.gt typeOf)
 
 --------------------------------------------------------------------------------

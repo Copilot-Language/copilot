@@ -14,13 +14,18 @@ module Copilot.Language.Operators.Boolean
 
 import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
+import Copilot.Language.Operators.Constant (constant)
 import Copilot.Language.Stream
 import Prelude ()
 
 --------------------------------------------------------------------------------
 
+infix 5 && 
+
 (&&) :: Stream Bool -> Stream Bool -> Stream Bool
 (&&) = Op2 Core.and
+
+infix 5 ||
 
 (||) :: Stream Bool -> Stream Bool -> Stream Bool
 (||) = Op2 Core.or
@@ -35,7 +40,3 @@ false :: Stream Bool
 false = constant False
 
 --------------------------------------------------------------------------------
-
-infix 5 && 
-infix 5 ||
-

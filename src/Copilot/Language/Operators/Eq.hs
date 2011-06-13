@@ -4,19 +4,23 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Copilot.Language.Operators.Eq
-  ( Eq (..)
+  ( (==)
+  , (/=)
   ) where
 
-import Prelude ()
+import Copilot.Core (Typed, typeOf)
+import qualified Copilot.Core as Core
+import Copilot.Language.Prelude
+import Copilot.Language.Stream
+import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-class Eq a b where
-  (==) :: a -> a -> b
-  (/=) :: a -> a -> b
+(==) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
+(==) = Op2 (Core.eq typeOf)
+
+(/=) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
+(/=) = Op2 (Core.ne typeOf)
 
 --------------------------------------------------------------------------------

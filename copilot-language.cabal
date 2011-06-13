@@ -31,6 +31,7 @@ library
     Copilot.Language
     Copilot.Language.Interpret
     Copilot.Language.Operators.Boolean
+    Copilot.Language.Operators.Constant
     Copilot.Language.Operators.Eq
     Copilot.Language.Operators.Extern
     Copilot.Language.Operators.Integral
@@ -39,6 +40,7 @@ library
     Copilot.Language.Operators.Temporal
     Copilot.Language.Prelude
     Copilot.Language.Reify
+    Copilot.Library.Voting
 
   other-modules:
     Copilot.Language.Reify.DynStableName

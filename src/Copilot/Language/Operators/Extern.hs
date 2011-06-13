@@ -4,17 +4,16 @@
 
 -- |
 
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Copilot.Language.Operators.Extern
-  ( Extern (..)
+  ( extern
   ) where
 
-import Copilot.Core (Name, Typed)
+import Copilot.Core (Typed)
+import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-class Extern a where
-  extern :: (Show b, Typed b) => Name -> a b
+extern :: Typed a => String -> Stream a
+extern = Extern
 
 --------------------------------------------------------------------------------

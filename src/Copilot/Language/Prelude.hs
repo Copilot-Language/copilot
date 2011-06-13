@@ -11,9 +11,9 @@ module Copilot.Language.Prelude
 
 import Prelude hiding
   ( (++)
-  , Eq (..)
-  , Integral (..)
-  , Ord (..)
+  , (==), (/=)
+  , div, mod
+  , (<=), (>=), (<), (>)
   , (&&)
   , (||)
   , const

@@ -4,24 +4,25 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Copilot.Language.Operators.Mux
-  ( Mux (..)
+  ( mux
   , ifThenElse
   ) where
 
+import Copilot.Core (Typed, typeOf)
+import qualified Copilot.Core as Core
+import Copilot.Language.Prelude
+import Copilot.Language.Stream
+import Prelude ()
+
 --------------------------------------------------------------------------------
 
-class Mux a b where
-  mux :: b -> a -> a -> a
+mux :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
+mux = Op3 (Core.mux typeOf)
 
 --------------------------------------------------------------------------------
 
-ifThenElse :: Mux a b => b -> a -> a -> a
+ifThenElse :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
 ifThenElse = mux
 
 --------------------------------------------------------------------------------

@@ -4,29 +4,24 @@
 
 -- |
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Copilot.Language.Operators.Temporal
-  ( Temporal (..)
+  ( (++)
+  , drop
   ) where
 
-import qualified Prelude as P
+import Copilot.Core (Typed)
 import Copilot.Language.Prelude
+import Copilot.Language.Stream
+import Prelude ()
 
 --------------------------------------------------------------------------------
 
 infixr 3 ++
 
-class Temporal a b where
-  (++) :: [b] -> a b -> a b
-  drop :: Int -> a b -> a b
+(++) :: Typed a => [a] -> Stream a -> Stream a
+(++) = (`Append` Nothing)
 
---------------------------------------------------------------------------------
-
-instance Temporal [] b where
-  (++) = (P.++)
-  drop = (P.drop)
+drop :: Typed a => Int -> Stream a -> Stream a
+drop i = Drop (fromIntegral i)
 
 --------------------------------------------------------------------------------
