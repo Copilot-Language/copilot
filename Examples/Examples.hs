@@ -118,10 +118,13 @@ spec =
 e1, e2, e3 :: [Word64]
 e1 = [0..]
 e2 = 5 : 4 : e2
-e3 = [1, 1] ++ zipWith (+) e3 (drop 1 e3)
+e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
 
 main :: IO ()
-main =
+main = reify vote >>= compile "vote"
+
+main1 :: IO ()
+main1 =
   do
     putStrLn "PrettyPrinter:"
     putStrLn ""

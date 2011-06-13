@@ -8,7 +8,6 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE Rank2Types #-}
 
-
 module Copilot.Language.Stream
   ( Stream (..)
   ) where
