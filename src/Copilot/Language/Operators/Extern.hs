@@ -4,8 +4,6 @@
 
 -- |
 
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Copilot.Language.Operators.Extern
   ( Extern (..)
   ) where
