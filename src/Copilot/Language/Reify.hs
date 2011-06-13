@@ -12,7 +12,8 @@ module Copilot.Language.Reify
 
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
-import Copilot.Language.Spec (Spec, runSpec, Trigger (..), TriggerArg (..))
+import Copilot.Language.Spec 
+  (Let (..), lets, triggers, Spec, runSpec, Trigger (..), TriggerArg (..))
 import Copilot.Language.Stream (Stream (..))
 import Copilot.Language.Reify.DynStableName
 import Data.IntMap (IntMap)
@@ -33,17 +34,36 @@ wrapExpr = WrapExpr
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
-    let exprs  = runSpec spec
+    let trigs = triggers $ runSpec spec
+    let letExprs = lets $ runSpec spec
     refCount     <- newIORef 0
     refVisited   <- newIORef M.empty
     refMap       <- newIORef []
-    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) exprs
+    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) trigs
+    coreLets     <- mapM (mkLet refCount refVisited refMap) letExprs
     coreStreams  <- readIORef refMap
     return $
       Core.Spec
         { Core.specStreams   = reverse coreStreams
         , Core.specObservers = []
-        , Core.specTriggers  = coreTriggers }
+        , Core.specTriggers  = coreTriggers 
+        , Core.specLets      = coreLets}
+
+--------------------------------------------------------------------------------
+
+{-# INLINE mkLet #-}
+mkLet
+  :: IORef Int
+  -> IORef (IntMap [(StableName, Int)])
+  -> IORef [Core.Stream]
+  -> Let
+  -> IO Core.Let
+mkLet refCount refVisited refMap (Let var e) =
+  do 
+    w <- mkExpr refCount refVisited refMap e
+    return $ Core.Let
+               { Core.letVar  = var
+               , Core.letExpr = unWrapExpr w }
 
 --------------------------------------------------------------------------------
 
@@ -56,7 +76,7 @@ mkTrigger
   -> IO Core.Trigger
 mkTrigger refCount refVisited refMap (Trigger name guard args) =
   do
-    w1 <- mkExpr refCount refVisited refMap guard
+    w1 <- mkExpr refCount refVisited refMap guard 
     args' <- mapM mkTriggerArg args
     return $
       Core.Trigger
@@ -92,6 +112,7 @@ mkExpr refCount refVisited refMap e0 =
                              s <- mkStream refCount refVisited refMap e1
                              return $ wrapExpr $ Core.drop typeOf k s
                          _ -> error "dfs: Drop" -- !!! This needs to be fixed !!!
+    LetBinding v    -> return $ wrapExpr $ Core.letBinding typeOf v
     Extern cs       -> return $ wrapExpr $ Core.extern typeOf cs
     Op1 op e        -> do
                          w <- mkExpr refCount refVisited refMap e

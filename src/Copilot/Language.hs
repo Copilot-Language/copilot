@@ -21,6 +21,8 @@ module Copilot.Language
   , constant
   , trigger
   , arg
+  , let_
+  , var
   , prettyPrint
   ) where
 
@@ -33,11 +35,12 @@ import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
 import Copilot.Language.Operators.Integral
+import Copilot.Language.Operators.LetBinding
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Spec (Spec, trigger, arg)
+import Copilot.Language.Spec (Spec, trigger, arg, let_)
 import Copilot.Language.Stream (Stream, constant)
 
 --------------------------------------------------------------------------------

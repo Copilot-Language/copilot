@@ -52,6 +52,21 @@ sumExterns =
   in
     e1 + e2
 
+-- Simple local variables example
+addMult :: Spec
+addMult = do
+  let_ "v" summation
+  trigger "f" true [ arg $ mult 5 ]
+  where
+  summation = nats + nats + nats
+
+  mult :: Int -> Stream Word64
+  mult 0 = var "v"
+  mult i = var "v" * mult (i-1)
+
+  nats :: Stream Word64
+  nats = [0] ++ nats + 1 
+
 -- > interpret 10 [] vote 
 -- results in out of memory
 vote :: Spec 
@@ -63,14 +78,14 @@ vote = do
     [ arg (aMajority ls v) ]
   where
   v = var "v"
+--  v = majority ls
 --  ls  = [a, b, c, d, e, f, g, h, i, j, k, l, m]
-  ls  = [a, b] --, c, d, e, f, g, h, i, j, k, l, m]
-  -- maj = majority ls
+  ls  = [a, b, c, d, e] --, f, g, h, i, j, k, l, m]
   a = [0] ++ a + 1 :: Stream Word32
   b = [0] ++ b + 1
-  -- c = [0] ++ c + 1
-  -- d = [0] ++ d + 1
-  -- e = [1] ++ e + 1
+  c = [0] ++ c + 1
+  d = [0] ++ d + 1
+  e = [1] ++ e + 1
   -- f = [1] ++ f + 1
   -- g = [1] ++ g + 1
   -- h = [1] ++ h + 1

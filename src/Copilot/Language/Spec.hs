@@ -11,33 +11,57 @@
 
 module Copilot.Language.Spec
   ( Spec
+  , Copilot (..)
   , Let (..)
   , let_
+  , lets
   , Trigger (..)
   , TriggerArg (..)
+  , triggers
   , runSpec
   , trigger
   , arg
   ) where
 
 import Control.Monad.Writer
+import Data.List (foldl')
+
 import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-type Spec = Writer [Expr] ()
+type Spec = Writer [Copilot] ()
 
 --------------------------------------------------------------------------------
 
-runSpec :: Spec -> [Expr]
+runSpec :: Spec -> [Copilot]
 runSpec = execWriter 
 
 --------------------------------------------------------------------------------
 
-data Expr = LetExpr Let 
-          | TriggerExpr Trigger
+lets :: [Copilot] -> [Let]
+lets = 
+  foldl' lets' []
+  where
+  lets' ls e = case e of 
+                 LetExpr l -> l : ls
+                 _         -> ls
+
+triggers :: [Copilot] -> [Trigger]
+triggers = 
+  foldl' triggers' []
+  where
+  triggers' ls e = case e of 
+                     TriggerExpr t -> t : ls
+                     _             -> ls
+
+--------------------------------------------------------------------------------
+
+data Copilot = 
+    LetExpr Let
+  | TriggerExpr Trigger
 
 --------------------------------------------------------------------------------
 

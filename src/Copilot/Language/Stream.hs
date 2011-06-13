@@ -21,6 +21,7 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
+import Copilot.Language.Operators.LetBinding
 import Copilot.Language.Operators.Integral
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
@@ -48,6 +49,10 @@ data Stream :: * -> * where
     -> Stream a
     -> Stream a
   Extern
+    :: Typed a
+    => String
+    -> Stream a
+  LetBinding
     :: Typed a
     => String
     -> Stream a
@@ -140,6 +145,11 @@ instance Typed b => Temporal Stream b where
 
 instance Extern Stream where
   extern      = Extern
+
+--------------------------------------------------------------------------------
+
+instance LetBinding Stream where
+  var        = LetBinding
 
 --------------------------------------------------------------------------------
 
