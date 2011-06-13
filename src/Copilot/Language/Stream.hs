@@ -40,6 +40,10 @@ data Stream :: * -> * where
     :: Typed a
     => String
     -> Stream a
+  LetBinding
+    :: Typed a
+    => String
+    -> Stream a
   Op1
     :: (Typed a, Typed b)
     => (forall op . Core.Op1 op => op a b)

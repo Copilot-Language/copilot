@@ -13,19 +13,12 @@ import Copilot.Language
 import Copilot.Language.Prelude hiding (even, odd)
 import Copilot.Language.Reify (reify)
 import Copilot.Compile.C99 (compile)
-import Copilot.Library.Voting 
 
 --------------------------------------------------------------------------------
 
 --
 -- Some utility functions:
 --
-
---foo :: Stream Word32 -> Stream Word32
---foo x = if x == 0 then 2 else 3
-
---imply :: Bool -> Bool -> Bool
---imply p q = not p || q
 
 implyStream :: Stream Bool -> Stream Bool -> Stream Bool
 implyStream p q = not p || q
@@ -64,31 +57,6 @@ sumExterns =
   in
     e1 + e2
 
--- > interpret 10 [] vote 
--- results in out of memory
-vote :: Spec
-vote = do 
-  trigger "maj" true
-    [ arg maj ]
-  trigger "aMaj" true 
-    [ arg $ aMajority ls maj ]
-  where
-  ls  = [a, b, c, d, e, f, g, h, i, j, k, l, m]
-  maj = majority ls
-  a = [0] ++ a + 1 :: Stream Word32
-  b = [0] ++ b + 1
-  c = [0] ++ c + 1
-  d = [0] ++ d + 1
-  e = [1] ++ e + 1
-  f = [1] ++ f + 1
-  g = [1] ++ g + 1
-  h = [1] ++ h + 1
-  i = [1] ++ i + 1
-  j = [1] ++ j + 1
-  k = [1] ++ k + 1
-  l = [1] ++ l + 1
-  m = [1] ++ m + 1
-
 --------------------------------------------------------------------------------
 
 --
@@ -121,10 +89,7 @@ e2 = 5 : 4 : e2
 e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
 
 main :: IO ()
-main = reify vote >>= compile "vote"
-
-main1 :: IO ()
-main1 =
+main =
   do
     putStrLn "PrettyPrinter:"
     putStrLn ""

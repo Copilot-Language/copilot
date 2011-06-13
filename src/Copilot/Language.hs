@@ -13,6 +13,7 @@ module Copilot.Language
   , module Copilot.Language.Operators.Constant
   , module Copilot.Language.Operators.Eq
   , module Copilot.Language.Operators.Extern
+  , module Copilot.Language.Operators.LetBinding
   , module Copilot.Language.Operators.Integral
   , module Copilot.Language.Operators.Mux
   , module Copilot.Language.Operators.Ord
@@ -21,6 +22,7 @@ module Copilot.Language
   , Stream
   , trigger
   , arg
+  , let_
   , prettyPrint
   ) where
 
@@ -34,11 +36,12 @@ import Copilot.Language.Operators.Constant
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
 import Copilot.Language.Operators.Integral
+import Copilot.Language.Operators.LetBinding
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Spec (Spec, trigger, arg)
+import Copilot.Language.Spec (Spec, trigger, arg, let_)
 import Copilot.Language.Stream (Stream)
 
 --------------------------------------------------------------------------------

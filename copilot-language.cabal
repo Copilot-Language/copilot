@@ -34,6 +34,7 @@ library
     Copilot.Language.Operators.Constant
     Copilot.Language.Operators.Eq
     Copilot.Language.Operators.Extern
+    Copilot.Language.Operators.LetBinding
     Copilot.Language.Operators.Integral
     Copilot.Language.Operators.Mux
     Copilot.Language.Operators.Ord

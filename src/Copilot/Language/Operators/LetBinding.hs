@@ -4,16 +4,16 @@
 
 -- |
 
-module Copilot.Language.Operators.Extern
-  ( extern
+module Copilot.Language.Operators.LetBinding
+  ( var
   ) where
 
-import Copilot.Core (Typed)
+import Copilot.Core (Name, Typed)
 import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-extern :: Typed a => String -> Stream a
-extern = Extern
+var :: Typed a => Name -> Stream a
+var = LetBinding
 
 --------------------------------------------------------------------------------
