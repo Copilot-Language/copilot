@@ -39,7 +39,6 @@ library
     Copilot.Language.Operators.Temporal
     Copilot.Language.Prelude
     Copilot.Language.Reify
-    Copilot.Library.Clock
 
   other-modules:
     Copilot.Language.Reify.DynStableName

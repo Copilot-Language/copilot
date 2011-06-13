@@ -5,30 +5,33 @@
 -- |
 
 module Copilot.Language.Operators.Boolean
-  ( Boolean (..)
+  ( (&&)
+  , (||)
+  , not
+  , true
+  , false
   ) where
 
-import qualified Prelude as P
+import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
+import Copilot.Language.Stream
+import Prelude ()
 
 --------------------------------------------------------------------------------
 
-class Boolean a where
-  (&&)     :: a -> a -> a
-  (||)     :: a -> a -> a
-  not      :: a -> a
-  true     :: a
-  false    :: a
-  fromBool :: Bool -> a
+(&&) :: Stream Bool -> Stream Bool -> Stream Bool
+(&&) = Op2 Core.and
 
---------------------------------------------------------------------------------
+(||) :: Stream Bool -> Stream Bool -> Stream Bool
+(||) = Op2 Core.or
 
-instance Boolean Bool where
-  (&&)      = (P.&&)
-  (||)      = (P.||)
-  not       = P.not
-  true      = P.True
-  false     = P.False
-  fromBool  = P.id
+not :: Stream Bool -> Stream Bool
+not = Op1 Core.not
+
+true :: Stream Bool
+true = constant True
+
+false :: Stream Bool
+false = constant False
 
 --------------------------------------------------------------------------------

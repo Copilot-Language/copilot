@@ -18,7 +18,6 @@ module Copilot.Language.Stream
 
 import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
-import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
 import Copilot.Language.Operators.Integral
@@ -81,16 +80,6 @@ instance Show (Stream a) where
 instance P.Eq (Stream a) where
   (==)        = error "'Prelude.(==)' isn't implemented for streams!"
   (/=)        = error "'Prelude.(/=)' isn't implemented for streams!"
-
---------------------------------------------------------------------------------
-
-instance Boolean (Stream Bool) where
-  (&&)        = Op2 Core.and
-  (||)        = Op2 Core.or
-  not         = Op1 Core.not
-  true        = Const true
-  false       = Const false
-  fromBool    = Const . fromBool
 
 --------------------------------------------------------------------------------
 

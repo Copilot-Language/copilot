@@ -20,8 +20,14 @@ import Copilot.Compile.C99 (compile)
 -- Some utility functions:
 --
 
-imply :: Bool -> Bool -> Bool
-imply p q = not p || q
+--foo :: Stream Word32 -> Stream Word32
+--foo x = if x == 0 then 2 else 3
+
+--imply :: Bool -> Bool -> Bool
+--imply p q = not p || q
+
+implyStream :: Stream Bool -> Stream Bool -> Stream Bool
+implyStream p q = not p || q
 
 flipflop :: Stream Bool -> Stream Bool
 flipflop x = y
