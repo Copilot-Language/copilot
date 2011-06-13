@@ -30,7 +30,7 @@ strictList (x:xs) = x `seq` (x : strictList xs)
 
 strictEval :: EvalExpr α -> EvalExpr α
 strictEval e = e `seq` EvalExpr $
-  \ exts strms -> strictList (evalExpr_ e exts strms)
+  \ exts lets strms -> strictList (evalExpr_ e exts lets strms)
 
 --------------------------------------------------------------------------------
 
@@ -40,23 +40,26 @@ class Applicative f where
 
 --------------------------------------------------------------------------------
 
-newtype EvalExpr a = EvalExpr { evalExpr_ :: Env Name -> Env Id -> [a] }
+newtype EvalExpr a = EvalExpr
+  { evalExpr_ :: Env Name -> Env Name -> Env Id -> [a] }
 
 instance Applicative EvalExpr where
-  pure x    = EvalExpr $ \ _ _ -> repeat x
-  e1 <*> e2 = EvalExpr $ \ exts strms -> e1 `seq` e2 `seq`
-    zipWith ($) (evalExpr_ e1 exts strms) (evalExpr_ e2 exts strms)
+  pure x    = EvalExpr $ \ _ _ _ -> repeat x
+  e1 <*> e2 = EvalExpr $ \ exts lets strms -> e1 `seq` e2 `seq`
+    zipWith ($) (evalExpr_ e1 exts lets strms) (evalExpr_ e2 exts lets strms)
 
 instance Expr EvalExpr where
-  const _ x       = x `seq` pure x
-  drop t i id     = EvalExpr $ \ _ strms -> strictList $
-                      let Just xs = lookup id strms >>= fromDynamicF t
-                      in P.drop (fromIntegral i) xs
-  letBinding t v  = undefined -- XXX
-  extern t name   = strictEval $ EvalExpr $ \ exts _ -> evalExtern t name exts
-  op1 op e1       = strictEval $ pure op <*> e1
-  op2 op e1 e2    = strictEval $ pure (apply2 op) <*> e1 <*> e2
-  op3 op e1 e2 e3 = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
+  const _ x         = x `seq` pure x
+  drop t i id       = EvalExpr $ \ _ _ strms -> strictList $
+                        let Just xs = lookup id strms >>= fromDynamicF t
+                        in P.drop (fromIntegral i) xs
+  letBinding t name = EvalExpr $ \ _ lets _ -> strictList $
+                        let Just xs = lookup name lets >>= fromDynamicF t
+                        in xs
+  extern t name     = EvalExpr $ \ exts _ _ -> evalExtern t name exts
+  op1 op e1         = strictEval $ pure op <*> e1
+  op2 op e1 e2      = strictEval $ pure (apply2 op) <*> e1 <*> e2
+  op3 op e1 e2 e3   = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
 
 evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
@@ -125,8 +128,8 @@ type Output = (Bool, [String])
 
 --------------------------------------------------------------------------------
 
-evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
-evalStream exts strms
+evalStream :: Env Name -> Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
+evalStream exts lets strms
   Stream
     { streamId       = id
     , streamBuffer   = buffer
@@ -136,7 +139,7 @@ evalStream exts strms
 
   where
 
-  xs = strictList $ buffer ++ evalExpr_ e exts strms
+  xs = strictList $ buffer ++ evalExpr_ e exts lets strms
 --  ys =
 --    case mguard of
 --      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
@@ -149,8 +152,8 @@ evalStream exts strms
 
 --------------------------------------------------------------------------------
 
-evalTrigger :: Env Name -> Env Id -> Trigger -> [Output]
-evalTrigger exts strms
+evalTrigger :: Env Name -> Env Name -> Env Id -> Trigger -> [Output]
+evalTrigger exts lets strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
@@ -159,23 +162,35 @@ evalTrigger exts strms
   where
 
   bs :: [Bool]
-  bs = evalExpr_ e exts strms
+  bs = evalExpr_ e exts lets strms
 
   vs :: [[String]]
   vs = transpose $ map evalTriggerArg args
 
   evalTriggerArg :: TriggerArg -> [String]
   evalTriggerArg (TriggerArg e1 t) =
-    map (showWithType t) (evalExpr_ e1 exts strms)
+    map (showWithType t) (evalExpr_ e1 exts lets strms)
 
+--------------------------------------------------------------------------------
+
+evalLet :: Env Name -> Env Name -> Env Id -> Let -> (Name, DynamicF [] Type)
+evalLet exts lets strms
+  Let
+    { letExpr = e
+    , letVar = name
+    , letType = t
+    } = (name, toDynamicF xs t)
+  where
+    xs = strictList $ evalExpr_ e exts lets strms
 
 --------------------------------------------------------------------------------
 
 evalSpec :: Env Name -> Spec -> [[Output]]
 evalSpec exts spec = outps
   where
-    strms = fmap (evalStream  exts strms) (specStreams  spec)
-    outps = fmap (evalTrigger exts strms) (specTriggers spec)
+    strms = fmap (evalStream  exts lets strms) (specStreams  spec)
+    lets  = fmap (evalLet     exts lets strms) (specLets     spec)
+    outps = fmap (evalTrigger exts lets strms) (specTriggers spec)
 
 --------------------------------------------------------------------------------
 

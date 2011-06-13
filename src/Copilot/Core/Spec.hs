@@ -55,7 +55,8 @@ data TriggerArg = forall a . TriggerArg
 -- | A variable binding to a stream expression.
 data Let = forall a . Let
   { letVar   :: Name
-  , letExpr  :: forall e . Expr e => e a }
+  , letExpr  :: forall e . Expr e => e a
+  , letType  :: Type a }
 
 --------------------------------------------------------------------------------
 
@@ -69,4 +70,3 @@ data Spec = Spec
   , specLets         :: [Let] }
 
 --------------------------------------------------------------------------------
-
