@@ -40,11 +40,6 @@ library
     -caf-all
     -fno-warn-orphans
 
-    -- Hopefully we can remove these as the Haskell Standard evolves:
-
-    -XExistentialQuantification
-    -XRank2Types
-
   build-depends:
     dlist,
     haskell2010,
