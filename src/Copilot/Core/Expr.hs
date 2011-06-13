@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Rank2Types #-}
+
 module Copilot.Core.Expr
   ( Id
   , Name
@@ -37,6 +39,11 @@ class Expr e where
     :: Type a
     -> Word8
     -> Id
+    -> e a
+  -- | A bound local variable.
+  letBinding
+    :: Type a
+    -> Name
     -> e a
   -- | An external variable.
   extern

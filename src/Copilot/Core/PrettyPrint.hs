@@ -25,6 +25,7 @@ instance Expr PPExpr where
   drop _ 0 id        = PPExpr $ text "stream" <+> text "s" <> int id
   drop _ i id        = PPExpr $ text "drop" <+> text (show i) <+> text "s" <> int id
   extern _ name      = PPExpr $ text "extern \"" <> text name <> text "\""
+  letBinding _ name  = PPExpr $ text "var \"" <> text name <> text "\""
   op1 op e           = PPExpr $ ppOp1 op (ppExpr e)
   op2 op e1 e2       = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
   op3 op e1 e2 e3    = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
@@ -84,6 +85,16 @@ ppPrefix cs = (text cs <+>)
 
 --------------------------------------------------------------------------------
 
+ppLet :: Let -> Doc
+ppLet 
+  Let 
+    { letVar  = v
+    , letExpr = e
+    }
+      = text "var:" <+> text v <+> text "=" <+> ppExpr e
+
+--------------------------------------------------------------------------------
+
 ppStream :: Stream -> Doc
 ppStream
   Stream
@@ -92,7 +103,7 @@ ppStream
     , streamExpr     = e
     , streamExprType = t
     }
-      = text "stream: \"s" <>  int id <> text "\""
+      = text "stream: \"s" <> int id <> text "\""
     <+> text (show $ map (showWithType t) buffer)
     <+> text "="
     <+> ppExpr e
@@ -124,8 +135,9 @@ ppTrigger
 --------------------------------------------------------------------------------
 
 ppSpec :: Spec -> Doc
-ppSpec spec = cs $$ ds
+ppSpec spec = ls $$ cs $$ ds
   where
+    ls = foldr (($$) . ppLet)  empty (specLets spec)
     cs = foldr (($$) . ppStream)  empty (specStreams spec)
     ds = foldr (($$) . ppTrigger) empty (specTriggers spec)
 

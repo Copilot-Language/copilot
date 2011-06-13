@@ -52,6 +52,7 @@ instance Expr EvalExpr where
   drop t i id     = EvalExpr $ \ _ strms -> strictList $
                       let Just xs = lookup id strms >>= fromDynamicF t
                       in P.drop (fromIntegral i) xs
+  letBinding t v  = undefined -- XXX
   extern t name   = strictEval $ EvalExpr $ \ exts _ -> evalExtern t name exts
   op1 op e1       = strictEval $ pure op <*> e1
   op2 op e1 e2    = strictEval $ pure (apply2 op) <*> e1 <*> e2
@@ -166,6 +167,7 @@ evalTrigger exts strms
   evalTriggerArg :: TriggerArg -> [String]
   evalTriggerArg (TriggerArg e1 t) =
     map (showWithType t) (evalExpr_ e1 exts strms)
+
 
 --------------------------------------------------------------------------------
 

@@ -2,11 +2,15 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types #-}
+
 module Copilot.Core.Spec
   ( Stream (..)
   , Observer (..)
   , Trigger (..)
   , TriggerArg (..)
+  , Let (..)
   , Spec (..)
   ) where
 
@@ -48,11 +52,21 @@ data TriggerArg = forall a . TriggerArg
 
 --------------------------------------------------------------------------------
 
--- | A Copilot specification consists of a list of anomymous streams, a list of
--- observers, and a list of triggers.
+-- | A variable binding to a stream expression.
+data Let = forall a . Let
+  { letVar   :: Name
+  , letExpr  :: forall e . Expr e => e a }
+
+--------------------------------------------------------------------------------
+
+-- | A Copilot specification consists of a list of variables bound to anonymous
+-- streams, a lost of anomymous streams, a list of observers, and a list of
+-- triggers.
 data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
-  , specTriggers     :: [Trigger] }
+  , specTriggers     :: [Trigger] 
+  , specLets         :: [Let] }
 
 --------------------------------------------------------------------------------
+

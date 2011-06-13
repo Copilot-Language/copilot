@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Rank2Types #-}
+
 module Copilot.Core.Operators
   ( Op1 (..)
   , Op2 (..)
