@@ -27,7 +27,7 @@ input = Input
 interpret
   :: Integer
   -> [Input]
-  -> Spec ()
+  -> Spec
   -> IO ()
 interpret i inputs spec =
   do

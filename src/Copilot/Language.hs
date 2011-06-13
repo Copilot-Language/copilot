@@ -20,7 +20,7 @@ module Copilot.Language
   , Stream
   , constant
   , trigger
-  , triggerArg
+  , arg
   , prettyPrint
   ) where
 
@@ -37,12 +37,12 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Spec (Spec, trigger, triggerArg)
+import Copilot.Language.Spec (Spec, trigger, arg)
 import Copilot.Language.Stream (Stream, constant)
 
 --------------------------------------------------------------------------------
 
-prettyPrint :: Spec () -> IO ()
+prettyPrint :: Spec -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
 
 --------------------------------------------------------------------------------
