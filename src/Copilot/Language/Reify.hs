@@ -63,7 +63,8 @@ mkLet refCount refVisited refMap (Let var e) =
     w <- mkExpr refCount refVisited refMap e
     return $ Core.Let
                { Core.letVar  = var
-               , Core.letExpr = unWrapExpr w }
+               , Core.letExpr = unWrapExpr w
+               , Core.letType = typeOf }
 
 --------------------------------------------------------------------------------
 
