@@ -2,6 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types #-}
+
 -- | An implementation of dynamic types using "Copilot.Core.Type.Equality".
 -- The theory behind this technique is described the following paper:
 --

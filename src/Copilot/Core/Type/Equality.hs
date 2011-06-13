@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Rank2Types #-}
+
 -- | Leibnizian equality on types.
 -- The theory behind this technique is described the following paper:
 --
