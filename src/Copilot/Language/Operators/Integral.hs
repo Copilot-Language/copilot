@@ -20,6 +20,7 @@ div :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 (Const 0) `div` _ = Const 0
 _ `div` (Const 0) = P.error "Error in div: division by zero."
 x `div` (Const 1) = x
+x `div` y = Op2 (Core.div typeOf) x y
 
 mod :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 (Const 0) `mod` _         = (Const 0)
