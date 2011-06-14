@@ -77,12 +77,19 @@ instance P.Eq (Stream a) where
 
 instance (Typed a, Num a) => Num (Stream a) where
   (Const x) + (Const y)   = Const (x + y)
+  (Const 0) + y           = y
+  x + (Const 0)           = x
   x + y                   = Op2 (Core.add typeOf) x y
 
   (Const x) - (Const y)   = Const (x - y)
+  x - (Const 0)           = x
   x - y                   = Op2 (Core.sub typeOf) x y
 
   (Const x) * (Const y)   = Const (x * y)
+  (Const 0) * _           = Const 0
+  _ * (Const 0)           = Const 0
+  (Const 1) * y           = y
+  x * (Const 1)           = x
   x * y                   = Op2 (Core.mul typeOf) x y
 
   abs (Const x)           = Const (abs x)

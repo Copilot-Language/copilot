@@ -31,14 +31,18 @@ infix 5 &&
 (&&) :: Stream Bool -> Stream Bool -> Stream Bool
 (Const False) && _ = false
 _ && (Const False) = false
+(Const True) && y  = y
+x && (Const True)  = x
 x && y             = Op2 Core.and x y
 
 infix 5 ||
 
 (||) :: Stream Bool -> Stream Bool -> Stream Bool
-(Const True) || _ = true
-_ || (Const True) = true
-x || y            = Op2 Core.or x y
+(Const True) || _  = true
+_ || (Const True)  = true
+(Const False) || y = y
+x || (Const False) = x
+x || y             = Op2 Core.or x y
 
 not :: Stream Bool -> Stream Bool
 not (Const c) = (Const $ P.not c)
