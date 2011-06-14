@@ -115,7 +115,7 @@ updateStates meta
       , letInfoType = t2
       } =
     exactPhase (fromEnum UpdateStates) $
-      atom ("update_let_" ++ show name) $
+      atom ("update_let_" ++ name) $
         do
           W.AssignInst <- return (W.assignInst t2)
           Just p <- return (t1 =~= t2)

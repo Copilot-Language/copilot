@@ -77,7 +77,12 @@ allocMetaTable spec =
 --------------------------------------------------------------------------------
 
 allocStream :: C.Stream -> Atom (C.Id, StreamInfo)
-allocStream (C.Stream id buf _ _ t) =
+allocStream
+  C.Stream
+    { C.streamId       = id
+    , C.streamBuffer   = buf
+    , C.streamExprType = t
+    } =
   do
     W.ExprInst <- return (W.exprInst t)
     que <- Q.queue (mkQueueName   id) buf
@@ -109,7 +114,7 @@ allocLet C.Let
     do
       W.ExprInst <- return (W.exprInst t)
       v <- A.var (mkLetName name) (C.uninitialized t)
-      return (name, LetInfo v t)    
+      return (name, LetInfo v t)
 
 --------------------------------------------------------------------------------
 
