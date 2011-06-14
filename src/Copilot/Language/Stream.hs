@@ -76,22 +76,39 @@ instance P.Eq (Stream a) where
 --------------------------------------------------------------------------------
 
 instance (Typed a, Num a) => Num (Stream a) where
-  (+)         = Op2 (Core.add typeOf)
-  (-)         = Op2 (Core.sub typeOf)
-  (*)         = Op2 (Core.mul typeOf)
-  abs         = Op1 (Core.abs typeOf)
-  signum      = Op1 (Core.sign typeOf)
-  fromInteger = Const . fromInteger
+  (Const x) + (Const y)   = Const (x + y)
+  x + y                   = Op2 (Core.add typeOf) x y
+
+  (Const x) - (Const y)   = Const (x - y)
+  x - y                   = Op2 (Core.sub typeOf) x y
+
+  (Const x) * (Const y)   = Const (x * y)
+  x * y                   = Op2 (Core.mul typeOf) x y
+
+  abs (Const x)           = Const (abs x)
+  abs x                   = Op1 (Core.abs typeOf) x
+
+  signum (Const x)        = Const (signum x)
+  signum x                = Op1 (Core.sign typeOf) x
+
+  fromInteger             = Const . fromInteger
 
 --------------------------------------------------------------------------------
 
+-- XXX we may not want to precompute these if they're constants if someone is
+-- relying on certain floating-point behavior.
 instance (Typed a, Fractional a) => Fractional (Stream a) where
-  (/)          = Op2 (Core.fdiv typeOf)
-  recip        = Op1 (Core.recip typeOf)
-  fromRational = Const . fromRational
+  (/)                     = Op2 (Core.fdiv typeOf) 
+
+  recip (Const x)         = Const (recip x)
+  recip x                 = Op1 (Core.recip typeOf) x
+
+  fromRational            = Const . fromRational
 
 --------------------------------------------------------------------------------
 
+-- XXX we may not want to precompute these if they're constants if someone is
+-- relying on certain floating-point behavior.
 instance (Typed a, Floating a) => Floating (Stream a) where
   pi           = Const pi
   exp          = Op1 (Core.exp typeOf)
@@ -113,3 +130,4 @@ instance (Typed a, Floating a) => Floating (Stream a) where
   acosh        = Op1 (Core.acosh typeOf)
 
 --------------------------------------------------------------------------------
+
