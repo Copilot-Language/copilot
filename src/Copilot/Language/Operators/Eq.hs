@@ -18,9 +18,11 @@ import qualified Prelude as P
 --------------------------------------------------------------------------------
 
 (==) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
-(==) = Op2 (Core.eq typeOf)
+(Const x) == (Const y) = Const (x P.== y)
+x == y = Op2 (Core.eq typeOf) x y
 
 (/=) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
-(/=) = Op2 (Core.ne typeOf)
+(Const x) /= (Const y) = Const (x P./= y)
+x /= y = Op2 (Core.ne typeOf) x y
 
 --------------------------------------------------------------------------------

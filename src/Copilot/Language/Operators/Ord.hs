@@ -20,15 +20,19 @@ import qualified Prelude as P
 --------------------------------------------------------------------------------
 
 (<=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
-(<=) = Op2 (Core.le typeOf)
+(Const x) <= (Const y) = Const (x P.<= y)
+x <= y                 = Op2 (Core.le typeOf) x y
 
 (>=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
-(>=) = Op2 (Core.ge typeOf)
+(Const x) >= (Const y) = Const (x P.>= y)
+x >= y                 = Op2 (Core.ge typeOf) x y
 
 (<) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
-(<) = Op2 (Core.lt typeOf)
+(Const x) < (Const y) = Const (x P.< y)
+x < y                 = Op2 (Core.lt typeOf) x y
 
 (>) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
-(>) = Op2 (Core.gt typeOf)
+(Const x) > (Const y) = Const (x P.> y)
+x > y                 = Op2 (Core.gt typeOf) x y
 
 --------------------------------------------------------------------------------
