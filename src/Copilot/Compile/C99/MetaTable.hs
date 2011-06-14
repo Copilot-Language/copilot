@@ -7,8 +7,10 @@
 module Copilot.Compile.C99.MetaTable
   ( StreamInfo (..)
   , ExternInfo (..)
+  , LetInfo (..)
   , StreamInfoMap
   , ExternInfoMap
+  , LetInfoMap
   , MetaTable (..)
   , allocMetaTable
   ) where
@@ -43,9 +45,18 @@ type ExternInfoMap = Map C.Name ExternInfo
 
 --------------------------------------------------------------------------------
 
+data LetInfo = forall a . LetInfo
+  { letInfoVar        :: A.V a
+  , letInfoType       :: C.Type a }
+
+type LetInfoMap = Map C.Name LetInfo
+
+--------------------------------------------------------------------------------
+
 data MetaTable = MetaTable
   { streamInfoMap     :: StreamInfoMap
-  , externInfoMap     :: ExternInfoMap }
+  , externInfoMap     :: ExternInfoMap
+  , letInfoMap        :: LetInfoMap }
 
 --------------------------------------------------------------------------------
 
@@ -58,7 +69,10 @@ allocMetaTable spec =
     externInfoMap_ <-
       liftM M.fromList $ mapM allocExtern (externals spec)
 
-    return (MetaTable streamInfoMap_ externInfoMap_)
+    letInfoMap_ <-
+      liftM M.fromList $ mapM allocLet    (C.specLets spec)
+
+    return (MetaTable streamInfoMap_ externInfoMap_ letInfoMap_)
 
 --------------------------------------------------------------------------------
 
@@ -87,8 +101,23 @@ allocExtern (Extern name t) =
 
 --------------------------------------------------------------------------------
 
+allocLet :: C.Let -> Atom (C.Name, LetInfo)
+allocLet C.Let
+  { C.letVar  = name
+  , C.letType = t
+  } =
+    do
+      W.ExprInst <- return (W.exprInst t)
+      v <- A.var (mkLetName name) (C.uninitialized t)
+      return (name, LetInfo v t)    
+
+--------------------------------------------------------------------------------
+
 mkExternName :: C.Name -> A.Name
 mkExternName name = "ext_" ++ name
+
+mkLetName :: C.Name -> A.Name
+mkLetName name = "let_" ++ name
 
 mkQueueName :: C.Id -> A.Name
 mkQueueName id = "s" ++ show id

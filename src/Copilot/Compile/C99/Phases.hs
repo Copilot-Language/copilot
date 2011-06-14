@@ -8,7 +8,7 @@ module Copilot.Compile.C99.Phases
 
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
 import Copilot.Compile.C99.MetaTable
-  (MetaTable (..), StreamInfo (..), ExternInfo (..))
+  (MetaTable (..), StreamInfo (..), ExternInfo (..), LetInfo (..))
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
@@ -63,13 +63,16 @@ updateStates :: MetaTable -> Core.Spec -> Atom ()
 updateStates meta
   Core.Spec
     { Core.specStreams = streams
+    , Core.specLets    = lets
     } =
-  mapM_ updateState streams
+      do
+        mapM_ updateStreamState streams
+        mapM_ updateLet lets
 
   where
 
-  updateState :: Core.Stream -> Atom ()
-  updateState
+  updateStreamState :: Core.Stream -> Atom ()
+  updateStreamState
     Core.Stream
       { Core.streamId       = id
       , Core.streamExpr     = e
@@ -78,10 +81,10 @@ updateStates meta
     let
       Just strmInfo = M.lookup id (streamInfoMap meta)
     in
-      updateState1 t1 id (c2aExpr meta e) strmInfo
+      updateStreamState1 t1 id (c2aExpr meta e) strmInfo
 
-  updateState1 :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
-  updateState1 t1 id e1
+  updateStreamState1 :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
+  updateStreamState1 t1 id e1
     StreamInfo
       { streamInfoTempVar = tmp
       , streamInfoType    = t2
@@ -92,6 +95,31 @@ updateStates meta
           W.AssignInst <- return (W.assignInst t2)
           Just p <- return (t1 =~= t2)
           tmp <== coerce (cong p) e1
+
+  updateLet :: Core.Let -> Atom ()
+  updateLet
+    Core.Let
+      { Core.letVar  = name
+      , Core.letExpr = e
+      , Core.letType = t1
+      } =
+    let
+      Just letInfo = M.lookup name (letInfoMap meta)
+    in
+      updateLet1 t1 name (c2aExpr meta e) letInfo
+
+  updateLet1 :: Core.Type a -> Core.Name -> A.E a -> LetInfo -> Atom ()
+  updateLet1 t1 name e1
+    LetInfo
+      { letInfoVar  = v
+      , letInfoType = t2
+      } =
+    exactPhase (fromEnum UpdateStates) $
+      atom ("update_let_" ++ show name) $
+        do
+          W.AssignInst <- return (W.assignInst t2)
+          Just p <- return (t1 =~= t2)
+          v <== coerce (cong p) e1
 
 --------------------------------------------------------------------------------
 

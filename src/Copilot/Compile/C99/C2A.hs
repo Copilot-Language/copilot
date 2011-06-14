@@ -77,7 +77,7 @@ instance C.Expr C2AExpr where
         , streamInfoType  = t2
         } =
       let
-        Just p = (=~=) t2 t1
+        Just p = t2 =~= t1
       in
         case W.exprInst t2 of
           W.ExprInst ->
@@ -85,9 +85,34 @@ instance C.Expr C2AExpr where
 
   ----------------------------------------------------
 
-  extern t cs = C2AExpr $ \ _ ->
+  letBinding t name = C2AExpr $ \ meta ->
 
-    (A.value . A.var' cs . c2aType) t
+    let
+      Just letInfo = M.lookup name (letInfoMap meta)
+    in
+      letBinding1 t letInfo
+
+    where
+
+    letBinding1 :: C.Type a -> LetInfo -> A.E a
+    letBinding1 t1
+      LetInfo
+        { letInfoVar  = v
+        , letInfoType = t2
+        } =
+      let
+        Just p = t2 =~= t1
+      in
+        case W.exprInst t2 of
+          W.ExprInst ->
+            coerce (cong p) (A.value v)
+
+  ----------------------------------------------------
+
+  extern t name = C2AExpr $ \ _ ->
+
+    (A.value . A.var' name . c2aType) t
+
 
   ----------------------------------------------------
 
