@@ -40,12 +40,11 @@ mkName cs k = cs P.++ show k
 --------------------------------------------------------------------------------
 
 vote :: Spec
-vote = do 
-  trigger "maj" true [ arg maj ]
+vote = trigger "maj" true [ arg maj ]
 
   where
 
-  maj = majority (concat (replicate 5 ls))
+  maj = majority ls
 
   ls = [a, b, c, d, e, f, g, h, i, j, k]
 
