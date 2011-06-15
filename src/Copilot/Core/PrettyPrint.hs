@@ -27,7 +27,7 @@ instance Expr PPExpr where
                          int id
   extern _ name        = PPExpr $ text "extern \"" <> text name <> text "\""
   local _ _ name e1 e2 = PPExpr $ text "local \"" <> text name <> text "\" ="
-                         <+> ppExpr e1 <+> text "in" <+> ppExpr e2
+                                    <+> ppExpr e1 $$ text "in" <+> ppExpr e2
   var _ name           = PPExpr $ text "var \"" <> text name <> text "\""
   letBinding _ name    = PPExpr $ text "var \"" <> text name <> text "\""
   op1 op e             = PPExpr $ ppOp1 op (ppExpr e)
