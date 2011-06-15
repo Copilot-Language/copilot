@@ -12,6 +12,7 @@ import Copilot.Core
 import Copilot.Core.Type.Show (showWithType)
 import Prelude hiding (id)
 import Text.PrettyPrint.HughesPJ
+import Data.List (intersperse)
 
 --------------------------------------------------------------------------------
 
@@ -104,8 +105,11 @@ ppStream
     , streamExprType = t
     }
       = text "stream: \"s" <> int id <> text "\""
-    <+> text (show $ map (showWithType t) buffer)
     <+> text "="
+    <+> text ("["
+              ++ ( concat $ intersperse "," $ map (showWithType t) buffer )
+              ++ "]")
+    <+> text "++"
     <+> ppExpr e
 
 --------------------------------------------------------------------------------
