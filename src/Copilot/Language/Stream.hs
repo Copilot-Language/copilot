@@ -40,10 +40,6 @@ data Stream :: * -> * where
     :: Typed a
     => String
     -> Stream a
-  LetBinding
-    :: Typed a
-    => String
-    -> Stream a
   Local
     :: (Typed a, Typed b)
     => String

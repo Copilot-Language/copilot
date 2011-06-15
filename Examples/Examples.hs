@@ -12,7 +12,6 @@ import qualified Prelude as P
 import Copilot.Language
 import Copilot.Language.Prelude hiding (even, odd)
 import Copilot.Language.Reify (reify)
-import Copilot.Language.Compile
 
 --------------------------------------------------------------------------------
 
@@ -75,12 +74,12 @@ spec =
     trigger "g" (flipflop booleans)
       [ arg (sumExterns + counter false + 25) ]
 
-    -- A trigger with a single argument:
+    -- A trigger with a single argument (should never fire):
     trigger "h" (extern "e3" /= fib)
       [ arg (0 :: Stream Int8) ]
 
-    -- A trigger with a single argument:
-    trigger "i" true [arg $ odd nats]
+    -- An observer with a single argument:
+    observer "i" (odd nats)
 
 -- Some infinite lists for simulating external variables:
 e1, e2, e3 :: [Word64]
@@ -101,6 +100,5 @@ main =
     interpret 100 [input "e1" e1, input "e2" e2, input "e3" e3] spec
     putStrLn ""
     putStrLn ""
-    compile "spec" spec
 
 --------------------------------------------------------------------------------

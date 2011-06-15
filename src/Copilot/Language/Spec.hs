@@ -10,14 +10,14 @@
 
 module Copilot.Language.Spec
   ( Spec
-  , Copilot (..)
-  , Let (..)
-  , let_
-  , lets
+  , runSpec
+  , SpecItem
+  , Observer (..)
+  , observer
+  , observers
   , Trigger (..)
   , TriggerArg (..)
   , triggers
-  , runSpec
   , trigger
   , arg
   ) where
@@ -31,54 +31,56 @@ import Copilot.Language.Stream
 
 --------------------------------------------------------------------------------
 
-type Spec = Writer [Copilot] ()
+type Spec = Writer [SpecItem] ()
 
 --------------------------------------------------------------------------------
 
-runSpec :: Spec -> [Copilot]
+runSpec :: Spec -> [SpecItem]
 runSpec = execWriter 
 
 --------------------------------------------------------------------------------
 
-lets :: [Copilot] -> [Let]
-lets = 
+observers :: [SpecItem] -> [Observer]
+observers = 
   foldl' lets' []
   where
-  lets' ls e = case e of 
-                 LetExpr l -> l : ls
-                 _         -> ls
+  lets' ls e =
+    case e of 
+      ObserverItem l -> l : ls
+      _              -> ls
 
-triggers :: [Copilot] -> [Trigger]
+triggers :: [SpecItem] -> [Trigger]
 triggers = 
   foldl' triggers' []
   where
-  triggers' ls e = case e of 
-                     TriggerExpr t -> t : ls
-                     _             -> ls
+  triggers' ls e =
+    case e of 
+      TriggerItem t -> t : ls
+      _             -> ls
 
 --------------------------------------------------------------------------------
 
-data Copilot = 
-    LetExpr Let
-  | TriggerExpr Trigger
+data SpecItem
+  = ObserverItem Observer
+  | TriggerItem  Trigger
 
 --------------------------------------------------------------------------------
 
-data Let where
-  Let
+data Observer where
+  Observer
     :: Typed a
     => String
     -> Stream a
-    -> Let
+    -> Observer
 
 --------------------------------------------------------------------------------
 
-let_ 
+observer 
   :: Typed a
   => String
   -> Stream a
   -> Spec
-let_ var e = tell [LetExpr $ Let var e]
+observer name e = tell [ObserverItem $ Observer name e]
 
 --------------------------------------------------------------------------------
 
@@ -104,7 +106,7 @@ trigger
   -> Stream Bool
   -> [TriggerArg]
   -> Spec 
-trigger name e args = tell [TriggerExpr $ Trigger name e args]
+trigger name e args = tell [TriggerItem $ Trigger name e args]
 
 --------------------------------------------------------------------------------
 

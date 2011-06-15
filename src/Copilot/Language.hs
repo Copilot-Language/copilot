@@ -20,9 +20,9 @@ module Copilot.Language
   , module Copilot.Language.Operators.Temporal
   , Spec
   , Stream
+  , observer
   , trigger
   , arg
-  , let_
   , prettyPrint
   ) where
 
@@ -41,7 +41,7 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Reify
-import Copilot.Language.Spec (Spec, trigger, arg, let_)
+import Copilot.Language.Spec (Spec, trigger, arg, observer)
 import Copilot.Language.Stream (Stream)
 
 --------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ module Copilot.Language.Reify
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Spec
-  (Let (..), lets, triggers, Spec, runSpec, Trigger (..), TriggerArg (..))
 import Copilot.Language.Stream (Stream (..))
 import Data.IORef
 import Prelude hiding (id)
@@ -38,37 +37,37 @@ data Shared = forall a . Shared
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
-    let trigs = triggers $ runSpec spec
-    let letExprs = lets $ runSpec spec
-    refCount     <- newIORef 0
-    refVisited   <- newIORef M.empty
-    refMap       <- newIORef []
-    coreTriggers <- mapM (mkTrigger refCount refVisited refMap) trigs
-    coreLets     <- mapM (mkLet refCount refVisited refMap) letExprs
-    coreStreams  <- readIORef refMap
+    let trigs = triggers  $ runSpec spec
+    let obsvs = observers $ runSpec spec
+    refCount      <- newIORef 0
+    refVisited    <- newIORef M.empty
+    refMap        <- newIORef []
+    coreTriggers  <- mapM (mkTrigger  refCount refVisited refMap) trigs
+    coreObservers <- mapM (mkObserver refCount refVisited refMap) obsvs
+    coreStreams   <- readIORef refMap
     return $
       Core.Spec
         { Core.specStreams   = reverse coreStreams
-        , Core.specObservers = []
-        , Core.specTriggers  = coreTriggers 
-        , Core.specLets      = coreLets}
+        , Core.specObservers = coreObservers
+        , Core.specTriggers  = coreTriggers }
 
 --------------------------------------------------------------------------------
 
-{-# INLINE mkLet #-}
-mkLet
+{-# INLINE mkObserver #-}
+mkObserver
   :: IORef Int
   -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
-  -> Let
-  -> IO Core.Let
-mkLet refCount refStreams refMap (Let var e) =
+  -> Observer
+  -> IO Core.Observer
+mkObserver refCount refStreams refMap (Observer name e) =
   do 
     w <- mkExpr refCount refStreams refMap e
-    return $ Core.Let
-               { Core.letVar  = var
-               , Core.letExpr = unWrapExpr w
-               , Core.letType = typeOf }
+    return $
+      Core.Observer
+         { Core.observerName     = name
+         , Core.observerExpr     = unWrapExpr w
+         , Core.observerExprType = typeOf }
 
 --------------------------------------------------------------------------------
 
@@ -123,7 +122,6 @@ mkExpr refCount refStreams refMap e0 =
                          return $ WrapExpr $ Core.local typeOf typeOf cs
                            (unWrapExpr w1) (unWrapExpr w2)
     Var cs          -> return $ WrapExpr $ Core.var typeOf cs
-    LetBinding v    -> return $ WrapExpr $ Core.letBinding typeOf v
     Extern cs       -> return $ WrapExpr $ Core.extern typeOf cs
     Op1 op e        -> do
                          w <- mkExpr refCount refStreams refMap e
