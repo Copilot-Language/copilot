@@ -49,17 +49,28 @@ instance Applicative EvalExpr where
     zipWith ($) (evalExpr_ e1 exts lets strms) (evalExpr_ e2 exts lets strms)
 
 instance Expr EvalExpr where
-  const _ x         = x `seq` pure x
-  drop t i id       = EvalExpr $ \ _ _ strms -> strictList $
-                        let Just xs = lookup id strms >>= fromDynamicF t
-                        in P.drop (fromIntegral i) xs
-  letBinding t name = EvalExpr $ \ _ lets _ -> strictList $
-                        let Just xs = lookup name lets >>= fromDynamicF t
-                        in xs
-  extern t name     = EvalExpr $ \ exts _ _ -> evalExtern t name exts
-  op1 op e1         = strictEval $ pure op <*> e1
-  op2 op e1 e2      = strictEval $ pure (apply2 op) <*> e1 <*> e2
-  op3 op e1 e2 e3   = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
+  const _ x              = x `seq` pure x
+  drop t i id            = EvalExpr $ \ _ _ strms -> strictList $
+                             let
+                               Just xs = lookup id strms >>= fromDynamicF t
+                             in
+                               P.drop (fromIntegral i) xs
+  local t1 _  name e1 e2 = EvalExpr $ \ exts lets strms -> strictList $
+                             let
+                               xs    = evalExpr_ e1 exts lets strms
+                               lets' = (name, toDynamicF xs t1) : lets
+                             in
+                               evalExpr_ e2 exts lets' strms
+  var t name             = EvalExpr $ \ _ lets _ -> strictList $
+                             let
+                               Just xs = lookup name lets >>= fromDynamicF t
+                             in
+                               xs
+  extern t name          = EvalExpr $ \ exts _ _ -> strictList $
+                             evalExtern t name exts
+  op1 op e1              = strictEval $ pure op <*> e1
+  op2 op e1 e2           = strictEval $ pure (apply2 op) <*> e1 <*> e2
+  op3 op e1 e2 e3        = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
 
 evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
@@ -188,9 +199,8 @@ evalLet exts lets strms
 evalSpec :: Env Name -> Spec -> [[Output]]
 evalSpec exts spec = outps
   where
-    strms = fmap (evalStream  exts lets strms) (specStreams  spec)
-    lets  = fmap (evalLet     exts lets strms) (specLets     spec)
-    outps = fmap (evalTrigger exts lets strms) (specTriggers spec)
+    strms = fmap (evalStream  exts [] strms) (specStreams  spec)
+    outps = fmap (evalTrigger exts [] strms) (specTriggers spec)
 
 --------------------------------------------------------------------------------
 

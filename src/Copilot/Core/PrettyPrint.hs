@@ -21,14 +21,18 @@ newtype PPOp2  a b c     = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
 newtype PPOp3  a b c d   = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
 
 instance Expr PPExpr where
-  const t x          = PPExpr $ text (showWithType t x)
-  drop _ 0 id        = PPExpr $ text "stream" <+> text "s" <> int id
-  drop _ i id        = PPExpr $ text "drop" <+> text (show i) <+> text "s" <> int id
-  extern _ name      = PPExpr $ text "extern \"" <> text name <> text "\""
-  letBinding _ name  = PPExpr $ text "var \"" <> text name <> text "\""
-  op1 op e           = PPExpr $ ppOp1 op (ppExpr e)
-  op2 op e1 e2       = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
-  op3 op e1 e2 e3    = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+  const t x            = PPExpr $ text (showWithType t x)
+  drop _ 0 id          = PPExpr $ text "stream" <+> text "s" <> int id
+  drop _ i id          = PPExpr $ text "drop" <+> text (show i) <+> text "s" <>
+                         int id
+  extern _ name        = PPExpr $ text "extern \"" <> text name <> text "\""
+  local _ _ name e1 e2 = PPExpr $ text "local \"" <> text name <> text "\" ="
+                         <+> ppExpr e1 <+> text "in" <+> ppExpr e2
+  var _ name           = PPExpr $ text "var \"" <> text name <> text "\""
+  letBinding _ name    = PPExpr $ text "var \"" <> text name <> text "\""
+  op1 op e             = PPExpr $ ppOp1 op (ppExpr e)
+  op2 op e1 e2         = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
+  op3 op e1 e2 e3      = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
 
 instance Op1 PPOp1 where
   not      = PPOp1 $ ppPrefix "not"
