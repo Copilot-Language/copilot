@@ -4,6 +4,7 @@
 
 -- |
 
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Language.Reify
@@ -12,22 +13,25 @@ module Copilot.Language.Reify
 
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
-import Copilot.Language.Spec 
+import Copilot.Language.Spec
   (Let (..), lets, triggers, Spec, runSpec, Trigger (..), TriggerArg (..))
 import Copilot.Language.Stream (Stream (..))
-import Copilot.Language.Reify.DynStableName
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as M
 import Data.IORef
 import Prelude hiding (id)
+import System.Mem.StableName.Dynamic
+import System.Mem.StableName.Dynamic.Map (Map)
+import qualified System.Mem.StableName.Dynamic.Map as M
 
 --------------------------------------------------------------------------------
 
 newtype WrapExpr a = WrapExpr
   { unWrapExpr :: forall e . Core.Expr e => e a }
 
-wrapExpr :: (forall e . Core.Expr e => e a) -> WrapExpr a
-wrapExpr = WrapExpr
+{-
+data Shared = forall a . Shared
+  { sharedExpr :: forall e . Core.Expr e => e a
+  , sharedType :: Core.Type a }
+-}
 
 --------------------------------------------------------------------------------
 
@@ -54,13 +58,13 @@ reify spec =
 {-# INLINE mkLet #-}
 mkLet
   :: IORef Int
-  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
   -> Let
   -> IO Core.Let
-mkLet refCount refVisited refMap (Let var e) =
+mkLet refCount refStreams refMap (Let var e) =
   do 
-    w <- mkExpr refCount refVisited refMap e
+    w <- mkExpr refCount refStreams refMap e
     return $ Core.Let
                { Core.letVar  = var
                , Core.letExpr = unWrapExpr w
@@ -71,13 +75,13 @@ mkLet refCount refVisited refMap (Let var e) =
 {-# INLINE mkTrigger #-}
 mkTrigger
   :: IORef Int
-  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
   -> Trigger
   -> IO Core.Trigger
-mkTrigger refCount refVisited refMap (Trigger name guard args) =
+mkTrigger refCount refStreams refMap (Trigger name guard args) =
   do
-    w1 <- mkExpr refCount refVisited refMap guard 
+    w1 <- mkExpr refCount refStreams refMap guard 
     args' <- mapM mkTriggerArg args
     return $
       Core.Trigger
@@ -90,7 +94,7 @@ mkTrigger refCount refVisited refMap (Trigger name guard args) =
   mkTriggerArg :: TriggerArg -> IO Core.TriggerArg
   mkTriggerArg (TriggerArg e) =
     do
-      w <- mkExpr refCount refVisited refMap e
+      w <- mkExpr refCount refStreams refMap e
       return $ Core.TriggerArg (unWrapExpr w) typeOf
 
 --------------------------------------------------------------------------------
@@ -98,36 +102,42 @@ mkTrigger refCount refVisited refMap (Trigger name guard args) =
 mkExpr
   :: Typed a
   => IORef Int
-  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
   -> Stream a
   -> IO (WrapExpr a)
-mkExpr refCount refVisited refMap e0 =
+mkExpr refCount refStreams refMap e0 =
   case e0 of
-    Append _ _ _    -> do s <- mkStream refCount refVisited refMap e0
-                          return $ wrapExpr $ Core.drop typeOf 0 s
-    Const x         -> return $ wrapExpr $ Core.const typeOf x
+    Append _ _ _    -> do s <- mkStream refCount refStreams refMap e0
+                          return $ WrapExpr $ Core.drop typeOf 0 s
     Drop k e1       -> case e1 of
                          Append _ _ _ ->
                            do
-                             s <- mkStream refCount refVisited refMap e1
-                             return $ wrapExpr $ Core.drop typeOf k s
+                             s <- mkStream refCount refStreams refMap e1
+                             return $ WrapExpr $ Core.drop typeOf k s
                          _ -> error "dfs: Drop" -- !!! This needs to be fixed !!!
-    LetBinding v    -> return $ wrapExpr $ Core.letBinding typeOf v
-    Extern cs       -> return $ wrapExpr $ Core.extern typeOf cs
+    Const x         -> return $ WrapExpr $ Core.const typeOf x
+    Local cs e1 e2  -> do
+                         w1 <- mkExpr refCount refStreams refMap e1
+                         w2 <- mkExpr refCount refStreams refMap e2
+                         return $ WrapExpr $ Core.local typeOf typeOf cs
+                           (unWrapExpr w1) (unWrapExpr w2)
+    Var cs          -> return $ WrapExpr $ Core.var typeOf cs
+    LetBinding v    -> return $ WrapExpr $ Core.letBinding typeOf v
+    Extern cs       -> return $ WrapExpr $ Core.extern typeOf cs
     Op1 op e        -> do
-                         w <- mkExpr refCount refVisited refMap e
-                         return $ wrapExpr $ Core.op1 op (unWrapExpr w)
+                         w <- mkExpr refCount refStreams refMap e
+                         return $ WrapExpr $ Core.op1 op (unWrapExpr w)
     Op2 op e1 e2    -> do
-                         w1 <- mkExpr refCount refVisited refMap e1
-                         w2 <- mkExpr refCount refVisited refMap e2
-                         return $ wrapExpr $ Core.op2 op
+                         w1 <- mkExpr refCount refStreams refMap e1
+                         w2 <- mkExpr refCount refStreams refMap e2
+                         return $ WrapExpr $ Core.op2 op
                            (unWrapExpr w1) (unWrapExpr w2)
     Op3 op e1 e2 e3 -> do
-                         w1 <- mkExpr refCount refVisited refMap e1
-                         w2 <- mkExpr refCount refVisited refMap e2
-                         w3 <- mkExpr refCount refVisited refMap e3
-                         return $ wrapExpr $ Core.op3 op
+                         w1 <- mkExpr refCount refStreams refMap e1
+                         w2 <- mkExpr refCount refStreams refMap e2
+                         w3 <- mkExpr refCount refStreams refMap e3
+                         return $ WrapExpr $ Core.op3 op
                            (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
 
 --------------------------------------------------------------------------------
@@ -136,41 +146,40 @@ mkExpr refCount refVisited refMap e0 =
 mkStream
   :: Typed a
   => IORef Int
-  -> IORef (IntMap [(StableName, Int)])
+  -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
   -> Stream a
   -> IO Id
-mkStream refCount refVisited refMap e0 =
+mkStream refCount refStreams refMap e0 =
   do
-    stn <- makeStableName e0
+    dstn <- makeDynamicStableName e0
     let Append buf _ e = e0 -- avoids warning
-    mk <- haveVisited stn
+    mk <- haveVisited dstn
     case mk of
       Just id_ -> return id_
-      Nothing  -> addToVisited stn buf e
+      Nothing  -> addToVisited dstn buf e
 
   where
 
   {-# INLINE haveVisited #-}
-  haveVisited :: StableName -> IO (Maybe Int)
-  haveVisited stn =
+  haveVisited :: DynamicStableName -> IO (Maybe Int)
+  haveVisited dstn =
     do
-      tab <- readIORef refVisited
-      return (M.lookup (hashStableName stn) tab >>= lookup stn)
+      tab <- readIORef refStreams
+      return (M.lookup dstn tab)
 
   {-# INLINE addToVisited #-}
   addToVisited
     :: Typed a
-    => StableName
+    => DynamicStableName
     -> [a]
     -> Stream a
     -> IO Id
-  addToVisited stn buf e =
+  addToVisited dstn buf e =
     do
       id <- atomicModifyIORef refCount $ \ n -> (succ n, n)
-      modifyIORef refVisited $
-        M.insertWith (++) (hashStableName stn) [(stn, id)]
-      w <- mkExpr refCount refVisited refMap e
+      modifyIORef refStreams (M.insert dstn id)
+      w <- mkExpr refCount refStreams refMap e
       modifyIORef refMap $ (:)
         Core.Stream
           { Core.streamId         = id

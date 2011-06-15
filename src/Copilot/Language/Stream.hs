@@ -44,6 +44,16 @@ data Stream :: * -> * where
     :: Typed a
     => String
     -> Stream a
+  Local
+    :: (Typed a, Typed b)
+    => String
+    -> Stream a
+    -> Stream b
+    -> Stream b
+  Var
+    :: Typed a
+    => String
+    -> Stream a
   Op1
     :: (Typed a, Typed b)
     => (forall op . Core.Op1 op => op a b)
@@ -55,8 +65,8 @@ data Stream :: * -> * where
   Op3
     :: (Typed a, Typed b, Typed c, Typed d)
     => (forall op . Core.Op3 op => op a b c d)
-    -> Stream a 
-    -> Stream b 
+    -> Stream a
+    -> Stream b
     -> Stream c
     -> Stream d
 

@@ -21,10 +21,10 @@ library
   build-depends:
     array,
     base >= 4.0,
-    copilot-core,
     containers,
-    fgl >= 5.4,
-    mtl >= 2.0
+    copilot-core,
+    mtl >= 2.0,
+    stable-maps
 
   exposed-modules:
     Copilot
@@ -35,6 +35,7 @@ library
     Copilot.Language.Operators.Eq
     Copilot.Language.Operators.Extern
     Copilot.Language.Operators.LetBinding
+    Copilot.Language.Operators.Local
     Copilot.Language.Operators.Integral
     Copilot.Language.Operators.Mux
     Copilot.Language.Operators.Ord
@@ -44,7 +45,6 @@ library
     Copilot.Library.Voting
 
   other-modules:
-    Copilot.Language.Reify.DynStableName
     Copilot.Language.Stream
     Copilot.Language.Spec
 
