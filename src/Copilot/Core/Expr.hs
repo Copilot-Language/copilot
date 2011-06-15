@@ -40,7 +40,18 @@ class Expr e where
     -> Word8
     -> Id
     -> e a
-  -- | A bound local variable.
+  local
+    :: Type a
+    -> Type b
+    -> Name
+    -> e a
+    -> e b
+    -> e b
+  var
+    :: Type a
+    -> Name
+    -> e a
+  -- | A bound global variable.
   letBinding
     :: Type a
     -> Name

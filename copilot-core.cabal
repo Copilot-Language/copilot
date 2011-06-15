@@ -45,7 +45,6 @@ library
     haskell2010,
     pretty >= 1.0,
     pretty-ncols >= 0.1,
-    QuickCheck >= 2.4,
     random > 1.0
 
   exposed-modules:
