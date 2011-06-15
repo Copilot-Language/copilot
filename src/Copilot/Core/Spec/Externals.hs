@@ -57,13 +57,14 @@ extsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
 newtype ExtsExpr a = ExtsExpr { extsExpr :: DList Extern }
 
 instance Expr ExtsExpr where
-  const  _ _     = ExtsExpr $ empty
-  drop   _ _ _   = ExtsExpr $ empty
-  letBinding _ _ = ExtsExpr $ empty
-  extern t name  = ExtsExpr $ singleton (Extern name t)
-  op1 _ e        = ExtsExpr $ extsExpr e
-  op2 _ e1 e2    = ExtsExpr $ extsExpr e1 `append` extsExpr e2
-  op3 _ e1 e2 e3 = ExtsExpr $ extsExpr e1 `append` extsExpr e2
-                                          `append` extsExpr e3
+  const  _ _        = ExtsExpr $ empty
+  drop   _ _ _      = ExtsExpr $ empty
+  local _ _ _ e1 e2 = ExtsExpr $ extsExpr e1 `append` extsExpr e2
+  var _ _           = ExtsExpr $ empty
+  extern t name     = ExtsExpr $ singleton (Extern name t)
+  op1 _ e           = ExtsExpr $ extsExpr e
+  op2 _ e1 e2       = ExtsExpr $ extsExpr e1 `append` extsExpr e2
+  op3 _ e1 e2 e3    = ExtsExpr $ extsExpr e1 `append` extsExpr e2
+                                             `append` extsExpr e3
 
 --------------------------------------------------------------------------------

@@ -30,7 +30,6 @@ instance Expr PPExpr where
   local _ _ name e1 e2 = PPExpr $ text "local \"" <> text name <> text "\" ="
                          <+> ppExpr e1 <+> text "in" <+> ppExpr e2
   var _ name           = PPExpr $ text "var \"" <> text name <> text "\""
-  letBinding _ name    = PPExpr $ text "var \"" <> text name <> text "\""
   op1 op e             = PPExpr $ ppOp1 op (ppExpr e)
   op2 op e1 e2         = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
   op3 op e1 e2 e3      = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
@@ -90,16 +89,6 @@ ppPrefix cs = (text cs <+>)
 
 --------------------------------------------------------------------------------
 
-ppLet :: Let -> Doc
-ppLet 
-  Let 
-    { letVar  = v
-    , letExpr = e
-    }
-      = text "var:" <+> text v <+> text "=" <+> ppExpr e
-
---------------------------------------------------------------------------------
-
 ppStream :: Stream -> Doc
 ppStream
   Stream
@@ -143,9 +132,8 @@ ppTrigger
 --------------------------------------------------------------------------------
 
 ppSpec :: Spec -> Doc
-ppSpec spec = ls $$ cs $$ ds
+ppSpec spec = cs $$ ds
   where
-    ls = foldr (($$) . ppLet)  empty (specLets spec)
     cs = foldr (($$) . ppStream)  empty (specStreams spec)
     ds = foldr (($$) . ppTrigger) empty (specTriggers spec)
 

@@ -10,7 +10,6 @@ module Copilot.Core.Spec
   , Observer (..)
   , Trigger (..)
   , TriggerArg (..)
-  , Let (..)
   , Spec (..)
   ) where
 
@@ -52,21 +51,12 @@ data TriggerArg = forall a . TriggerArg
 
 --------------------------------------------------------------------------------
 
--- | A variable binding to a stream expression.
-data Let = forall a . Let
-  { letVar           :: Name
-  , letExpr          :: forall e . Expr e => e a
-  , letType          :: Type a }
-
---------------------------------------------------------------------------------
-
 -- | A Copilot specification consists of a list of variables bound to anonymous
 -- streams, a lost of anomymous streams, a list of observers, and a list of
 -- triggers.
 data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
-  , specTriggers     :: [Trigger] 
-  , specLets         :: [Let] }
+  , specTriggers     :: [Trigger] }
 
 --------------------------------------------------------------------------------

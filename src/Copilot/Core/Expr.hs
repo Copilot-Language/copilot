@@ -40,6 +40,7 @@ class Expr e where
     -> Word8
     -> Id
     -> e a
+  -- | A binding of local variable.
   local
     :: Type a
     -> Type b
@@ -47,16 +48,11 @@ class Expr e where
     -> e a
     -> e b
     -> e b
+  -- | A bound local variable.
   var
     :: Type a
     -> Name
     -> e a
-  -- | A bound global variable.
-  letBinding
-    :: Type a
-    -> Name
-    -> e a
-  -- | An external variable.
   extern
     :: Type a
     -> Name
@@ -76,7 +72,7 @@ class Expr e where
 
 --------------------------------------------------------------------------------
 
--- Expression wrapper.
+-- A wrapped expression.
 
 data WrapExpr a = WrapExpr { unWrapExpr :: forall e . Expr e => e a }
 

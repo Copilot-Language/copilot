@@ -30,7 +30,7 @@ strictList (x:xs) = x `seq` (x : strictList xs)
 
 strictEval :: EvalExpr α -> EvalExpr α
 strictEval e = e `seq` EvalExpr $
-  \ exts lets strms -> strictList (evalExpr_ e exts lets strms)
+  \ exts locs strms -> strictList (evalExpr_ e exts locs strms)
 
 --------------------------------------------------------------------------------
 
@@ -45,8 +45,8 @@ newtype EvalExpr a = EvalExpr
 
 instance Applicative EvalExpr where
   pure x    = EvalExpr $ \ _ _ _ -> repeat x
-  e1 <*> e2 = EvalExpr $ \ exts lets strms -> e1 `seq` e2 `seq`
-    zipWith ($) (evalExpr_ e1 exts lets strms) (evalExpr_ e2 exts lets strms)
+  e1 <*> e2 = EvalExpr $ \ exts locs strms -> e1 `seq` e2 `seq`
+    zipWith ($) (evalExpr_ e1 exts locs strms) (evalExpr_ e2 exts locs strms)
 
 instance Expr EvalExpr where
   const _ x              = x `seq` pure x
@@ -55,15 +55,15 @@ instance Expr EvalExpr where
                                Just xs = lookup id strms >>= fromDynamicF t
                              in
                                P.drop (fromIntegral i) xs
-  local t1 _  name e1 e2 = EvalExpr $ \ exts lets strms -> strictList $
+  local t1 _  name e1 e2 = EvalExpr $ \ exts locs strms -> strictList $
                              let
-                               xs    = evalExpr_ e1 exts lets strms
-                               lets' = (name, toDynamicF xs t1) : lets
+                               xs    = evalExpr_ e1 exts locs strms
+                               locs' = (name, toDynamicF xs t1) : locs
                              in
-                               evalExpr_ e2 exts lets' strms
-  var t name             = EvalExpr $ \ _ lets _ -> strictList $
+                               evalExpr_ e2 exts locs' strms
+  var t name             = EvalExpr $ \ _ locs _ -> strictList $
                              let
-                               Just xs = lookup name lets >>= fromDynamicF t
+                               Just xs = lookup name locs >>= fromDynamicF t
                              in
                                xs
   extern t name          = EvalExpr $ \ exts _ _ -> strictList $
@@ -139,8 +139,8 @@ type Output = (Bool, [String])
 
 --------------------------------------------------------------------------------
 
-evalStream :: Env Name -> Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
-evalStream exts lets strms
+evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
+evalStream exts strms
   Stream
     { streamId       = id
     , streamBuffer   = buffer
@@ -150,7 +150,7 @@ evalStream exts lets strms
 
   where
 
-  xs = strictList $ buffer ++ evalExpr_ e exts lets strms
+  xs = strictList $ buffer ++ evalExpr_ e exts [] strms
 --  ys =
 --    case mguard of
 --      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
@@ -163,8 +163,25 @@ evalStream exts lets strms
 
 --------------------------------------------------------------------------------
 
-evalTrigger :: Env Name -> Env Name -> Env Id -> Trigger -> [Output]
-evalTrigger exts lets strms
+evalObserver :: Env Name -> Env Id -> Observer -> [Output]
+evalObserver exts strms
+  Observer
+    { observerExpr     = e
+    , observerExprType = t }
+  = zip bs vs
+
+  where
+
+  bs :: [Bool]
+  bs = repeat True
+
+  vs :: [[String]]
+  vs = transpose $ [map (showWithType t) (evalExpr_ e exts [] strms)]
+
+--------------------------------------------------------------------------------
+
+evalTrigger :: Env Name -> Env Id -> Trigger -> [Output]
+evalTrigger exts strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
@@ -173,34 +190,23 @@ evalTrigger exts lets strms
   where
 
   bs :: [Bool]
-  bs = evalExpr_ e exts lets strms
+  bs = evalExpr_ e exts [] strms
 
   vs :: [[String]]
   vs = transpose $ map evalTriggerArg args
 
   evalTriggerArg :: TriggerArg -> [String]
   evalTriggerArg (TriggerArg e1 t) =
-    map (showWithType t) (evalExpr_ e1 exts lets strms)
-
---------------------------------------------------------------------------------
-
-evalLet :: Env Name -> Env Name -> Env Id -> Let -> (Name, DynamicF [] Type)
-evalLet exts lets strms
-  Let
-    { letExpr = e
-    , letVar = name
-    , letType = t
-    } = (name, toDynamicF xs t)
-  where
-    xs = strictList $ evalExpr_ e exts lets strms
+    map (showWithType t) (evalExpr_ e1 exts [] strms)
 
 --------------------------------------------------------------------------------
 
 evalSpec :: Env Name -> Spec -> [[Output]]
-evalSpec exts spec = outps
+evalSpec exts spec = outps2 ++ outps1
   where
-    strms = fmap (evalStream  exts [] strms) (specStreams  spec)
-    outps = fmap (evalTrigger exts [] strms) (specTriggers spec)
+    strms  = fmap (evalStream   exts strms) (specStreams   spec)
+    outps1 = fmap (evalObserver exts strms) (specObservers spec)
+    outps2 = fmap (evalTrigger  exts strms) (specTriggers  spec)
 
 --------------------------------------------------------------------------------
 
@@ -210,18 +216,21 @@ interpret k exts spec =
   ( render
   . asColumns
   . transpose
-  . (:) (ppTriggerNames $ specTriggers spec)
+  . (:) (ppTriggerNames ++ ppObserverNames)
   . take k
   . ppOutputs
   . evalSpec exts
   ) spec
 
+  where
+
+  ppTriggerNames :: [Doc]
+  ppTriggerNames = map (text . (++ ":") . triggerName) (specTriggers spec)
+
+  ppObserverNames :: [Doc]
+  ppObserverNames = map (text . (++ ":") . observerName) (specObservers spec)
+
 --------------------------------------------------------------------------------
-
--- Functions for pretty-printing the output of the interpreter:
-
-ppTriggerNames :: [Trigger] -> [Doc]
-ppTriggerNames = map (text . (++ ":") . triggerName)
 
 ppOutput :: Output -> Doc
 ppOutput (True,  vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
