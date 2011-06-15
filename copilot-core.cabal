@@ -57,9 +57,9 @@ library
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Externals
---    Copilot.Core.Spec.Random
---    Copilot.Core.Spec.Random.Gen
---    Copilot.Core.Spec.Random.Weights
+--    Copilot.Core.Random
+--    Copilot.Core.Random.Gen
+--    Copilot.Core.Random.Weights
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
