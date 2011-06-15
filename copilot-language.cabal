@@ -30,7 +30,6 @@ library
     Copilot
     Copilot.Language
     Copilot.Language.Interpret
-    Copilot.Language.Compile
     Copilot.Language.Operators.Boolean
     Copilot.Language.Operators.Constant
     Copilot.Language.Operators.Eq
