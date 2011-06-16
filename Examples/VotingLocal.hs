@@ -34,6 +34,21 @@ majority' k (x:xs) candidate cnt =
 
 --------------------------------------------------------------------------------
 
+aMajority :: (Num a, Typed a) => [Stream a] -> Stream a -> Stream Bool
+aMajority [] _ = 
+  error "Error in aMajority: list must be nonempty."
+aMajority ls candidate = 
+  local "candidate" candidate (aMajority_ 0 ls)
+
+  where
+
+  aMajority_ :: (Num a, Typed a) => Stream Word32 -> [Stream a] -> Stream Bool
+  aMajority_ acc []     = (acc * 2) > (fromIntegral $ length ls)
+  aMajority_ acc (x:xs) =
+    aMajority_ (acc + (if x == var "candidate" then 1 else 0)) xs
+
+--------------------------------------------------------------------------------
+
 mkName :: String -> Int -> String
 mkName cs k = cs P.++ show k
 
@@ -42,10 +57,13 @@ mkName cs k = cs P.++ show k
 vote :: Spec
 vote = trigger "maj" true [ arg maj ]
 
+  trigger "aMaj" true 
+    [ arg $ aMajority xs maj ]
+
   where
 
-  maj = majority ls
-
+  maj = majority xs
+  xs = concat (replicate 5 ls)
   ls = [a, b, c, d, e, f, g, h, i, j, k]
 
   a = [0] ++ a + 1 :: Stream Word32
@@ -65,5 +83,5 @@ vote = trigger "maj" true [ arg maj ]
 main :: IO ()
 main =
   do
-    interpret 20 [] vote
+--    interpret 20 [] vote
     prettyPrint vote
