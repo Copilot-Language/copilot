@@ -131,11 +131,23 @@ ppTrigger
 
 --------------------------------------------------------------------------------
 
+ppObserver :: Observer -> Doc
+ppObserver
+  Observer
+    { observerName     = name
+    , observerExpr     = e }
+  =   text "observer: \"" <> text name <> text "\""
+  <+> text "="
+  <+> ppExpr e
+
+--------------------------------------------------------------------------------
+
 ppSpec :: Spec -> Doc
-ppSpec spec = cs $$ ds
+ppSpec spec = cs $$ ds $$ es
   where
-    cs = foldr (($$) . ppStream)  empty (specStreams spec)
-    ds = foldr (($$) . ppTrigger) empty (specTriggers spec)
+    cs = foldr (($$) . ppStream)   empty (specStreams   spec)
+    ds = foldr (($$) . ppTrigger)  empty (specTriggers  spec)
+    es = foldr (($$) . ppObserver) empty (specObservers spec)
 
 --------------------------------------------------------------------------------
 
