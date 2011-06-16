@@ -1,5 +1,5 @@
 cabal-version:       >=1.10
-name:                copilot-library
+name:                copilot-libraries
 version:             0.1
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
