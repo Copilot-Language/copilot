@@ -38,6 +38,8 @@ instance EqualType Type where
   (=~=) (Word16 x) (Word16 y) = Just (trans x (symm y))
   (=~=) (Word32 x) (Word32 y) = Just (trans x (symm y))
   (=~=) (Word64 x) (Word64 y) = Just (trans x (symm y))
+  (=~=) (Float x)  (Float y)  = Just (trans x (symm y))
+  (=~=) (Double x) (Double y) = Just (trans x (symm y))
   (=~=) _ _ = Nothing
 
 --------------------------------------------------------------------------------

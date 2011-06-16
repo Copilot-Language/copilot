@@ -75,9 +75,9 @@ instance Op2 PPOp2 where
 
 instance Op3 PPOp3 where
   mux _    = PPOp3 $ \ doc1 doc2 doc3 ->
-    text "if"    <+> doc1 <+>
-    text "then " <+> doc2 <+>
-    text "else " <+> doc3
+    text "(if"   <+> doc1 <+>
+    text "then" <+> doc2 <+>
+    text "else" <+> doc3 <> text ")"
 
 --------------------------------------------------------------------------------
   
