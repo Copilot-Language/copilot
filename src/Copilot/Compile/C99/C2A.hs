@@ -85,6 +85,7 @@ instance C.Expr C2AExpr where
 
   ----------------------------------------------------
 
+{-
   letBinding t name = C2AExpr $ \ meta ->
 
     let
@@ -106,6 +107,7 @@ instance C.Expr C2AExpr where
         case W.exprInst t2 of
           W.ExprInst ->
             coerce (cong p) (A.value v)
+-}
 
   ----------------------------------------------------
 

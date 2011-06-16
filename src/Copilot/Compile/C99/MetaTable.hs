@@ -70,7 +70,7 @@ allocMetaTable spec =
       liftM M.fromList $ mapM allocExtern (externals spec)
 
     letInfoMap_ <-
-      liftM M.fromList $ mapM allocLet    (C.specLets spec)
+      liftM M.fromList $ return []
 
     return (MetaTable streamInfoMap_ externInfoMap_ letInfoMap_)
 
@@ -106,6 +106,7 @@ allocExtern (Extern name t) =
 
 --------------------------------------------------------------------------------
 
+{-
 allocLet :: C.Let -> Atom (C.Name, LetInfo)
 allocLet C.Let
   { C.letVar  = name
@@ -115,6 +116,7 @@ allocLet C.Let
       W.ExprInst <- return (W.exprInst t)
       v <- A.var (mkLetName name) (C.uninitialized t)
       return (name, LetInfo v t)
+-}
 
 --------------------------------------------------------------------------------
 

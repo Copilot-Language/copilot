@@ -63,11 +63,11 @@ updateStates :: MetaTable -> Core.Spec -> Atom ()
 updateStates meta
   Core.Spec
     { Core.specStreams = streams
-    , Core.specLets    = lets
+--    , Core.specLets    = lets
     } =
       do
         mapM_ updateStreamState streams
-        mapM_ updateLet lets
+--        mapM_ updateLet lets
 
   where
 
@@ -96,6 +96,7 @@ updateStates meta
           Just p <- return (t1 =~= t2)
           tmp <== coerce (cong p) e1
 
+{-
   updateLet :: Core.Let -> Atom ()
   updateLet
     Core.Let
@@ -120,6 +121,7 @@ updateStates meta
           W.AssignInst <- return (W.assignInst t2)
           Just p <- return (t1 =~= t2)
           v <== coerce (cong p) e1
+-}
 
 --------------------------------------------------------------------------------
 
