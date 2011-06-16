@@ -39,12 +39,12 @@ data Weights = Weights
 
 simpleWeights :: Weights
 simpleWeights = Weights
-  { maxExprDepth = 5
-  , maxBuffSize  = 8
-  , maxTriggers  = 8
-  , maxTrigArgs  = 4
+  { maxExprDepth = 2
+  , maxBuffSize  = 2
+  , maxTriggers  = 1
+  , maxTrigArgs  = 1
   , maxObservers = 8
-  , numStreams   = 10
+  , numStreams   = 5
   -- Expression frequencies:
   , constFreq    = 1
   , drop0Freq    = 1

@@ -31,7 +31,7 @@ genSpec :: Gen Spec
 genSpec =
   do
     ws <- weights
-    numTriggers <- choose (1, maxTriggers ws - 1)
+    numTriggers <- choose (1, maxTriggers ws)
     ss <- genStreamInfo's
     streams  <- mapM (genStream ss) ss
     triggers <- mapM (genTrigger ss) (map mkTriggerName [0..numTriggers-1])
@@ -121,7 +121,7 @@ genTrigger ss name =
   do
     w  <- genExpr ss (typeOf :: Type Bool)
     ws <- weights
-    i  <- choose (0, maxTrigArgs ws)
+    i  <- choose (1, maxTrigArgs ws)
     args <- replicateM i genArg
     return
       Trigger
