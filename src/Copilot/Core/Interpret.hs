@@ -114,8 +114,8 @@ instance Op2 Apply2 where
   add _    = Apply2 (+)
   sub _    = Apply2 (-)
   mul _    = Apply2 (*)
-  mod _    = Apply2 P.mod
-  div _    = Apply2 P.div
+  mod _    = Apply2 (catchZero P.mod)
+  div _    = Apply2 (catchZero P.div)
   fdiv _   = Apply2 (P./)
   pow _    = Apply2 (P.**)
   logb _   = Apply2 P.logBase
@@ -125,6 +125,10 @@ instance Op2 Apply2 where
   ge _     = Apply2 (>=)
   lt _     = Apply2 (<)
   gt _     = Apply2 (>)
+
+catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
+catchZero _ _ 0 = 0
+catchZero f x y = f x y
 
 --------------------------------------------------------------------------------
 

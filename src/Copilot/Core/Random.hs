@@ -49,8 +49,9 @@ genSpec =
 --------------------------------------------------------------------------------
 
 data StreamInfo = forall a . (Eq a, Ord a) => StreamInfo
-  { streamInfoId   :: E.Id
-  , streamInfoType :: Type a }
+  { streamInfoId         :: E.Id
+  , streamInfoType       :: Type a
+  , streamInfoBufferSize :: Int }
 
 --------------------------------------------------------------------------------
 
@@ -71,44 +72,47 @@ genType = elements
   , WrapType (typeOf :: Type Double) ]
 
 genTypeFromStreamInfo's :: [StreamInfo] -> Gen WrapType
-genTypeFromStreamInfo's = elements . map (\ (StreamInfo _ t) -> WrapType t)
+genTypeFromStreamInfo's = elements . map (\ (StreamInfo _ t _) -> WrapType t)
 
 --------------------------------------------------------------------------------
 
 genStreamInfo's :: Gen [StreamInfo]
 genStreamInfo's =
   do
+    let
+      s0 = StreamInfo 0 (typeOf :: Type Bool) 1
     ws <- weights
-    let s0 = StreamInfo 0 (typeOf :: Type Bool)
     ss <- mapM genStreamInfo [1 .. numStreams ws - 1]
     return (s0 : ss)
 
   where
 
   genStreamInfo :: Int -> Gen StreamInfo
-  genStreamInfo k =
+  genStreamInfo id =
     do
+      ws <- weights
+      k  <- choose (1, maxBuffSize ws)
       WrapType t <- genType
       return
         StreamInfo
-          { streamInfoId   = k
-          , streamInfoType = t }
+          { streamInfoId         = id
+          , streamInfoType       = t
+          , streamInfoBufferSize = k }
 
 --------------------------------------------------------------------------------
 
 genStream :: [StreamInfo] -> StreamInfo -> Gen Stream
 genStream ss
   StreamInfo
-    { streamInfoId   = k
-    , streamInfoType = t } =
+    { streamInfoId         = id
+    , streamInfoType       = t
+    , streamInfoBufferSize = k } =
   do
-    ws <- weights
-    i  <- choose (1, maxBuffSize ws)
-    xs <- replicateM i (randomFromType t)
+    xs <- replicateM k (randomFromType t)
     w  <- genExpr ss t
     return
       Stream
-        { streamId       = k
+        { streamId       = id
         , streamBuffer   = xs
         , streamGuard    = Nothing
         , streamExpr     = unWrapExpr w
@@ -169,15 +173,14 @@ genExpr ss t =
   genDrop =
     do
       s <- findStreamInfoWithMatchingType
-      ws <- weights
-      k <- choose (0, maxBuffSize ws - 1)
+      k <- choose (0, streamInfoBufferSize s - 1)
       return $ WrapExpr $ E.drop t (fromIntegral k) (streamInfoId s)
 
     where
 
     findStreamInfoWithMatchingType =
       let
-        p (StreamInfo _ t1) =
+        p (StreamInfo _ t1 _) =
           case t =~= t1 of
             Just _ -> True
             _      -> False
