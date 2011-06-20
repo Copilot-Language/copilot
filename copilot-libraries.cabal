@@ -27,8 +27,10 @@ library
 
   exposed-modules:
     Copilot.Library.Clocks
+    Copilot.Library.LTL
     Copilot.Library.PTLTL
     Copilot.Library.Statistics
+    Copilot.Library.Utils
 
   other-modules:
 

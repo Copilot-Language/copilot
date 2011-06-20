@@ -38,4 +38,6 @@ statisticsTest = do
 
 test = do
   prettyPrint statisticsTest
+  putStrLn ""
+  putStrLn ""
   interpret 20 [] statisticsTest

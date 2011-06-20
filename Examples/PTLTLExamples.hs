@@ -5,7 +5,7 @@ module Copilot.Examples.PTLTLExamples where
 
 import Copilot.Language
 import Copilot.Language.Prelude
-import Prelude ( ($), (+) )
+-- import Prelude ()
 import Copilot.Library.PTLTL
 import qualified Prelude   as P
 import qualified Data.Bool as B

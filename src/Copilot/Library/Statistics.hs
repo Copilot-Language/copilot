@@ -7,27 +7,22 @@ module Copilot.Library.Statistics
 
 
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( sum, max, min )
 import qualified Prelude as P
-
-
-foldDrops :: ( Typed a ) =>
-             Int -> ( Stream a -> Stream a -> Stream a )
-                 ->   Stream a -> Stream a
-foldDrops n f s = foldl1 f [ drop x s | x <- [ 0 .. ( n P.- 1 ) ] ]
+import Copilot.Language.Prelude hiding ( sum, max, min )
+import Copilot.Library.Utils
 
 -- | Summation.
 sum :: ( Typed a, Num a ) => Int -> Stream a -> Stream a
-sum n s = foldDrops n (+) s
+sum n s = nfoldl1 n (+) s
 
 -- | Maximum value.
 max :: ( Typed a, Ord a ) => Int -> Stream a -> Stream a
-max n s = foldDrops n largest s
+max n s = nfoldl1 n largest s
     where largest  = \ x y -> mux ( x >= y ) x y
 
 -- | Minimum value.
 min :: ( Typed a, Ord a ) => Int -> Stream a -> Stream a
-min n s = foldDrops n smallest s
+min n s = nfoldl1 n smallest s
     where smallest = \ x y -> mux ( x <= y ) x y
 
 -- | Mean value.  @n@ must not overflow

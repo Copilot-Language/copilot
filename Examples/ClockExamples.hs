@@ -2,7 +2,7 @@
 
 module Copilot.Examples.ClockExamples where
 
-import Prelude ( ($) )
+import Prelude ( ($), putStrLn )
 import qualified Prelude as P
 import Copilot.Language
 import Copilot.Library.Clocks
@@ -25,4 +25,6 @@ clockTest = do
 
 test = do
   prettyPrint clockTest
+  putStrLn ""
+  putStrLn ""
   interpret 10 [] clockTest
