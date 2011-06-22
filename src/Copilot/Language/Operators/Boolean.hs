@@ -10,6 +10,8 @@ module Copilot.Language.Operators.Boolean
   , not
   , true
   , false
+  , xor
+  , (==>)
   ) where
 
 import qualified Copilot.Core as Core
@@ -26,7 +28,7 @@ true = constant True
 false :: Stream Bool
 false = constant False
 
-infix 5 && 
+infix 5 &&
 
 (&&) :: Stream Bool -> Stream Bool -> Stream Bool
 (Const False) && _ = false
@@ -47,5 +49,11 @@ x || y             = Op2 Core.or x y
 not :: Stream Bool -> Stream Bool
 not (Const c) = (Const $ P.not c)
 not x         = Op1 Core.not x
+
+xor :: Stream Bool -> Stream Bool -> Stream Bool
+xor x y = ( not x && y ) || ( x && not y )
+
+(==>) :: Stream Bool -> Stream Bool -> Stream Bool
+x ==> y = not x || y
 
 --------------------------------------------------------------------------------
