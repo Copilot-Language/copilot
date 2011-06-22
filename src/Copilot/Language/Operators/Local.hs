@@ -6,18 +6,14 @@
 
 module Copilot.Language.Operators.Local
   ( local
-  , var
   ) where
 
-import Copilot.Core (Name, Typed)
-import Copilot.Language.Stream
+import Copilot.Core (Typed)
+import Copilot.Language.Stream (Stream (..))
 
 --------------------------------------------------------------------------------
 
-local :: (Typed a, Typed b) => Name -> Stream a -> Stream b -> Stream b
+local :: (Typed a, Typed b) => Stream a -> (Stream a -> Stream b) -> Stream b
 local = Local
-
-var :: Typed a => Name -> Stream a
-var = Var
 
 --------------------------------------------------------------------------------

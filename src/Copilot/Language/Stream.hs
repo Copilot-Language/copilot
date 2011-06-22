@@ -42,9 +42,8 @@ data Stream :: * -> * where
     -> Stream a
   Local
     :: (Typed a, Typed b)
-    => String
-    -> Stream a
-    -> Stream b
+    => Stream a
+    -> (Stream a -> Stream b)
     -> Stream b
   Var
     :: Typed a

@@ -24,18 +24,9 @@ majority' :: (Num a, Typed a)
 majority' _ []     candidate _   = candidate
 
 majority' k (x:xs) candidate cnt =
-  local
-    (mkName "candidate" k)
-    (if cnt == 0 then x else candidate) $
-      local
-        (mkName "cnt" k)
-        (if cnt == 0 || x == candidate then cnt+1 else cnt-1) $
-          majority' (k+1) xs (var (mkName "candidate" k)) (var (mkName "cnt" k))
-
---------------------------------------------------------------------------------
-
-mkName :: String -> Int -> String
-mkName cs k = cs P.++ show k
+  local (if cnt == 0 then x else candidate) $ \ candidate' ->
+    local (if cnt == 0 || x == candidate then cnt+1 else cnt-1) $ \ cnt' ->
+      majority' (k+1) xs candidate' cnt'
 
 --------------------------------------------------------------------------------
 
