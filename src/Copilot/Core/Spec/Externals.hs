@@ -25,10 +25,15 @@ data Extern = forall a . Extern
 --------------------------------------------------------------------------------
 
 externals :: Spec -> [Extern]
-externals Spec { specStreams  = streams, specTriggers = triggers } =
+externals
+  Spec
+    { specStreams   = streams
+    , specTriggers  = triggers
+    , specObservers = observers } =
   nubBy eqExt . toList $
-    concat (fmap extsStream  streams) `append`
-    concat (fmap extsTrigger triggers)
+    concat (fmap extsStream   streams)  `append`
+    concat (fmap extsTrigger  triggers) `append`
+    concat (fmap extsObserver observers)
 
   where
 
@@ -51,6 +56,11 @@ extsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
 
   extsTriggerArg :: TriggerArg -> DList Extern
   extsTriggerArg (TriggerArg e1 _) = extsExpr e1
+
+--------------------------------------------------------------------------------
+
+extsObserver :: Observer -> DList Extern
+extsObserver Observer { observerExpr = e } = extsExpr e
 
 --------------------------------------------------------------------------------
 
