@@ -2,6 +2,7 @@
 
 module Copilot.Examples.ClockExamples where
 
+
 import Prelude ( ($), putStrLn )
 import qualified Prelude as P
 import Copilot.Language
@@ -19,8 +20,8 @@ clk1Stream = clk1 ( period p ) ( phase 0 )
 
 clockTest :: Spec
 clockTest = do
-  trigger "clk"  true [ arg $ clkStream  ]
-  trigger "clk1" true [ arg $ clk1Stream ]
+  observer "clk" clkStream
+  observer "clk1" clk1Stream
 
 
 test = do

@@ -29,10 +29,10 @@ meanV = mean 3 inputFData
 
 statisticsTest :: Spec
 statisticsTest = do
-  trigger "minV"  true [ arg $ minV  ]
-  trigger "maxV"  true [ arg $ maxV  ]
-  trigger "sumV"  true [ arg $ sumV  ]
-  trigger "meanV" true [ arg $ meanV ]
+  observer "minV"  minV
+  observer "maxV"  maxV
+  observer "sumV"  sumV
+  observer "meanV" meanV
 
 
 

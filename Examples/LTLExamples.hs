@@ -1,7 +1,6 @@
-module Language.Copilot.Examples.LTLExamples where
+module Copilot.Examples.LTLExamples where
 
 
-import Prelude ()
 import qualified Prelude as P
 import Copilot.Language
 import Copilot.Language.Prelude hiding ( until )

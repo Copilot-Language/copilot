@@ -31,7 +31,7 @@ mean :: ( Typed a, Fractional a ) => Int -> Stream a -> Stream a
 mean n s = ( sum n s ) / ( fromIntegral n )
 
 -- | Mean value over the current set of specs passed in.
-meanNow :: (Typed a, Integral a) => [Stream a] -> Stream a
+meanNow :: ( Typed a, Integral a ) => [ Stream a ] -> Stream a
 meanNow [] = error
     "Error in majority: list of arguments must be nonempty."
 meanNow ls = ( foldl1 (+) ls ) `div` ( fromIntegral $ length ls )

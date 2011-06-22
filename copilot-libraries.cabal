@@ -23,6 +23,7 @@ library
     base >= 4.0,
     containers,
     copilot-language,
+    parsec >= 2.0,
     mtl >= 2.0
 
   exposed-modules:
@@ -30,6 +31,7 @@ library
     Copilot.Library.LTL
     Copilot.Library.PTLTL
     Copilot.Library.Statistics
+    Copilot.Library.RegExp
     Copilot.Library.Utils
 
   other-modules:

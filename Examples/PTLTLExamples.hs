@@ -5,7 +5,6 @@ module Copilot.Examples.PTLTLExamples where
 
 import Copilot.Language
 import Copilot.Language.Prelude
--- import Prelude ()
 import Copilot.Library.PTLTL
 import qualified Prelude   as P
 import qualified Data.Bool as B
@@ -17,7 +16,7 @@ previousTestData = [ True, False ] ++ previousTestData
 
 previousTest :: Spec
 previousTest = do
-  trigger "previousTest" true [ arg $ previous previousTestData ]
+  observer "previousTest" ( previous previousTestData )
 
 
 -- | test of alwaysBeen
@@ -27,7 +26,7 @@ alwaysBeenTestData = [ True, True, True, True, True, True, True, False ]
 
 alwaysBeenTest :: Spec
 alwaysBeenTest = do
-  trigger "testAlwaysBeen" true [ arg $ alwaysBeen alwaysBeenTestData ]
+  observer "testAlwaysBeen" ( alwaysBeen alwaysBeenTestData )
 
 
 -- | test of eventuallyPrevious
@@ -36,8 +35,8 @@ eventuallyPrevTestData = [ False, False, False, False, False, True, False ]
                          ++ eventuallyPrevTestData
 
 eventuallyPrevTest :: Spec
-eventuallyPrevTest = trigger "eventuallyPrevTest" true
-                     [ arg $ eventuallyPrev eventuallyPrevTestData ]
+eventuallyPrevTest = observer "eventuallyPrevTest"
+                     ( eventuallyPrev eventuallyPrevTestData )
 
 
 -- | test of since
@@ -49,14 +48,14 @@ sinceTestData2 = [ False, False, True, False, False, False, False ]
                  ++ sinceTestData2
 
 sinceTest :: Spec
-sinceTest = trigger "sinceTest" true
-            [ arg $ sinceTestData1 `since` sinceTestData2 ]
+sinceTest = observer "sinceTest"
+            ( sinceTestData1 `since` sinceTestData2 )
 
 
 -- | test since with external variables
 sinceExtTest :: Spec
-sinceExtTest = trigger "sinceExtTest" true
-               [ arg $ extern "e1" `since` extern "e2" ]
+sinceExtTest = observer "sinceExtTest"
+               ( extern "e1" `since` extern "e2" )
 
 
 -- "If the majority of the engine temperature probes exeeds 250 degrees, then
