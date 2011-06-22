@@ -8,7 +8,7 @@ module Copilot.Compile.C99.Phases
 
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
 import Copilot.Compile.C99.MetaTable
-  (MetaTable (..), StreamInfo (..), ExternInfo (..), LetInfo (..))
+  (MetaTable (..), StreamInfo (..), ExternInfo (..))
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
@@ -26,6 +26,7 @@ data Phase
   | UpdateStates
   | FireTriggers
   | UpdateBuffers
+  | UpdateObservers
   deriving (Bounded, Eq, Enum, Ord, Show)
 
 numberOfPhases :: Int
@@ -36,10 +37,11 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 schedulePhases :: MetaTable -> Core.Spec -> Atom ()
 schedulePhases meta spec =
   A.period numberOfPhases $
-    sampleExterns meta      >>
-    updateStates  meta spec >>
-    fireTriggers  meta spec >>
-    updateBuffers meta spec
+    sampleExterns   meta      >>
+    updateStates    meta spec >>
+    fireTriggers    meta spec >>
+--    updateObservers meta spec >>
+    updateBuffers   meta spec
 
 --------------------------------------------------------------------------------
 
@@ -78,10 +80,10 @@ updateStates meta
       , Core.streamExpr     = e
       , Core.streamExprType = t1
       } =
-    let
-      Just strmInfo = M.lookup id (streamInfoMap meta)
-    in
-      updateStreamState1 t1 id (c2aExpr meta e) strmInfo
+    do
+      let e' = c2aExpr meta e
+      let Just strmInfo = M.lookup id (streamInfoMap meta)
+      updateStreamState1 t1 id e' strmInfo
 
   updateStreamState1 :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
   updateStreamState1 t1 id e1
@@ -144,16 +146,17 @@ fireTriggers meta
     exactPhase (fromEnum FireTriggers) $
       atom ("fire_trigger_" ++ name) $
         do
-          cond (c2aExpr meta e0)
-          A.action fnCall (reverse $ fmap triggerArg2UE args)
+          let args' = map triggerArg2UE (reverse args)
+              e0'   = c2aExpr meta e0
+          cond e0'
+          A.action fnCall args'
 
       where
 
       triggerArg2UE :: Core.TriggerArg -> A.UE
       triggerArg2UE (Core.TriggerArg e t) =
         case W.exprInst t of
-          W.ExprInst ->
-            A.ue $ c2aExpr meta e
+          W.ExprInst -> A.ue (c2aExpr meta e)
 
       fnCall :: [String] -> String
       fnCall xs = name ++ "(" ++ concat (intersperse "," xs) ++ ")"

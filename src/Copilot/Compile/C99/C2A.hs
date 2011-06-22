@@ -2,6 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Compile.C99.C2A
@@ -14,14 +15,15 @@ import qualified Copilot.Compile.C99.Witness as W
 import Copilot.Compile.C99.MetaTable
 import qualified Copilot.Core as C
 import Copilot.Core.Type.Equality ((=~=), coerce, cong)
+import Data.Map (Map)
 import qualified Data.Map as M
 import qualified Language.Atom as A
 import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
 
-c2aExpr :: MetaTable -> (forall η . C.Expr η => η a) -> A.E a
-c2aExpr m e = c2aExpr_ e m
+c2aExpr :: MetaTable -> (forall e . C.Expr e => e a) -> A.E a
+c2aExpr meta e = c2aExpr_ e M.empty meta
 
 --------------------------------------------------------------------------------
 
@@ -37,8 +39,16 @@ c2aType t =
 
 --------------------------------------------------------------------------------
 
+data Local = forall a . Local
+  { localAtomExpr :: A.E a
+  , localType     :: C.Type a }
+
+type Env = Map C.Name Local
+
+--------------------------------------------------------------------------------
+
 newtype C2AExpr a = C2AExpr
-  { c2aExpr_ :: MetaTable -> A.E a }
+  { c2aExpr_ :: Env -> MetaTable -> A.E a }
 
 newtype C2AOp1 a b = C2AOp1
   { c2aOp1 :: A.E a -> A.E b }
@@ -55,13 +65,13 @@ instance C.Expr C2AExpr where
 
   ----------------------------------------------------
 
-  const _ x = C2AExpr $ \ _ ->
+  const _ x = C2AExpr $ \ _ _ ->
 
     A.Const x
 
   ----------------------------------------------------
 
-  drop t i id = C2AExpr $ \ meta ->
+  drop t i id = C2AExpr $ \ _ meta ->
 
     let
       Just strmInfo = M.lookup id (streamInfoMap meta)
@@ -85,66 +95,56 @@ instance C.Expr C2AExpr where
 
   ----------------------------------------------------
 
-{-
-  letBinding t name = C2AExpr $ \ meta ->
-
+  local t1 _ name e1 e2 = C2AExpr $ \ env meta ->
     let
-      Just letInfo = M.lookup name (letInfoMap meta)
+      e1'  = c2aExpr_ e1 env meta
+      env' = M.insert name (Local e1' t1) env
     in
-      letBinding1 t letInfo
-
-    where
-
-    letBinding1 :: C.Type a -> LetInfo -> A.E a
-    letBinding1 t1
-      LetInfo
-        { letInfoVar  = v
-        , letInfoType = t2
-        } =
-      let
-        Just p = t2 =~= t1
-      in
-        case W.exprInst t2 of
-          W.ExprInst ->
-            coerce (cong p) (A.value v)
--}
+      c2aExpr_ e2 env' meta
 
   ----------------------------------------------------
 
-  extern t name = C2AExpr $ \ _ ->
+  var t1 name = C2AExpr $ \ env _ ->
+    let
+      Just local = M.lookup name env
+    in
+      case local of
+        Local
+          { localAtomExpr = e
+          , localType     = t2
+          } ->
+            let
+              Just p = t2 =~= t1
+            in
+              case W.exprInst t2 of
+                W.ExprInst ->
+                  coerce (cong p) e
+
+  ----------------------------------------------------
+
+  extern t name = C2AExpr $ \ _ _ ->
 
     (A.value . A.var' name . c2aType) t
 
 
   ----------------------------------------------------
 
-  op1 op e = C2AExpr $ \ meta ->
+  op1 op e = C2AExpr $ \ env meta ->
 
-    let
-      e' = c2aExpr_ e meta
-    in
-      c2aOp1 op e'
+    c2aOp1 op (c2aExpr_ e env meta)
 
   ----------------------------------------------------
 
-  op2 op e1 e2 = C2AExpr $ \ meta ->
+  op2 op e1 e2 = C2AExpr $ \ env meta ->
 
-    let
-      e1' = c2aExpr_ e1 meta
-      e2' = c2aExpr_ e2 meta
-    in
-      c2aOp2 op e1' e2'
+    c2aOp2 op (c2aExpr_ e1 env meta) (c2aExpr_ e2 env meta)
 
   ----------------------------------------------------
 
-  op3 op e1 e2 e3 = C2AExpr $ \ meta ->
+  op3 op e1 e2 e3 = C2AExpr $ \ env meta ->
 
-    let
-      e1' = c2aExpr_ e1 meta
-      e2' = c2aExpr_ e2 meta
-      e3' = c2aExpr_ e3 meta
-    in
-      c2aOp3 op e1' e2' e3'
+    c2aOp3 op (c2aExpr_ e1 env meta) (c2aExpr_ e2 env meta)
+      (c2aExpr_ e3 env meta)
 
   ----------------------------------------------------
 
@@ -191,4 +191,4 @@ instance C.Op2 C2AOp2 where
 instance C.Op3 C2AOp3 where
   mux t   = C2AOp3 $ case W.exprInst        t of W.ExprInst        -> A.mux
 
---------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
