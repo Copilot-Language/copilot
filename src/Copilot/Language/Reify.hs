@@ -15,6 +15,7 @@ module Copilot.Language.Reify
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
+import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream (..))
 import Data.IORef
@@ -33,6 +34,7 @@ newtype WrapExpr a = WrapExpr
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
+    analyze spec
     let trigs = triggers  $ runSpec spec
     let obsvs = observers $ runSpec spec
     refMkId      <- newIORef 0
