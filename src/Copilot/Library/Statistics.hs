@@ -6,9 +6,9 @@ module Copilot.Library.Statistics
     ( max, min, sum, mean, meanNow ) where
 
 
+import Prelude ( Num, (+), (/), Ord, Fractional, Integral
+               , fromIntegral, error, foldl1, ($), length )
 import Copilot.Language
-import qualified Prelude as P
-import Copilot.Language.Prelude hiding ( sum, max, min )
 import Copilot.Library.Utils
 
 -- | Summation.

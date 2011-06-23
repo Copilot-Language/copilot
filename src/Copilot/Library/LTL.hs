@@ -23,9 +23,7 @@ module Copilot.Library.LTL
 import Prelude ( Bool, Integral
                , fromIntegral
                , (+), (-), foldl1 )
-import qualified Prelude as P
 import Copilot.Language
-import Data.List (replicate)
 import Copilot.Library.Utils
 
 
