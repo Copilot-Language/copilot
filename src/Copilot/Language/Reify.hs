@@ -2,7 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Transforms a Copilot Language specification into a Copilot Core
+-- specification.
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
@@ -13,6 +14,8 @@ module Copilot.Language.Reify
 
 import Copilot.Core (Typed, Id, typeOf)
 import qualified Copilot.Core as Core
+--import Copilot.Language.Reify.Sharing (makeSharingExplicit)
+import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream (..))
 import Data.IORef
@@ -26,24 +29,19 @@ import qualified System.Mem.StableName.Dynamic.Map as M
 newtype WrapExpr a = WrapExpr
   { unWrapExpr :: forall e . Core.Expr e => e a }
 
-{-
-data Shared = forall a . Shared
-  { sharedExpr :: forall e . Core.Expr e => e a
-  , sharedType :: Core.Type a }
--}
-
 --------------------------------------------------------------------------------
 
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
+    analyze spec
     let trigs = triggers  $ runSpec spec
     let obsvs = observers $ runSpec spec
-    refCount      <- newIORef 0
+    refMkId      <- newIORef 0
     refVisited    <- newIORef M.empty
     refMap        <- newIORef []
-    coreTriggers  <- mapM (mkTrigger  refCount refVisited refMap) trigs
-    coreObservers <- mapM (mkObserver refCount refVisited refMap) obsvs
+    coreTriggers  <- mapM (mkTrigger  refMkId refVisited refMap) trigs
+    coreObservers <- mapM (mkObserver refMkId refVisited refMap) obsvs
     coreStreams   <- readIORef refMap
     return $
       Core.Spec
@@ -60,9 +58,9 @@ mkObserver
   -> IORef [Core.Stream]
   -> Observer
   -> IO Core.Observer
-mkObserver refCount refStreams refMap (Observer name e) =
+mkObserver refMkId refStreams refMap (Observer name e) =
   do 
-    w <- mkExpr refCount refStreams refMap e
+    w <- mkExpr refMkId refStreams refMap e
     return $
       Core.Observer
          { Core.observerName     = name
@@ -78,9 +76,9 @@ mkTrigger
   -> IORef [Core.Stream]
   -> Trigger
   -> IO Core.Trigger
-mkTrigger refCount refStreams refMap (Trigger name guard args) =
+mkTrigger refMkId refStreams refMap (Trigger name guard args) =
   do
-    w1 <- mkExpr refCount refStreams refMap guard 
+    w1 <- mkExpr refMkId refStreams refMap guard 
     args' <- mapM mkTriggerArg args
     return $
       Core.Trigger
@@ -93,11 +91,12 @@ mkTrigger refCount refStreams refMap (Trigger name guard args) =
   mkTriggerArg :: TriggerArg -> IO Core.TriggerArg
   mkTriggerArg (TriggerArg e) =
     do
-      w <- mkExpr refCount refStreams refMap e
+      w <- mkExpr refMkId refStreams refMap e
       return $ Core.TriggerArg (unWrapExpr w) typeOf
 
 --------------------------------------------------------------------------------
 
+{-# INLINE mkExpr #-}
 mkExpr
   :: Typed a
   => IORef Int
@@ -105,38 +104,50 @@ mkExpr
   -> IORef [Core.Stream]
   -> Stream a
   -> IO (WrapExpr a)
-mkExpr refCount refStreams refMap e0 =
-  case e0 of
-    Append _ _ _    -> do s <- mkStream refCount refStreams refMap e0
-                          return $ WrapExpr $ Core.drop typeOf 0 s
-    Drop k e1       -> case e1 of
-                         Append _ _ _ ->
-                           do
-                             s <- mkStream refCount refStreams refMap e1
-                             return $ WrapExpr $ Core.drop typeOf k s
-                         _ -> error "dfs: Drop" -- !!! This needs to be fixed !!!
-    Const x         -> return $ WrapExpr $ Core.const typeOf x
-    Local cs e1 e2  -> do
-                         w1 <- mkExpr refCount refStreams refMap e1
-                         w2 <- mkExpr refCount refStreams refMap e2
-                         return $ WrapExpr $ Core.local typeOf typeOf cs
-                           (unWrapExpr w1) (unWrapExpr w2)
-    Var cs          -> return $ WrapExpr $ Core.var typeOf cs
-    Extern cs       -> return $ WrapExpr $ Core.extern typeOf cs
-    Op1 op e        -> do
-                         w <- mkExpr refCount refStreams refMap e
-                         return $ WrapExpr $ Core.op1 op (unWrapExpr w)
-    Op2 op e1 e2    -> do
-                         w1 <- mkExpr refCount refStreams refMap e1
-                         w2 <- mkExpr refCount refStreams refMap e2
-                         return $ WrapExpr $ Core.op2 op
-                           (unWrapExpr w1) (unWrapExpr w2)
-    Op3 op e1 e2 e3 -> do
-                         w1 <- mkExpr refCount refStreams refMap e1
-                         w2 <- mkExpr refCount refStreams refMap e2
-                         w3 <- mkExpr refCount refStreams refMap e3
-                         return $ WrapExpr $ Core.op3 op
-                           (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
+mkExpr refMkId refStreams refMap = go
+
+--  (>>= go) . makeSharingExplicit refMkId
+
+  where
+
+  go
+    :: Typed a
+    => Stream a
+    -> IO (WrapExpr a)
+  go e0 =
+    case e0 of
+      Append _ _ _    -> do s <- mkStream refMkId refStreams refMap e0
+                            return $ WrapExpr $ Core.drop typeOf 0 s
+      Drop k e1       -> case e1 of
+                           Append _ _ _ ->
+                             do
+                               s <- mkStream refMkId refStreams refMap e1
+                               return $ WrapExpr $ Core.drop typeOf k s
+                           _ -> error "dfs: Drop" -- !!! Fix this !!!
+      Const x         -> return $ WrapExpr $ Core.const typeOf x
+      Local e f       -> do
+                           id <- mkId refMkId
+                           let cs = "local_" ++ show id
+                           w1 <- go e
+                           w2 <- go (f (Var cs))
+                           return $ WrapExpr $ Core.local typeOf typeOf cs
+                             (unWrapExpr w1) (unWrapExpr w2)
+      Var cs          -> return $ WrapExpr $ Core.var typeOf cs
+      Extern cs       -> return $ WrapExpr $ Core.extern typeOf cs
+      Op1 op e        -> do
+                           w <- go e
+                           return $ WrapExpr $ Core.op1 op (unWrapExpr w)
+      Op2 op e1 e2    -> do
+                           w1 <- go e1
+                           w2 <- go e2
+                           return $ WrapExpr $ Core.op2 op
+                             (unWrapExpr w1) (unWrapExpr w2)
+      Op3 op e1 e2 e3 -> do
+                           w1 <- go e1
+                           w2 <- go e2
+                           w3 <- go e3
+                           return $ WrapExpr $ Core.op3 op
+                             (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
 
 --------------------------------------------------------------------------------
 
@@ -148,7 +159,7 @@ mkStream
   -> IORef [Core.Stream]
   -> Stream a
   -> IO Id
-mkStream refCount refStreams refMap e0 =
+mkStream refMkId refStreams refMap e0 =
   do
     dstn <- makeDynamicStableName e0
     let Append buf _ e = e0 -- avoids warning
@@ -175,9 +186,9 @@ mkStream refCount refStreams refMap e0 =
     -> IO Id
   addToVisited dstn buf e =
     do
-      id <- atomicModifyIORef refCount $ \ n -> (succ n, n)
+      id <- mkId refMkId
       modifyIORef refStreams (M.insert dstn id)
-      w <- mkExpr refCount refStreams refMap e
+      w <- mkExpr refMkId refStreams refMap e
       modifyIORef refMap $ (:)
         Core.Stream
           { Core.streamId         = id
@@ -186,5 +197,10 @@ mkStream refCount refStreams refMap e0 =
           , Core.streamExpr       = unWrapExpr w
           , Core.streamExprType   = typeOf }
       return id
+
+--------------------------------------------------------------------------------
+
+mkId :: IORef Int -> IO Id
+mkId refMkId = atomicModifyIORef refMkId $ \ n -> (succ n, n)
 
 --------------------------------------------------------------------------------

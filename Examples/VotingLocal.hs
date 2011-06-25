@@ -5,6 +5,7 @@
 -- |
 
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Main where
 
@@ -24,38 +25,30 @@ majority' :: (Num a, Typed a)
 majority' _ []     candidate _   = candidate
 
 majority' k (x:xs) candidate cnt =
-  local
-    (mkName "candidate" k)
-    (if cnt == 0 then x else candidate) $
-      local
-        (mkName "cnt" k)
-        (if cnt == 0 || x == candidate then cnt+1 else cnt-1) $
-          majority' (k+1) xs (var (mkName "candidate" k)) (var (mkName "cnt" k))
+  local (if cnt == 0 then x else candidate) $ \ candidate' ->
+    local (if cnt == 0 || x == candidate then cnt+1 else cnt-1) $ \ cnt' ->
+      majority' (k+1) xs candidate' cnt'
 
 --------------------------------------------------------------------------------
 
-aMajority :: (Num a, Typed a) => [Stream a] -> Stream a -> Stream Bool
+aMajority :: forall a. (Num a, Typed a) => [Stream a] -> Stream a -> Stream Bool
 aMajority [] _ = 
   error "Error in aMajority: list must be nonempty."
 aMajority ls candidate = 
-  local "candidate" candidate (aMajority_ 0 ls)
+  aMajority_ (0 :: Stream Word32) ls
 
   where
 
-  aMajority_ :: (Num a, Typed a) => Stream Word32 -> [Stream a] -> Stream Bool
   aMajority_ acc []     = (acc * 2) > (fromIntegral $ length ls)
   aMajority_ acc (x:xs) =
-    aMajority_ (acc + (if x == var "candidate" then 1 else 0)) xs
-
---------------------------------------------------------------------------------
-
-mkName :: String -> Int -> String
-mkName cs k = cs P.++ show k
+    local (if x == candidate then 1 else 0) $ \ cnt ->
+      aMajority_ (acc + cnt) xs
 
 --------------------------------------------------------------------------------
 
 vote :: Spec
-vote = trigger "maj" true [ arg maj ]
+vote = do 
+  trigger "maj" true [ arg maj ]
 
   trigger "aMaj" true 
     [ arg $ aMajority xs maj ]

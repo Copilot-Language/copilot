@@ -44,6 +44,8 @@ library
     Copilot.Library.Voting
 
   other-modules:
+    Copilot.Language.Analyze
+--    Copilot.Language.Reify.Sharing
     Copilot.Language.Stream
     Copilot.Language.Spec
 

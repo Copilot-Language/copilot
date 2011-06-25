@@ -14,7 +14,7 @@ module Copilot.Library.Voting
 
 import Prelude ()
 import Data.List (foldl')
-import Copilot.Language.Prelude 
+import Copilot.Language.Prelude
 import Copilot.Language
 
 -- | Boyer-Moore linear majority algorithm.  Warning!  Returns an arbitary
