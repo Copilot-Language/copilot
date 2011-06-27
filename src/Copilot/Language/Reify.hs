@@ -161,7 +161,7 @@ mkStream
   -> IO Id
 mkStream refMkId refStreams refMap e0 =
   do
-    dstn <- makeDynamicStableName e0
+    dstn <- makeDynStableName e0
     let Append buf _ e = e0 -- avoids warning
     mk <- haveVisited dstn
     case mk of
@@ -171,7 +171,7 @@ mkStream refMkId refStreams refMap e0 =
   where
 
   {-# INLINE haveVisited #-}
-  haveVisited :: DynamicStableName -> IO (Maybe Int)
+  haveVisited :: DynStableName -> IO (Maybe Int)
   haveVisited dstn =
     do
       tab <- readIORef refStreams
@@ -180,7 +180,7 @@ mkStream refMkId refStreams refMap e0 =
   {-# INLINE addToVisited #-}
   addToVisited
     :: Typed a
-    => DynamicStableName
+    => DynStableName
     -> [a]
     -> Stream a
     -> IO Id

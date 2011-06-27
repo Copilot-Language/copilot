@@ -20,12 +20,11 @@ library
 
   build-depends:
     array,
-    base >= 4.0,
-    containers,
+    base >= 4.0 && < 5,
+    containers >= 0.4 && < 1,
     copilot-core,
-    mtl >= 2.0,
-    stable-maps
-
+    mtl >= 2.0 && < 3,
+    ghc-prim >= 0.2 && < 0.3
   exposed-modules:
     Copilot
     Copilot.Language
@@ -45,9 +44,10 @@ library
 
   other-modules:
     Copilot.Language.Analyze
---    Copilot.Language.Reify.Sharing
     Copilot.Language.Stream
     Copilot.Language.Spec
+    System.Mem.StableName.Dynamic
+    System.Mem.StableName.Dynamic.Map
 
   ghc-options:
     -fwarn-tabs

@@ -79,7 +79,7 @@ analyzeExpr refStreams = go M.empty
   go :: Env -> Stream b -> IO ()
   go nodes e0 =
     do
-      dstn <- makeDynamicStableName e0
+      dstn <- makeDynStableName e0
       assertNotVisited e0 dstn nodes
       let nodes' = M.insert dstn () nodes
       case e0 of
@@ -96,7 +96,7 @@ analyzeExpr refStreams = go M.empty
         _              -> return ()
 
   {-# INLINE assertNotVisited #-}
-  assertNotVisited :: Stream a -> DynamicStableName -> Env -> IO ()
+  assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
   assertNotVisited (Append _ _ _) _    _     = return ()
   assertNotVisited _              dstn nodes =
     case M.lookup dstn nodes of
@@ -106,7 +106,7 @@ analyzeExpr refStreams = go M.empty
 --------------------------------------------------------------------------------
 
 {-# INLINE analyzeAppend #-}
-analyzeAppend :: IORef Env -> DynamicStableName -> Stream a -> IO ()
+analyzeAppend :: IORef Env -> DynStableName -> Stream a -> IO ()
 analyzeAppend refStreams dstn e =
   do
     streams <- readIORef refStreams

@@ -32,6 +32,6 @@ interpret
 interpret i inputs spec =
   do
     coreSpec <- reify spec
-    putStrLn $ I.interpret (fromIntegral i) exts coreSpec
+    putStrLn $ I.interpret I.Table (fromIntegral i) exts coreSpec
   where
     exts = map (\ (Input name xs) -> (name, toDynamicF xs typeOf)) inputs

@@ -97,7 +97,7 @@ main =
     putStrLn ""
     putStrLn "Interpreter:"
     putStrLn ""
-    interpret 100 [input "e1" e1, input "e2" e2, input "e3" e3] spec
+    interpret 10 [input "e1" e1, input "e2" e2, input "e3" e3] spec
     putStrLn ""
     putStrLn ""
 
