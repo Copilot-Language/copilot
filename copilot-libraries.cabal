@@ -33,6 +33,7 @@ library
     Copilot.Library.Statistics
     Copilot.Library.RegExp
     Copilot.Library.Utils
+    Copilot.Library.Voting
 
   other-modules:
 
