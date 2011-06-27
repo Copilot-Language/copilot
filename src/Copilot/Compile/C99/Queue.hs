@@ -38,7 +38,7 @@ lookahead i
     , size            = sz
     } =
   let
-    k = (value p + fromIntegral i + 1) `mod_` fromIntegral sz
+    k = (value p + fromIntegral i) `mod_` fromIntegral sz
   in
     buf !. k
 
