@@ -40,7 +40,6 @@ library
     Copilot.Language.Operators.Temporal
     Copilot.Language.Prelude
     Copilot.Language.Reify
-    Copilot.Library.Voting
 
   other-modules:
     Copilot.Language.Analyze
