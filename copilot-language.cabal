@@ -23,6 +23,7 @@ library
     base >= 4.0 && < 5,
     containers >= 0.4 && < 1,
     copilot-core,
+    data-reify >= 0.6,
     mtl >= 2.0 && < 3,
     ghc-prim >= 0.2 && < 0.3
   exposed-modules:
@@ -40,6 +41,7 @@ library
     Copilot.Language.Operators.Temporal
     Copilot.Language.Prelude
     Copilot.Language.Reify
+    Copilot.Language.Reify.Graph
 
   other-modules:
     Copilot.Language.Analyze
