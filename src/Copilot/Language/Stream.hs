@@ -33,7 +33,7 @@ data Stream :: * -> * where
     -> Stream a
   Drop
     :: Typed a
-    => Integer 
+    => Int
     -> Stream a
     -> Stream a
   Extern
