@@ -42,7 +42,7 @@ library
     Copilot.Language.Operators.Temporal
     Copilot.Language.Prelude
     Copilot.Language.Reify
-    Copilot.Language.Reify.Graph
+--    Copilot.Language.Reify.Graph
 
   other-modules:
     Copilot.Language.Analyze
