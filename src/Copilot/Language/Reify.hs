@@ -122,7 +122,7 @@ mkExpr refMkId refStreams refMap = go
                            Append _ _ _ ->
                              do
                                s <- mkStream refMkId refStreams refMap e1
-                               return $ WrapExpr $ Core.drop typeOf k s
+                               return $ WrapExpr $ Core.drop typeOf (fromIntegral k) s
                            _ -> error "dfs: Drop" -- !!! Fix this !!!
       Const x         -> return $ WrapExpr $ Core.const typeOf x
       Local e f       -> do

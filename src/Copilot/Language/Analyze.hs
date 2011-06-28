@@ -14,6 +14,7 @@ module Copilot.Language.Analyze
 
 import Control.Exception (Exception, throw)
 import Copilot.Language.Spec
+import Copilot.Core (DropIdx)
 import Copilot.Language.Stream (Stream (..))
 import Data.IORef
 import Data.Typeable
@@ -27,12 +28,15 @@ data AnalyzeException
   = DropAppliedToNonAppend
   | DropIndexOverflow
   | ReferentialCycle
+  | DropMaxViolation
   deriving Typeable
 
 instance Show AnalyzeException where
   show DropAppliedToNonAppend = "Drop applied to non-append operation!"
   show DropIndexOverflow      = "Drop index overflow!"
   show ReferentialCycle       = "Referential cycle!"
+  show DropMaxViolation       = "Maximum drop violation (" ++ 
+                                  show (maxBound :: DropIdx) ++ ")!"
 
 instance Exception AnalyzeException
 
@@ -122,8 +126,9 @@ analyzeAppend refStreams dstn e =
 {-# INLINE analyzeDrop #-}
 analyzeDrop :: Int -> Stream a -> IO ()
 analyzeDrop k (Append xs _ _)
-  | k >= length xs = throw DropIndexOverflow
-  | otherwise      = return ()
-analyzeDrop _ _    = throw DropAppliedToNonAppend
+  | k >= length xs                         = throw DropIndexOverflow
+  | k > fromIntegral (maxBound :: DropIdx) = throw DropMaxViolation
+  | otherwise                              = return ()
+analyzeDrop _ _                            = throw DropAppliedToNonAppend
 
 --------------------------------------------------------------------------------

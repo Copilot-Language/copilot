@@ -15,7 +15,7 @@ module Copilot.Language.Stream
 import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
-import Data.Word (Word8)
+--import Data.Word (Word8)
 import qualified Prelude as P
 
 --------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ data Stream :: * -> * where
     -> Stream a
   Drop
     :: Typed a
-    => Word8
+    => Integer 
     -> Stream a
     -> Stream a
   Extern
