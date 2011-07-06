@@ -4,13 +4,11 @@
 
 module Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV) where
 
-import Copilot.Core.Interpret.Eval (ExecTrace (..), Output)
+import Copilot.Core.Interpret.Eval (Output)
 import Copilot.Compile.C99.Test.Iteration (Iteration (..))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.Char
-import Data.List (nub)
-import Data.Map (Map)
 import qualified Data.Map as M
 import Prelude as P
 import Text.CSV.ByteString

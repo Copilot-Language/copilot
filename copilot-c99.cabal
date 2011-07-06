@@ -59,5 +59,4 @@ executable CopilotC99Test
   build-depends           : base >= 4.3
                           , copilot-c99
                           , copilot-core
-                          , copilot-language
                           , random >= 1.0

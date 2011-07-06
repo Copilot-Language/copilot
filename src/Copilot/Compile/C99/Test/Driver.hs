@@ -7,12 +7,9 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  (Spec (..), Trigger (..), TriggerArg (..), Type (..), typeOf)
+  (Spec (..), Trigger (..), TriggerArg (..), Type (..))
 import Data.List (intersperse)
-import Data.Monoid (Monoid (..))
-import Data.Int
 import Data.Text (Text)
-import qualified Data.Text as Text
 import Text.PP
   (Doc, ($$), (<>), (<+>), indent, string, empty, render, concatV, concatH)
 
@@ -103,28 +100,26 @@ ppPars
           ppType t <+> string ("t" ++ show k)
 
 ppArgs :: [TriggerArg] -> Doc
-ppArgs
+ppArgs args
   = concatV
-  . intersperse (string ", ")
-  . map ppArg
-  . zip [0..]
+  $ intersperse (string ", ")
+  $ map ppArg
+  $ [0..length args-1]
 
   where
 
-  ppArg :: (Int, TriggerArg) -> Doc
-  ppArg (k, par) = case par of
-    TriggerArg
-      { triggerArgType = t } ->
-          string ("t" ++ show k)
+  ppArg :: Int -> Doc
+  ppArg k = string ("t" ++ show k)
 
 ppType :: Type a -> Doc
-ppType t = string $ case t of
-  Bool   _ -> "bool"
-  Int8   _ -> "int8_t"   ; Int16  _ -> "int16_t"
-  Int32  _ -> "int32_t"  ; Int64  _ -> "int64_t"
-  Word8  _ -> "uint8_t"  ; Word16 _ -> "uint16_t"
-  Word32 _ -> "uint32_t" ; Word64 _ -> "uint64_t"
-  Float  _ -> "float" ; Double _ -> "double"
+ppType t = string $
+  case t of
+    Bool   _ -> "bool"
+    Int8   _ -> "int8_t"   ; Int16  _ -> "int16_t"
+    Int32  _ -> "int32_t"  ; Int64  _ -> "int64_t"
+    Word8  _ -> "uint8_t"  ; Word16 _ -> "uint16_t"
+    Word32 _ -> "uint32_t" ; Word64 _ -> "uint64_t"
+    Float  _ -> "float"    ; Double _ -> "double"
 
 ppFormat :: TriggerArg -> Doc
 ppFormat

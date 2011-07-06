@@ -6,15 +6,12 @@ module Copilot.Compile.C99.Test.CheckSpec (checkSpec) where
 
 import Copilot.Compile.C99 (compile)
 import Copilot.Core (Spec)
-import qualified Copilot.Core as Core
-import Copilot.Core.Interpret.Eval (ExecTrace, eval)
+import Copilot.Core.Interpret.Eval (eval)
 import Copilot.Compile.C99.Test.Driver (driver)
 import Copilot.Compile.C99.Test.Iteration (Iteration, execTraceToIterations)
 import Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import System.Directory (removeFile)
 import System.Process (system, readProcess)
@@ -43,7 +40,7 @@ genCFiles spec =
 compileCFiles :: IO ()
 compileCFiles =
   do
-    system $ "gcc tmp_.c tmp_driver_.c -o tmp_"
+    _ <- system $ "gcc tmp_.c tmp_driver_.c -o tmp_"
     return ()
 
 execute :: Int -> IO ByteString
