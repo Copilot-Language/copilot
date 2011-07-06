@@ -75,7 +75,7 @@ symm (Refl f) = unSymm (f (Symm refl))
 newtype Lift  f a b       = Lift  { unLift  :: Equal (f a)       (f b) }
 newtype Lift2 f c a b     = Lift2 { unlift2 :: Equal (f a c)     (f b c) }  
 newtype Lift3 f c d a b   = Lift3 { unlift3 :: Equal (f a c d)   (f b c d) }
-newtype Lift4 f ξ c d a b = Lift4 { unlift4 :: Equal (f a c d ξ) (f b c d ξ) }
+newtype Lift4 f e c d a b = Lift4 { unlift4 :: Equal (f a c d e) (f b c d e) }
 
 lift :: Equal a b -> Equal (f a) (f b)
 lift (Refl f) = unLift (f (Lift refl))
@@ -86,7 +86,7 @@ lift2 (Refl f) = unlift2 (f (Lift2 refl))
 lift3 :: Equal a b -> Equal (f a c d) (f b c d)
 lift3 (Refl f) = unlift3 (f (Lift3 refl))
 
-lift4 :: Equal a b -> Equal (f a c d ξ) (f b c d ξ)
+lift4 :: Equal a b -> Equal (f a c d e) (f b c d e)
 lift4 (Refl f) = unlift4 (f (Lift4 refl))
 
 --------------------------------------------------------------------------------
