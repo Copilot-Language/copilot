@@ -25,8 +25,15 @@ library
 
   build-depends           : atom >= 1.0.9
                           , base >= 4.3
+                          , bytestring
+                          , bytestring-csv
                           , containers >= 0.4
                           , copilot-core
+                          , directory >= 1.1
+                          , process >= 1.0
+                          , pp >= 1.0
+                          , random >= 1.0
+                          , text >= 0.6
                           , QuickCheck >= 2.4
 
   exposed-modules         : Copilot.Compile.C99
@@ -35,12 +42,22 @@ library
                           , Copilot.Compile.C99.Phases
                           , Copilot.Compile.C99.PreCode
                           , Copilot.Compile.C99.Queue
+                          , Copilot.Compile.C99.Test
                           , Copilot.Compile.C99.Witness
 
---executable CopilotC99Test
---  main-is                 : test/CopilotC99Test.hs
---  default-language        : Haskell2010
---
---  build-depends           : base >= 4.3
---                          , directory >= 1.1
---                          , process >= 1.0
+  other-modules           : Copilot.Compile.C99.Test.CheckSpec
+                          , Copilot.Compile.C99.Test.Driver
+                          , Copilot.Compile.C99.Test.Iteration
+                          , Copilot.Compile.C99.Test.ReadCSV
+
+executable CopilotC99Test
+  default-language        : Haskell2010
+  hs-source-dirs          : test
+  ghc-options             : -Wall -fwarn-tabs
+  main-is                 : CopilotC99Test.hs
+
+  build-depends           : base >= 4.3
+                          , copilot-c99
+                          , copilot-core
+                          , copilot-language
+                          , random >= 1.0
