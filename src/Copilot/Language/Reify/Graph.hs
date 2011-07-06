@@ -16,10 +16,7 @@ import Control.Applicative (pure, (<$>), (<*>))
 import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
---import Data.Foldable (Foldable (..))
 import Data.Reify (MuRef (..))
---import Data.Traversable (Traversable (..))
---import Data.Monoid (mempty, mappend)
 import Data.Word (Word8)
 
 data G t where
@@ -62,6 +59,10 @@ instance MuRef (Stream a) where
     Op1 op e        -> Op1G op <$> f e
     Op2 op e1 e2    -> Op2G op <$> f e1 <*> f e2
     Op3 op e1 e2 e3 -> Op3G op <$> f e1 <*> f e2 <*> f e3
+
+--type Env = Map String (Stream a)
+
+--mapDeRef' :: Env -> 
 
 {-
 instance Functor G where
