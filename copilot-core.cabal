@@ -55,7 +55,6 @@ library
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Interpret.Render
---    Copilot.Core.Interpret.Inf
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Externals

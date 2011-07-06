@@ -6,21 +6,21 @@
 
 module Copilot.Core.Interpret.Render
   ( renderAsTable
-  , renderAsSequence
+  , renderAsCSV
   ) where
 
 import Data.List (intersperse, transpose)
 import Data.Maybe (catMaybes)
-import Copilot.Core.Interpret.Eval (Output, Result (..))
+import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import qualified Data.Map as M
 import Text.PrettyPrint.NCol (asColumns)
-import Text.PrettyPrint (Doc, ($$), (<+>), text, render, empty)
+import Text.PrettyPrint (Doc, ($$), (<>), text, render, empty)
 
 --------------------------------------------------------------------------------
 
-renderAsTable :: Result -> String
+renderAsTable :: ExecTrace -> String
 renderAsTable
-  Result
+  ExecTrace
     { interpTriggers  = trigs
     , interpObservers = obsvs } =
   ( render
@@ -50,21 +50,21 @@ renderAsTable
 
 --------------------------------------------------------------------------------
 
-renderAsSequence :: Result -> String
-renderAsSequence = render . unfold
+renderAsCSV :: ExecTrace -> String
+renderAsCSV = render . unfold
 
-unfold :: Result -> Doc
+unfold :: ExecTrace -> Doc
 unfold r =
   case step r of
     (cs, Nothing) -> cs
     (cs, Just r') -> cs $$ unfold r'
 
-step :: Result -> (Doc, Maybe Result)
+step :: ExecTrace -> (Doc, Maybe ExecTrace)
 step
-  Result
+  ExecTrace
     { interpTriggers  = trigs
     , interpObservers = obsvs
-    } = (foldr ($$) empty (text "-- Iteration --" : ppTriggerOutputs), tails)
+    } = (foldr ($$) empty (text "#" : ppTriggerOutputs), tails)
 
   where
 
@@ -75,15 +75,15 @@ step
   ppTriggerOutput :: (String, Maybe [Output]) -> Maybe Doc
   ppTriggerOutput (_,  Nothing) = Nothing
   ppTriggerOutput (cs, Just xs) = Just $
-    text cs <+> text " : " <+>
-      (foldr (<+>) empty . map text . intersperse ",") xs
+    text cs <> text "," <>
+      (foldr (<>) empty . map text . intersperse ",") xs
 
-  tails :: Maybe Result
+  tails :: Maybe ExecTrace
   tails =
     if any null (M.elems (fmap tail trigs))
       then Nothing
       else Just
-        Result
+        ExecTrace
           { interpTriggers  = fmap tail trigs
           , interpObservers = obsvs }
 

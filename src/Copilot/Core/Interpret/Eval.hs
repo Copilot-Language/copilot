@@ -7,7 +7,7 @@
 module Copilot.Core.Interpret.Eval
   ( Env
   , Output
-  , Result (..)
+  , ExecTrace (..)
   , eval
   ) where
 
@@ -28,21 +28,21 @@ type Env k = [(k, DynamicF [] Type)]
 
 type Output = String
 
-data Result = Result
+data ExecTrace = ExecTrace
   { interpTriggers  :: Map String [Maybe [Output]]
   , interpObservers :: Map String [Output] }
   deriving Show
 
 --------------------------------------------------------------------------------
 
-eval :: Int -> Env Name -> Spec -> Result
+eval :: Int -> Env Name -> Spec -> ExecTrace
 eval k exts spec =
   let
     strms = fmap (evalStream   k exts strms) (specStreams   spec)
     trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
     obsvs = fmap (evalObserver k exts strms) (specObservers spec)
   in
-    Result
+    ExecTrace
       { interpTriggers  = M.fromList $ 
           zip (fmap triggerName  (specTriggers  spec)) trigs
       , interpObservers = M.fromList $
