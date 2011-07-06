@@ -14,9 +14,9 @@ import Copilot.Core
 import Copilot.Core.Interpret.Eval
 import Copilot.Core.Interpret.Render
 
-data Format = Table | Sequence
+data Format = Table | CSV
 
 -- | Interprets a Copilot specification.
 interpret :: Format -> Int -> Env Name -> Spec -> String
-interpret Table    k exts spec = renderAsTable    (eval k exts spec)
-interpret Sequence k exts spec = renderAsSequence (eval k exts spec)
+interpret Table k exts spec = renderAsTable (eval k exts spec)
+interpret CSV   k exts spec = renderAsCSV   (eval k exts spec)

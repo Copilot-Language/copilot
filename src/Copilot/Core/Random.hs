@@ -5,7 +5,8 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Copilot.Core.Random
-  ( random ) where
+  ( randomSpec
+  ) where
 
 import Control.Monad
 import Copilot.Core (WrapExpr (..), WrapOp1 (..), WrapOp2 (..))
@@ -22,8 +23,8 @@ import System.Random (StdGen)
 
 --------------------------------------------------------------------------------
 
-random :: Weights -> StdGen -> Spec
-random = runGen genSpec 0
+randomSpec :: Weights -> StdGen -> Spec
+randomSpec = runGen genSpec 0
 
 --------------------------------------------------------------------------------
 
