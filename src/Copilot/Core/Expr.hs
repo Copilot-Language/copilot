@@ -9,6 +9,7 @@ module Copilot.Core.Expr
   , Name
   , Expr (..)
   , WrapExpr (..)
+  , DropIdx
   ) where
 
 import Copilot.Core.Operators (Op1, Op2, Op3)
@@ -27,6 +28,10 @@ type Name = String
 
 --------------------------------------------------------------------------------
 
+type DropIdx = Word8
+
+--------------------------------------------------------------------------------
+
 -- | The expression class.
 class Expr e where
   -- | A constant.
@@ -37,7 +42,7 @@ class Expr e where
   -- | The temporal look-ahead operator.
   drop
     :: Type a
-    -> Word8
+    -> DropIdx
     -> Id
     -> e a
   -- | A binding of local variable.
