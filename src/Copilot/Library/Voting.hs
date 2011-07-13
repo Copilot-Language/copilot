@@ -2,78 +2,53 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | An implementation of the Boyer-Moore Majority Vote Algorithm for Copilot.
+--
+-- For details of the Boyer-Moore Majority Vote Algorithm see the following
+-- papers:
+--
+-- * Wim H. Hesselink,
+-- \"The Boyer-Moore Majority Vote Algorithm\", 2005
+--
+-- * Robert S. Boyer and J Strother Moore,
+-- \"MJRTY - A Fast Majority Vote Algorithm\", 1982
 
 {-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Library.Voting 
   ( majority, aMajority ) where
 
 import Copilot.Language
 import Copilot.Language.Prelude
+import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-majority :: (Num a, Typed a) => [Stream a] -> Stream a
-majority [] = error "Error in majority: list must be nonempty."
-majority ls = majority' 0 ls 0 0
+majority :: (P.Eq a, Typed a) => [Stream a] -> Stream a
+majority []     = error "Copilot.Library.Voting.majority: empty list!"
+majority (x:xs) = majority' xs x 1
 
-  where
-  majority' :: (Num a, Typed a)
-    => Int -> [Stream a] -> Stream a -> Stream Word32 -> Stream a
-  majority' _ []     candidate _   = candidate
-  majority' k (x:xs) candidate cnt = 
-    local (if cnt == 0 then x else candidate) $ \ candidate' ->
-      local (if cnt == 0 || x == candidate then cnt+1 else cnt-1) $ \ cnt' ->
-        majority' (k+1) xs candidate' cnt'
-
---------------------------------------------------------------------------------
-
-aMajority :: forall a. (Num a, Typed a) => [Stream a] -> Stream a -> Stream Bool
-aMajority [] _ = 
-  error "Error in aMajority: list must be nonempty."
-aMajority ls candidate = 
-  aMajority_ (0 :: Stream Word32) ls
-
-  where
-
-  aMajority_ acc []     = (acc * 2) > (fromIntegral $ length ls)
-  aMajority_ acc (x:xs) =
-    local (if x == candidate then 1 else 0) $ \ cnt ->
-      aMajority_ (acc + cnt) xs
+majority' :: (P.Eq a, Typed a)
+  => [Stream a] -> Stream a -> Stream Word32 -> Stream a
+majority' []     can _   = can
+majority' (x:xs) can cnt = 
+  local (if cnt == 0 then x else can) $ \ can' ->
+    local (if cnt == 0 || x == can then cnt+1 else cnt-1) $ \ cnt' ->
+      majority' xs can' cnt'
 
 --------------------------------------------------------------------------------
 
--- vote :: Spec
--- vote = do 
---   trigger "maj" true [ arg maj ]
+aMajority :: (P.Eq a, Typed a) => [Stream a] -> Stream a -> Stream Bool
+aMajority [] _ = error "Copilot.Library.Voting.aMajority: empty list!"
+aMajority xs can =
+  let
+    cnt = aMajority' 0 xs can
+  in
+    (cnt * 2) > fromIntegral (length xs)
 
---   trigger "aMaj" true 
---     [ arg $ aMajority xs maj ]
-
---   where
-
---   maj = majority xs
---   xs = concat (replicate 1 ls)
---   ls = [a, b, c, d, e, f, g, h, i, j, k]
-
---   a = [0] ++ a + 1 :: Stream Word32
---   b = [0] ++ b + 1
---   c = [0] ++ c + 1
---   d = [0] ++ d + 1
---   e = [1] ++ e + 1
---   f = [1] ++ f + 1
---   g = [1] ++ g + 1
---   h = [1] ++ h + 1
---   i = [1] ++ i + 1
---   j = [1] ++ j + 1
---   k = [1] ++ k + 1
-
--- --------------------------------------------------------------------------------
-
--- main :: IO ()
--- main =
---   do
--- --    interpret 20 [] vote
---     prettyPrint vote
+aMajority' :: (P.Eq a, Typed a)
+  => Stream Word32 -> [Stream a] -> Stream a -> Stream Word32
+aMajority' cnt []     _   = cnt
+aMajority' cnt (x:xs) can =
+  local (if x == can then cnt+1 else cnt) $ \ cnt' ->
+    aMajority' cnt' xs can
