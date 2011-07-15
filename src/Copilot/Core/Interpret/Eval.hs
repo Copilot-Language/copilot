@@ -173,16 +173,13 @@ evalStream k exts strms
     , streamBuffer   = buffer
     , streamExpr     = e
     , streamExprType = t
-    , streamGuard    = mguard
+    , streamGuard    = g
     } = (id, toDynamicF ws t)
 
   where
 
   xs = buffer ++ evalExpr_ e exts [] strms
-  ys =
-    case mguard of
-      Just e2 -> withGuard (uninitialized t) (evalExpr_ e2 exts [] strms) xs
-      Nothing -> xs
+  ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
   ws = take k $ strictList $ ys
 
   withGuard :: a -> [Bool] -> [a] -> [a]

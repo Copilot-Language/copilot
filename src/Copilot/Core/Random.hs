@@ -115,7 +115,7 @@ genStream ss
       Stream
         { streamId       = id
         , streamBuffer   = xs
-        , streamGuard    = Nothing
+        , streamGuard    = E.const (typeOf :: Type Bool) True
         , streamExpr     = unWrapExpr w
         , streamExprType = t }
 

@@ -22,7 +22,7 @@ import Copilot.Core.Type (Type)
 data Stream = forall a  . Stream
   { streamId         :: Id
   , streamBuffer     :: [a]
-  , streamGuard      :: forall e . Expr e => Maybe (e Bool)
+  , streamGuard      :: forall e . Expr e => e Bool
   , streamExpr       :: forall e . Expr e => e a
   , streamExprType   :: Type a }
 
