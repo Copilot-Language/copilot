@@ -7,6 +7,8 @@
 module Copilot.Core.Type
   ( Type (..)
   , Typed (..)
+  , UType (..)
+  , utype
   ) where
 
 import Copilot.Core.Type.Equality
@@ -61,32 +63,32 @@ instance Typed Double where typeOf = Double (mkEqual id)
 
 --------------------------------------------------------------------------------
 
-{-
-data NumInst a = Num a => NumInst
+-- Raw 'untyped' types:
 
-numInst :: Type a -> Maybe (NumInst a)
-numInst (Bool   _) = Nothing
-numInst (Int8   p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Int16  p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Int32  p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Int64  p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Word8  p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Word16 p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Word32 p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Word64 p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Float  p) = Just $ coerce (cong (symm p)) NumInst
-numInst (Double p) = Just $ coerce (cong (symm p)) NumInst
+data UType
+  = UBool
+  | UInt8
+  | UInt16
+  | UInt32
+  | UInt64
+  | UWord8
+  | UWord16
+  | UWord32
+  | UWord64
+  | UFloat
+  | UDouble
 
-add1, add2 :: Type a -> a -> a -> Maybe a
-add1 t x y =
-  case numInst t of
-    Just NumInst -> Just (x + y)
-    Nothing      -> Nothing
-
-add2 t x y =
-  do
-    NumInst <- numInst t
-    return (x + y)
--}
+utype :: Type a -> UType
+utype (Bool  _)  = UBool
+utype (Int8  _)  = UInt8
+utype (Int16 _)  = UInt16
+utype (Int32 _)  = UInt32
+utype (Int64 _)  = UInt64
+utype (Word8  _) = UWord8
+utype (Word16 _) = UWord16
+utype (Word32 _) = UWord32
+utype (Word64 _) = UWord64
+utype (Float  _) = UFloat
+utype (Double _) = UDouble
 
 --------------------------------------------------------------------------------

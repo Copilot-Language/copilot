@@ -173,20 +173,22 @@ evalStream k exts strms
     , streamBuffer   = buffer
     , streamExpr     = e
     , streamExprType = t
-    } = (id, toDynamicF xs t)
+    , streamGuard    = mguard
+    } = (id, toDynamicF ws t)
 
   where
 
-  xs = take k $ strictList $ buffer ++ evalExpr_ e exts [] strms
---  ys =
---    case mguard of
---      Just e2 -> withGuard (uninitialized t) (evalExpr env e2) xs
---      Nothing -> xs
+  xs = buffer ++ evalExpr_ e exts [] strms
+  ys =
+    case mguard of
+      Just e2 -> withGuard (uninitialized t) (evalExpr_ e2 exts [] strms) xs
+      Nothing -> xs
+  ws = take k $ strictList $ ys
 
---  withGuard :: a -> [Bool] -> [a] -> [a]
---  withGuard _ (True:vs)  (x:xs) = x : withGuard x vs xs
---  withGuard z (False:vs) xs     = z : withGuard z vs xs
---  withGuard _ _          _      = error "withGuard: empty stream."
+  withGuard :: a -> [Bool] -> [a] -> [a]
+  withGuard _ (True:vs)  (z:zs) = z : withGuard z vs zs
+  withGuard z (False:vs) zs     = z : withGuard z vs zs
+  withGuard _ _          _      = []
 
 --------------------------------------------------------------------------------
 
