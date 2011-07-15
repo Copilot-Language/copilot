@@ -7,33 +7,37 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  (Spec (..), Trigger (..), TriggerArg (..), Type (..))
+  (Spec (..), Trigger (..), TriggerArg (..), Type (..), UType (..), utype)
 import Data.List (intersperse)
+import Data.Map (Map)
+import qualified Data.Map as M
 import Data.Text (Text)
 import Text.PP
   (Doc, ($$), (<>), (<+>), indent, string, empty, render, concatV, concatH)
 
-driver :: String -> Spec -> Text
-driver name Spec { specTriggers = trigs } =
+type ExternalEnv = Map String (UType, [Int])
+
+driver :: ExternalEnv -> Int -> String -> Spec -> Text
+driver env numIterations pname Spec { specTriggers = trigs } =
   render $
-    ppHeader name $$
-    ppMain name $$
+    ppHeader pname $$
+    ppMain numIterations pname $$
     ppTriggers trigs
 
 ppHeader :: String -> Doc
-ppHeader name =
+ppHeader pname =
   concatH $
     [ string "#include <stdint.h>"
     , string "#include <stdio.h>"
-    , string "#include \"" <> string name <> string ".h\""
+    , string "#include \"" <> string pname <> string ".h\""
     ]
 
-ppMain :: String -> Doc
-ppMain name =
+ppMain :: Int -> String -> Doc
+ppMain numIterations pname =
   concatH $
     [ string "int main(int argc, char const *argv[]) {"
     , string "  int i, k;"
-    , string "  k = atoi(argv[1]);"
+    , string "  k = " <> string (show numIterations) <> string ";"
     , string "  for (i = 0; i < k; i++) {"
     , string "    " <> it <+> it <+> it <+> it <+> it
     , string "    if (i < k-1) printf(\"#\\n\");"
@@ -45,7 +49,7 @@ ppMain name =
   where
 
     it :: Doc
-    it = string name <> string "();"
+    it = string pname <> string "();"
 
 ppTriggers :: [Trigger] -> Doc
 ppTriggers = foldr ($$) empty . map ppTrigger
@@ -97,7 +101,7 @@ ppPars
   ppPar (k, par) = case par of
     TriggerArg
       { triggerArgType = t } ->
-          ppType t <+> string ("t" ++ show k)
+          ppUType (utype t) <+> string ("t" ++ show k)
 
 ppArgs :: [TriggerArg] -> Doc
 ppArgs args
@@ -111,15 +115,15 @@ ppArgs args
   ppArg :: Int -> Doc
   ppArg k = string ("t" ++ show k)
 
-ppType :: Type a -> Doc
-ppType t = string $
+ppUType :: UType -> Doc
+ppUType t = string $
   case t of
-    Bool   _ -> "bool"
-    Int8   _ -> "int8_t"   ; Int16  _ -> "int16_t"
-    Int32  _ -> "int32_t"  ; Int64  _ -> "int64_t"
-    Word8  _ -> "uint8_t"  ; Word16 _ -> "uint16_t"
-    Word32 _ -> "uint32_t" ; Word64 _ -> "uint64_t"
-    Float  _ -> "float"    ; Double _ -> "double"
+    UBool   -> "bool"
+    UInt8   -> "int8_t"   ; UInt16  -> "int16_t"
+    UInt32  -> "int32_t"  ; UInt64  -> "int64_t"
+    UWord8  -> "uint8_t"  ; UWord16 -> "uint16_t"
+    UWord32 -> "uint32_t" ; UWord64 -> "uint64_t"
+    UFloat  -> "float"    ; UDouble -> "double"
 
 ppFormat :: TriggerArg -> Doc
 ppFormat
@@ -129,3 +133,6 @@ ppFormat
     Int8   _ -> "%d" ; Int16  _ -> "%d" ; Int32  _ -> "%d" ; Int64  _ -> "%lld"
     Word8  _ -> "%d" ; Word16 _ -> "%d" ; Word32 _ -> "%d" ; Word64 _ -> "%lld"
     Float  _ -> "%f" ; Double _ -> "%lf"
+
+--ppExterns :: 
+--ppExterns = undefined
