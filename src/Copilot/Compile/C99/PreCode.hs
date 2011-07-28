@@ -21,7 +21,7 @@ externProto (Extern name t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
 
 --------------------------------------------------------------------------------
 
-typeSpec :: Core.Type α -> String
+typeSpec :: Core.Type a -> String
 typeSpec (Core.Bool   _) = "bool"
 typeSpec (Core.Int8   _) = "int8_t"
 typeSpec (Core.Int16  _) = "int16_t"
