@@ -30,6 +30,7 @@ library
   exposed-modules:
     Copilot
     Copilot.Language
+    Copilot.Language.Compile
     Copilot.Language.Interpret
     Copilot.Language.Operators.Boolean
     Copilot.Language.Operators.Constant

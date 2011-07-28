@@ -12,7 +12,7 @@ module Copilot.Language.Reify
   ( reify
   ) where
 
-import Copilot.Core (Typed, Id, typeOf)
+import Copilot.Core (Typed, Type, Id, typeOf)
 import qualified Copilot.Core as Core
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
@@ -193,7 +193,7 @@ mkStream refMkId refStreams refMap e0 =
         Core.Stream
           { Core.streamId         = id
           , Core.streamBuffer     = buf
-          , Core.streamGuard      = Nothing
+          , Core.streamGuard      = Core.const (typeOf :: Type Bool) True
           , Core.streamExpr       = unWrapExpr w
           , Core.streamExprType   = typeOf }
       return id
