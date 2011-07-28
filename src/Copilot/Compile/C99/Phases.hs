@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Rank2Types #-}
+
 module Copilot.Compile.C99.Phases
   ( schedulePhases
   ) where
@@ -65,11 +67,7 @@ updateStates :: MetaTable -> Core.Spec -> Atom ()
 updateStates meta
   Core.Spec
     { Core.specStreams = streams
---    , Core.specLets    = lets
-    } =
-      do
-        mapM_ updateStreamState streams
---        mapM_ updateLet lets
+    } = mapM_ updateStreamState streams
 
   where
 
@@ -79,14 +77,17 @@ updateStates meta
       { Core.streamId       = id
       , Core.streamExpr     = e
       , Core.streamExprType = t1
+      , Core.streamGuard    = g
       } =
     do
       let e' = c2aExpr meta e
-      let Just strmInfo = M.lookup id (streamInfoMap meta)
-      updateStreamState1 t1 id e' strmInfo
+          Just strmInfo = M.lookup id (streamInfoMap meta)
+          g' = cond (c2aExpr meta g)
+      updateStreamState1 t1 id e' g' strmInfo
 
-  updateStreamState1 :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
-  updateStreamState1 t1 id e1
+  updateStreamState1
+    :: Core.Type a -> Core.Id -> A.E a -> Atom () -> StreamInfo -> Atom ()
+  updateStreamState1 t1 id e1 g1
     StreamInfo
       { streamInfoTempVar = tmp
       , streamInfoType    = t2
@@ -94,6 +95,7 @@ updateStates meta
     exactPhase (fromEnum UpdateStates) $
       atom ("update_state_s" ++ show id) $
         do
+          g1
           W.AssignInst <- return (W.assignInst t2)
           Just p <- return (t1 =~= t2)
           tmp <== coerce (cong p) e1

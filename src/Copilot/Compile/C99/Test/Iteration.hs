@@ -8,7 +8,6 @@ module Copilot.Compile.C99.Test.Iteration
   ) where
 
 import Copilot.Core.Interpret.Eval (ExecTrace (..), Output)
-import Data.Function (on)
 import Data.List (unfoldr)
 import Data.Map (Map)
 import qualified Data.Map as M
