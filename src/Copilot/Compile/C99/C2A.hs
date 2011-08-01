@@ -20,6 +20,8 @@ import qualified Data.Map as M
 import qualified Language.Atom as A
 import Prelude hiding (id)
 
+import Data.Int
+
 --------------------------------------------------------------------------------
 
 c2aExpr :: MetaTable -> (forall e . C.Expr e => e a) -> A.E a
@@ -126,6 +128,24 @@ instance C.Expr C2AExpr where
 
     (A.value . A.var' name . c2aType) t
 
+  ----------------------------------------------------
+{-
+  externFun t name args = C2AExpr $ \ _ _ ->
+
+    (A.value . A.var' name . c2aType) t
+-}
+
+  ----------------------------------------------------
+
+  externArray t1 t2 name e1 = C2AExpr $ \ env meta ->
+
+    case ( W.integralEInst t1, W.exprInst t2 ) of
+         ( W.IntegralEInst   , W.ExprInst    ) ->
+            let
+              arr = A.array' name (c2aType t2)
+              idx = c2aExpr_ e1 env meta
+            in
+              arr A.!. idx
 
   ----------------------------------------------------
 
@@ -169,7 +189,6 @@ instance C.Op1 C2AOp1 where
   atanh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> atanh
   acosh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> acosh
 
-
 instance C.Op2 C2AOp2 where
   and     = C2AOp2                                                    (A.&&.)
   or      = C2AOp2                                                    (A.||.)
@@ -191,4 +210,4 @@ instance C.Op2 C2AOp2 where
 instance C.Op3 C2AOp3 where
   mux t   = C2AOp3 $ case W.exprInst        t of W.ExprInst        -> A.mux
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

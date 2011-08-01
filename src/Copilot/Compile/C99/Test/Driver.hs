@@ -7,7 +7,7 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  (Spec (..), Trigger (..), TriggerArg (..), Type (..), UType (..), utype)
+  (Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), utype)
 import Data.List (intersperse)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -72,7 +72,7 @@ ppTrigger
     , string "}"
     ]
 
-ppPrintf :: String -> [TriggerArg] -> Doc
+ppPrintf :: String -> [UExpr] -> Doc
 ppPrintf name args =
   string "printf(\"" <>
   string name <>
@@ -82,13 +82,13 @@ ppPrintf name args =
   ppArgs args <>
   string ")"
 
-ppFormats :: [TriggerArg] -> Doc
+ppFormats :: [UExpr] -> Doc
 ppFormats
   = concatV
   . intersperse (string ",")
   . map ppFormat
 
-ppPars :: [TriggerArg] -> Doc
+ppPars :: [UExpr] -> Doc
 ppPars
   = concatV
   . intersperse (string ", ")
@@ -97,13 +97,13 @@ ppPars
 
   where
 
-  ppPar :: (Int, TriggerArg) -> Doc
+  ppPar :: (Int, UExpr) -> Doc
   ppPar (k, par) = case par of
-    TriggerArg
-      { triggerArgType = t } ->
+    UExpr
+      { uExprType = t } ->
           ppUType (utype t) <+> string ("t" ++ show k)
 
-ppArgs :: [TriggerArg] -> Doc
+ppArgs :: [UExpr] -> Doc
 ppArgs args
   = concatV
   $ intersperse (string ", ")
@@ -125,9 +125,9 @@ ppUType t = string $
     UWord32 -> "uint32_t" ; UWord64 -> "uint64_t"
     UFloat  -> "float"    ; UDouble -> "double"
 
-ppFormat :: TriggerArg -> Doc
+ppFormat :: UExpr -> Doc
 ppFormat
-  TriggerArg { triggerArgType = t } =
+  UExpr { uExprType = t } =
   string $ case t of
     Bool   _ -> "%d"
     Int8   _ -> "%d" ; Int16  _ -> "%d" ; Int32  _ -> "%d" ; Int64  _ -> "%lld"
