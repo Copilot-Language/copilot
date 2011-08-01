@@ -53,12 +53,12 @@ locsStream Stream { streamExpr = e } = locsExpr e
 
 locsTrigger :: Trigger -> DList Local
 locsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
-  locsExpr e `append` concat (fmap locsTriggerArg args)
+  locsExpr e `append` concat (fmap locsUExpr args)
 
   where
 
-  locsTriggerArg :: TriggerArg -> DList Local
-  locsTriggerArg (TriggerArg e1 _) = locsExpr e1
+  locsUExpr :: UExpr -> DList Local
+  locsUExpr (UExpr _ e1) = locsExpr e1
 
 --------------------------------------------------------------------------------
 

@@ -9,11 +9,10 @@ module Copilot.Core.Spec
   ( Stream (..)
   , Observer (..)
   , Trigger (..)
-  , TriggerArg (..)
   , Spec (..)
   ) where
 
-import Copilot.Core.Expr (Name, Id, Expr)
+import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type)
 
 --------------------------------------------------------------------------------
@@ -40,14 +39,7 @@ data Observer = forall a . Observer
 data Trigger = Trigger
   { triggerName      :: Name
   , triggerGuard     :: forall e . Expr e => e Bool
-  , triggerArgs      :: [TriggerArg] }
-
---------------------------------------------------------------------------------
-
--- | An argument to a trigger.
-data TriggerArg = forall a . TriggerArg
-  { triggerArgExpr   :: forall e . Expr e => e a
-  , triggerArgType   :: Type a }
+  , triggerArgs      :: [UExpr] }
 
 --------------------------------------------------------------------------------
 

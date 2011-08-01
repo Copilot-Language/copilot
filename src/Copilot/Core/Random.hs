@@ -9,7 +9,7 @@ module Copilot.Core.Random
   ) where
 
 import Control.Monad
-import Copilot.Core (WrapExpr (..), WrapOp1 (..), WrapOp2 (..))
+import Copilot.Core (WrapExpr (..), WrapOp1 (..), WrapOp2 (..), UExpr (..))
 import qualified Copilot.Core as E
 import Copilot.Core.Spec
 import Copilot.Core.Random.Gen
@@ -136,15 +136,15 @@ genTrigger ss name =
 
   where
 
-  genArg :: Gen TriggerArg
+  genArg :: Gen UExpr
   genArg =
     do
       WrapType t <- genTypeFromStreamInfo's ss
       w <- genExpr ss t
       return
-        TriggerArg
-          { triggerArgExpr = unWrapExpr w
-          , triggerArgType = t }
+        UExpr
+          { uExprExpr = unWrapExpr w
+          , uExprType = t }
 
 --------------------------------------------------------------------------------
 

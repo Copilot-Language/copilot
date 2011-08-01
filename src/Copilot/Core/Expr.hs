@@ -2,13 +2,14 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 module Copilot.Core.Expr
   ( Id
   , Name
   , Expr (..)
   , WrapExpr (..)
+  , UExpr (..)
   , DropIdx
   ) where
 
@@ -28,6 +29,7 @@ type Name = String
 
 --------------------------------------------------------------------------------
 
+-- | An index for the drop operator.
 type DropIdx = Word8
 
 --------------------------------------------------------------------------------
@@ -63,6 +65,20 @@ class Expr e where
     -> Name
     -> e a
   -- | An unary operator.
+  externFun
+    :: Type a
+    -> Name
+    -> [UExpr]
+    -> e a
+  -- | An external function.
+  externArray
+    :: Integral a
+    => Type a
+    -> Type b
+    -> Name
+    -> e a
+    -> e b
+  -- | An external array.
   op1
     :: (forall op . Op1 op => op a b)
     -> e a -> e b
@@ -77,8 +93,13 @@ class Expr e where
 
 --------------------------------------------------------------------------------
 
--- A wrapped expression.
+-- | An untyped expression.
+data UExpr = forall a . UExpr
+  { uExprType :: Type a
+  , uExprExpr :: forall e . Expr e => e a }
 
-data WrapExpr a = WrapExpr { unWrapExpr :: forall e . Expr e => e a }
+-- | A wrapped expression.
+data WrapExpr a = WrapExpr
+  { unWrapExpr :: forall e . Expr e => e a }
 
 --------------------------------------------------------------------------------

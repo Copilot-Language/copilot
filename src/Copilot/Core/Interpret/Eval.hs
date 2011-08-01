@@ -180,7 +180,7 @@ evalStream k exts strms
 
   xs = buffer ++ evalExpr_ e exts [] strms
   ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
-  ws = take k $ strictList $ ys
+  ws = take k $ strictList $ xs
 
   withGuard :: a -> [Bool] -> [a] -> [a]
   withGuard _ (True:vs)  (z:zs) = z : withGuard z vs zs
@@ -206,10 +206,10 @@ evalTrigger k exts strms
   bs = evalExpr_ e exts [] strms
 
   vs :: [[Output]]
-  vs = transpose $ map evalTriggerArg args
+  vs = transpose $ map evalUExpr args
 
-  evalTriggerArg :: TriggerArg -> [Output]
-  evalTriggerArg (TriggerArg e1 t) =
+  evalUExpr :: UExpr -> [Output]
+  evalUExpr (UExpr t e1) =
     map (showWithType t) (evalExpr_ e1 exts [] strms)
 
 --------------------------------------------------------------------------------
