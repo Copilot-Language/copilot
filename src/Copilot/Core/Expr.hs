@@ -93,7 +93,7 @@ class Expr e where
 
 --------------------------------------------------------------------------------
 
--- | An untyped expression.
+-- | A untyped expression (no phantom type).
 data UExpr = forall a . UExpr
   { uExprType :: Type a
   , uExprExpr :: forall e . Expr e => e a }
