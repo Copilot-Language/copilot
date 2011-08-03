@@ -16,6 +16,11 @@ module Copilot.Language.Operators.Extern
   , externI64
   , externF
   , externD
+
+  , FunArg
+  , externFun
+  , externArray
+  , funArg
   ) where
 
 import Copilot.Core (Typed)
@@ -27,6 +32,15 @@ import Data.Int
 
 extern :: Typed a => String -> Stream a
 extern = Extern
+
+externFun :: Typed a => String -> [FunArg] -> Stream a
+externFun = undefined
+
+externArray :: (Typed a, Typed b, Integral a) => String -> Stream a -> Stream b
+externArray = undefined
+
+funArg :: Typed a => Stream a -> FunArg
+funArg = FunArg
 
 --------------------------------------------------------------------------------
 

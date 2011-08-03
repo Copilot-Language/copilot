@@ -10,6 +10,7 @@
 
 module Copilot.Language.Stream
   ( Stream (..)
+  , FunArg (..)
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -40,6 +41,16 @@ data Stream :: * -> * where
     :: Typed a
     => String
     -> Stream a
+  ExternFun
+    :: Typed a
+    => String
+    -> [FunArg]
+    -> Stream a
+  ExternArray
+    :: (Typed a, Typed b, Integral a)
+    => String
+    -> Stream a
+    -> Stream b
   Local
     :: (Typed a, Typed b)
     => Stream a
@@ -64,6 +75,11 @@ data Stream :: * -> * where
     -> Stream b
     -> Stream c
     -> Stream d
+
+--------------------------------------------------------------------------------
+
+data FunArg where
+  FunArg :: Typed a => Stream a -> FunArg
 
 --------------------------------------------------------------------------------
 

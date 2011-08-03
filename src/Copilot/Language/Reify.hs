@@ -5,8 +5,7 @@
 -- | Transforms a Copilot Language specification into a Copilot Core
 -- specification.
 
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 module Copilot.Language.Reify
   ( reify
@@ -17,7 +16,7 @@ import qualified Copilot.Core as Core
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
-import Copilot.Language.Stream (Stream (..))
+import Copilot.Language.Stream (Stream (..), FunArg (..))
 import Data.IORef
 import Prelude hiding (id)
 import System.Mem.StableName.Dynamic
@@ -88,11 +87,11 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) =
 
   where
 
-  mkTriggerArg :: TriggerArg -> IO Core.TriggerArg
+  mkTriggerArg :: TriggerArg -> IO Core.UExpr
   mkTriggerArg (TriggerArg e) =
     do
       w <- mkExpr refMkId refStreams refMap e
-      return $ Core.TriggerArg (unWrapExpr w) typeOf
+      return $ Core.UExpr typeOf (unWrapExpr w)
 
 --------------------------------------------------------------------------------
 
@@ -115,39 +114,109 @@ mkExpr refMkId refStreams refMap = go
     => Stream a
     -> IO (WrapExpr a)
   go e0 =
+
     case e0 of
-      Append _ _ _    -> do s <- mkStream refMkId refStreams refMap e0
-                            return $ WrapExpr $ Core.drop typeOf 0 s
-      Drop k e1       -> case e1 of
-                           Append _ _ _ ->
-                             do
-                               s <- mkStream refMkId refStreams refMap e1
-                               return $ WrapExpr $ Core.drop typeOf (fromIntegral k) s
-                           _ -> error "dfs: Drop" -- !!! Fix this !!!
-      Const x         -> return $ WrapExpr $ Core.const typeOf x
-      Local e f       -> do
-                           id <- mkId refMkId
-                           let cs = "local_" ++ show id
-                           w1 <- go e
-                           w2 <- go (f (Var cs))
-                           return $ WrapExpr $ Core.local typeOf typeOf cs
-                             (unWrapExpr w1) (unWrapExpr w2)
-      Var cs          -> return $ WrapExpr $ Core.var typeOf cs
-      Extern cs       -> return $ WrapExpr $ Core.extern typeOf cs
-      Op1 op e        -> do
-                           w <- go e
-                           return $ WrapExpr $ Core.op1 op (unWrapExpr w)
-      Op2 op e1 e2    -> do
-                           w1 <- go e1
-                           w2 <- go e2
-                           return $ WrapExpr $ Core.op2 op
-                             (unWrapExpr w1) (unWrapExpr w2)
-      Op3 op e1 e2 e3 -> do
-                           w1 <- go e1
-                           w2 <- go e2
-                           w3 <- go e3
-                           return $ WrapExpr $ Core.op3 op
-                             (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
+
+      ------------------------------------------------------
+
+      Append _ _ _ ->
+
+        do s <- mkStream refMkId refStreams refMap e0
+           return $ WrapExpr $ Core.drop typeOf 0 s
+
+      ------------------------------------------------------
+
+      Drop k e1 ->
+
+        case e1 of
+          Append _ _ _ ->
+            do
+              s <- mkStream refMkId refStreams refMap e1
+              return $ WrapExpr $ Core.drop typeOf (fromIntegral k) s
+          _ -> error "dfs: Drop"
+
+      ------------------------------------------------------
+
+      Const x ->
+
+        return $ WrapExpr $ Core.const typeOf x
+
+      ------------------------------------------------------
+
+      Local e f ->
+
+        do
+          id <- mkId refMkId
+          let cs = "local_" ++ show id
+          w1 <- go e
+          w2 <- go (f (Var cs))
+          return $ WrapExpr $ Core.local typeOf typeOf cs
+            (unWrapExpr w1) (unWrapExpr w2)
+
+      ------------------------------------------------------
+
+      Var cs ->
+
+        return $ WrapExpr $ Core.var typeOf cs
+
+      ------------------------------------------------------
+
+      Extern cs ->
+
+        return $ WrapExpr $ Core.extern typeOf cs
+
+      ------------------------------------------------------
+
+      ExternFun cs args ->
+
+        do
+          args' <- mapM mkFunArg args
+          return $ WrapExpr $ Core.externFun typeOf cs args'
+
+      ------------------------------------------------------
+
+      ExternArray cs e ->
+
+        do
+          w <- go e
+          return $ WrapExpr $ Core.externArray typeOf typeOf cs (unWrapExpr w)
+
+      ------------------------------------------------------
+
+      Op1 op e ->
+
+        do
+          w <- go e
+          return $ WrapExpr $ Core.op1 op (unWrapExpr w)
+
+      ------------------------------------------------------
+
+      Op2 op e1 e2 ->
+
+        do
+          w1 <- go e1
+          w2 <- go e2
+          return $ WrapExpr $ Core.op2 op
+            (unWrapExpr w1) (unWrapExpr w2)
+
+      ------------------------------------------------------
+
+      Op3 op e1 e2 e3 ->
+
+        do
+          w1 <- go e1
+          w2 <- go e2
+          w3 <- go e3
+          return $ WrapExpr $ Core.op3 op
+            (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
+
+      ------------------------------------------------------
+
+  mkFunArg :: FunArg -> IO Core.UExpr
+  mkFunArg (FunArg e) =
+    do
+      w <- mkExpr refMkId refStreams refMap e
+      return $ Core.UExpr typeOf (unWrapExpr w)
 
 --------------------------------------------------------------------------------
 
@@ -202,5 +271,3 @@ mkStream refMkId refStreams refMap e0 =
 
 mkId :: IORef Int -> IO Id
 mkId refMkId = atomicModifyIORef refMkId $ \ n -> (succ n, n)
-
---------------------------------------------------------------------------------

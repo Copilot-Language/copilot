@@ -63,6 +63,11 @@ sumExterns =
 -- An example of a complete copilot specification.
 --
 
+e1, e2, e3 :: [Word64]
+e1 = [0..]
+e2 = 5 : 4 : e2
+e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
+
 -- A specification:
 spec :: Spec 
 spec =
