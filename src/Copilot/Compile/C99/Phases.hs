@@ -25,6 +25,7 @@ import Prelude hiding (id)
 
 data Phase
   = SampleExterns
+  | SampleExternFuns
   | UpdateStates
   | FireTriggers
   | UpdateBuffers
@@ -39,11 +40,12 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 schedulePhases :: MetaTable -> Core.Spec -> Atom ()
 schedulePhases meta spec =
   A.period numberOfPhases $
-    sampleExterns   meta      >>
-    updateStates    meta spec >>
-    fireTriggers    meta spec >>
+    sampleExterns    meta      >>
+    sampleExternFuns meta spec >>
+    updateStates     meta spec >>
+    fireTriggers     meta spec >>
 --    updateObservers meta spec >>
-    updateBuffers   meta spec
+    updateBuffers    meta spec
 
 --------------------------------------------------------------------------------
 
@@ -60,6 +62,11 @@ sampleExterns =
         do
           W.AssignInst <- return $ W.assignInst t
           v <== A.value (A.var' name (c2aType t))
+
+--------------------------------------------------------------------------------
+
+sampleExternFuns :: MetaTable -> Core.Spec -> Atom ()
+sampleExternFuns = undefined
 
 --------------------------------------------------------------------------------
 
