@@ -41,7 +41,7 @@ schedulePhases :: MetaTable -> Core.Spec -> Atom ()
 schedulePhases meta spec =
   A.period numberOfPhases $
     sampleExterns    meta      >>
-    sampleExternFuns meta spec >>
+--    sampleExternFuns meta spec >>
     updateStates     meta spec >>
     fireTriggers     meta spec >>
 --    updateObservers meta spec >>
