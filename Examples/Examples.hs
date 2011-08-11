@@ -53,6 +53,14 @@ bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
           .^.
           ( let b = [ 0, 1, 1 ] ++ b in b )
 
+sumExterns :: Stream Word64
+sumExterns =
+  let
+    e1 = extern "e1"
+    e2 = extern "e2"
+  in
+    e1 + e2
+
 --------------------------------------------------------------------------------
 
 --
@@ -63,24 +71,26 @@ bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
 spec :: Spec 
 spec =
   do
-    -- A trigger with three arguments:
+    -- A trigger with four arguments:
     trigger "f" true -- booleans
-      [ arg fib, arg nats, arg bitWise ]
+      [ arg fib, arg nats, arg sumExterns, arg bitWise ]
 
     -- A trigger with a single argument:
     trigger "g" (flipflop booleans)
-      [ arg (counter false + 25 :: Stream Int32) ]
+      [ arg (sumExterns + counter false + 25) ]
+--      [ arg (counter false + 25 :: Stream Int32) ]
 
     -- A trigger with a single argument (should never fire):
     trigger "h" (extern "e3" /= fib)
       [ arg (0 :: Stream Int8) ]
 
+    observer "i" (odd nats)
 
-e1, e2, e3 :: [ Word64 ]
-e1 = [ 1 .. ]
-e2 = [ 1 .. ]
-e3 = [ 1 .. ]
-
+--- Some infinite lists for simulating external variables:
+e1, e2, e3 :: [Word64]
+e1 = [0..]
+e2 = 5 : 4 : e2
+e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
 
 main :: IO ()
 main =
