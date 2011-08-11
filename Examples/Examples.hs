@@ -67,10 +67,12 @@ sumExterns =
 -- An example of a complete copilot specification.
 --
 
+
 -- A specification:
 spec :: Spec 
 spec =
   do
+
     -- A trigger with four arguments:
     trigger "f" true -- booleans
       [ arg fib, arg nats, arg sumExterns, arg bitWise ]
