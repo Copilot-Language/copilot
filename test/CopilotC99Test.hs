@@ -7,8 +7,6 @@
 
 module Main (main) where
 
-import Copilot.Core (Spec)
-import qualified Copilot.Core as Core
 import Copilot.Core.PrettyPrint (prettyPrint)
 import Copilot.Core.Random (randomSpec)
 import Copilot.Core.Random.Weights (Weights (..), simpleWeights)

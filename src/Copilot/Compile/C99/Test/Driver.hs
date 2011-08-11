@@ -10,7 +10,6 @@ import Copilot.Core
   (Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), utype)
 import Data.List (intersperse)
 import Data.Map (Map)
-import qualified Data.Map as M
 import Data.Text (Text)
 import Text.PP
   (Doc, ($$), (<>), (<+>), indent, string, empty, render, concatV, concatH)
@@ -18,7 +17,7 @@ import Text.PP
 type ExternalEnv = Map String (UType, [Int])
 
 driver :: ExternalEnv -> Int -> String -> Spec -> Text
-driver env numIterations pname Spec { specTriggers = trigs } =
+driver _ numIterations pname Spec { specTriggers = trigs } =
   render $
     ppHeader pname $$
     ppMain numIterations pname $$

@@ -7,17 +7,25 @@ module Copilot.Compile.C99.PreCode
   ) where
 
 import qualified Copilot.Core as Core
+import Copilot.Core (Observer (..), specObservers)
 import Copilot.Core.Spec.Externals (Extern (..), externals)
 
 --------------------------------------------------------------------------------
 
 preCode :: Core.Spec -> String
-preCode = unlines . map externProto . externals
+preCode spec =
+  ( unlines . map externProto   . externals     ) spec ++
+  ( unlines . map observerProto . specObservers ) spec
 
 --------------------------------------------------------------------------------
 
 externProto :: Extern -> String
 externProto (Extern name t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
+
+--------------------------------------------------------------------------------
+
+observerProto :: Observer -> String
+observerProto (Observer name _ t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
 
 --------------------------------------------------------------------------------
 
