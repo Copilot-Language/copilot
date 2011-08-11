@@ -14,6 +14,7 @@ module Copilot.Core.Operators
   ) where
 
 import Copilot.Core.Type (Type)
+import Data.Bits
 
 --------------------------------------------------------------------------------
 
@@ -42,6 +43,7 @@ class Op1 op where
   asinh :: Floating a => Type a -> op a a
   atanh :: Floating a => Type a -> op a a
   acosh :: Floating a => Type a -> op a a
+  bwNot :: Bits a => Type a -> op a a
 
 --------------------------------------------------------------------------------
 
@@ -70,6 +72,10 @@ class Op2 op where
   ge    :: Ord a => Type a -> op a a Bool
   lt    :: Ord a => Type a -> op a a Bool
   gt    :: Ord a => Type a -> op a a Bool
+  -- Bitwise operators.
+  bwAnd :: Bits a => Type a -> op a a a
+  bwOr  :: Bits a => Type a -> op a a a
+  bwXor :: Bits a => Type a -> op a a a
 
 --------------------------------------------------------------------------------
 

@@ -54,6 +54,7 @@ instance Op1 PPOp1 where
   asinh _  = PPOp1 $ ppPrefix "asinh"
   atanh _  = PPOp1 $ ppPrefix "atanh"
   acosh _  = PPOp1 $ ppPrefix "acosh"
+  bwNot _  = PPOp1 $ ppPrefix "~"
 
 instance Op2 PPOp2 where
   and      = PPOp2 $ ppInfix "&&"
@@ -72,6 +73,9 @@ instance Op2 PPOp2 where
   ge _     = PPOp2 $ ppInfix ">="
   lt _     = PPOp2 $ ppInfix "<"
   gt _     = PPOp2 $ ppInfix ">"
+  bwAnd _  = PPOp2 $ ppInfix "&"
+  bwOr _   = PPOp2 $ ppInfix "|"
+  bwXor _  = PPOp2 $ ppInfix "^"
 
 instance Op3 PPOp3 where
   mux _    = PPOp3 $ \ doc1 doc2 doc3 ->

@@ -17,6 +17,7 @@ import Copilot.Core.Type.Show (showWithType)
 import Data.List (transpose)
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Bits
 import Prelude hiding (id)
 import qualified Prelude as P
 
@@ -130,6 +131,7 @@ instance Op1 (->) where
   asinh _  = P.asinh
   atanh _  = P.atanh
   acosh _  = P.acosh
+  bwNot _  = complement
 
 --------------------------------------------------------------------------------
 
@@ -152,6 +154,9 @@ instance Op2 Apply2 where
   ge _     = Apply2 (>=)
   lt _     = Apply2 (<)
   gt _     = Apply2 (>)
+  bwAnd _  = Apply2 (.&.)
+  bwOr  _  = Apply2 (.|.)
+  bwXor _  = Apply2 (xor)
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = 0
