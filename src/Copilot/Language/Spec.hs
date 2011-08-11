@@ -105,7 +105,7 @@ trigger
   :: String
   -> Stream Bool
   -> [TriggerArg]
-  -> Spec 
+  -> Spec
 trigger name e args = tell [TriggerItem $ Trigger name e args]
 
 --------------------------------------------------------------------------------
