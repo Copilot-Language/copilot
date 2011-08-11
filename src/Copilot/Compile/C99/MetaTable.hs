@@ -7,8 +7,10 @@
 module Copilot.Compile.C99.MetaTable
   ( StreamInfo (..)
   , ExternInfo (..)
+  , ExternFunInfo (..)
   , StreamInfoMap
   , ExternInfoMap
+  , ExternFunInfoMap
   , MetaTable (..)
   , allocMetaTable
   ) where
@@ -43,9 +45,19 @@ type ExternInfoMap = Map C.Name ExternInfo
 
 --------------------------------------------------------------------------------
 
+data ExternFunInfo = forall a . ExternFunInfo
+  { externFunInfoArgs :: [(C.UType, C.UExpr)]
+  , externFunInfoVar  :: A.V a
+  , externFunInfoType :: C.Type a }
+
+type ExternFunInfoMap = Map C.Name ExternFunInfo
+
+--------------------------------------------------------------------------------
+
 data MetaTable = MetaTable
   { streamInfoMap     :: StreamInfoMap
-  , externInfoMap     :: ExternInfoMap }
+  , externInfoMap     :: ExternInfoMap
+  , externFunInfoMap  :: ExternFunInfoMap }
 
 --------------------------------------------------------------------------------
 
@@ -58,7 +70,7 @@ allocMetaTable spec =
     externInfoMap_ <-
       liftM M.fromList $ mapM allocExtern (externals spec)
 
-    return (MetaTable streamInfoMap_ externInfoMap_)
+    return (MetaTable streamInfoMap_ externInfoMap_ undefined)
 
 --------------------------------------------------------------------------------
 
@@ -100,5 +112,3 @@ mkQueueName id = "str" ++ show id
 
 mkTempVarName :: C.Id -> A.Name
 mkTempVarName id = "tmp" ++ show id
-
---------------------------------------------------------------------------------

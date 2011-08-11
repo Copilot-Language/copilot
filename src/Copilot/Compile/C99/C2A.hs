@@ -2,8 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 module Copilot.Compile.C99.C2A
   ( c2aExpr
@@ -96,6 +95,7 @@ instance C.Expr C2AExpr where
   ----------------------------------------------------
 
   local t1 _ name e1 e2 = C2AExpr $ \ env meta ->
+
     let
       e1'  = c2aExpr_ e1 env meta
       env' = M.insert name (Local e1' t1) env
@@ -105,6 +105,7 @@ instance C.Expr C2AExpr where
   ----------------------------------------------------
 
   var t1 name = C2AExpr $ \ env _ ->
+
     let
       Just local = M.lookup name env
     in
@@ -126,6 +127,40 @@ instance C.Expr C2AExpr where
 
     (A.value . A.var' name . c2aType) t
 
+  ----------------------------------------------------
+
+  externFun t name _ = C2AExpr $ \ _ meta ->
+
+    let
+      Just extFunInfo = M.lookup name (externFunInfoMap meta)
+    in
+      externFun1 t extFunInfo
+
+    where
+
+    externFun1 t1
+      ExternFunInfo
+        { externFunInfoVar  = var
+        , externFunInfoType = t2
+        } =
+      let
+        Just p = t2 =~= t1
+      in
+        case W.exprInst t2 of
+          W.ExprInst ->
+            coerce (cong p) (A.value var)
+
+  ----------------------------------------------------
+
+  externArray t1 t2 name e1 = C2AExpr $ \ env meta ->
+
+    case ( W.integralEInst t1, W.exprInst t2 ) of
+         ( W.IntegralEInst   , W.ExprInst    ) ->
+            let
+              arr = A.array' name (c2aType t2)
+              idx = c2aExpr_ e1 env meta
+            in
+              arr A.!. idx
 
   ----------------------------------------------------
 
@@ -170,7 +205,6 @@ instance C.Op1 C2AOp1 where
   acosh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> acosh
   bwNot t = C2AOp1 $ case W.bitsEInst       t of W.BitsEInst       -> (A.complement)
 
-
 instance C.Op2 C2AOp2 where
   and     = C2AOp2                                                    (A.&&.)
   or      = C2AOp2                                                    (A.||.)
@@ -194,5 +228,3 @@ instance C.Op2 C2AOp2 where
 
 instance C.Op3 C2AOp3 where
   mux t   = C2AOp3 $ case W.exprInst        t of W.ExprInst        -> A.mux
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------

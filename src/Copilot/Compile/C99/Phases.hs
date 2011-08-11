@@ -25,6 +25,7 @@ import Prelude hiding (id)
 
 data Phase
   = SampleExterns
+  | SampleExternFuns
   | UpdateStates
   | FireTriggers
   | UpdateBuffers
@@ -39,11 +40,12 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 schedulePhases :: MetaTable -> Core.Spec -> Atom ()
 schedulePhases meta spec =
   A.period numberOfPhases $
-    sampleExterns   meta      >>
-    updateStates    meta spec >>
-    fireTriggers    meta spec >>
+    sampleExterns    meta      >>
+--    sampleExternFuns meta spec >>
+    updateStates     meta spec >>
+    fireTriggers     meta spec >>
 --    updateObservers meta spec >>
-    updateBuffers   meta spec
+    updateBuffers    meta spec
 
 --------------------------------------------------------------------------------
 
@@ -60,6 +62,11 @@ sampleExterns =
         do
           W.AssignInst <- return $ W.assignInst t
           v <== A.value (A.var' name (c2aType t))
+
+--------------------------------------------------------------------------------
+
+sampleExternFuns :: MetaTable -> Core.Spec -> Atom ()
+sampleExternFuns = undefined
 
 --------------------------------------------------------------------------------
 
@@ -100,33 +107,6 @@ updateStates meta
           Just p <- return (t1 =~= t2)
           tmp <== coerce (cong p) e1
 
-{-
-  updateLet :: Core.Let -> Atom ()
-  updateLet
-    Core.Let
-      { Core.letVar  = name
-      , Core.letExpr = e
-      , Core.letType = t1
-      } =
-    let
-      Just letInfo = M.lookup name (letInfoMap meta)
-    in
-      updateLet1 t1 name (c2aExpr meta e) letInfo
-
-  updateLet1 :: Core.Type a -> Core.Name -> A.E a -> LetInfo -> Atom ()
-  updateLet1 t1 name e1
-    LetInfo
-      { letInfoVar  = v
-      , letInfoType = t2
-      } =
-    exactPhase (fromEnum UpdateStates) $
-      atom ("update_let_" ++ name) $
-        do
-          W.AssignInst <- return (W.assignInst t2)
-          Just p <- return (t1 =~= t2)
-          v <== coerce (cong p) e1
--}
-
 --------------------------------------------------------------------------------
 
 fireTriggers :: MetaTable -> Core.Spec -> Atom ()
@@ -155,8 +135,8 @@ fireTriggers meta
 
       where
 
-      triggerArg2UE :: Core.TriggerArg -> A.UE
-      triggerArg2UE (Core.TriggerArg e t) =
+      triggerArg2UE :: Core.UExpr -> A.UE
+      triggerArg2UE (Core.UExpr t e) =
         case W.exprInst t of
           W.ExprInst -> A.ue (c2aExpr meta e)
 
@@ -196,5 +176,3 @@ updateBuffers meta
         do
           W.AssignInst <- return (W.assignInst t)
           Q.dropFirstElemAndSnoc (A.value tmp) que
-
---------------------------------------------------------------------------------
