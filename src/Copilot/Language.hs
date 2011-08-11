@@ -19,6 +19,7 @@ module Copilot.Language
   , module Copilot.Language.Operators.Mux
   , module Copilot.Language.Operators.Ord
   , module Copilot.Language.Operators.Temporal
+  , module Copilot.Language.Operators.BitWise
   , Spec
   , Stream
   , observer
@@ -42,6 +43,7 @@ import Copilot.Language.Operators.Local
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
+import Copilot.Language.Operators.BitWise
 import Copilot.Language.Reify
 import Copilot.Language.Spec (Spec, trigger, arg, observer)
 import Copilot.Language.Stream (Stream)

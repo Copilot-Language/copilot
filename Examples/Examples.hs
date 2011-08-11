@@ -48,6 +48,11 @@ booleans = [True, True, False] ++ booleans
 fib :: Stream Word64
 fib = [1, 1] ++ fib + drop 1 fib
 
+bitWise :: Stream Word8
+bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
+          .^.
+          ( let b = [ 0, 1, 1 ] ++ b in b )
+
 --------------------------------------------------------------------------------
 
 --
@@ -58,9 +63,9 @@ fib = [1, 1] ++ fib + drop 1 fib
 spec :: Spec 
 spec =
   do
-    -- A trigger with two arguments:
-    trigger "f" booleans
-      [ arg fib, arg nats ]
+    -- A trigger with three arguments:
+    trigger "f" true -- booleans
+      [ arg fib, arg nats, arg bitWise ]
 
     -- A trigger with a single argument:
     trigger "g" (flipflop booleans)
@@ -69,6 +74,13 @@ spec =
     -- A trigger with a single argument (should never fire):
     trigger "h" (extern "e3" /= fib)
       [ arg (0 :: Stream Int8) ]
+
+
+e1, e2, e3 :: [ Word64 ]
+e1 = [ 1 .. ]
+e2 = [ 1 .. ]
+e3 = [ 1 .. ]
+
 
 main :: IO ()
 main =
