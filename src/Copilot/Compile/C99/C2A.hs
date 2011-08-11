@@ -168,6 +168,7 @@ instance C.Op1 C2AOp1 where
   asinh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> asinh
   atanh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> atanh
   acosh t = C2AOp1 $ case W.floatingEInst   t of W.FloatingEInst   -> acosh
+  bwNot t = C2AOp1 $ case W.bitsEInst       t of W.BitsEInst       -> (A.complement)
 
 
 instance C.Op2 C2AOp2 where
@@ -187,6 +188,9 @@ instance C.Op2 C2AOp2 where
   ge    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>=.)
   lt    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.<.)
   gt    t = C2AOp2 $ case W.ordEInst        t of W.OrdEInst        -> (A.>.)
+  bwAnd t = C2AOp2 $ case W.bitsEInst       t of W.BitsEInst       -> (A..&.)
+  bwOr  t = C2AOp2 $ case W.bitsEInst       t of W.BitsEInst       -> (A..|.)
+  bwXor t = C2AOp2 $ case W.bitsEInst       t of W.BitsEInst       -> (A.xor)
 
 instance C.Op3 C2AOp3 where
   mux t   = C2AOp3 $ case W.exprInst        t of W.ExprInst        -> A.mux
