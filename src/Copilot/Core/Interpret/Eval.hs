@@ -159,7 +159,7 @@ instance Op2 Apply2 where
   bwXor _  = Apply2 (xor)
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
-catchZero _ _ 0 = 0
+catchZero _ _ 0 = error "divide by zero"
 catchZero f x y = f x y
 
 --------------------------------------------------------------------------------
