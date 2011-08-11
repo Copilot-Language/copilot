@@ -50,12 +50,12 @@ extsStream Stream { streamExpr = e } = extsExpr e
 
 extsTrigger :: Trigger -> DList Extern
 extsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
-  extsExpr e `append` concat (fmap extsTriggerArg args)
+  extsExpr e `append` concat (fmap extsUExpr args)
 
   where
 
-  extsTriggerArg :: TriggerArg -> DList Extern
-  extsTriggerArg (TriggerArg e1 _) = extsExpr e1
+  extsUExpr :: UExpr -> DList Extern
+  extsUExpr (UExpr _ e1) = extsExpr e1
 
 --------------------------------------------------------------------------------
 

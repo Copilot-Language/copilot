@@ -16,10 +16,10 @@ import Data.List (intersperse)
 
 --------------------------------------------------------------------------------
 
-newtype PPExpr a         = PPExpr { ppExpr :: Doc }
-newtype PPOp1  a b       = PPOp1  { ppOp1  :: Doc -> Doc }
-newtype PPOp2  a b c     = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
-newtype PPOp3  a b c d   = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
+newtype PPExpr a       = PPExpr { ppExpr :: Doc }
+newtype PPOp1  a b     = PPOp1  { ppOp1  :: Doc -> Doc }
+newtype PPOp2  a b c   = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
+newtype PPOp3  a b c d = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
 
 instance Expr PPExpr where
   const t x            = PPExpr $ text (showWithType t x)
@@ -120,15 +120,15 @@ ppTrigger
   =   text "trigger: \"" <> text name <> text "\""
   <+> text "="
   <+> ppExpr e
-  $$  nest 2 (foldr (($$) . ppTriggerArg) empty argsAndNum)
+  $$  nest 2 (foldr (($$) . ppUExpr) empty argsAndNum)
 
   where
 
-  argsAndNum :: [(TriggerArg, Int)]
+  argsAndNum :: [(UExpr, Int)]
   argsAndNum = zip args [0..]
 
-  ppTriggerArg :: (TriggerArg, Int) -> Doc
-  ppTriggerArg (TriggerArg e1 _, k)
+  ppUExpr :: (UExpr, Int) -> Doc
+  ppUExpr (UExpr _ e1, k)
     =   text "arg: " <> int k
     <+> text "="
     <+> ppExpr e1
