@@ -12,11 +12,13 @@ module Copilot.Compile.C99.Witness
   , NumEInst (..)      , numEInst
   , IntegralEInst (..) , integralEInst
   , FloatingEInst (..) , floatingEInst
+  , BitsEInst (..)     , bitsEInst
   ) where
 
 import qualified Language.Atom as A
 import qualified Copilot.Core as C
 import Copilot.Core.Type.Equality
+import Data.Bits
 
 --------------------------------------------------------------------------------
 
@@ -118,5 +120,24 @@ floatingEInst t =
     C.Float  p -> mkInst p FloatingEInst
     C.Double p -> mkInst p FloatingEInst
     _          -> error "integralEInst!" -- !! supress warning !!
+
+--------------------------------------------------------------------------------
+
+data BitsEInst a = ( A.Expr a, A.OrdE a, A.EqE a, A.IntegralE a, Bits a ) => BitsEInst
+
+bitsEInst :: Bits a => C.Type a -> BitsEInst a
+bitsEInst t =
+  case t of
+    C.Bool   p -> error "bitsEInst Bool!" -- !! supress warning !!
+    C.Int8   p -> mkInst p BitsEInst
+    C.Int16  p -> mkInst p BitsEInst
+    C.Int32  p -> mkInst p BitsEInst
+    C.Int64  p -> mkInst p BitsEInst
+    C.Word8  p -> mkInst p BitsEInst
+    C.Word16 p -> mkInst p BitsEInst
+    C.Word32 p -> mkInst p BitsEInst
+    C.Word64 p -> mkInst p BitsEInst
+    C.Float  _ -> error "bitsEInst Float!" -- !! supress warning !!
+    C.Double _ -> error "bitsEInst Double!" -- !! supress warning !!
 
 --------------------------------------------------------------------------------
