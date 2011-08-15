@@ -17,7 +17,6 @@ import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 import Data.Reify (MuRef (..))
-import Data.Word (Word8)
 
 data G t where
   AppendG
@@ -30,7 +29,7 @@ data G t where
     => a
     -> G t
   DropG
-    :: Word8
+    :: Int
     -> t
     -> G t
   Op1G

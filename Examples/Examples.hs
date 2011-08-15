@@ -48,6 +48,10 @@ booleans = [True, True, False] ++ booleans
 fib :: Stream Word64
 fib = [1, 1] ++ fib + drop 1 fib
 
+bitWise :: Stream Word8
+bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
+          .^.
+          ( let b = [ 0, 1, 1 ] ++ b in b )
 
 sumExterns :: Stream Word64
 sumExterns =
@@ -63,15 +67,15 @@ sumExterns =
 -- An example of a complete copilot specification.
 --
 
-e1, e2, e3 :: [Word64]
-e1 = [0..]
-e2 = 5 : 4 : e2
-e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
-
 -- A specification:
 spec :: Spec 
 spec =
   do
+
+    -- A trigger with four arguments:
+    trigger "f" true -- booleans
+      [ arg fib, arg nats, arg sumExterns, arg bitWise ]
+
     -- A trigger with two arguments:
     trigger "f" booleans
       [ arg fib, arg sumExterns ]
