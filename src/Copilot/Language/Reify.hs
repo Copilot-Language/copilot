@@ -163,7 +163,7 @@ mkExpr refMkId refStreams refMap = go
 
       Extern cs ->
 
-        return $ WrapExpr $ Core.extern typeOf cs
+        return $ WrapExpr $ Core.externVar typeOf cs
 
       ------------------------------------------------------
 

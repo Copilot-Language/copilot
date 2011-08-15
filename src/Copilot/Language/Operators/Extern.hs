@@ -21,10 +21,10 @@ extern :: Typed a => String -> Stream a
 extern = Extern
 
 externFun :: Typed a => String -> [FunArg] -> Stream a
-externFun = undefined
+externFun = ExternFun
 
 externArray :: (Typed a, Typed b, Integral a) => String -> Stream a -> Stream b
-externArray = undefined
+externArray = ExternArray
 
 funArg :: Typed a => Stream a -> FunArg
 funArg = FunArg
