@@ -50,14 +50,15 @@ library
 
   exposed-modules:
 
+    Copilot.Compile.Header.C99
     Copilot.Core
     Copilot.Core.Expr
+    Copilot.Core.External
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Interpret.Render
     Copilot.Core.Operators
     Copilot.Core.Spec
-    Copilot.Core.Spec.Externals
     Copilot.Core.Spec.Locals
     Copilot.Core.Random
     Copilot.Core.Random.Gen
@@ -68,3 +69,5 @@ library
     Copilot.Core.Type.Show
     Copilot.Core.Type.Uninitialized
     Copilot.Core.PrettyPrint
+    Copilot.Core.Version
+

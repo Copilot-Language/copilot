@@ -2,13 +2,14 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification #-}
+
 -- | 
 
 module Copilot.Core.Type
   ( Type (..)
   , Typed (..)
   , UType (..)
-  , utype
   ) where
 
 import Copilot.Core.Type.Equality
@@ -63,32 +64,5 @@ instance Typed Double where typeOf = Double (mkEqual id)
 
 --------------------------------------------------------------------------------
 
--- Raw 'untyped' types:
-
-data UType
-  = UBool
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | UWord8
-  | UWord16
-  | UWord32
-  | UWord64
-  | UFloat
-  | UDouble
-
-utype :: Type a -> UType
-utype (Bool  _)  = UBool
-utype (Int8  _)  = UInt8
-utype (Int16 _)  = UInt16
-utype (Int32 _)  = UInt32
-utype (Int64 _)  = UInt64
-utype (Word8  _) = UWord8
-utype (Word16 _) = UWord16
-utype (Word32 _) = UWord32
-utype (Word64 _) = UWord64
-utype (Float  _) = UFloat
-utype (Double _) = UDouble
-
---------------------------------------------------------------------------------
+-- | A untyped type (no phantom type).
+data UType = forall a . UType { uTypeType :: Type a }
