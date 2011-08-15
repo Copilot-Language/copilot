@@ -19,7 +19,7 @@ import Control.Monad (liftM)
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
-import Copilot.Core.Spec.Externals (Extern (..), externals)
+import Copilot.Core.External (ExternVar (..), externVars)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Language.Atom (Atom)
@@ -68,7 +68,7 @@ allocMetaTable spec =
       liftM M.fromList $ mapM allocStream (C.specStreams spec)
 
     externInfoMap_ <-
-      liftM M.fromList $ mapM allocExtern (externals spec)
+      liftM M.fromList $ mapM allocExternVar (externVars spec)
 
     return (MetaTable streamInfoMap_ externInfoMap_ undefined)
 
@@ -95,12 +95,14 @@ allocStream
 
 --------------------------------------------------------------------------------
 
-allocExtern :: Extern -> Atom (C.Name, ExternInfo)
-allocExtern (Extern name t) =
-  do
-    W.ExprInst <- return (W.exprInst t)
-    v <- A.var (mkExternName name) (C.uninitialized t)
-    return (name, ExternInfo v t)
+allocExternVar :: ExternVar -> Atom (C.Name, ExternInfo)
+allocExternVar (ExternVar name ut) =
+  case ut of
+    C.UType t ->
+      do
+        W.ExprInst <- return (W.exprInst t)
+        v <- A.var (mkExternName name) (C.uninitialized t)
+        return (name, ExternInfo v t)
 
 --------------------------------------------------------------------------------
 

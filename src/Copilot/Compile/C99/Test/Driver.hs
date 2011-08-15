@@ -7,7 +7,7 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  (Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), utype)
+  (Spec (..), Trigger (..), UExpr (..), Type (..), UType (..))
 import Data.List (intersperse)
 import Data.Map (Map)
 import Data.Text (Text)
@@ -100,7 +100,7 @@ ppPars
   ppPar (k, par) = case par of
     UExpr
       { uExprType = t } ->
-          ppUType (utype t) <+> string ("t" ++ show k)
+          ppUType (UType t) <+> string ("t" ++ show k)
 
 ppArgs :: [UExpr] -> Doc
 ppArgs args
@@ -115,14 +115,21 @@ ppArgs args
   ppArg k = string ("t" ++ show k)
 
 ppUType :: UType -> Doc
-ppUType t = string $
-  case t of
-    UBool   -> "bool"
-    UInt8   -> "int8_t"   ; UInt16  -> "int16_t"
-    UInt32  -> "int32_t"  ; UInt64  -> "int64_t"
-    UWord8  -> "uint8_t"  ; UWord16 -> "uint16_t"
-    UWord32 -> "uint32_t" ; UWord64 -> "uint64_t"
-    UFloat  -> "float"    ; UDouble -> "double"
+ppUType UType { uTypeType = t } = string (typeSpec' t)
+
+  where
+
+  typeSpec' (Bool   _) = "bool"
+  typeSpec' (Int8   _) = "int8_t"
+  typeSpec' (Int16  _) = "int16_t"
+  typeSpec' (Int32  _) = "int32_t"
+  typeSpec' (Int64  _) = "int64_t"
+  typeSpec' (Word8  _) = "uint8_t"
+  typeSpec' (Word16 _) = "uint16_t"
+  typeSpec' (Word32 _) = "uint32_t"
+  typeSpec' (Word64 _) = "uint64_t"
+  typeSpec' (Float  _) = "float"
+  typeSpec' (Double _) = "double"
 
 ppFormat :: UExpr -> Doc
 ppFormat
