@@ -5,7 +5,7 @@
 -- | Generates a C99 header from a copilot-specification. The functionality
 -- provided by the header must be implemented by back-ends targetting C99.
 
-module Copilot.Compile.Header.C99 (c99header) where
+module Copilot.Compile.Header.C99 (c99HeaderName, genC99header) where
 
 import Copilot.Core
 import Copilot.Core.Version
@@ -14,6 +14,12 @@ import Text.PrettyPrint.HughesPJ
 import Prelude hiding (unlines)
 
 --------------------------------------------------------------------------------
+
+c99HeaderName :: Name -> String
+c99HeaderName = (++ "_copilot.h")
+
+genC99header :: Name -> Spec -> IO ()
+genC99header pname spec = writeFile (c99HeaderName pname) (c99header pname spec)
 
 c99header :: Name -> Spec -> String
 c99header pname spec = render $ concatH $
