@@ -39,12 +39,12 @@ data ExecTrace = ExecTrace
 eval :: Int -> Env Name -> Spec -> ExecTrace
 eval k exts spec =
   let
-    strms = fmap (evalStream   k exts strms) (specStreams   spec)
+    strms = fmap (evalStream     exts strms) (specStreams   spec)
     trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
     obsvs = fmap (evalObserver k exts strms) (specObservers spec)
   in
     ExecTrace
-      { interpTriggers  = M.fromList $ 
+      { interpTriggers  = M.fromList $
           zip (fmap triggerName  (specTriggers  spec)) trigs
       , interpObservers = M.fromList $
           zip (fmap observerName (specObservers spec)) obsvs
@@ -175,8 +175,8 @@ instance Op3 Apply3 where
 
 --------------------------------------------------------------------------------
 
-evalStream :: Int -> Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
-evalStream k exts strms
+evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
+evalStream exts strms
   Stream
     { streamId       = id
     , streamBuffer   = buffer
@@ -189,7 +189,7 @@ evalStream k exts strms
 
   xs = buffer ++ evalExpr_ e exts [] strms
 --  ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
-  ws = take k $ strictList $ xs
+  ws = strictList $ xs
 {-
   withGuard :: a -> [Bool] -> [a] -> [a]
   withGuard _ (True:vs)  (z:zs) = z : withGuard z vs zs
