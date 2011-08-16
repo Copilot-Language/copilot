@@ -7,6 +7,7 @@
 
 module Copilot.Compile.Header.C99 (c99HeaderName, genC99Header) where
 
+import Copilot.Core
 import Copilot.Core.Version
 import Data.List (intersperse)
 import Text.PrettyPrint.HughesPJ
@@ -137,7 +138,7 @@ ppExternalFunction
   ppArgs = concatH . intersperse (text ",") . map ppArg
 
   ppArg :: UType -> Doc
-  ppArg UType { uTypeType = t } = text (typeSpec (UType t))
+  ppArg UType { uTypeType = t1 } = text (typeSpec (UType t1))
 
 --------------------------------------------------------------------------------
 
@@ -169,9 +170,6 @@ ppStep name = text "void step_" <> text name <> text "();"
 
 string :: String -> Doc
 string = text
-
-concatV :: [Doc] -> Doc
-concatV = foldr (<>) empty
 
 concatH :: [Doc] -> Doc
 concatH = foldr ($$) empty
