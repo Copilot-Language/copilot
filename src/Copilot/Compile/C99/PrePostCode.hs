@@ -2,28 +2,25 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-module Copilot.Compile.C99.PreCode
-  ( preCode
+module Copilot.Compile.C99.PrePostCode
+  ( preCode , postCode
   ) where
 
 import Copilot.Core
+import Copilot.Compile.C99.Phases (numberOfPhases)
+import Copilot.Compile.Header.C99 (c99HeaderName)
 
 --------------------------------------------------------------------------------
 
-preCode :: Spec -> String
-preCode spec =
-  ( unlines . map externProto   . externVars    ) spec ++
-  ( unlines . map observerProto . specObservers ) spec
+preCode :: Name -> Spec -> String
+preCode programName spec = unlines $
+  [ "#include \"" ++ c99HeaderName programName ++ "\"" ] ++
+  ( map observerDecl . specObservers ) spec
 
 --------------------------------------------------------------------------------
 
-externProto :: ExternVar -> String
-externProto (ExternVar name t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
-
---------------------------------------------------------------------------------
-
-observerProto :: Observer -> String
-observerProto (Observer name _ t) = typeSpec (UType t) ++ " " ++ name ++ ";"
+observerDecl :: Observer -> String
+observerDecl (Observer name _ t) = typeSpec (UType t) ++ " " ++ name ++ ";"
 
 --------------------------------------------------------------------------------
 
@@ -45,3 +42,16 @@ typeSpec UType { uTypeType = t } = typeSpec' t
   typeSpec' (Double _) = "double"
 
 --------------------------------------------------------------------------------
+
+postCode :: Name -> Spec -> String
+postCode programName _ =
+  unlines
+    [ "void step_" ++ programName ++ "()"
+    , "{"
+    , "  " ++ concat (replicate numberOfPhases step)
+    , "}"
+    ]
+
+  where
+
+  step = "step_" ++ programName ++ "();"
