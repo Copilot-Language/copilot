@@ -7,7 +7,6 @@
 
 module Copilot.Compile.Header.C99 (c99HeaderName, genC99Header) where
 
-import Copilot.Core
 import Copilot.Core.Version
 import Data.List (intersperse)
 import Text.PrettyPrint.HughesPJ
@@ -56,8 +55,8 @@ c99Header pname spec = render $ concatH $
 
 ppHeaders :: Doc
 ppHeaders = unlines
-  [ "include <stdint.h>"
-  , "include <stdbool.h>"
+  [ "#include <stdint.h>"
+  , "#include <stdbool.h>"
   ]
 
 --------------------------------------------------------------------------------
@@ -162,7 +161,7 @@ typeSpec UType { uTypeType = t } = typeSpec' t
 --------------------------------------------------------------------------------
 
 ppStep :: Name -> Doc
-ppStep name = text "step_" <> text name <> text "();"
+ppStep name = text "void step_" <> text name <> text "();"
 
 --------------------------------------------------------------------------------
 
