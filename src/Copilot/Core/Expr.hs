@@ -15,7 +15,7 @@ module Copilot.Core.Expr
 
 import Copilot.Core.Operators (Op1, Op2, Op3)
 import Copilot.Core.Type (Type)
-import Data.Word (Word8)
+import Data.Word (Word16)
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ type Name = String
 --------------------------------------------------------------------------------
 
 -- | An index for the drop operator.
-type DropIdx = Word8
+type DropIdx = Word16
 
 --------------------------------------------------------------------------------
 
