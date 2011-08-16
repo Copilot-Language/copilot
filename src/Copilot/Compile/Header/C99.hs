@@ -64,7 +64,7 @@ ppObserver
   Observer
     { observerName     = name
     , observerExprType = t } =
-        string "extern const" <+> string (typeSpec (UType t)) <+>
+        string "extern" <+> string (typeSpec (UType t)) <+>
         string name <> text ";"
 
 --------------------------------------------------------------------------------
