@@ -15,7 +15,7 @@ module Copilot.Language.Analyze
 import Control.Exception (Exception, throw)
 import Copilot.Language.Spec
 import Copilot.Core (DropIdx)
-import Copilot.Language.Stream (Stream (..))
+import Copilot.Language.Stream (Stream (..), FunArg (..))
 import Data.IORef
 import Data.Typeable
 import System.Mem.StableName.Dynamic
@@ -29,6 +29,8 @@ data AnalyzeException
   | DropIndexOverflow
   | ReferentialCycle
   | DropMaxViolation
+  | NestedExternFun
+  | NestedArray
   deriving Typeable
 
 instance Show AnalyzeException where
@@ -37,6 +39,10 @@ instance Show AnalyzeException where
   show ReferentialCycle       = "Referential cycle!"
   show DropMaxViolation       = "Maximum drop violation (" ++ 
                                   show (maxBound :: DropIdx) ++ ")!"
+  show NestedExternFun        = 
+    "Extern function takes an extern function or extern array as an argument!"
+  show NestedArray            = 
+    "Extern array takes an extern function or extern array as an argument!"
 
 instance Exception AnalyzeException
 
@@ -55,51 +61,62 @@ analyze spec =
 
 --------------------------------------------------------------------------------
 
-{-# INLINE analyzeTrigger #-}
 analyzeTrigger :: IORef Env -> Trigger -> IO ()
 analyzeTrigger refStreams (Trigger _ e0 args) =
   analyzeExpr refStreams e0 >> mapM_ analyzeTriggerArg args
 
   where
 
-  {-# INLINE analyzeTriggerArg #-}
   analyzeTriggerArg :: TriggerArg -> IO ()
   analyzeTriggerArg (TriggerArg e) = analyzeExpr refStreams e
 
 --------------------------------------------------------------------------------
 
-{-# INLINE analyzeObserver #-}
 analyzeObserver :: IORef Env -> Observer -> IO ()
 analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 
 --------------------------------------------------------------------------------
 
-{-# INLINE analyzeExpr #-}
+data SeenExtern = NoExtern
+                | SeenFun
+                | SeenArr
+
+--------------------------------------------------------------------------------
+
 analyzeExpr :: IORef Env -> Stream a -> IO ()
-analyzeExpr refStreams = go M.empty
+analyzeExpr refStreams = go NoExtern M.empty 
 
   where
 
-  go :: Env -> Stream b -> IO ()
-  go nodes e0 =
+  go :: SeenExtern -> Env -> Stream b -> IO ()
+  go seenExt nodes e0 =
     do
       dstn <- makeDynStableName e0
       assertNotVisited e0 dstn nodes
       let nodes' = M.insert dstn () nodes
       case e0 of
-        Append _ _ e   -> analyzeAppend refStreams dstn e
-        Const _        -> return ()
-        Drop k e1      -> analyzeDrop (fromIntegral k) e1
-        Local e f      -> go nodes' e >> go nodes' (f (Var "dummy"))
-        Op1 _ e        -> go nodes' e
-        Op2 _ e1 e2    ->
-                          do
-                            go nodes' e1
-                            go nodes' e2
-        Op3 _ e1 e2 e3 -> go nodes' e1 >> go nodes' e2 >> go nodes' e3
-        _              -> return ()
+        Append _ _ e       -> analyzeAppend refStreams dstn e
+        Const _            -> return ()
+        Drop k e1          -> analyzeDrop (fromIntegral k) e1
+        Local e f          -> go seenExt nodes' e >> 
+                              go seenExt nodes' (f (Var "dummy"))
+        Op1 _ e            -> go seenExt nodes' e
+        Op2 _ e1 e2        -> go seenExt nodes' e1 >> 
+                              go seenExt nodes' e2
+        Op3 _ e1 e2 e3     -> go seenExt nodes' e1 >> 
+                              go seenExt nodes' e2 >> 
+                              go seenExt nodes' e3
+        ExternFun _ args   -> case seenExt of 
+                                NoExtern -> mapM_ (\(FunArg a) -> 
+                                                      go SeenFun nodes' a) args
+                                SeenFun  -> throw NestedExternFun
+                                SeenArr  -> throw NestedArray
+        ExternArray _ idx  -> case seenExt of 
+                                NoExtern -> go SeenArr nodes' idx
+                                SeenFun  -> throw NestedExternFun
+                                SeenArr  -> throw NestedArray
+        _                  -> return ()
 
-  {-# INLINE assertNotVisited #-}
   assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
   assertNotVisited (Append _ _ _) _    _     = return ()
   assertNotVisited _              dstn nodes =
@@ -109,7 +126,6 @@ analyzeExpr refStreams = go M.empty
 
 --------------------------------------------------------------------------------
 
-{-# INLINE analyzeAppend #-}
 analyzeAppend :: IORef Env -> DynStableName -> Stream a -> IO ()
 analyzeAppend refStreams dstn e =
   do
@@ -123,7 +139,6 @@ analyzeAppend refStreams dstn e =
 
 --------------------------------------------------------------------------------
 
-{-# INLINE analyzeDrop #-}
 analyzeDrop :: Int -> Stream a -> IO ()
 analyzeDrop k (Append xs _ _)
   | k >= length xs                         = throw DropIndexOverflow
