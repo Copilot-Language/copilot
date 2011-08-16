@@ -140,7 +140,7 @@ ppExternalFunction
   ppArgs = concatH . intersperse (text ",") . map ppArg
 
   ppArg :: UType -> Doc
-  ppArg UType { uTypeType = t' } = text (typeSpec (UType t'))
+  ppArg UType { uTypeType = t1 } = text (typeSpec (UType t1))
 
 --------------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ typeSpec UType { uTypeType = t } = typeSpec' t
 --------------------------------------------------------------------------------
 
 ppStep :: Name -> Doc
-ppStep name = text "step_" <> text name <> text "();"
+ppStep name = text "void step_" <> text name <> text "();"
 
 --------------------------------------------------------------------------------
 
