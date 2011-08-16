@@ -94,8 +94,12 @@ instance Expr EvalExpr where
                                Just xs = lookup name locs >>= fromDynamicF t
                              in
                                xs
-  extern t name          = EvalExpr $ \ exts _ _ -> strictList $
+  externVar t name       = EvalExpr $ \ exts _ _ -> strictList $
                              evalExtern t name exts
+  externArray _ _ _ _ =
+    error "External arrays aren't supported in the interpreter"
+  externFun _ _ _ =
+    error "External functions aren't supported in the interpreter"
   op1 op e1              = strictEval $ pure op <*> e1
   op2 op e1 e2           = strictEval $ pure (apply2 op) <*> e1 <*> e2
   op3 op e1 e2 e3        = strictEval $ pure (apply3 op) <*> e1 <*> e2 <*> e3
@@ -178,20 +182,20 @@ evalStream k exts strms
     , streamBuffer   = buffer
     , streamExpr     = e
     , streamExprType = t
-    , streamGuard    = g
+--    , streamGuard    = g
     } = (id, toDynamicF ws t)
 
   where
 
   xs = buffer ++ evalExpr_ e exts [] strms
-  ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
+--  ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
   ws = take k $ strictList $ xs
-
+{-
   withGuard :: a -> [Bool] -> [a] -> [a]
   withGuard _ (True:vs)  (z:zs) = z : withGuard z vs zs
   withGuard z (False:vs) zs     = z : withGuard z vs zs
   withGuard _ _          _      = []
-
+-}
 --------------------------------------------------------------------------------
 
 evalTrigger :: Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]

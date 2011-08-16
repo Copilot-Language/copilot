@@ -60,7 +60,7 @@ class Expr e where
     :: Type a
     -> Name
     -> e a
-  extern
+  externVar
     :: Type a
     -> Name
     -> e a

@@ -26,7 +26,7 @@ instance Expr PPExpr where
   drop _ 0 id          = PPExpr $ text "stream" <+> text "s" <> int id
   drop _ i id          = PPExpr $ text "drop" <+> text (show i) <+> text "s" <>
                          int id
-  extern _ name        = PPExpr $ text "extern \"" <> text name <> text "\""
+  externVar _ name     = PPExpr $ text "extern \"" <> text name <> text "\""
   local _ _ name e1 e2 = PPExpr $ text "local \"" <> text name <> text "\" ="
                                     <+> ppExpr e1 $$ text "in" <+> ppExpr e2
   var _ name           = PPExpr $ text "var \"" <> text name <> text "\""

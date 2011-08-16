@@ -76,7 +76,7 @@ instance Expr ExtsExpr where
                                       `append` locsExpr e1
                                       `append` locsExpr e2
   var _ _              = ExtsExpr $ empty
-  extern _ _           = ExtsExpr $ empty
+  externVar _ _        = ExtsExpr $ empty
   op1 _ e              = ExtsExpr $ locsExpr e
   op2 _ e1 e2          = ExtsExpr $ locsExpr e1 `append` locsExpr e2
   op3 _ e1 e2 e3       = ExtsExpr $ locsExpr e1 `append` locsExpr e2
