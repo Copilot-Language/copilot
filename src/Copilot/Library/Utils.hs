@@ -1,9 +1,10 @@
 module Copilot.Library.Utils
-    ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1 ) where
+    ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
+      scanl, scanr, scanl1, scanr1 ) where
 
 
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( take, takeWhile )
+import Copilot.Language.Prelude hiding ( take )
 import qualified Prelude as P
 
 
@@ -41,3 +42,27 @@ nfoldr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
                   ->   Stream a -> Stream a
 nfoldr1 n f s = foldr1 f $ take n s
+
+
+nscanl :: ( Typed a )
+          => Int -> ( Stream a -> Stream a -> Stream a )
+          -> Stream a -> Stream a -> [ Stream a ]
+nscanl n f e s = scanl f e $ take n s
+
+
+nscanr :: ( Typed a )
+          => Int -> ( Stream a -> Stream a -> Stream a )
+          -> Stream a -> Stream a -> [ Stream a ]
+nscanr n f e s = scanr f e $ take n s
+
+
+nscanl1 :: ( Typed a )
+           => Int -> ( Stream a -> Stream a -> Stream a )
+           -> Stream a -> [ Stream a ]
+nscanl1 n f s = scanl1 f $ take n s
+
+
+nscanr1 :: ( Typed a )
+           => Int -> ( Stream a -> Stream a -> Stream a )
+           -> Stream a -> [ Stream a ]
+nscanr1 n f s = scanr1 f $ take n s

@@ -44,5 +44,5 @@ vote = do
 main :: IO ()
 main =
   do
---    interpret 20 [] vote
-    prettyPrint vote
+    interpret 20 [] vote
+--    prettyPrint vote
