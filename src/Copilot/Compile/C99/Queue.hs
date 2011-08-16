@@ -10,13 +10,15 @@ module Copilot.Compile.C99.Queue
   , queue
   ) where
 
-import Data.Word (Word8)
+import Data.Word (Word16)
 import Language.Atom
+
+type QueueIndexType = Word16
 
 data Queue a = Queue
   { queueRingBuffer :: A a
-  , queuePointer    :: V Word8
-  , size            :: Word8
+  , queuePointer    :: V QueueIndexType
+  , size            :: QueueIndexType
   }
 
 dropFirstElemAndSnoc :: Assign a => E a -> Queue a -> Atom ()
