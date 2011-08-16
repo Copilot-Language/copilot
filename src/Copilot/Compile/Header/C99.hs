@@ -18,8 +18,10 @@ import Prelude hiding (unlines)
 c99HeaderName :: Name -> String
 c99HeaderName = (++ "_copilot.h")
 
-genC99Header :: Name -> Spec -> IO ()
-genC99Header pname spec = writeFile (c99HeaderName pname) (c99Header pname spec)
+genC99Header :: FilePath -> Name -> Spec -> IO ()
+genC99Header dir pname spec = 
+  let filePath = dir ++ '/' : c99HeaderName pname in
+  writeFile filePath (c99Header pname spec)
 
 c99Header :: Name -> Spec -> String
 c99Header pname spec = render $ concatH $
@@ -56,8 +58,8 @@ c99Header pname spec = render $ concatH $
 
 ppHeaders :: Doc
 ppHeaders = unlines
-  [ "include <stdint.h>"
-  , "include <stdbool.h>"
+  [ "#include <stdint.h>"
+  , "#include <stdbool.h>"
   ]
 
 --------------------------------------------------------------------------------
@@ -83,7 +85,7 @@ ppTriggerPrototype
   Trigger
     { triggerName = name
     , triggerArgs = args } =
-        string "void" <+> string name <+> string "(" <> ppArgs args <> string ");"
+        string "void" <+> string name <> string "(" <> ppArgs args <> string ");"
 
   where
 
@@ -129,7 +131,7 @@ ppExternalFunction
     { externFunName      = name
     , externFunType      = t
     , externFunArgsTypes = args } =
-        string (typeSpec t) <+> string name <+>
+        string (typeSpec t) <+> string name <>
         string "(" <> ppArgs args <> string ");"
 
   where
@@ -138,7 +140,7 @@ ppExternalFunction
   ppArgs = concatH . intersperse (text ",") . map ppArg
 
   ppArg :: UType -> Doc
-  ppArg UType { uTypeType = t } = text (typeSpec (UType t))
+  ppArg UType { uTypeType = t' } = text (typeSpec (UType t'))
 
 --------------------------------------------------------------------------------
 
@@ -170,9 +172,6 @@ ppStep name = text "step_" <> text name <> text "();"
 
 string :: String -> Doc
 string = text
-
-concatV :: [Doc] -> Doc
-concatV = foldr (<>) empty
 
 concatH :: [Doc] -> Doc
 concatH = foldr ($$) empty
