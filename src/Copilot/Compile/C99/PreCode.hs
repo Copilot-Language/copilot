@@ -6,32 +6,42 @@ module Copilot.Compile.C99.PreCode
   ( preCode
   ) where
 
-import qualified Copilot.Core as Core
-import Copilot.Core.Spec.Externals (Extern (..), externals)
+import Copilot.Core
 
 --------------------------------------------------------------------------------
 
-preCode :: Core.Spec -> String
-preCode = unlines . map externProto . externals
+preCode :: Spec -> String
+preCode spec =
+  ( unlines . map externProto   . externVars    ) spec ++
+  ( unlines . map observerProto . specObservers ) spec
 
 --------------------------------------------------------------------------------
 
-externProto :: Extern -> String
-externProto (Extern name t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
+externProto :: ExternVar -> String
+externProto (ExternVar name t) = "extern " ++ typeSpec t ++ " " ++ name ++ ";"
 
 --------------------------------------------------------------------------------
 
-typeSpec :: Core.Type a -> String
-typeSpec (Core.Bool   _) = "bool"
-typeSpec (Core.Int8   _) = "int8_t"
-typeSpec (Core.Int16  _) = "int16_t"
-typeSpec (Core.Int32  _) = "int32_t"
-typeSpec (Core.Int64  _) = "int64_t"
-typeSpec (Core.Word8  _) = "uint8_t"
-typeSpec (Core.Word16 _) = "uint16_t"
-typeSpec (Core.Word32 _) = "uint32_t"
-typeSpec (Core.Word64 _) = "uint64_t"
-typeSpec (Core.Float  _) = "float"
-typeSpec (Core.Double _) = "double"
+observerProto :: Observer -> String
+observerProto (Observer name _ t) = typeSpec (UType t) ++ " " ++ name ++ ";"
+
+--------------------------------------------------------------------------------
+
+typeSpec :: UType -> String
+typeSpec UType { uTypeType = t } = typeSpec' t
+
+  where
+
+  typeSpec' (Bool   _) = "bool"
+  typeSpec' (Int8   _) = "int8_t"
+  typeSpec' (Int16  _) = "int16_t"
+  typeSpec' (Int32  _) = "int32_t"
+  typeSpec' (Int64  _) = "int64_t"
+  typeSpec' (Word8  _) = "uint8_t"
+  typeSpec' (Word16 _) = "uint16_t"
+  typeSpec' (Word32 _) = "uint32_t"
+  typeSpec' (Word64 _) = "uint64_t"
+  typeSpec' (Float  _) = "float"
+  typeSpec' (Double _) = "double"
 
 --------------------------------------------------------------------------------

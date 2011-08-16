@@ -6,6 +6,7 @@
 
 module Copilot.Compile.C99.Phases
   ( schedulePhases
+  , numberOfPhases
   ) where
 
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
@@ -44,7 +45,7 @@ schedulePhases meta spec =
 --    sampleExternFuns meta spec >>
     updateStates     meta spec >>
     fireTriggers     meta spec >>
---    updateObservers meta spec >>
+    updateObservers  meta spec >>
     updateBuffers    meta spec
 
 --------------------------------------------------------------------------------
@@ -142,6 +143,31 @@ fireTriggers meta
 
       fnCall :: [String] -> String
       fnCall xs = name ++ "(" ++ concat (intersperse "," xs) ++ ")"
+
+--------------------------------------------------------------------------------
+
+updateObservers :: MetaTable -> Core.Spec -> Atom ()
+updateObservers meta
+  Core.Spec
+    { Core.specObservers = observers
+    } =
+  mapM_ updateObserver observers
+
+  where
+
+  updateObserver :: Core.Observer -> Atom ()
+  updateObserver
+    Core.Observer
+      { Core.observerName     = name
+      , Core.observerExpr     = e
+      , Core.observerExprType = t
+      } =
+    exactPhase (fromEnum UpdateObservers) $
+      atom ("update_observer_" ++ name) $
+        do
+          let e' = c2aExpr meta e
+          W.AssignInst <- return (W.assignInst t)
+          (A.var' name . c2aType) t <== e'
 
 --------------------------------------------------------------------------------
 
