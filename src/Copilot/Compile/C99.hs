@@ -23,7 +23,7 @@ compile programName spec =
   do
     (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
     putStrLn $ Atom.reportSchedule schedule
-    genC99Header "" programName spec
+    genC99Header "." programName spec
 
   where
 
