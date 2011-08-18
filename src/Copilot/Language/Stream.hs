@@ -17,7 +17,6 @@ import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
 import qualified Prelude as P
-import Data.Bits
 
 --------------------------------------------------------------------------------
 
@@ -156,18 +155,5 @@ instance (Typed a, Floating a) => Floating (Stream a) where
   asinh        = Op1 (Core.asinh typeOf)
   atanh        = Op1 (Core.atanh typeOf)
   acosh        = Op1 (Core.acosh typeOf)
-
---------------------------------------------------------------------------------
-
-instance ( Typed a, Bits a ) => Bits ( Stream a ) where
-  (.&.)      = Op2 ( Core.bwAnd typeOf )
-  complement = Op1 ( Core.bwNot typeOf )
-  (.|.)      = Op2 ( Core.bwOr  typeOf )
-  xor        = Op2 ( Core.bwXor typeOf )
-  shift      = error "tbd: shift"
-  rotate     = error "tbd: rotate"
-  bitSize    = error "tbd: bitSize"
-  isSigned   = error "tbd: issigned"
-
 
 --------------------------------------------------------------------------------
