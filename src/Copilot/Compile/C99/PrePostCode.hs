@@ -54,4 +54,4 @@ postCode programName _ =
 
   where
 
-  step = "step_" ++ programName ++ "();"
+  step = programName ++ "();"

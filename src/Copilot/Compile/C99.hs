@@ -38,5 +38,3 @@ compile programName spec =
     do
       meta <- allocMetaTable spec
       schedulePhases meta spec
-
---------------------------------------------------------------------------------
