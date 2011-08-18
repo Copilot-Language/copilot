@@ -1,6 +1,6 @@
 module Copilot.Library.Utils
     ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
-      scanl, scanr, scanl1, scanr1 ) where
+      nscanl, nscanr, nscanl1, nscanr1 ) where
 
 
 import Copilot.Language
