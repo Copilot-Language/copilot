@@ -93,11 +93,12 @@ case' predicates alternatives =
 ls !! n = let indices      = map
                              ( constant . fromIntegral )
                              [ 0 .. P.length ls - 1 ]
-              select
-                _
-                []         = error "indexing the empty list with !! is not defined"
+              select [] _  = last ls
               select
                 ( i : is )
                 ( a : as ) = mux ( i == n ) a ( select is as )
-              select _  _  = last ls
-          in select indices ls
+              select _  _  = undefined -- should not happen
+          in if null ls then
+               error "indexing the empty list with !! is not defined"
+             else
+               select indices ls
