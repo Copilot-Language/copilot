@@ -1,10 +1,11 @@
 module Copilot.Library.Utils
     ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
-      nscanl, nscanr, nscanl1, nscanr1 ) where
+      nscanl, nscanr, nscanl1, nscanr1,
+      case', (!!) ) where
 
 
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( take )
+import Copilot.Language.Prelude hiding ( take, (!!) )
 import qualified Prelude as P
 
 
@@ -18,6 +19,9 @@ tails s = [ drop x s | x <- [ 0 .. ] ]
 take :: ( Integral a, Typed b )
         => a -> Stream b -> [ Stream b ]
 take n s = P.take ( fromIntegral n ) $ tails s
+
+
+-- Folds
 
 
 nfoldl :: ( Typed a )
@@ -44,6 +48,9 @@ nfoldr1 :: ( Typed a )
 nfoldr1 n f s = foldr1 f $ take n s
 
 
+-- Scans
+
+
 nscanl :: ( Typed a )
           => Int -> ( Stream a -> Stream a -> Stream a )
           -> Stream a -> Stream a -> [ Stream a ]
@@ -66,3 +73,31 @@ nscanr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
            -> Stream a -> [ Stream a ]
 nscanr1 n f s = scanr1 f $ take n s
+
+
+-- Case-like function, the index of the first predicate that is true
+-- in the predicate list selects the stream result, if no predicate
+-- is true, the last element is chosen (default element)
+case' :: ( Typed a )
+         => [ Stream Bool ] -> [ Stream a ] -> Stream a
+case' predicates alternatives =
+  let case'' []         [ default' ] = default'
+      case'' ( p : ps ) ( a : as )   = mux p a ( case'' ps as )
+      case'' _          _            = error $ "length of alternatives list is not "
+                                       P.++ "greater than the length of predicates list"
+  in case'' predicates alternatives
+
+
+(!!) :: ( Typed a, Integral a )
+        => [ Stream a ] -> Stream a -> Stream a
+ls !! n = let indices      = map
+                             ( constant . fromIntegral )
+                             [ 0 .. P.length ls - 1 ]
+              select
+                _
+                []         = error "indexing the empty list with !! is not defined"
+              select
+                ( i : is )
+                ( a : as ) = mux ( i == n ) a ( select is as )
+              select _  _  = last ls
+          in select indices ls
