@@ -1,7 +1,7 @@
 module Copilot.Library.Utils
     ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
       nscanl, nscanr, nscanl1, nscanr1,
-      case', (!!) ) where
+      case', (!!), cycle ) where
 
 
 import Copilot.Language
