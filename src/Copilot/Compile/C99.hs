@@ -6,10 +6,12 @@
 
 module Copilot.Compile.C99
   ( compile
+  , module Copilot.Compile.C99.Params
   ) where
 
 import Copilot.Compile.Header.C99 (genC99Header)
 import Copilot.Compile.C99.MetaTable (allocMetaTable)
+import Copilot.Compile.C99.Params
 import Copilot.Compile.C99.Phases (schedulePhases)
 import Copilot.Compile.C99.PrePostCode (preCode, postCode)
 import qualified Copilot.Core as Core
@@ -18,23 +20,26 @@ import qualified Language.Atom as Atom
 
 --------------------------------------------------------------------------------
 
-compile :: String -> Core.Spec -> IO ()
-compile programName spec =
+compile :: Params -> Core.Spec -> IO ()
+compile params spec =
   do
     (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
     putStrLn $ Atom.reportSchedule schedule
-    genC99Header "." programName spec
+    genC99Header (prefix params) "." spec
 
   where
+
+  programName :: String
+  programName = withPrefix (prefix params) "copilot"
 
   atomDefaults :: Atom.Config
   atomDefaults =
     Atom.defaults
       { Atom.cCode = \ _ _ _ ->
-        (preCode programName spec, postCode programName spec) }
+        (preCode params spec, postCode params spec) }
 
   atomProgram :: Atom ()
   atomProgram =
     do
       meta <- allocMetaTable spec
-      schedulePhases meta spec
+      schedulePhases params meta spec

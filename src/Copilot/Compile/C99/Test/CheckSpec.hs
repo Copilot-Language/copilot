@@ -7,6 +7,7 @@ module Copilot.Compile.C99.Test.CheckSpec (checkSpec) where
 import Copilot.Compile.C99 (compile)
 import Copilot.Core (Spec)
 import Copilot.Core.Interpret.Eval (eval)
+import Copilot.Compile.C99.Params (Params (..), defaultParams)
 import Copilot.Compile.C99.Test.Driver (driver)
 import Copilot.Compile.C99.Test.Iteration (Iteration, execTraceToIterations)
 import Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV)
@@ -37,7 +38,7 @@ checkSpec numIterations spec =
 genCFiles :: Int -> Spec -> IO ()
 genCFiles numIterations spec =
   do
-    compile "tmp_" spec
+    compile (defaultParams { prefix = Just "tmp" }) spec
     TIO.writeFile "tmp_driver_.c" (driver M.empty numIterations "tmp_" spec)
     return ()
 
@@ -48,7 +49,7 @@ compileCFiles =
     return ()
 
 execute :: Int -> IO ByteString
-execute numIterations =
+execute _ =
   do
     fmap B.pack (readProcess "./tmp_" [] "")
 

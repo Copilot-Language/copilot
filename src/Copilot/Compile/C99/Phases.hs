@@ -12,6 +12,7 @@ module Copilot.Compile.C99.Phases
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
 import Copilot.Compile.C99.MetaTable
   (MetaTable (..), StreamInfo (..), ExternInfo (..))
+import Copilot.Compile.C99.Params
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
@@ -38,21 +39,21 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 
 --------------------------------------------------------------------------------
 
-schedulePhases :: MetaTable -> Core.Spec -> Atom ()
-schedulePhases meta spec =
+schedulePhases :: Params -> MetaTable -> Core.Spec -> Atom ()
+schedulePhases params meta spec =
   A.period numberOfPhases $
-    sampleExterns    meta      >>
---    sampleExternFuns meta spec >>
-    updateStates     meta spec >>
-    fireTriggers     meta spec >>
-    updateObservers  meta spec >>
-    updateBuffers    meta spec
+    sampleExterns    params meta spec >>
+    sampleExternFuns params meta spec >>
+    updateStates     params meta spec >>
+    fireTriggers     params meta spec >>
+    updateObservers  params meta spec >>
+    updateBuffers    params meta spec
 
 --------------------------------------------------------------------------------
 
-sampleExterns :: MetaTable -> Atom ()
-sampleExterns =
-  mapM_ sampleExtern . M.toList . externInfoMap
+sampleExterns :: Params -> MetaTable -> Core.Spec -> Atom ()
+sampleExterns _ spec _ =
+  (mapM_ sampleExtern . M.toList . externInfoMap) spec
 
   where
 
@@ -66,13 +67,13 @@ sampleExterns =
 
 --------------------------------------------------------------------------------
 
-sampleExternFuns :: MetaTable -> Core.Spec -> Atom ()
-sampleExternFuns = undefined
+sampleExternFuns :: Params -> MetaTable -> Core.Spec -> Atom ()
+sampleExternFuns _ _ _ = return ()
 
 --------------------------------------------------------------------------------
 
-updateStates :: MetaTable -> Core.Spec -> Atom ()
-updateStates meta
+updateStates :: Params -> MetaTable -> Core.Spec -> Atom ()
+updateStates _ meta
   Core.Spec
     { Core.specStreams = streams
     } = mapM_ updateStreamState streams
@@ -110,8 +111,8 @@ updateStates meta
 
 --------------------------------------------------------------------------------
 
-fireTriggers :: MetaTable -> Core.Spec -> Atom ()
-fireTriggers meta
+fireTriggers :: Params -> MetaTable -> Core.Spec -> Atom ()
+fireTriggers params meta
   Core.Spec
     { Core.specTriggers = triggers
     } =
@@ -142,12 +143,13 @@ fireTriggers meta
           W.ExprInst -> A.ue (c2aExpr meta e)
 
       fnCall :: [String] -> String
-      fnCall xs = name ++ "(" ++ concat (intersperse "," xs) ++ ")"
+      fnCall xs = withPrefix (prefix params) name ++
+        "(" ++ concat (intersperse "," xs) ++ ")"
 
 --------------------------------------------------------------------------------
 
-updateObservers :: MetaTable -> Core.Spec -> Atom ()
-updateObservers meta
+updateObservers :: Params -> MetaTable -> Core.Spec -> Atom ()
+updateObservers params meta
   Core.Spec
     { Core.specObservers = observers
     } =
@@ -167,12 +169,12 @@ updateObservers meta
         do
           let e' = c2aExpr meta e
           W.AssignInst <- return (W.assignInst t)
-          (A.var' name . c2aType) t <== e'
+          (A.var' (withPrefix (prefix params) name) . c2aType) t <== e'
 
 --------------------------------------------------------------------------------
 
-updateBuffers :: MetaTable -> Core.Spec -> Atom ()
-updateBuffers meta
+updateBuffers :: Params -> MetaTable -> Core.Spec -> Atom ()
+updateBuffers _ meta
   Core.Spec
     { Core.specStreams = streams
     } =

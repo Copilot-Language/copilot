@@ -7,20 +7,25 @@ module Copilot.Compile.C99.PrePostCode
   ) where
 
 import Copilot.Core
+import Copilot.Compile.C99.Params
 import Copilot.Compile.C99.Phases (numberOfPhases)
 import Copilot.Compile.Header.C99 (c99HeaderName)
 
 --------------------------------------------------------------------------------
 
-preCode :: Name -> Spec -> String
-preCode programName spec = unlines $
-  [ "#include \"" ++ c99HeaderName programName ++ "\"" ] ++
-  ( map observerDecl . specObservers ) spec
+preCode :: Params -> Spec -> String
+preCode params spec = unlines $
+  [ "#include \"" ++ c99HeaderName (prefix params) ++ "\"" ] ++
+  ( map (observerDecl params) . specObservers ) spec
 
 --------------------------------------------------------------------------------
 
-observerDecl :: Observer -> String
-observerDecl (Observer name _ t) = typeSpec (UType t) ++ " " ++ name ++ ";"
+observerDecl :: Params -> Observer -> String
+observerDecl params (Observer cs _ t) = typeSpec (UType t) ++ " " ++ name ++ ";"
+
+  where
+
+    name = withPrefix (prefix params) cs
 
 --------------------------------------------------------------------------------
 
@@ -43,10 +48,10 @@ typeSpec UType { uTypeType = t } = typeSpec' t
 
 --------------------------------------------------------------------------------
 
-postCode :: Name -> Spec -> String
-postCode programName _ =
+postCode :: Params -> Spec -> String
+postCode params _ =
   unlines
-    [ "void step_" ++ programName ++ "()"
+    [ "void " ++ withPrefix (prefix params) "step" ++ "()"
     , "{"
     , "  " ++ concat (replicate numberOfPhases step)
     , "}"
@@ -54,4 +59,4 @@ postCode programName _ =
 
   where
 
-  step = programName ++ "();"
+  step = withPrefix (prefix params) "copilot" ++ "();"

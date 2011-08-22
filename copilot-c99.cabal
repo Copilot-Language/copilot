@@ -39,6 +39,7 @@ library
   exposed-modules         : Copilot.Compile.C99
                           , Copilot.Compile.C99.C2A
                           , Copilot.Compile.C99.MetaTable
+                          , Copilot.Compile.C99.Params
                           , Copilot.Compile.C99.Phases
                           , Copilot.Compile.C99.PrePostCode
                           , Copilot.Compile.C99.Queue

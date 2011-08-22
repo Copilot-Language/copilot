@@ -128,7 +128,7 @@ data BitsEInst a = ( A.Expr a, A.OrdE a, A.EqE a, A.IntegralE a, Bits a ) => Bit
 bitsEInst :: Bits a => C.Type a -> BitsEInst a
 bitsEInst t =
   case t of
-    C.Bool   p -> error "bitsEInst Bool!" -- !! supress warning !!
+    C.Bool   _ -> error "bitsEInst Bool!" -- !! supress warning !!
     C.Int8   p -> mkInst p BitsEInst
     C.Int16  p -> mkInst p BitsEInst
     C.Int32  p -> mkInst p BitsEInst

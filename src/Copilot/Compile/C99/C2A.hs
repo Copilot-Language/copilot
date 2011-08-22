@@ -123,9 +123,25 @@ instance C.Expr C2AExpr where
 
   ----------------------------------------------------
 
-  externVar t name = C2AExpr $ \ _ _ ->
+  externVar t name = C2AExpr $ \ _ meta ->
 
-    (A.value . A.var' name . c2aType) t
+    let
+      Just externInfo = M.lookup name (externInfoMap meta)
+    in
+      externVar1 t externInfo
+
+    where
+
+    externVar1 :: C.Type a -> ExternInfo -> A.E a
+    externVar1 t1
+      ExternInfo
+        { externInfoVar  = v
+        , externInfoType = t2
+        } =
+      let
+        Just p = t2 =~= t1
+      in
+        coerce (cong p) (A.value v)
 
   ----------------------------------------------------
 
