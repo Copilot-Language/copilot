@@ -5,7 +5,7 @@ module Copilot.Library.Utils
 
 
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( take, (!!) )
+import Copilot.Language.Prelude hiding ( take, (!!), cycle )
 import qualified Prelude as P
 
 
@@ -103,3 +103,8 @@ ls !! n = let indices      = map
                error "indexing the empty list with !! is not defined"
              else
                select indices ls
+
+
+cycle :: ( Typed a ) => [ a ] -> Stream a
+cycle ls = cycle'
+  where cycle' = ls ++ cycle'
