@@ -116,51 +116,53 @@ evalExtern t name exts =
 --------------------------------------------------------------------------------
 
 instance Op1 (->) where
-  not      = P.not
-  abs _    = P.abs
-  sign _   = P.signum
-  recip _  = P.recip
-  exp _    = P.exp
-  sqrt _   = P.sqrt
-  log _    = P.log
-  sin _    = P.sin
-  tan _    = P.tan
-  cos _    = P.cos
-  asin _   = P.asin
-  atan _   = P.atan
-  acos _   = P.acos
-  sinh _   = P.sinh
-  tanh _   = P.tanh
-  cosh _   = P.cosh
-  asinh _  = P.asinh
-  atanh _  = P.atanh
-  acosh _  = P.acosh
-  bwNot _  = complement
+  not        = P.not
+  abs _      = P.abs
+  sign _     = P.signum
+  recip _    = P.recip
+  exp _      = P.exp
+  sqrt _     = P.sqrt
+  log _      = P.log
+  sin _      = P.sin
+  tan _      = P.tan
+  cos _      = P.cos
+  asin _     = P.asin
+  atan _     = P.atan
+  acos _     = P.acos
+  sinh _     = P.sinh
+  tanh _     = P.tanh
+  cosh _     = P.cosh
+  asinh _    = P.asinh
+  atanh _    = P.atanh
+  acosh _    = P.acosh
+  bwNot _    = complement
 
 --------------------------------------------------------------------------------
 
 newtype Apply2 a b c = Apply2 { apply2 :: a -> b -> c }
 
 instance Op2 Apply2 where
-  and      = Apply2 (&&)
-  or       = Apply2 (||)
-  add _    = Apply2 (+)
-  sub _    = Apply2 (-)
-  mul _    = Apply2 (*)
-  mod _    = Apply2 (catchZero P.mod)
-  div _    = Apply2 (catchZero P.div)
-  fdiv _   = Apply2 (P./)
-  pow _    = Apply2 (P.**)
-  logb _   = Apply2 P.logBase
-  eq _     = Apply2 (==)
-  ne _     = Apply2 (/=)
-  le _     = Apply2 (<=)
-  ge _     = Apply2 (>=)
-  lt _     = Apply2 (<)
-  gt _     = Apply2 (>)
-  bwAnd _  = Apply2 (.&.)
-  bwOr  _  = Apply2 (.|.)
-  bwXor _  = Apply2 (xor)
+  and          = Apply2 (&&)
+  or           = Apply2 (||)
+  add _        = Apply2 (+)
+  sub _        = Apply2 (-)
+  mul _        = Apply2 (*)
+  mod _        = Apply2 (catchZero P.mod)
+  div _        = Apply2 (catchZero P.div)
+  fdiv _       = Apply2 (P./)
+  pow _        = Apply2 (P.**)
+  logb _       = Apply2 P.logBase
+  eq _         = Apply2 (==)
+  ne _         = Apply2 (/=)
+  le _         = Apply2 (<=)
+  ge _         = Apply2 (>=)
+  lt _         = Apply2 (<)
+  gt _         = Apply2 (>)
+  bwAnd _      = Apply2 (.&.)
+  bwOr  _      = Apply2 (.|.)
+  bwXor _      = Apply2 (xor)
+  bwShiftL _ _ = Apply2 ( \ a b -> shiftL a $ fromIntegral b )
+  bwShiftR _ _ = Apply2 ( \ a b -> shiftR a $ fromIntegral b )
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = error "divide by zero"

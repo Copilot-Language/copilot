@@ -21,7 +21,7 @@ import Data.Bits
 -- | Unary operators.
 class Op1 op where
   -- Boolean operators.
-  not   :: op Bool Bool
+  not      :: op Bool Bool
   -- Numeric operators.
   abs   :: Num a => Type a -> op a a
   sign  :: Num a => Type a -> op a a
@@ -43,39 +43,41 @@ class Op1 op where
   asinh :: Floating a => Type a -> op a a
   atanh :: Floating a => Type a -> op a a
   acosh :: Floating a => Type a -> op a a
-  bwNot :: Bits a => Type a -> op a a
+  bwNot :: Bits     a => Type a -> op a a
 
 --------------------------------------------------------------------------------
 
 -- | Binary operators.
 class Op2 op where
   -- Boolean operators.
-  and   :: op Bool Bool Bool
-  or    :: op Bool Bool Bool
+  and      :: op Bool Bool Bool
+  or       :: op Bool Bool Bool
   -- Numeric operators.
-  add   :: Num a => Type a -> op a a a
-  sub   :: Num a => Type a -> op a a a
-  mul   :: Num a => Type a -> op a a a
+  add      :: Num a => Type a -> op a a a
+  sub      :: Num a => Type a -> op a a a
+  mul      :: Num a => Type a -> op a a a
   -- Integral operators.
-  mod   :: Integral a => Type a -> op a a a
-  div   :: Integral a => Type a -> op a a a
+  mod      :: Integral a => Type a -> op a a a
+  div      :: Integral a => Type a -> op a a a
   -- Fractional operators.
-  fdiv  :: Fractional a => Type a -> op a a a
+  fdiv     :: Fractional a => Type a -> op a a a
   -- Floating operators.
-  pow   :: Floating a => Type a -> op a a a
-  logb  :: Floating a => Type a -> op a a a
+  pow      :: Floating a => Type a -> op a a a
+  logb     :: Floating a => Type a -> op a a a
   -- Equality operators.
-  eq    :: Eq a => Type a -> op a a Bool
-  ne    :: Eq a => Type a -> op a a Bool
+  eq       :: Eq a => Type a -> op a a Bool
+  ne       :: Eq a => Type a -> op a a Bool
   -- Relational operators.
-  le    :: Ord a => Type a -> op a a Bool
-  ge    :: Ord a => Type a -> op a a Bool
-  lt    :: Ord a => Type a -> op a a Bool
-  gt    :: Ord a => Type a -> op a a Bool
+  le       :: Ord a => Type a -> op a a Bool
+  ge       :: Ord a => Type a -> op a a Bool
+  lt       :: Ord a => Type a -> op a a Bool
+  gt       :: Ord a => Type a -> op a a Bool
   -- Bitwise operators.
-  bwAnd :: Bits a => Type a -> op a a a
-  bwOr  :: Bits a => Type a -> op a a a
-  bwXor :: Bits a => Type a -> op a a a
+  bwAnd    :: Bits a => Type a -> op a a a
+  bwOr     :: Bits a => Type a -> op a a a
+  bwXor    :: Bits a => Type a -> op a a a
+  bwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> op a b a
+  bwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> op a b a
 
 --------------------------------------------------------------------------------
 
