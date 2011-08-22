@@ -30,7 +30,7 @@ min n s = nfoldl1 n smallest s
 mean :: ( Typed a, Fractional a ) => Int -> Stream a -> Stream a
 mean n s = ( sum n s ) / ( fromIntegral n )
 
--- | Mean value over the current set of specs passed in.
+-- | Mean value over the current set of streams passed in.
 meanNow :: ( Typed a, Integral a ) => [ Stream a ] -> Stream a
 meanNow [] = error
     "Error in majority: list of arguments must be nonempty."

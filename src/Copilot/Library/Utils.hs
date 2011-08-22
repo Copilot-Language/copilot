@@ -24,9 +24,9 @@ take n s = P.take ( fromIntegral n ) $ tails s
 -- Folds
 
 
-nfoldl :: ( Typed a )
-          => Int -> ( Stream a -> Stream a -> Stream a )
-                 ->   Stream a -> Stream a -> Stream a
+nfoldl :: ( Typed a, Typed b )
+          => Int -> ( Stream a -> Stream b -> Stream a )
+                 ->   Stream a -> Stream b -> Stream a
 nfoldl n f e s = foldl f e $ take n s
 
 
@@ -36,9 +36,9 @@ nfoldl1 :: ( Typed a )
 nfoldl1 n f s = foldl1 f $ take n s
 
 
-nfoldr :: ( Typed a )
-          => Int -> ( Stream a -> Stream a -> Stream a )
-                 ->   Stream a -> Stream a -> Stream a
+nfoldr :: ( Typed a, Typed b )
+          => Int -> ( Stream a -> Stream b -> Stream b )
+                 ->   Stream b -> Stream a -> Stream b
 nfoldr n f e s = foldr f e $ take n s
 
 
@@ -51,15 +51,15 @@ nfoldr1 n f s = foldr1 f $ take n s
 -- Scans
 
 
-nscanl :: ( Typed a )
-          => Int -> ( Stream a -> Stream a -> Stream a )
-          -> Stream a -> Stream a -> [ Stream a ]
+nscanl :: ( Typed a, Typed b )
+          => Int -> ( Stream a -> Stream b -> Stream a )
+          -> Stream a -> Stream b -> [ Stream a ]
 nscanl n f e s = scanl f e $ take n s
 
 
 nscanr :: ( Typed a )
-          => Int -> ( Stream a -> Stream a -> Stream a )
-          -> Stream a -> Stream a -> [ Stream a ]
+          => Int -> ( Stream a -> Stream b -> Stream b )
+          -> Stream b -> Stream a -> [ Stream b ]
 nscanr n f e s = scanr f e $ take n s
 
 
@@ -81,10 +81,11 @@ nscanr1 n f s = scanr1 f $ take n s
 case' :: ( Typed a )
          => [ Stream Bool ] -> [ Stream a ] -> Stream a
 case' predicates alternatives =
-  let case'' []         [ default' ] = default'
-      case'' ( p : ps ) ( a : as )   = mux p a ( case'' ps as )
-      case'' _          _            = error $ "length of alternatives list is not "
-                                       P.++ "greater than the length of predicates list"
+  let case'' []         ( default' : _ ) = default'
+      case'' ( p : ps ) ( a : as )       = mux p a ( case'' ps as )
+      case'' _          _                =
+        error $ "length of alternatives list is not "
+        P.++ "greater by one than the length of predicates list"
   in case'' predicates alternatives
 
 
