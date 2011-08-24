@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Type.Show
   ( ShowWit (..)
@@ -22,17 +22,17 @@ data ShowWit a = Show a => ShowWit
 showWit :: Type a -> ShowWit a
 showWit t =
   case t of
-    Bool   p -> coerce2 (symm p) ShowWit
-    Int8   p -> coerce2 (symm p) ShowWit
-    Int16  p -> coerce2 (symm p) ShowWit
-    Int32  p -> coerce2 (symm p) ShowWit
-    Int64  p -> coerce2 (symm p) ShowWit
-    Word8  p -> coerce2 (symm p) ShowWit
-    Word16 p -> coerce2 (symm p) ShowWit
-    Word32 p -> coerce2 (symm p) ShowWit
-    Word64 p -> coerce2 (symm p) ShowWit
-    Float  p -> coerce2 (symm p) ShowWit
-    Double p -> coerce2 (symm p) ShowWit
+    Bool   -> ShowWit
+    Int8   -> ShowWit
+    Int16  -> ShowWit
+    Int32  -> ShowWit
+    Int64  -> ShowWit
+    Word8  -> ShowWit
+    Word16 -> ShowWit
+    Word32 -> ShowWit
+    Word64 -> ShowWit
+    Float  -> ShowWit
+    Double -> ShowWit
 
 --------------------------------------------------------------------------------
 

@@ -4,6 +4,8 @@
 
 -- | A pretty printer for Copilot specifications.
 
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Core.PrettyPrint
   ( prettyPrint
   ) where
@@ -16,71 +18,70 @@ import Data.List (intersperse)
 
 --------------------------------------------------------------------------------
 
-newtype PPExpr a       = PPExpr { ppExpr :: Doc }
-newtype PPOp1  a b     = PPOp1  { ppOp1  :: Doc -> Doc }
-newtype PPOp2  a b c   = PPOp2  { ppOp2  :: Doc -> Doc -> Doc }
-newtype PPOp3  a b c d = PPOp3  { ppOp3  :: Doc -> Doc -> Doc -> Doc }
-
-instance Expr PPExpr where
-  const t x            = PPExpr $ text (showWithType t x)
-  drop _ 0 id          = PPExpr $ text "stream" <+> text "s" <> int id
-  drop _ i id          = PPExpr $ text "drop" <+> text (show i) <+> text "s" <>
-                         int id
-  externVar _ name     = PPExpr $ text "extern \"" <> text name <> text "\""
-  local _ _ name e1 e2 = PPExpr $ text "local \"" <> text name <> text "\" ="
+ppExpr :: Expr a -> Doc
+ppExpr e0 = case e0 of
+  Const t x            -> text (showWithType t x)
+  Drop _ 0 id          -> text "stream" <+> text "s" <> int id
+  Drop _ i id          -> text "drop" <+> text (show i) <+> text "s" <>
+                          int id
+  ExternVar _ name     -> text "extern \"" <> text name <> text "\""
+  Local _ _ name e1 e2 -> text "local \"" <> text name <> text "\" ="
                                     <+> ppExpr e1 $$ text "in" <+> ppExpr e2
-  var _ name           = PPExpr $ text "var \"" <> text name <> text "\""
-  op1 op e             = PPExpr $ ppOp1 op (ppExpr e)
-  op2 op e1 e2         = PPExpr $ ppOp2 op (ppExpr e1) (ppExpr e2)
-  op3 op e1 e2 e3      = PPExpr $ ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+  Var _ name           -> text "var \"" <> text name <> text "\""
+  Op1 op e             -> ppOp1 op (ppExpr e)
+  Op2 op e1 e2         -> ppOp2 op (ppExpr e1) (ppExpr e2)
+  Op3 op e1 e2 e3      -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
 
-instance Op1 PPOp1 where
-  not      = PPOp1 $ ppPrefix "not"
-  abs _    = PPOp1 $ ppPrefix "abs"
-  sign _   = PPOp1 $ ppPrefix "signum"
-  recip _  = PPOp1 $ ppPrefix "recip"
-  exp _    = PPOp1 $ ppPrefix "exp"
-  sqrt _   = PPOp1 $ ppPrefix "sqrt"
-  log _    = PPOp1 $ ppPrefix "log"
-  sin _    = PPOp1 $ ppPrefix "sin"
-  tan _    = PPOp1 $ ppPrefix "tan"
-  cos _    = PPOp1 $ ppPrefix "cos"
-  asin _   = PPOp1 $ ppPrefix "asin"
-  atan _   = PPOp1 $ ppPrefix "atan"
-  acos _   = PPOp1 $ ppPrefix "acos"
-  sinh _   = PPOp1 $ ppPrefix "sinh"
-  tanh _   = PPOp1 $ ppPrefix "tanh"
-  cosh _   = PPOp1 $ ppPrefix "cosh"
-  asinh _  = PPOp1 $ ppPrefix "asinh"
-  atanh _  = PPOp1 $ ppPrefix "atanh"
-  acosh _  = PPOp1 $ ppPrefix "acosh"
-  bwNot _  = PPOp1 $ ppPrefix "~"
+ppOp1 :: Op1 a b -> Doc -> Doc
+ppOp1 op = case op of
+  Not      -> ppPrefix "not"
+  Abs _    -> ppPrefix "abs"
+  Sign _   -> ppPrefix "signum"
+  Recip _  -> ppPrefix "recip"
+  Exp _    -> ppPrefix "exp"
+  Sqrt _   -> ppPrefix "sqrt"
+  Log _    -> ppPrefix "log"
+  Sin _    -> ppPrefix "sin"
+  Tan _    -> ppPrefix "tan"
+  Cos _    -> ppPrefix "cos"
+  Asin _   -> ppPrefix "asin"
+  Atan _   -> ppPrefix "atan"
+  Acos _   -> ppPrefix "acos"
+  Sinh _   -> ppPrefix "sinh"
+  Tanh _   -> ppPrefix "tanh"
+  Cosh _   -> ppPrefix "cosh"
+  Asinh _  -> ppPrefix "asinh"
+  Atanh _  -> ppPrefix "atanh"
+  Acosh _  -> ppPrefix "acosh"
+  BwNot _  -> ppPrefix "~"
 
-instance Op2 PPOp2 where
-  and          = PPOp2 $ ppInfix "&&"
-  or           = PPOp2 $ ppInfix "||"
-  add      _   = PPOp2 $ ppInfix "+"
-  sub      _   = PPOp2 $ ppInfix "-"
-  mul      _   = PPOp2 $ ppInfix "*"
-  div      _   = PPOp2 $ ppInfix "div"
-  mod      _   = PPOp2 $ ppInfix "mod"
-  fdiv     _   = PPOp2 $ ppInfix "/"
-  pow      _   = PPOp2 $ ppInfix "**"
-  logb     _   = PPOp2 $ ppInfix "logBase"
-  eq       _   = PPOp2 $ ppInfix "=="
-  ne       _   = PPOp2 $ ppInfix "/="
-  le       _   = PPOp2 $ ppInfix "<="
-  ge       _   = PPOp2 $ ppInfix ">="
-  lt       _   = PPOp2 $ ppInfix "<"
-  gt       _   = PPOp2 $ ppInfix ">"
-  bwAnd    _   = PPOp2 $ ppInfix "&"
-  bwOr     _   = PPOp2 $ ppInfix "|"
-  bwXor    _   = PPOp2 $ ppInfix "^"
-  bwShiftL _ _ = PPOp2 $ ppInfix "<<"
-  bwShiftR _ _ = PPOp2 $ ppInfix ">>"
+ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
+ppOp2 op = case op of
+  And          -> ppInfix "&&"
+  Or           -> ppInfix "||"
+  Add      _   -> ppInfix "+"
+  Sub      _   -> ppInfix "-"
+  Mul      _   -> ppInfix "*"
+  Div      _   -> ppInfix "div"
+  Mod      _   -> ppInfix "mod"
+  Fdiv     _   -> ppInfix "/"
+  Pow      _   -> ppInfix "**"
+  Logb     _   -> ppInfix "logBase"
+  Eq       _   -> ppInfix "=="
+  Ne       _   -> ppInfix "/="
+  Le       _   -> ppInfix "<="
+  Ge       _   -> ppInfix ">="
+  Lt       _   -> ppInfix "<"
+  Gt       _   -> ppInfix ">"
+  BwAnd    _   -> ppInfix "&"
+  BwOr     _   -> ppInfix "|"
+  BwXor    _   -> ppInfix "^"
+  BwShiftL _ _ -> ppInfix "<<"
+  BwShiftR _ _ -> ppInfix ">>"
 
-instance Op3 PPOp3 where
-  mux _    = PPOp3 $ \ doc1 doc2 doc3 ->
+ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
+ppOp3 op = case op of
+  Mux _    -> \ doc1 doc2 doc3 ->
     text "(if"   <+> doc1 <+>
     text "then" <+> doc2 <+>
     text "else" <+> doc3 <> text ")"

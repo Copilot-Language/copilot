@@ -2,9 +2,11 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | 
+
+{-# LANGUAGE ExistentialQuantification, GADTs, KindSignatures #-}
 
 module Copilot.Core.Type
   ( Type (..)
@@ -12,55 +14,49 @@ module Copilot.Core.Type
   , UType (..)
   ) where
 
+import Data.Int
+import Data.Word
 import Copilot.Core.Type.Equality
-import Data.Int (Int8, Int16, Int32, Int64)
-import Data.Word (Word8, Word16, Word32, Word64)
 
---------------------------------------------------------------------------------
-
-data Type a
-  = Bool   (Equal a Bool)
-  | Int8   (Equal a Int8)
-  | Int16  (Equal a Int16)
-  | Int32  (Equal a Int32)
-  | Int64  (Equal a Int64)
-  | Word8  (Equal a Word8)
-  | Word16 (Equal a Word16)
-  | Word32 (Equal a Word32)
-  | Word64 (Equal a Word64)
-  | Float  (Equal a Float)
-  | Double (Equal a Double)
+data Type :: * -> * where
+  Bool    :: Type Bool
+  Int8    :: Type Int8
+  Int16   :: Type Int16
+  Int32   :: Type Int32
+  Int64   :: Type Int64
+  Word8   :: Type Word8
+  Word16  :: Type Word16
+  Word32  :: Type Word32
+  Word64  :: Type Word64
+  Float   :: Type Float
+  Double  :: Type Double
 
 instance EqualType Type where
-  (=~=) (Bool x)   (Bool y)   = Just (trans x (symm y))
-  (=~=) (Int8 x)   (Int8 y)   = Just (trans x (symm y))
-  (=~=) (Int16 x)  (Int16 y)  = Just (trans x (symm y))
-  (=~=) (Int32 x)  (Int32 y)  = Just (trans x (symm y))
-  (=~=) (Int64 x)  (Int64 y)  = Just (trans x (symm y))
-  (=~=) (Word8 x)  (Word8 y)  = Just (trans x (symm y))
-  (=~=) (Word16 x) (Word16 y) = Just (trans x (symm y))
-  (=~=) (Word32 x) (Word32 y) = Just (trans x (symm y))
-  (=~=) (Word64 x) (Word64 y) = Just (trans x (symm y))
-  (=~=) (Float x)  (Float y)  = Just (trans x (symm y))
-  (=~=) (Double x) (Double y) = Just (trans x (symm y))
+  (=~=) Bool   Bool   = Just Refl
+  (=~=) Int8   Int8   = Just Refl
+  (=~=) Int16  Int16  = Just Refl
+  (=~=) Int32  Int32  = Just Refl
+  (=~=) Int64  Int64  = Just Refl
+  (=~=) Word8  Word8  = Just Refl
+  (=~=) Word16 Word16 = Just Refl
+  (=~=) Word32 Word32 = Just Refl
+  (=~=) Word64 Word64 = Just Refl
   (=~=) _ _ = Nothing
-
---------------------------------------------------------------------------------
 
 class Typed a where
   typeOf :: Type a
 
-instance Typed Bool   where typeOf = Bool   (mkEqual id)
-instance Typed Int8   where typeOf = Int8   (mkEqual id)
-instance Typed Int16  where typeOf = Int16  (mkEqual id)
-instance Typed Int32  where typeOf = Int32  (mkEqual id)
-instance Typed Int64  where typeOf = Int64  (mkEqual id)
-instance Typed Word8  where typeOf = Word8  (mkEqual id)
-instance Typed Word16 where typeOf = Word16 (mkEqual id)
-instance Typed Word32 where typeOf = Word32 (mkEqual id)
-instance Typed Word64 where typeOf = Word64 (mkEqual id)
-instance Typed Float  where typeOf = Float  (mkEqual id)
-instance Typed Double where typeOf = Double (mkEqual id)
+instance Typed Bool   where typeOf = Bool
+instance Typed Int8   where typeOf = Int8
+instance Typed Int16  where typeOf = Int16
+instance Typed Int32  where typeOf = Int32
+instance Typed Int64  where typeOf = Int64
+instance Typed Word8  where typeOf = Word8
+instance Typed Word16 where typeOf = Word16
+instance Typed Word32 where typeOf = Word32
+instance Typed Word64 where typeOf = Word64
+instance Typed Float  where typeOf = Float
+instance Typed Double where typeOf = Double
 
 --------------------------------------------------------------------------------
 

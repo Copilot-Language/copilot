@@ -12,49 +12,41 @@
 -- \"/Typing dynamic typing/\",
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
 
+{-# LANGUAGE GADTs, KindSignatures, ScopedTypeVariables #-}
+
 module Copilot.Core.Type.Dynamic
   ( Dynamic
   , DynamicF
-  , toDynamic
-  , fromDynamic
-  , toDynamicF
-  , fromDynamicF
-  , mapDynamicF
+  , toDyn
+  , fromDyn
+  , toDynF
+  , fromDynF
   ) where
 
 import Copilot.Core.Type.Equality
 
 --------------------------------------------------------------------------------
 
-data Dynamic t = forall a . Dynamic a (t a)
+data Dynamic :: (* -> *) -> * where
+  Dynamic :: a -> t a -> Dynamic t
 
-toDynamic :: a -> t a -> Dynamic t
-toDynamic = Dynamic
+data DynamicF :: (* -> *) -> (* -> *) -> * where
+  DynamicF :: f a -> t a -> DynamicF f t
 
-fromDynamic :: EqualType t => t a -> Dynamic t -> Maybe a
-fromDynamic t2 (Dynamic x t1) =
+toDyn :: EqualType t => t a -> a -> Dynamic t
+toDyn t x = Dynamic x t
+
+fromDyn :: EqualType t => t a -> Dynamic t -> Maybe a
+fromDyn t1 (Dynamic x t2) =
   case t1 =~= t2 of
-    Just eq -> Just (coerce eq x)
-    Nothing -> Nothing
+    Just Refl -> return x
+    Nothing   -> Nothing
 
---------------------------------------------------------------------------------
+toDynF :: EqualType t => t a -> f a -> DynamicF f t
+toDynF t fx = DynamicF fx t
 
-data DynamicF f t = forall a . DynamicF (f a) (t a)
-
-toDynamicF :: f a -> t a -> DynamicF f t
-toDynamicF = DynamicF
-
-fromDynamicF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)
-fromDynamicF t2 (DynamicF fx t1) =
+fromDynF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)
+fromDynF t1 (DynamicF fx t2) =
   case t1 =~= t2 of
-    Just eq -> Just (coerce (cong eq) fx)
-    Nothing -> Nothing
-
-mapDynamicF
-  :: EqualType t
-  => (forall a . f a -> g a)
-  -> DynamicF f t
-  -> DynamicF g t
-mapDynamicF f (DynamicF fx t) = DynamicF (f fx) t
-
---------------------------------------------------------------------------------
+    Just Refl -> return fx
+    Nothing   -> Nothing

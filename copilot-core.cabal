@@ -43,7 +43,7 @@ library
   build-depends:
     containers >= 0.4 && < 1,
     dlist,
-    haskell2010,
+    base >= 4.0,
     pretty >= 1.0,
     pretty-ncols >= 0.1,
     random > 1.0
@@ -60,9 +60,9 @@ library
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Locals
-    Copilot.Core.Random
-    Copilot.Core.Random.Gen
-    Copilot.Core.Random.Weights
+--    Copilot.Core.Random
+--    Copilot.Core.Random.Gen
+--    Copilot.Core.Random.Weights
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality

@@ -2,8 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Spec
   ( Stream (..)
@@ -21,8 +20,8 @@ import Copilot.Core.Type (Type)
 data Stream = forall a  . Stream
   { streamId         :: Id
   , streamBuffer     :: [a]
-  , streamGuard      :: forall e . Expr e => e Bool
-  , streamExpr       :: forall e . Expr e => e a
+  , streamGuard      :: Expr Bool
+  , streamExpr       :: Expr a
   , streamExprType   :: Type a }
 
 --------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ data Stream = forall a  . Stream
 -- | An observer.
 data Observer = forall a . Observer
   { observerName     :: Name
-  , observerExpr     :: forall e . Expr e => e a
+  , observerExpr     :: Expr a
   , observerExprType :: Type a }
 
 --------------------------------------------------------------------------------
@@ -38,7 +37,7 @@ data Observer = forall a . Observer
 -- | A trigger.
 data Trigger = Trigger
   { triggerName      :: Name
-  , triggerGuard     :: forall e . Expr e => e Bool
+  , triggerGuard     :: Expr Bool
   , triggerArgs      :: [UExpr] }
 
 --------------------------------------------------------------------------------

@@ -5,6 +5,8 @@
 -- | Generates a C99 header from a copilot-specification. The functionality
 -- provided by the header must be implemented by back-ends targetting C99.
 
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Compile.Header.C99
   ( genC99Header
   , c99HeaderName
@@ -111,24 +113,24 @@ ppTriggerPrototypes prefix = concatH . map ppTriggerPrototype
 
 --------------------------------------------------------------------------------
 
-ppExternalVariables :: [ExternVar] -> Doc
+ppExternalVariables :: [ExtVar] -> Doc
 ppExternalVariables = concatH . map ppExternalVariable
 
-ppExternalVariable :: ExternVar -> Doc
+ppExternalVariable :: ExtVar -> Doc
 ppExternalVariable
-  ExternVar
+  ExtVar
     { externVarName = name
     , externVarType = t } =
         string "extern" <+> text (typeSpec t) <+> text name <> text ";"
 
 --------------------------------------------------------------------------------
 
-ppExternalArrays :: [ExternArray] -> Doc
+ppExternalArrays :: [ExtArray] -> Doc
 ppExternalArrays = concatH . map ppExternalArray
 
-ppExternalArray :: ExternArray -> Doc
+ppExternalArray :: ExtArray -> Doc
 ppExternalArray
-  ExternArray
+  ExtArray
     { externArrayName = name
     , externArrayType = t } =
         string "extern" <+> text (typeSpec t) <+> text "*" <+>
@@ -136,12 +138,12 @@ ppExternalArray
 
 --------------------------------------------------------------------------------
 
-ppExternalFunctions :: [ExternFun] -> Doc
+ppExternalFunctions :: [ExtFun] -> Doc
 ppExternalFunctions = concatH . map ppExternalFunction
 
-ppExternalFunction :: ExternFun -> Doc
+ppExternalFunction :: ExtFun -> Doc
 ppExternalFunction
-  ExternFun
+  ExtFun
     { externFunName      = name
     , externFunType      = t
     , externFunArgsTypes = args } =
@@ -163,17 +165,17 @@ typeSpec UType { uTypeType = t } = typeSpec' t
 
   where
 
-  typeSpec' (Bool   _) = "bool"
-  typeSpec' (Int8   _) = "int8_t"
-  typeSpec' (Int16  _) = "int16_t"
-  typeSpec' (Int32  _) = "int32_t"
-  typeSpec' (Int64  _) = "int64_t"
-  typeSpec' (Word8  _) = "uint8_t"
-  typeSpec' (Word16 _) = "uint16_t"
-  typeSpec' (Word32 _) = "uint32_t"
-  typeSpec' (Word64 _) = "uint64_t"
-  typeSpec' (Float  _) = "float"
-  typeSpec' (Double _) = "double"
+  typeSpec' Bool = "bool"
+  typeSpec' Int8   = "int8_t"
+  typeSpec' Int16  = "int16_t"
+  typeSpec' Int32  = "int32_t"
+  typeSpec' Int64  = "int64_t"
+  typeSpec' Word8  = "uint8_t"
+  typeSpec' Word16 = "uint16_t"
+  typeSpec' Word32 = "uint32_t"
+  typeSpec' Word64 = "uint64_t"
+  typeSpec' Float  = "float"
+  typeSpec' Double = "double"
 
 --------------------------------------------------------------------------------
 

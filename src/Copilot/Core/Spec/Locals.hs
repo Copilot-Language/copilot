@@ -7,7 +7,7 @@
 -- |
 
 module Copilot.Core.Spec.Locals
-  ( Local (..)
+  ( Loc (..)
   , locals
   ) where
 
@@ -18,16 +18,16 @@ import Prelude hiding (concat, foldr)
 
 --------------------------------------------------------------------------------
 
-data Local = forall a . Local
+data Loc = forall a . Loc
   { localName :: Name
   , localType :: Type a }
 
-instance Show Local where
-  show Local { localName = name } = name
+instance Show Loc where
+  show Loc { localName = name } = name
 
 --------------------------------------------------------------------------------
 
-locals :: Spec -> [Local]
+locals :: Spec -> [Loc]
 locals
   Spec
     { specStreams   = streams
@@ -40,46 +40,45 @@ locals
 
   where
 
-  eqLoc :: Local -> Local -> Bool
-  eqLoc Local { localName = name1 } Local { localName = name2 } =
+  eqLoc :: Loc -> Loc -> Bool
+  eqLoc Loc { localName = name1 } Loc { localName = name2 } =
     name1 == name2
 
 --------------------------------------------------------------------------------
 
-locsStream :: Stream -> DList Local
+locsStream :: Stream -> DList Loc
 locsStream Stream { streamExpr = e } = locsExpr e
 
 --------------------------------------------------------------------------------
 
-locsTrigger :: Trigger -> DList Local
+locsTrigger :: Trigger -> DList Loc
 locsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
   locsExpr e `append` concat (fmap locsUExpr args)
 
   where
 
-  locsUExpr :: UExpr -> DList Local
+  locsUExpr :: UExpr -> DList Loc
   locsUExpr (UExpr _ e1) = locsExpr e1
 
 --------------------------------------------------------------------------------
 
-locsObserver :: Observer -> DList Local
+locsObserver :: Observer -> DList Loc
 locsObserver Observer { observerExpr = e } = locsExpr e
 
 --------------------------------------------------------------------------------
 
-newtype ExtsExpr a = ExtsExpr { locsExpr :: DList Local }
-
-instance Expr ExtsExpr where
-  const  _ _           = ExtsExpr $ empty
-  drop   _ _ _         = ExtsExpr $ empty
-  local t _ name e1 e2 = ExtsExpr $ singleton (Local name t)
+locsExpr :: Expr a -> DList Loc
+locsExpr e0 = case e0 of
+  Const  _ _           -> empty
+  Drop   _ _ _         -> empty
+  Local t _ name e1 e2 -> singleton (Loc name t)
                                       `append` locsExpr e1
                                       `append` locsExpr e2
-  var _ _              = ExtsExpr $ empty
-  externVar _ _        = ExtsExpr $ empty
-  op1 _ e              = ExtsExpr $ locsExpr e
-  op2 _ e1 e2          = ExtsExpr $ locsExpr e1 `append` locsExpr e2
-  op3 _ e1 e2 e3       = ExtsExpr $ locsExpr e1 `append` locsExpr e2
-                                                `append` locsExpr e3
+  Var _ _              -> empty
+  ExternVar _ _        -> empty
+  Op1 _ e              -> locsExpr e
+  Op2 _ e1 e2          -> locsExpr e1 `append` locsExpr e2
+  Op3 _ e1 e2 e3       -> locsExpr e1 `append` locsExpr e2
+                                       `append` locsExpr e3
 
 --------------------------------------------------------------------------------

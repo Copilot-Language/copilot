@@ -6,7 +6,7 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.External
-  ( ExternVar (..), ExternArray (..), ExternFun (..)
+  ( ExtVar (..), ExtArray (..), ExtFun (..)
   , externVars, externArrays, externFuns
   ) where
 
@@ -19,122 +19,117 @@ import Prelude hiding (all, concat, foldr)
 
 --------------------------------------------------------------------------------
 
-data ExternVar = ExternVar
+data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
 
-data ExternArray = ExternArray
+data ExtArray = ExtArray
   { externArrayName :: Name
   , externArrayType :: UType }
 
-data ExternFun = ExternFun
+data ExtFun = ExtFun
   { externFunName      :: Name
   , externFunType      :: UType
   , externFunArgsTypes :: [UType] }
 
 --------------------------------------------------------------------------------
 
-externVars :: Spec -> [ExternVar]
+externVars :: Spec -> [ExtVar]
 externVars = nubBy eqExt . toList . all externVarsExpr
 
   where
 
-  eqExt :: ExternVar -> ExternVar -> Bool
-  eqExt ExternVar { externVarName = name1 } ExternVar { externVarName = name2 } =
+  eqExt :: ExtVar -> ExtVar -> Bool
+  eqExt ExtVar { externVarName = name1 } ExtVar { externVarName = name2 } =
     name1 == name2
 
-newtype ExternVarsExpr a = ExternVarsExpr { externVarsExpr :: DList ExternVar }
-
-instance Expr ExternVarsExpr where
-  const  _ _          = ExternVarsExpr $ empty
-  drop   _ _ _        = ExternVarsExpr $ empty
-  local _ _ _ e1 e2   = ExternVarsExpr $ externVarsExpr e1 `append`
+externVarsExpr :: Expr a -> DList ExtVar
+externVarsExpr e0 = case e0 of
+  Const  _ _          -> empty
+  Drop   _ _ _        -> empty
+  Local _ _ _ e1 e2   -> externVarsExpr e1 `append`
                                          externVarsExpr e2
-  var _ _             = ExternVarsExpr $ empty
-  externVar t name    = ExternVarsExpr $ singleton (ExternVar name (UType t))
-  externArray _ _ _ e = ExternVarsExpr $ externVarsExpr e
-  externFun _ _ ues   = ExternVarsExpr $ concat (map externVarsUExpr ues)
-  op1 _ e             = ExternVarsExpr $ externVarsExpr e
-  op2 _ e1 e2         = ExternVarsExpr $ externVarsExpr e1 `append`
-                                         externVarsExpr e2
-  op3 _ e1 e2 e3      = ExternVarsExpr $ externVarsExpr e1 `append`
-                                         externVarsExpr e2 `append`
-                                         externVarsExpr e3
+  Var _ _             -> empty
+  ExternVar t name    -> singleton (ExtVar name (UType t))
+  ExternArray _ _ _ e -> externVarsExpr e
+  ExternFun _ _ ues   -> concat (map externVarsUExpr ues)
+  Op1 _ e             -> externVarsExpr e
+  Op2 _ e1 e2         -> externVarsExpr e1 `append` externVarsExpr e2
+  Op3 _ e1 e2 e3      -> externVarsExpr e1 `append`
+                         externVarsExpr e2 `append`
+                         externVarsExpr e3
 
-externVarsUExpr :: UExpr -> DList ExternVar
+externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
 
 --------------------------------------------------------------------------------
 
-externArrays :: Spec -> [ExternArray]
+externArrays :: Spec -> [ExtArray]
 externArrays = nubBy eqExt . toList . all externArraysExpr
 
   where
 
-  eqExt :: ExternArray -> ExternArray -> Bool
+  eqExt :: ExtArray -> ExtArray -> Bool
   eqExt
-    ExternArray { externArrayName = name1 }
-    ExternArray { externArrayName = name2 } = name1 == name2
+    ExtArray { externArrayName = name1 }
+    ExtArray { externArrayName = name2 } = name1 == name2
 
-newtype ExternArraysExpr a = ExternArraysExpr
-  { externArraysExpr :: DList ExternArray }
-
-instance Expr ExternArraysExpr where
-  const  _ _               = ExternArraysExpr $ empty
-  drop   _ _ _             = ExternArraysExpr $ empty
-  local _ _ _ e1 e2        = ExternArraysExpr $ externArraysExpr e1 `append`
+externArraysExpr :: Expr a -> DList ExtArray
+externArraysExpr e0 = case e0 of
+  Const  _ _               -> empty
+  Drop   _ _ _             -> empty
+  Local _ _ _ e1 e2        -> externArraysExpr e1 `append`
                                                 externArraysExpr e2
-  var _ _                  = ExternArraysExpr $ empty
-  externVar _ _            = ExternArraysExpr $ empty
-  externArray t1 t2 name e = ExternArraysExpr $ singleton (ExternArray name (UType t1))
-  externFun _ _ ues        = ExternArraysExpr $ concat (map externArraysUExpr ues)
-  op1 _ e                  = ExternArraysExpr $ externArraysExpr e
-  op2 _ e1 e2              = ExternArraysExpr $ externArraysExpr e1 `append`
-                                                externArraysExpr e2
-  op3 _ e1 e2 e3           = ExternArraysExpr $ externArraysExpr e1 `append`
-                                                externArraysExpr e2 `append`
-                                                externArraysExpr e3
+  Var _ _                  -> empty
+  ExternVar _ _            -> empty
+  ExternArray t1 _  name _ -> singleton (ExtArray name (UType t1))
+  ExternFun _ _ ues        -> concat (map externArraysUExpr ues)
+  Op1 _ e                  -> externArraysExpr e
+  Op2 _ e1 e2              -> externArraysExpr e1 `append` externArraysExpr e2
+  Op3 _ e1 e2 e3           -> externArraysExpr e1 `append`
+                              externArraysExpr e2 `append`
+                              externArraysExpr e3
 
-externArraysUExpr :: UExpr -> DList ExternArray
+externArraysUExpr :: UExpr -> DList ExtArray
 externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
 
 --------------------------------------------------------------------------------
 
-externFuns :: Spec -> [ExternFun]
+externFuns :: Spec -> [ExtFun]
 externFuns _ = []
 
   where
 
 {-
-  eqExt :: ExternVar -> ExternVar -> Bool
-  eqExt ExternVar { externVarName = name1 } ExternVar { externVarName = name2 } =
+  eqExt :: ExtVar -> ExtVar -> Bool
+  eqExt ExtVar { externVarName = name1 } ExtVar { externVarName = name2 } =
     name1 == name2
 
-newtype ExternVarsExpr a = ExternVarsExpr { externVarsExpr :: DList ExternVar }
+newtype ExtVarsExpr a = ExtVarsExpr { externVarsExpr :: DList ExtVar }
 
-instance Expr ExternVarsExpr where
-  const  _ _          = ExternVarsExpr $ empty
-  drop   _ _ _        = ExternVarsExpr $ empty
-  local _ _ _ e1 e2   = ExternVarsExpr $ externVarsExpr e1 `append`
+instance Expr ExtVarsExpr where
+  const  _ _          -> empty
+  drop   _ _ _        -> empty
+  local _ _ _ e1 e2   -> externVarsExpr e1 `append`
                                          externVarsExpr e2
-  var _ _             = ExternVarsExpr $ empty
-  extern t name       = ExternVarsExpr $ singleton (ExternVar name (utype t))
-  externArray _ _ _ e = ExternVarsExpr $ externVarsExpr e
-  externFun _ _ ues   = ExternVarsExpr $ concat (map externVarsUExpr ues)
-  op1 _ e             = ExternVarsExpr $ externVarsExpr e
-  op2 _ e1 e2         = ExternVarsExpr $ externVarsExpr e1 `append`
+  var _ _             -> empty
+  extern t name       -> singleton (ExtVar name (utype t))
+  externArray _ _ _ e -> externVarsExpr e
+  externFun _ _ ues   -> concat (map externVarsUExpr ues)
+  op1 _ e             -> externVarsExpr e
+  op2 _ e1 e2         -> externVarsExpr e1 `append`
                                          externVarsExpr e2
-  op3 _ e1 e2 e3      = ExternVarsExpr $ externVarsExpr e1 `append`
+  op3 _ e1 e2 e3      -> externVarsExpr e1 `append`
                                          externVarsExpr e2 `append`
                                          externVarsExpr e3
 
-externVarsUExpr :: UExpr -> DList ExternVar
+externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
 -}
 
 --------------------------------------------------------------------------------
 
-all :: Expr e => (forall a . e a -> DList b) -> Spec -> DList b
+all :: (forall a . Expr a -> DList b) -> Spec -> DList b
 all f spec =
   concat (fmap (allStream) (specStreams   spec)) `append`
   concat (fmap allTrigger  (specTriggers  spec)) `append`

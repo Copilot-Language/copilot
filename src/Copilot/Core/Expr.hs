@@ -2,13 +2,12 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE GADTs, ExistentialQuantification #-}
 
 module Copilot.Core.Expr
   ( Id
   , Name
   , Expr (..)
-  , WrapExpr (..)
   , UExpr (..)
   , DropIdx
   ) where
@@ -34,72 +33,62 @@ type DropIdx = Word16
 
 --------------------------------------------------------------------------------
 
--- | The expression class.
-class Expr e where
-  -- | A constant.
-  const
+data Expr a where
+  Const
     :: Type a
     -> a
-    -> e a
-  -- | The temporal look-ahead operator.
-  drop
+    -> Expr a
+  Drop
     :: Type a
     -> DropIdx
     -> Id
-    -> e a
-  -- | A binding of local variable.
-  local
+    -> Expr a
+  Local
     :: Type a
     -> Type b
     -> Name
-    -> e a
-    -> e b
-    -> e b
-  -- | A bound local variable.
-  var
+    -> Expr a
+    -> Expr b
+    -> Expr b
+  Var
     :: Type a
     -> Name
-    -> e a
-  externVar
+    -> Expr a
+  ExternVar
     :: Type a
     -> Name
-    -> e a
-  -- | An unary operator.
-  externFun
+    -> Expr a
+  ExternFun
     :: Type a
     -> Name
     -> [UExpr]
-    -> e a
-  -- | An external function.
-  externArray
+    -> Expr a
+  ExternArray
     :: Integral a
     => Type a
     -> Type b
     -> Name
-    -> e a
-    -> e b
-  -- | An external array.
-  op1
-    :: (forall op . Op1 op => op a b)
-    -> e a -> e b
-  -- | A binary operator.
-  op2
-    :: (forall op . Op2 op => op a b c)
-    -> e a -> e b -> e c
-  -- | A Ternary operator.
-  op3
-    :: (forall op . Op3 op => op a b c d)
-    -> e a -> e b -> e c -> e d
+    -> Expr a
+    -> Expr b
+  Op1
+    :: Op1 a b
+    -> Expr a
+    -> Expr b
+  Op2
+    :: Op2 a b c
+    -> Expr a
+    -> Expr b
+    -> Expr c
+  Op3
+    :: Op3 a b c d
+    -> Expr a
+    -> Expr b
+    -> Expr c
+    -> Expr d
 
 --------------------------------------------------------------------------------
 
 -- | A untyped expression (no phantom type).
 data UExpr = forall a . UExpr
   { uExprType :: Type a
-  , uExprExpr :: forall e . Expr e => e a }
-
--- | A wrapped expression.
-data WrapExpr a = WrapExpr
-  { unWrapExpr :: forall e . Expr e => e a }
-
---------------------------------------------------------------------------------
+  , uExprExpr :: Expr a }

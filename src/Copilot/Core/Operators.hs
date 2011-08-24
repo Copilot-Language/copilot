@@ -2,15 +2,12 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE GADTs, Rank2Types #-}
 
 module Copilot.Core.Operators
   ( Op1 (..)
   , Op2 (..)
   , Op3 (..)
-  , WrapOp1 (..)
-  , WrapOp2 (..)
-  , WrapOp3 (..)
   ) where
 
 import Copilot.Core.Type (Type)
@@ -18,80 +15,67 @@ import Data.Bits
 
 --------------------------------------------------------------------------------
 
--- | Unary operators.
-class Op1 op where
+-- Unary operators.
+data Op1 a b where
   -- Boolean operators.
-  not      :: op Bool Bool
+  Not      :: Op1 Bool Bool
   -- Numeric operators.
-  abs   :: Num a => Type a -> op a a
-  sign  :: Num a => Type a -> op a a
+  Abs      :: Num a => Type a -> Op1 a a
+  Sign     :: Num a => Type a -> Op1 a a
   -- Fractional operators.
-  recip :: Fractional a => Type a -> op a a
+  Recip    :: Fractional a => Type a -> Op1 a a
   -- Floating operators.
-  exp   :: Floating a => Type a -> op a a
-  sqrt  :: Floating a => Type a -> op a a
-  log   :: Floating a => Type a -> op a a
-  sin   :: Floating a => Type a -> op a a
-  tan   :: Floating a => Type a -> op a a
-  cos   :: Floating a => Type a -> op a a
-  asin  :: Floating a => Type a -> op a a
-  atan  :: Floating a => Type a -> op a a
-  acos  :: Floating a => Type a -> op a a
-  sinh  :: Floating a => Type a -> op a a
-  tanh  :: Floating a => Type a -> op a a
-  cosh  :: Floating a => Type a -> op a a
-  asinh :: Floating a => Type a -> op a a
-  atanh :: Floating a => Type a -> op a a
-  acosh :: Floating a => Type a -> op a a
-  bwNot :: Bits     a => Type a -> op a a
-
---------------------------------------------------------------------------------
+  Exp      :: Floating a => Type a -> Op1 a a
+  Sqrt     :: Floating a => Type a -> Op1 a a
+  Log      :: Floating a => Type a -> Op1 a a
+  Sin      :: Floating a => Type a -> Op1 a a
+  Tan      :: Floating a => Type a -> Op1 a a
+  Cos      :: Floating a => Type a -> Op1 a a
+  Asin     :: Floating a => Type a -> Op1 a a
+  Atan     :: Floating a => Type a -> Op1 a a
+  Acos     :: Floating a => Type a -> Op1 a a
+  Sinh     :: Floating a => Type a -> Op1 a a
+  Tanh     :: Floating a => Type a -> Op1 a a
+  Cosh     :: Floating a => Type a -> Op1 a a
+  Asinh    :: Floating a => Type a -> Op1 a a
+  Atanh    :: Floating a => Type a -> Op1 a a
+  Acosh    :: Floating a => Type a -> Op1 a a
+  -- Bitwise operators:
+  BwNot    :: Bits     a => Type a -> Op1 a a
 
 -- | Binary operators.
-class Op2 op where
+data Op2 a b c where
   -- Boolean operators.
-  and      :: op Bool Bool Bool
-  or       :: op Bool Bool Bool
+  And      :: Op2 Bool Bool Bool
+  Or       :: Op2 Bool Bool Bool
   -- Numeric operators.
-  add      :: Num a => Type a -> op a a a
-  sub      :: Num a => Type a -> op a a a
-  mul      :: Num a => Type a -> op a a a
+  Add      :: Num a => Type a -> Op2 a a a
+  Sub      :: Num a => Type a -> Op2 a a a
+  Mul      :: Num a => Type a -> Op2 a a a
   -- Integral operators.
-  mod      :: Integral a => Type a -> op a a a
-  div      :: Integral a => Type a -> op a a a
+  Mod      :: Integral a => Type a -> Op2 a a a
+  Div      :: Integral a => Type a -> Op2 a a a
   -- Fractional operators.
-  fdiv     :: Fractional a => Type a -> op a a a
+  Fdiv     :: Fractional a => Type a -> Op2 a a a
   -- Floating operators.
-  pow      :: Floating a => Type a -> op a a a
-  logb     :: Floating a => Type a -> op a a a
+  Pow      :: Floating a => Type a -> Op2 a a a
+  Logb     :: Floating a => Type a -> Op2 a a a
   -- Equality operators.
-  eq       :: Eq a => Type a -> op a a Bool
-  ne       :: Eq a => Type a -> op a a Bool
+  Eq       :: Eq a => Type a -> Op2 a a Bool
+  Ne       :: Eq a => Type a -> Op2 a a Bool
   -- Relational operators.
-  le       :: Ord a => Type a -> op a a Bool
-  ge       :: Ord a => Type a -> op a a Bool
-  lt       :: Ord a => Type a -> op a a Bool
-  gt       :: Ord a => Type a -> op a a Bool
+  Le       :: Ord a => Type a -> Op2 a a Bool
+  Ge       :: Ord a => Type a -> Op2 a a Bool
+  Lt       :: Ord a => Type a -> Op2 a a Bool
+  Gt       :: Ord a => Type a -> Op2 a a Bool
   -- Bitwise operators.
-  bwAnd    :: Bits a => Type a -> op a a a
-  bwOr     :: Bits a => Type a -> op a a a
-  bwXor    :: Bits a => Type a -> op a a a
-  bwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> op a b a
-  bwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> op a b a
-
---------------------------------------------------------------------------------
+  BwAnd    :: Bits a => Type a -> Op2 a a a
+  BwOr     :: Bits a => Type a -> Op2 a a a
+  BwXor    :: Bits a => Type a -> Op2 a a a
+  BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
+  BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
 
 -- | Ternary operators.
-class Op3 op where
+data Op3 a b c d where
   -- Conditional operator:
-  mux   :: Type a -> op Bool a a a
-
---------------------------------------------------------------------------------
-
--- Operator wrappers.
-
-data WrapOp1 a b     = WrapOp1 { unWrapOp1 :: forall op . Op1 op => op a b }
-data WrapOp2 a b c   = WrapOp2 { unWrapOp2 :: forall op . Op2 op => op a b c }
-data WrapOp3 a b c d = WrapOp3 { unWrapOp3 :: forall op . Op3 op => op a b c d }
-
---------------------------------------------------------------------------------
+  Mux   :: Type a -> Op3 Bool a a a
