@@ -19,7 +19,7 @@ import Control.Monad (liftM)
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
-import Copilot.Core.External (ExternVar (..), externVars)
+import Copilot.Core.External (ExtVar (..), externVars)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Language.Atom (Atom)
@@ -95,8 +95,8 @@ allocStream
 
 --------------------------------------------------------------------------------
 
-allocExternVar :: ExternVar -> Atom (C.Name, ExternInfo)
-allocExternVar (ExternVar name ut) =
+allocExternVar :: ExtVar -> Atom (C.Name, ExternInfo)
+allocExternVar (ExtVar name ut) =
   case ut of
     C.UType t ->
       do

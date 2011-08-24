@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Compile.C99.PrePostCode
   ( preCode , postCode
   ) where
@@ -34,17 +36,17 @@ typeSpec UType { uTypeType = t } = typeSpec' t
 
   where
 
-  typeSpec' (Bool   _) = "bool"
-  typeSpec' (Int8   _) = "int8_t"
-  typeSpec' (Int16  _) = "int16_t"
-  typeSpec' (Int32  _) = "int32_t"
-  typeSpec' (Int64  _) = "int64_t"
-  typeSpec' (Word8  _) = "uint8_t"
-  typeSpec' (Word16 _) = "uint16_t"
-  typeSpec' (Word32 _) = "uint32_t"
-  typeSpec' (Word64 _) = "uint64_t"
-  typeSpec' (Float  _) = "float"
-  typeSpec' (Double _) = "double"
+  typeSpec' Bool   = "bool"
+  typeSpec' Int8   = "int8_t"
+  typeSpec' Int16  = "int16_t"
+  typeSpec' Int32  = "int32_t"
+  typeSpec' Int64  = "int64_t"
+  typeSpec' Word8  = "uint8_t"
+  typeSpec' Word16 = "uint16_t"
+  typeSpec' Word32 = "uint32_t"
+  typeSpec' Word64 = "uint64_t"
+  typeSpec' Float  = "float"
+  typeSpec' Double = "double"
 
 --------------------------------------------------------------------------------
 

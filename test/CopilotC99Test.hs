@@ -8,12 +8,12 @@
 module Main (main) where
 
 import Copilot.Core.PrettyPrint (prettyPrint)
-import Copilot.Core.Random (randomSpec)
-import Copilot.Core.Random.Weights (Weights (..), simpleWeights)
+--import Copilot.Core.Random (randomSpec)
+--import Copilot.Core.Random.Weights (Weights (..), simpleWeights)
 import Copilot.Compile.C99.Test (testCompilerAgainstInterpreter)
 import Prelude
 import System.Random
-
+{-
 myWeights :: Weights
 myWeights =
   simpleWeights
@@ -23,12 +23,12 @@ myWeights =
     , maxTrigArgs  = 1
     , maxObservers = 0
     , numStreams   = 3 }
-
+-}
 testRandomSpec :: IO Bool
 testRandomSpec =
   do
     g <- newStdGen
-    let spec = randomSpec myWeights g
+    let spec = undefined--randomSpec myWeights g
     putStrLn $ prettyPrint spec
     testCompilerAgainstInterpreter 10 spec
 
