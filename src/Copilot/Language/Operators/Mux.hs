@@ -20,7 +20,7 @@ import Prelude ()
 mux :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
 mux (Const True) t _  = t
 mux (Const False) _ f = f
-mux b t f             = Op3 (Core.mux typeOf) b t f
+mux b t f             = Op3 (Core.Mux typeOf) b t f
 
 --------------------------------------------------------------------------------
 

@@ -22,5 +22,3 @@ compile
   -> IO ()
 compile name spec = undefined
 --  reify spec >>= C.compile name
-
---------------------------------------------------------------------------------

@@ -35,7 +35,7 @@ infix 5 &&
 _ && (Const False) = false
 (Const True) && y  = y
 x && (Const True)  = x
-x && y             = Op2 Core.and x y
+x && y             = Op2 Core.And x y
 
 infix 5 ||
 
@@ -44,11 +44,11 @@ infix 5 ||
 _ || (Const True)  = true
 (Const False) || y = y
 x || (Const False) = x
-x || y             = Op2 Core.or x y
+x || y             = Op2 Core.Or x y
 
 not :: Stream Bool -> Stream Bool
 not (Const c) = (Const $ P.not c)
-not x         = Op1 Core.not x
+not x         = Op1 Core.Not x
 
 xor :: Stream Bool -> Stream Bool -> Stream Bool
 xor x y = ( not x && y ) || ( x && not y )

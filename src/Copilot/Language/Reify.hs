@@ -25,11 +25,6 @@ import qualified System.Mem.StableName.Dynamic.Map as M
 
 --------------------------------------------------------------------------------
 
-newtype WrapExpr a = WrapExpr
-  { unWrapExpr :: forall e . Core.Expr e => e a }
-
---------------------------------------------------------------------------------
-
 reify :: Spec -> IO Core.Spec
 reify spec =
   do
@@ -63,7 +58,7 @@ mkObserver refMkId refStreams refMap (Observer name e) =
     return $
       Core.Observer
          { Core.observerName     = name
-         , Core.observerExpr     = unWrapExpr w
+         , Core.observerExpr     = w
          , Core.observerExprType = typeOf }
 
 --------------------------------------------------------------------------------
@@ -82,7 +77,7 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) =
     return $
       Core.Trigger
         { Core.triggerName  = name
-        , Core.triggerGuard = unWrapExpr w1 
+        , Core.triggerGuard = w1 
         , Core.triggerArgs  = args' }
 
   where
@@ -91,7 +86,7 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) =
   mkTriggerArg (TriggerArg e) =
     do
       w <- mkExpr refMkId refStreams refMap e
-      return $ Core.UExpr typeOf (unWrapExpr w)
+      return $ Core.UExpr typeOf w
 
 --------------------------------------------------------------------------------
 
@@ -102,7 +97,7 @@ mkExpr
   -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
   -> Stream a
-  -> IO (WrapExpr a)
+  -> IO (Core.Expr a)
 mkExpr refMkId refStreams refMap = go
 
 --  (>>= go) . makeSharingExplicit refMkId
@@ -112,7 +107,7 @@ mkExpr refMkId refStreams refMap = go
   go
     :: Typed a
     => Stream a
-    -> IO (WrapExpr a)
+    -> IO (Core.Expr a)
   go e0 =
 
     case e0 of
@@ -122,7 +117,7 @@ mkExpr refMkId refStreams refMap = go
       Append _ _ _ ->
 
         do s <- mkStream refMkId refStreams refMap e0
-           return $ WrapExpr $ Core.drop typeOf 0 s
+           return $ Core.Drop typeOf 0 s
 
       ------------------------------------------------------
 
@@ -132,14 +127,14 @@ mkExpr refMkId refStreams refMap = go
           Append _ _ _ ->
             do
               s <- mkStream refMkId refStreams refMap e1
-              return $ WrapExpr $ Core.drop typeOf (fromIntegral k) s
+              return $ Core.Drop typeOf (fromIntegral k) s
           _ -> error "dfs: Drop"
 
       ------------------------------------------------------
 
       Const x ->
 
-        return $ WrapExpr $ Core.const typeOf x
+        return $ Core.Const typeOf x
 
       ------------------------------------------------------
 
@@ -150,20 +145,19 @@ mkExpr refMkId refStreams refMap = go
           let cs = "local_" ++ show id
           w1 <- go e
           w2 <- go (f (Var cs))
-          return $ WrapExpr $ Core.local typeOf typeOf cs
-            (unWrapExpr w1) (unWrapExpr w2)
+          return $ Core.Local typeOf typeOf cs w1 w2
 
       ------------------------------------------------------
 
       Var cs ->
 
-        return $ WrapExpr $ Core.var typeOf cs
+        return $ Core.Var typeOf cs
 
       ------------------------------------------------------
 
       Extern cs ->
 
-        return $ WrapExpr $ Core.externVar typeOf cs
+        return $ Core.ExternVar typeOf cs
 
       ------------------------------------------------------
 
@@ -171,7 +165,7 @@ mkExpr refMkId refStreams refMap = go
 
         do
           args' <- mapM mkFunArg args
-          return $ WrapExpr $ Core.externFun typeOf cs args'
+          return $ Core.ExternFun typeOf cs args'
 
       ------------------------------------------------------
 
@@ -179,7 +173,7 @@ mkExpr refMkId refStreams refMap = go
 
         do
           w <- go e
-          return $ WrapExpr $ Core.externArray typeOf typeOf cs (unWrapExpr w)
+          return $ Core.ExternArray typeOf typeOf cs w
 
       ------------------------------------------------------
 
@@ -187,7 +181,7 @@ mkExpr refMkId refStreams refMap = go
 
         do
           w <- go e
-          return $ WrapExpr $ Core.op1 op (unWrapExpr w)
+          return $ Core.Op1 op w
 
       ------------------------------------------------------
 
@@ -196,8 +190,7 @@ mkExpr refMkId refStreams refMap = go
         do
           w1 <- go e1
           w2 <- go e2
-          return $ WrapExpr $ Core.op2 op
-            (unWrapExpr w1) (unWrapExpr w2)
+          return $ Core.Op2 op w1 w2
 
       ------------------------------------------------------
 
@@ -207,8 +200,7 @@ mkExpr refMkId refStreams refMap = go
           w1 <- go e1
           w2 <- go e2
           w3 <- go e3
-          return $ WrapExpr $ Core.op3 op
-            (unWrapExpr w1) (unWrapExpr w2) (unWrapExpr w3)
+          return $ Core.Op3 op w1 w2 w3
 
       ------------------------------------------------------
 
@@ -216,7 +208,7 @@ mkExpr refMkId refStreams refMap = go
   mkFunArg (FunArg e) =
     do
       w <- mkExpr refMkId refStreams refMap e
-      return $ Core.UExpr typeOf (unWrapExpr w)
+      return $ Core.UExpr typeOf w
 
 --------------------------------------------------------------------------------
 
@@ -262,8 +254,8 @@ mkStream refMkId refStreams refMap e0 =
         Core.Stream
           { Core.streamId         = id
           , Core.streamBuffer     = buf
-          , Core.streamGuard      = Core.const (typeOf :: Type Bool) True
-          , Core.streamExpr       = unWrapExpr w
+          , Core.streamGuard      = Core.Const (typeOf :: Type Bool) True
+          , Core.streamExpr       = w
           , Core.streamExprType   = typeOf }
       return id
 

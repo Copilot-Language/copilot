@@ -34,17 +34,17 @@ data G t where
     -> G t
   Op1G
     :: (Typed a, Typed b)
-    => (forall op . Core.Op1 op => op a b)
+    => Core.Op1 a b
     -> t
     -> G t
   Op2G
     :: (Typed a, Typed b, Typed c)
-    => (forall op . Core.Op2 op => op a b c)
+    => Core.Op2 a b c
     -> t -> t
     -> G t
   Op3G
     :: (Typed a, Typed b, Typed c, Typed d)
-    => (forall op . Core.Op3 op => op a b c d)
+    => Core.Op3 a b c d
     -> t -> t -> t
     -> G t
 

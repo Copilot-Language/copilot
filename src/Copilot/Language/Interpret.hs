@@ -11,7 +11,7 @@ module Copilot.Language.Interpret
   ) where
 
 import Copilot.Core.Type (Typed, typeOf)
-import Copilot.Core.Type.Dynamic (toDynamicF)
+import Copilot.Core.Type.Dynamic (toDynF)
 import qualified Copilot.Core.Interpret as I
 import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
@@ -32,4 +32,4 @@ interpret i inputs spec =
     coreSpec <- reify spec
     putStrLn $ I.interpret I.Table (fromIntegral i) exts coreSpec
   where
-    exts = map (\ (Input name xs) -> (name, toDynamicF xs typeOf)) inputs
+    exts = map (\ (Input name xs) -> (name, toDynF typeOf xs)) inputs

@@ -12,10 +12,10 @@ import qualified Prelude as P
 import Data.Bits
 
 instance ( Typed a, Bits a ) => Bits ( Stream a ) where
-  (.&.)      = Op2 ( Core.bwAnd typeOf )
-  complement = Op1 ( Core.bwNot typeOf )
-  (.|.)      = Op2 ( Core.bwOr  typeOf )
-  xor        = Op2 ( Core.bwXor typeOf )
+  (.&.)      = Op2 ( Core.BwAnd typeOf )
+  complement = Op1 ( Core.BwNot typeOf )
+  (.|.)      = Op2 ( Core.BwOr  typeOf )
+  xor        = Op2 ( Core.BwXor typeOf )
   shiftL     = P.error "shiftL undefined, for left-shifting use .<<."
   shiftR     = P.error "shiftR undefined, for right-shifting use .>>."
   rotate     = P.error "tbd: rotate"
@@ -30,5 +30,5 @@ instance ( Typed a, Bits a ) => Bits ( Stream a ) where
 
 (.<<.), (.>>.) :: ( Bits a, Typed a, Typed b, P.Integral b ) =>
                     Stream a -> Stream b -> Stream a
-(.<<.) = Op2 ( Core.bwShiftL typeOf typeOf )
-(.>>.) = Op2 ( Core.bwShiftR typeOf typeOf )
+(.<<.) = Op2 ( Core.BwShiftL typeOf typeOf )
+(.>>.) = Op2 ( Core.BwShiftR typeOf typeOf )
