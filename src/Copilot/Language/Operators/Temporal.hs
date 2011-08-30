@@ -22,9 +22,7 @@ infixr 3 ++
 (++) = (`Append` Nothing)
 
 drop :: Typed a => Int -> Stream a -> Stream a
---drop 0 s             = s
---drop _ ( Const j )   = Const j
---drop i ( Drop  j s ) = Drop (fromIntegral i + j) s
+drop 0 s             = s
+drop _ ( Const j )   = Const j
+drop i ( Drop  j s ) = Drop (fromIntegral i + j) s
 drop i s             = Drop (fromIntegral i)     s
-
---------------------------------------------------------------------------------
