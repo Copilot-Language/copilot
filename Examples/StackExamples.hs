@@ -25,7 +25,8 @@ popSignal = replicate 6 False P.++ replicate 6 True ++ false
 
 -- all operations on a stack of depth 5, of type Word16 and with
 -- start/default value 0
-stackStream = stack 5 ( 0 :: Word16 ) popSignal pushSignal pushValue
+stackStream :: Stream Word16
+stackStream = stack 5 0 popSignal pushSignal pushValue
 
 
 stackTest :: Spec
