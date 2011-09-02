@@ -7,22 +7,28 @@ module Copilot.Examples.RegExpExamples where
 import qualified Prelude as P
 import Copilot.Language
 import Copilot.Library.RegExp
+import Copilot.Library.Utils
 import Data.Bool
 
 
 reset :: Stream Bool
-reset = false
+reset = [ False ] ++ cycle [ False, False, False, True ]
 
 
 -- | Regular expression matching on integral streams
-
 s :: Stream Int8
-s = [ 0, 1, 2 ] ++ constant (-3)
+s = extern "e"
 
-test1 = copilotRegexp s "<0><1><2>*|<-3>+" reset
+e :: [ Int8 ]
+e = P.cycle [ 0, 1 ]
+
+
+test1 :: Stream Bool
+test1 = copilotRegexp s "(<0>?<0>?<1>)+|<2>?<3>+" reset
 
 
 -- | Regular expressions over boolean streams
+
 
 s0    = [ True,  False, False, False, False, False ] ++ s1
 s1    = [ False, True,  False, False, False, False ] ++ s2
@@ -45,7 +51,8 @@ test2 = copilotRegexpB
 spec = do
    observer "test1" test1
    observer "test2" test2
+   observer "reset" reset
 
 
 test = do
-   interpret 20 [] spec
+   interpret 15 [ input "e" e ] spec

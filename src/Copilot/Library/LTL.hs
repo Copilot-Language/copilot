@@ -35,7 +35,7 @@ import Copilot.Library.Utils
 -- @
 -- Note: s must have sufficient history to drop a value from it.
 next :: Stream Bool -> Stream Bool
-next = drop 1
+next = drop ( 1 :: Int )
 
 
 -- | Property @s@ holds for the next @n@ periods.  We require @n >= 0@. If @n ==

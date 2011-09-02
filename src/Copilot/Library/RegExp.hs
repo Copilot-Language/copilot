@@ -18,9 +18,7 @@ import qualified Copilot.Language as C
 
 -- The symbols in a regular expression, "Any" is any value of type t
 -- (matches any symbol, the "point" character in a regular expression).
--- Start is used only for a start state in the generated NFA, that
--- does not consume any input symbol
-data Sym t = Start | Any | Sym t
+data Sym t = Any | Sym t
              deriving ( Eq, Ord, Show )
 
 -- A symbol's value can occur multiple times in a regular expression,
@@ -295,35 +293,37 @@ regexp2CopilotNFA :: ( C.Typed t, Eq t )
                      => C.Stream t -> RegExp t -> C.Stream Bool -> C.Stream Bool
 regexp2CopilotNFA inStream rexp reset =
     let symbols                    = getSymbols rexp
-        start                      = [ True ] C.++ reset
+        first'                     = first rexp
+        start                      = [ True ] C.++ C.false
 
-        preceding'   numSym        = case preceding rexp numSym of
-                                        []    -> [ start ]
-                                        other -> [ streams !! i
-                                                   | i <- map ( fromJust . symbolNum ) other ]
+        preceding'   numSym        = let ps    = preceding rexp numSym
+                                         s     = if numSym `elem` first' then
+                                                   [ start ] else []
+                                     in s ++ [ streams !! i
+                                             | i <- map ( fromJust . symbolNum ) ps ]
 
         matchesInput numSym        = case symbol numSym of
-                                       Start -> error "start matched"
                                        Any   -> C.true
                                        Sym t -> inStream C.== C.constant t
 
-        transitions  numSym        = matchesInput numSym
-                                     C.&& ( foldl1 ( C.|| ) $ preceding' numSym )
+        transitions  numSym ps     = matchesInput numSym
+                                     C.&& ( foldl ( C.|| ) C.false ps )
 
-        stream       numSym        = [ False ] C.++
-                                     ( C.mux ( C.drop 1 start )
-                                       C.false
-                                       ( transitions numSym ) )
+        stream       numSym        = let ps   = preceding' numSym
+                                         init = C.constant $ numSym `elem` first'
+                                     in C.mux reset
+                                        ( [ False ] C.++ matchesInput numSym C.&& init )
+                                        ( [ False ] C.++ transitions  numSym ps )
 
         streams                    = map stream symbols
 
-        outStream                  = foldl ( C.|| ) reset streams
+        outStream                  = foldl ( C.|| ) start streams
 
     in outStream
 
 
 copilotRegexp :: ( C.Typed t, SymbolParser t, Eq t )
-              => C.Stream t -> SourceName -> C.Stream Bool -> C.Stream Bool
+                 => C.Stream t -> SourceName -> C.Stream Bool -> C.Stream Bool
 copilotRegexp inStream rexp reset =
   case parse parser rexp rexp of
     Left  err ->
@@ -340,48 +340,84 @@ copilotRegexp inStream rexp reset =
                  concat [ "The regular expression matches a language "
                         , "that contains epsilon. This cannot be handled "
                         , "on infinite streams, since we do not have "
-                        , "a distinct end-of-input symbol."]
+                        , "a distinct end-of-input symbol." ]
              else regexp2CopilotNFA inStream nrexp reset
 
 
 regexp2CopilotNFAB :: RegExp P -> [ ( StreamName, C.Stream Bool ) ]
-                   -> C.Stream Bool -> C.Stream Bool
+                      -> C.Stream Bool -> C.Stream Bool
 regexp2CopilotNFAB rexp propositions reset =
     let symbols                    = getSymbols rexp
-        start                      = [ True ] C.++ reset
+        first'                     = first rexp
+        start                      = [ True ] C.++ C.false
 
-        preceding'   numSym        = case preceding rexp numSym of
-                                        []    -> [ start ]
-                                        other -> [ streams !! i
-                                                   | i <- map ( fromJust . symbolNum ) other ]
+        preceding'   numSym        = let ps    = preceding rexp numSym
+                                         s     = if numSym `elem` first' then
+                                                   [ start ] else []
+                                     in s ++ [ streams !! i
+                                             | i <- map ( fromJust . symbolNum ) ps ]
 
         lookup' a l = case lookup a l of
                         Nothing -> error $ "boolean stream "
                                            ++ a
                                            ++ " is not defined"
                         Just s  -> s
+
         matchesInput numSym        = case symbol numSym of
-                                       Start -> error "start matched"
                                        Any   -> C.true
                                        Sym t -> lookup' ( getName t ) propositions
 
-        transitions  numSym        = matchesInput numSym
-                                     C.&& ( foldl1 ( C.|| ) $ preceding' numSym )
+        transitions  numSym ps     = matchesInput numSym
+                                     C.&& ( foldl ( C.|| ) C.false ps )
 
-        stream       numSym        = [ False ] C.++
-                                     ( C.mux ( C.drop 1 start )
-                                       C.false
-                                       ( transitions numSym ) )
+        stream       numSym        = let ps   = preceding' numSym
+                                         init = C.constant $ numSym `elem` first'
+                                     in C.mux reset
+                                        ( [ False ] C.++ matchesInput numSym C.&& init )
+                                        ( [ False ] C.++ transitions  numSym ps )
 
         streams                    = map stream symbols
 
-        outStream                  = foldl ( C.|| ) reset streams
+        outStream                  = foldl ( C.|| ) start streams
 
     in outStream
 
+    -- let symbols                    = getSymbols rexp
+
+    --     preceding'   numSym        = case preceding rexp numSym of
+    --                                     []    -> [] -- start state
+    --                                     other -> [ streams !! i
+    --                                              | i <- map ( fromJust . symbolNum ) other ]
+
+    --     lookup' a l = case lookup a l of
+    --                     Nothing -> error $ "boolean stream "
+    --                                        ++ a
+    --                                        ++ " is not defined"
+    --                     Just s  -> s
+
+    --     matchesInput numSym        = case symbol numSym of
+    --                                    Any   -> C.true
+    --                                    Sym t -> lookup' ( getName t ) propositions
+
+    --     transitions  numSym ps     = matchesInput numSym
+    --                                  C.&& ( foldl ( C.|| ) C.false ps )
+
+    --     stream       numSym        = let ps   = preceding' numSym
+    --                                      init = null ps
+    --                                  in [ init ] C.++
+    --                                     ( C.mux reset
+    --                                       ( C.constant init )
+    --                                       ( transitions numSym ps ) )
+
+    --     streams                    = map stream symbols
+
+    --     outStream                  = foldl ( C.|| ) C.false streams
+
+    -- in outStream
+
 
 copilotRegexpB :: SourceName -> [ ( StreamName, C.Stream Bool ) ]
-               -> C.Stream Bool -> C.Stream Bool
+                  -> C.Stream Bool -> C.Stream Bool
 copilotRegexpB rexp propositions reset =
   case parse parser rexp rexp of
     Left  err ->
@@ -398,5 +434,5 @@ copilotRegexpB rexp propositions reset =
                  concat [ "The regular expression matches a language "
                         , "that contains epsilon. This cannot be handled "
                         , "on infinite streams, since we do not have "
-                        , "a distinct end-of-input symbol."]
+                        , "a distinct end-of-input symbol." ]
              else regexp2CopilotNFAB nrexp propositions reset
