@@ -13,7 +13,7 @@ import qualified Prelude as P
 
 tails :: ( Typed a )
          => Stream a -> [ Stream a ]
-tails s = [ drop x s | x <- [ 0 :: Integer .. ] ]
+tails s = [ drop x s | x <- [ 0 .. ] ]
 
 
 take :: ( Integral a, Typed b )
