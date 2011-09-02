@@ -34,6 +34,7 @@ library
     Copilot.Library.RegExp
     Copilot.Library.Utils
     Copilot.Library.Voting
+    Copilot.Library.Stacks
 
   other-modules:
 
