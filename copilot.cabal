@@ -1,85 +1,39 @@
 
 name:                copilot
-version:             1.0.3
-cabal-version:       >= 1.6
+version:             2.0
+cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller
-synopsis:            A stream DSL for writing embedded C monitors.
+author:              Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
+synopsis:            A stream DSL for writing embedded C (constant memory and constant time) programs.
 build-type:          Simple
 maintainer:          Lee Pike <leepike@galois.com>
 category:            Language, Embedded
 homepage:            http://leepike.github.com/Copilot/
-description:         Can you write a list in Haskell? Then you can write embedded C code using
-                     Copilot. Here's a Copilot program that computes the Fibonacci sequence (over
-                     Word 64s) and tests for even numbers:
-                     .
-                     > fib :: Streams
-                     > fib = do
-                     >  let f = varW64 "fib"
-                     >  let t = varB "t"
-                     >  f .= [0,1] ++ f + (drop 1 f)
-                     >  t .= even f
-                     >    where even :: Spec Word64 -> Spec Bool
-                     >          even w' = w' `mod` 2 == 0
-                     .
-                     Copilot contains an interpreter, a compiler, and uses a model-checker to check
-                     the correctness of your program. The compiler generates constant time and
-                     constant space C code via Tom Hawkin's Atom (thanks Tom!). Copilot was
-                     originally developed to write embedded monitors for more complex embedded
-                     systems, but it can be used to develop a variety of functional-style embedded
-                     code.
+stability:           Experimental
+description:         Documentation is available at the website, and see the included examples.
 
-extra-source-files:  README
+extra-source-files:  README.md
 
 source-repository head
     type:       git
     location:   git://github.com/leepike/Copilot.git
 
 library
-    ghc-options:     -Wall
-    -- These build depends represent my current system.  This will probably
-    -- build on packages outside these constraints.
+    default-language:  Haskell2010
+    ghc-options:     
+      -Wall
+      -fwarn-tabs
+      -auto-all
+      -caf-all
+      -fno-warn-orphans
+
+
     build-depends:
                        base >= 4.0
-                     , atom >= 1.0.8
-                     , containers >= 0.2.0.1
-                     , process >= 1.0.0.0
-                     , random >= 1.0.0.0
-                     , directory >= 1.0.0.0
-                     , mtl >= 1.0.0.0
-                     , filepath >= 1.0.0.0
-                     , parsec >= 2.0
-                     , unix >= 2.0
+                     , copilot-core
+                     , copilot-language
+                     , copilot-libraries
+                     , copilot-cbmc
 
-    extensions:
     exposed-modules: Language.Copilot
-                     Language.Copilot.AdHocC
-                     Language.Copilot.Core
-                     Language.Copilot.Language
-                     Language.Copilot.Language.Sampling
-                     Language.Copilot.Language.FunctionCalls
-                     Language.Copilot.Language.RandomOps
-                     Language.Copilot.Language.Casting
-                     Language.Copilot.AtomToC
-                     Language.Copilot.Compiler
-                     Language.Copilot.Interpreter
-                     Language.Copilot.Help
-                     Language.Copilot.Analyser
-                     Language.Copilot.PrettyPrinter
-                     Language.Copilot.Tests.Test
-                     Language.Copilot.Tests.Random
-                     Language.Copilot.Dispatch
-                     Language.Copilot.Interface
-                     Language.Copilot.Libs.ErrorChks
-                     Language.Copilot.Libs.PTLTL
-                     Language.Copilot.Libs.LTL
-                     Language.Copilot.Libs.Indexes
-                     Language.Copilot.Libs.Statistics
-                     Language.Copilot.Libs.Vote
-                     Language.Copilot.Libs.Clocks
-                     Language.Copilot.Libs.RegExp
-                     Language.Copilot.Examples.Examples
-                     Language.Copilot.Examples.LTLExamples
-                     Language.Copilot.Examples.PTLTLExamples
-                     Language.Copilot.Examples.StatExamples
