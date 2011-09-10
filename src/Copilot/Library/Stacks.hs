@@ -1,9 +1,9 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Copilot.Library.Stacks
   ( stack, stack' ) where
 
 
-import Prelude ()
-import qualified Prelude as P
 import Copilot.Language
 import Copilot.Language.Prelude
 

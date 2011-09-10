@@ -9,6 +9,7 @@ module Copilot.Library.Statistics
 import Prelude ( Num, (+), (/), Ord, Fractional, Integral
                , fromIntegral, error, foldl1, ($), length )
 import Copilot.Language
+import Copilot.Language.Prelude
 import Copilot.Library.Utils
 
 -- | Summation.

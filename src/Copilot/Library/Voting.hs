@@ -29,7 +29,7 @@ majority []     = error "Copilot.Library.Voting.majority: empty list!"
 majority (x:xs) = majority' xs x 1
 
 majority' :: (P.Eq a, Typed a)
-  => [Stream a] -> Stream a -> Stream Word32 -> Stream a
+   => [Stream a] -> Stream a -> Stream Word32 -> Stream a
 majority' []     can _   = can
 majority' (x:xs) can cnt = 
   local (if cnt == 0 then x else can) $ \ can' ->

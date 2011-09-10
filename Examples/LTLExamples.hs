@@ -11,7 +11,6 @@ import Copilot.Library.LTL
 -- LTL tests ---
 ----------------
 
-
 testAlways :: Int -> Int -> Stream Bool
 testAlways i1 i2 = let input = replicate i1 P.True P.++ [ False ] ++ true
                    in  always i2 input

@@ -5,7 +5,7 @@ module Copilot.Library.Utils
 
 
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( take, (!!), cycle )
+import Copilot.Language.Prelude 
 import qualified Prelude as P
 
 

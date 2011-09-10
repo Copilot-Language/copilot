@@ -309,10 +309,10 @@ regexp2CopilotNFA inStream rexp reset =
         transitions  numSym ps     = matchesInput numSym
                                      C.&& ( foldl ( C.|| ) C.false ps )
 
-        stream       numSym        = let ps   = preceding' numSym
-                                         init = C.constant $ numSym `elem` first'
+        stream       numSym        = let ps    = preceding' numSym
+                                         init_ = C.constant $ numSym `elem` first'
                                      in C.mux reset
-                                        ( [ False ] C.++ matchesInput numSym C.&& init )
+                                        ( [ False ] C.++ matchesInput numSym C.&& init_ )
                                         ( [ False ] C.++ transitions  numSym ps )
 
         streams                    = map stream symbols
@@ -370,10 +370,10 @@ regexp2CopilotNFAB rexp propositions reset =
         transitions  numSym ps     = matchesInput numSym
                                      C.&& ( foldl ( C.|| ) C.false ps )
 
-        stream       numSym        = let ps   = preceding' numSym
-                                         init = C.constant $ numSym `elem` first'
+        stream       numSym        = let ps    = preceding' numSym
+                                         init_ = C.constant $ numSym `elem` first'
                                      in C.mux reset
-                                        ( [ False ] C.++ matchesInput numSym C.&& init )
+                                        ( [ False ] C.++ matchesInput numSym C.&& init_ )
                                         ( [ False ] C.++ transitions  numSym ps )
 
         streams                    = map stream symbols

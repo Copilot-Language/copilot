@@ -58,10 +58,6 @@ sinceExtTest = observer "sinceExtTest"
                ( extern "e1" `since` extern "e2" )
 
 
--- "If the majority of the engine temperature probes exeeds 250 degrees, then
--- the cooler is engaged and remains engaged until the majority of the engine
--- temperature drops to 250 or below.  Otherwise, trigger an immediate shutdown
--- of the engine."
 
 -- t0, t1, t2 :: Spec Word8
 -- cooler, check, overHeat, monitor, maj :: Spec Bool

@@ -24,6 +24,7 @@ import Prelude ( Bool, Integral
                , fromIntegral
                , (+), (-), foldl1 )
 import Copilot.Language
+import Copilot.Language.Prelude
 import Copilot.Library.Utils
 
 
