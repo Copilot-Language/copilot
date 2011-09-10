@@ -19,6 +19,14 @@ import Prelude hiding
   , const
   , drop
   , not
-  , mod )
+  , mod 
+  , until
+  , sum
+  , max
+  , min
+  , (!!)
+  , cycle
+  , take 
+  )
 
 --------------------------------------------------------------------------------

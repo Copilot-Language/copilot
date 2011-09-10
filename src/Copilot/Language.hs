@@ -28,7 +28,7 @@ module Copilot.Language
   , prettyPrint
   ) where
 
-import Data.Int
+import Data.Int hiding (Int)
 import Data.Word
 import Copilot.Core (Name, Typed)
 import qualified Copilot.Core.PrettyPrint as PP
