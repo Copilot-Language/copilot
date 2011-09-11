@@ -63,24 +63,17 @@ strictList (x:xs) = x `seq` (x : strictList xs)
 evalExpr_ :: Expr a -> Env Name -> Env Name -> Env Id -> [a]
 evalExpr_ e0 exts locs strms = case e0 of
   Const _ x              -> x `seq` repeat x
-  Drop t i id            -> strictList $
-                             let
-                               Just xs = lookup id strms >>= fromDynF t
-                             in
-                               P.drop (fromIntegral i) xs
+  Drop t i id            -> strictList $ 
+    let Just xs = lookup id strms >>= fromDynF t
+    in  P.drop (fromIntegral i) xs
   Local t1 _  name e1 e2 -> strictList $
-                             let
-                               xs    = evalExpr_ e1 exts locs strms
-                               locs' = (name, toDynF t1 xs) : locs
-                             in
-                               evalExpr_ e2 exts locs' strms
+    let xs    = evalExpr_ e1 exts locs strms
+        locs' = (name, toDynF t1 xs) : locs
+    in  evalExpr_ e2 exts locs' strms
   Var t name             -> strictList $
-                             let
-                               Just xs = lookup name locs >>= fromDynF t
-                             in
-                               xs
-  ExternVar t name       -> strictList $
-                             evalExtern t name exts
+    let Just xs = lookup name locs >>= fromDynF t
+    in  xs
+  ExternVar t name       -> strictList $ evalExtern t name exts
   ExternArray _ _ _ _    ->
     error "External arrays aren't supported in the interpreter"
   ExternFun _ _ _        ->
