@@ -2,7 +2,7 @@ cabal-version:       >=1.10
 
 name:                copilot-core
 
-version:             0.1
+version:             0.2
 
 synopsis:            An intermediate representation for Copilot.
 
@@ -39,14 +39,15 @@ library
     -auto-all
     -caf-all
     -fno-warn-orphans
+    --enable-library-profiling
 
   build-depends:
     containers >= 0.4 && < 1,
-    dlist,
     base >= 4.0,
     pretty >= 1.0,
+    random > 1.0,
     pretty-ncols >= 0.1,
-    random > 1.0
+    dlist
 
   exposed-modules:
 
@@ -60,9 +61,6 @@ library
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Locals
---    Copilot.Core.Random
---    Copilot.Core.Random.Gen
---    Copilot.Core.Random.Weights
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
@@ -71,3 +69,8 @@ library
     Copilot.Core.PrettyPrint
     Copilot.Core.Version
 
+  -- other-modules:
+  --   Copilot.Core.Random
+  --   Copilot.Core.Random.Gen
+  --   Copilot.Core.Random.Weights
+  
