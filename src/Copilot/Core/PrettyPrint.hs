@@ -31,6 +31,7 @@ ppExpr e0 = case e0 of
   Op1 op e             -> ppOp1 op (ppExpr e)
   Op2 op e1 e2         -> ppOp2 op (ppExpr e1) (ppExpr e2)
   Op3 op e1 e2 e3      -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+  _                    -> error "Expression not implemented in PrettyPrint.hs in copilot-core!"
 
 ppOp1 :: Op1 a b -> Doc -> Doc
 ppOp1 op = case op of

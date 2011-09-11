@@ -80,5 +80,6 @@ locsExpr e0 = case e0 of
   Op2 _ e1 e2          -> locsExpr e1 `append` locsExpr e2
   Op3 _ e1 e2 e3       -> locsExpr e1 `append` locsExpr e2
                                        `append` locsExpr e3
+  _                    -> error "Expression not implemented in Locals.hs in copilot-core!"
 
 --------------------------------------------------------------------------------
