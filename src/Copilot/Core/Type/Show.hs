@@ -11,7 +11,6 @@ module Copilot.Core.Type.Show
   ) where
 
 import Copilot.Core.Type
-import Copilot.Core.Type.Equality
 
 --------------------------------------------------------------------------------
 
