@@ -231,6 +231,10 @@ c2aOp2 op = case op of
   BwAnd t -> case W.bitsEInst       t of W.BitsEInst       -> (A..&.)
   BwOr  t -> case W.bitsEInst       t of W.BitsEInst       -> (A..|.)
   BwXor t -> case W.bitsEInst       t of W.BitsEInst       -> (A.xor)
+  BwShiftL t t' -> case ( W.bitsEInst t, W.integralEInst t' )
+                   of ( W.BitsEInst, W.IntegralEInst )      -> (A..<<.)
+  BwShiftR t t' -> case ( W.bitsEInst t, W.integralEInst t' )
+                   of ( W.BitsEInst, W.IntegralEInst )      -> (A..>>.)
 
 c2aOp3 :: C.Op3 a b c d -> A.E a -> A.E b -> A.E c -> A.E d
 c2aOp3 op = case op of
