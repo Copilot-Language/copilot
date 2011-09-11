@@ -38,20 +38,20 @@ checkSpec numIterations spec =
 genCFiles :: Int -> Spec -> IO ()
 genCFiles numIterations spec =
   do
-    compile (defaultParams { prefix = Just "tmp" }) spec
-    TIO.writeFile "tmp_driver_.c" (driver M.empty numIterations "tmp_" spec)
+    compile (defaultParams { prefix = Nothing }) spec
+    TIO.writeFile "driver.c" (driver M.empty numIterations "test" spec)
     return ()
 
 compileCFiles :: IO ()
 compileCFiles =
   do
-    _ <- system $ "gcc tmp_.c tmp_driver_.c -o tmp_"
+    _ <- system $ "gcc copilot.c driver.c -o _test"
     return ()
 
 execute :: Int -> IO ByteString
 execute _ =
   do
-    fmap B.pack (readProcess "./tmp_" [] "")
+    fmap B.pack (readProcess "./_test" [] "")
 
 interp :: Int -> Spec -> [Iteration]
 interp numIterations = execTraceToIterations . eval numIterations []
@@ -59,8 +59,8 @@ interp numIterations = execTraceToIterations . eval numIterations []
 cleanUp :: IO ()
 cleanUp =
   do
-    removeFile "tmp_.c"
-    removeFile "tmp_.h"
-    removeFile "tmp_driver_.c"
-    removeFile "tmp_"
+    removeFile "copilot.c"
+    removeFile "copilot.h"
+    removeFile "driver.c"
+    removeFile "_test"
     return ()

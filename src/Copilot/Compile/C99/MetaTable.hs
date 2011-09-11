@@ -7,6 +7,7 @@
 module Copilot.Compile.C99.MetaTable
   ( StreamInfo (..)
   , ExternInfo (..)
+  , ExternArrayInfo (..)
   , ExternFunInfo (..)
   , StreamInfoMap
   , ExternInfoMap
@@ -45,6 +46,15 @@ type ExternInfoMap = Map C.Name ExternInfo
 
 --------------------------------------------------------------------------------
 
+data ExternArrayInfo = forall a b . ExternArrayInfo
+  { externArrayInfoIdxExpr  :: C.Type a
+  , externArrayInfoIdxType  :: C.Expr a
+  , externArrayInfoElemType :: C.Expr b }
+
+type ExternArrayInfoMap = Map C.Name ExternArrayInfo
+
+--------------------------------------------------------------------------------
+
 data ExternFunInfo = forall a . ExternFunInfo
   { externFunInfoArgs :: [(C.UType, C.UExpr)]
   , externFunInfoVar  :: A.V a
@@ -55,9 +65,10 @@ type ExternFunInfoMap = Map C.Name ExternFunInfo
 --------------------------------------------------------------------------------
 
 data MetaTable = MetaTable
-  { streamInfoMap     :: StreamInfoMap
-  , externInfoMap     :: ExternInfoMap
-  , externFunInfoMap  :: ExternFunInfoMap }
+  { streamInfoMap      :: StreamInfoMap
+  , externInfoMap      :: ExternInfoMap
+  , externArrayInfoMap :: ExternArrayInfoMap
+  , externFunInfoMap   :: ExternFunInfoMap }
 
 --------------------------------------------------------------------------------
 
@@ -70,7 +81,7 @@ allocMetaTable spec =
     externInfoMap_ <-
       liftM M.fromList $ mapM allocExternVar (externVars spec)
 
-    return (MetaTable streamInfoMap_ externInfoMap_ undefined)
+    return (MetaTable streamInfoMap_ externInfoMap_ undefined undefined)
 
 --------------------------------------------------------------------------------
 
@@ -103,6 +114,11 @@ allocExternVar (ExtVar name ut) =
         W.ExprInst <- return (W.exprInst t)
         v <- A.var (mkExternName name) (C.uninitialized t)
         return (name, ExternInfo v t)
+
+--------------------------------------------------------------------------------
+
+--allocExternInfoArray :: ExtArray -> Atom (C.Name, ExternInfo)
+--allocExternInfoArray = 
 
 --------------------------------------------------------------------------------
 

@@ -30,7 +30,7 @@ ppHeader pname =
   concatH $
     [ string "#include <stdint.h>"
     , string "#include <stdio.h>"
-    , string "#include \"" <> string pname <> string ".h\""
+    , string "#include \"copilot.h\""
     ]
 
 ppMain :: Int -> String -> Doc
@@ -50,7 +50,7 @@ ppMain numIterations pname =
   where
 
     it :: Doc
-    it = string pname <> string "();"
+    it = string "step();"
 
 ppTriggers :: [Trigger] -> Doc
 ppTriggers = foldr ($$) empty . map ppTrigger

@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE GADTs, Rank2Types #-}
 
 module Copilot.Compile.C99.Phases
   ( schedulePhases
@@ -11,12 +11,12 @@ module Copilot.Compile.C99.Phases
 
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
 import Copilot.Compile.C99.MetaTable
-  (MetaTable (..), StreamInfo (..), ExternInfo (..))
+  (MetaTable (..), StreamInfo (..), ExternInfo (..), ExternArrayInfo (..))
 import Copilot.Compile.C99.Params
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
-import Copilot.Core.Type.Equality ((=~=), coerce, cong)
+import Copilot.Core.Type.Equality ((=~=), Equal (..), coerce, cong)
 import Data.List (intersperse)
 import qualified Data.Map as M
 import Language.Atom (Atom, (<==), atom, cond, exactPhase)
@@ -26,7 +26,8 @@ import Prelude hiding (id)
 --------------------------------------------------------------------------------
 
 data Phase
-  = SampleExterns
+  = SampleExternVars
+  | SampleExternArrays
   | SampleExternFuns
   | UpdateStates
   | FireTriggers
@@ -42,28 +43,39 @@ numberOfPhases = succ (fromEnum (maxBound :: Phase))
 schedulePhases :: Params -> MetaTable -> Core.Spec -> Atom ()
 schedulePhases params meta spec =
   A.period numberOfPhases $
-    sampleExterns    params meta spec >>
-    sampleExternFuns params meta spec >>
-    updateStates     params meta spec >>
-    fireTriggers     params meta spec >>
-    updateObservers  params meta spec >>
-    updateBuffers    params meta spec
+    sampleExternVars    params meta spec >>
+    sampleExternFuns    params meta spec >>
+    updateStates        params meta spec >>
+    fireTriggers        params meta spec >>
+    updateObservers     params meta spec >>
+    updateBuffers       params meta spec
 
 --------------------------------------------------------------------------------
 
-sampleExterns :: Params -> MetaTable -> Core.Spec -> Atom ()
-sampleExterns _ spec _ =
-  (mapM_ sampleExtern . M.toList . externInfoMap) spec
+sampleExternVars :: Params -> MetaTable -> Core.Spec -> Atom ()
+sampleExternVars _ spec _ =
+  (mapM_ sampleExternVar . M.toList . externInfoMap) spec
 
   where
 
-  sampleExtern :: (Core.Name, ExternInfo) -> Atom ()
-  sampleExtern (name, ExternInfo v t) =
-    exactPhase (fromEnum SampleExterns) $
+  sampleExternVar :: (Core.Name, ExternInfo) -> Atom ()
+  sampleExternVar (name, ExternInfo v t) =
+    exactPhase (fromEnum SampleExternVars) $
       atom ("sample_" ++ name) $
         do
           W.AssignInst <- return $ W.assignInst t
           v <== A.value (A.var' name (c2aType t))
+
+--------------------------------------------------------------------------------
+
+sampleExternArrays :: Params -> MetaTable -> Core.Spec -> Atom ()
+sampleExternArrays _ spec _ =
+  (mapM_ sampleExternArray . M.toList . externArrayInfoMap) spec
+
+  where
+
+  sampleExternArray :: (Core.Name, ExternArrayInfo) -> Atom ()
+  sampleExternArray (_, ExternArrayInfo _ _ _) = undefined
 
 --------------------------------------------------------------------------------
 
@@ -106,8 +118,8 @@ updateStates _ meta
         do
           g1
           W.AssignInst <- return (W.assignInst t2)
-          Just p <- return (t1 =~= t2)
-          tmp <== coerce (cong p) e1
+          Just Refl <- return (t1 =~= t2)
+          tmp <== e1 -- coerce (cong p) e1
 
 --------------------------------------------------------------------------------
 
