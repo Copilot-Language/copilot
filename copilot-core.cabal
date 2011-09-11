@@ -60,9 +60,9 @@ library
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Locals
---    Copilot.Core.Random
---    Copilot.Core.Random.Gen
---    Copilot.Core.Random.Weights
+    Copilot.Core.Random
+    Copilot.Core.Random.Gen
+    Copilot.Core.Random.Weights
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality

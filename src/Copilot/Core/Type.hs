@@ -41,6 +41,8 @@ instance EqualType Type where
   (=~=) Word16 Word16 = Just Refl
   (=~=) Word32 Word32 = Just Refl
   (=~=) Word64 Word64 = Just Refl
+  (=~=) Float  Float  = Just Refl
+  (=~=) Double Double = Just Refl
   (=~=) _ _ = Nothing
 
 class Typed a where

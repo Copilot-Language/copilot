@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE GADTs, ExistentialQuantification #-}
+
 module Copilot.Core.Random.Gen
   ( Gen
   , runGen
@@ -17,7 +19,6 @@ module Copilot.Core.Random.Gen
 
 import Copilot.Core.Random.Weights
 import Copilot.Core.Type
-import Copilot.Core.Type.Equality
 import System.Random (StdGen, Random, random, randomR, split)
 
 --------------------------------------------------------------------------------
@@ -57,17 +58,17 @@ incDepth gen = MkGen $ \ d ws g -> runGen gen (succ d) ws g
 randomFromType :: Type a -> Gen a
 randomFromType t =
   case t of
-    Bool   p -> coerce (cong (symm p)) genBool
-    Int8   p -> coerce (cong (symm p)) genBoundedIntegral
-    Int16  p -> coerce (cong (symm p)) genBoundedIntegral
-    Int32  p -> coerce (cong (symm p)) genBoundedIntegral
-    Int64  p -> coerce (cong (symm p)) genBoundedIntegral
-    Word8  p -> coerce (cong (symm p)) genBoundedIntegral
-    Word16 p -> coerce (cong (symm p)) genBoundedIntegral
-    Word32 p -> coerce (cong (symm p)) genBoundedIntegral
-    Word64 p -> coerce (cong (symm p)) genBoundedIntegral
-    Float  p -> coerce (cong (symm p)) genFractional
-    Double p -> coerce (cong (symm p)) genFractional
+    Bool   -> genBool
+    Int8   -> genBoundedIntegral
+    Int16  -> genBoundedIntegral
+    Int32  -> genBoundedIntegral
+    Int64  -> genBoundedIntegral
+    Word8  -> genBoundedIntegral
+    Word16 -> genBoundedIntegral
+    Word32 -> genBoundedIntegral
+    Word64 -> genBoundedIntegral
+    Float  -> genFractional
+    Double -> genFractional
 
   where
 

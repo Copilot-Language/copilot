@@ -2,14 +2,14 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs, ExistentialQuantification #-}
 
 module Copilot.Core.Random
   ( randomSpec
   ) where
 
 import Control.Monad
-import Copilot.Core (WrapExpr (..), WrapOp1 (..), WrapOp2 (..), UExpr (..))
+import Copilot.Core (UExpr (..))
 import qualified Copilot.Core as E
 import Copilot.Core.Spec
 import Copilot.Core.Random.Gen
@@ -115,8 +115,8 @@ genStream ss
       Stream
         { streamId       = id
         , streamBuffer   = xs
-        , streamGuard    = E.const (typeOf :: Type Bool) True
-        , streamExpr     = unWrapExpr w
+        , streamGuard    = E.Const (typeOf :: Type Bool) True
+        , streamExpr     = w
         , streamExprType = t }
 
 --------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ genTrigger ss name =
     return
       Trigger
         { triggerName  = name
-        , triggerGuard = unWrapExpr w
+        , triggerGuard = w
         , triggerArgs  = args }
 
   where
@@ -143,12 +143,12 @@ genTrigger ss name =
       w <- genExpr ss t
       return
         UExpr
-          { uExprExpr = unWrapExpr w
+          { uExprExpr = w
           , uExprType = t }
 
 --------------------------------------------------------------------------------
 
-genExpr :: [StreamInfo] -> Type a -> Gen (WrapExpr a)
+genExpr :: [StreamInfo] -> Type a -> Gen (E.Expr a)
 genExpr ss t =
   do
     dp <- depth
@@ -169,13 +169,13 @@ genExpr ss t =
   genConst =
     do
       x <- randomFromType t
-      return $ WrapExpr $ E.const t x
+      return $ E.Const t x
 
   genDrop =
     do
       s <- findStreamInfoWithMatchingType
       k <- choose (0, streamInfoBufferSize s - 1)
-      return $ WrapExpr $ E.drop t (fromIntegral k) (streamInfoId s)
+      return $ E.Drop t (fromIntegral k) (streamInfoId s)
 
     where
 
@@ -189,148 +189,120 @@ genExpr ss t =
         elements (filter p ss)
 
   genOp1 = incDepth $ case t of
-    Bool   p -> genOp1Bool ss p
-    Int8   p -> genOp1Num  ss t (numWit p)
-    Int16  p -> genOp1Num  ss t (numWit p)
-    Int32  p -> genOp1Num  ss t (numWit p)
-    Int64  p -> genOp1Num  ss t (numWit p)
-    Word8  p -> genOp1Num  ss t (numWit p)
-    Word16 p -> genOp1Num  ss t (numWit p)
-    Word32 p -> genOp1Num  ss t (numWit p)
-    Word64 p -> genOp1Num  ss t (numWit p)
-    Float  p -> genOp1Num  ss t (numWit p)
-    Double p -> genOp1Num  ss t (numWit p)
+    Bool   -> genOp1Bool ss
+    Int8   -> genOp1Num  ss t
+    Int16  -> genOp1Num  ss t
+    Int32  -> genOp1Num  ss t
+    Int64  -> genOp1Num  ss t
+    Word8  -> genOp1Num  ss t
+    Word16 -> genOp1Num  ss t
+    Word32 -> genOp1Num  ss t
+    Word64 -> genOp1Num  ss t
+    Float  -> genOp1Num  ss t
+    Double -> genOp1Num  ss t
 
   genOp2 = incDepth $ case t of
-    Bool   p -> oneOf [genOp2Bool ss p, genOp2Eq ss p, genOp2Ord ss p]
-    Int8   p -> intOrWord p
-    Int16  p -> intOrWord p
-    Int32  p -> intOrWord p
-    Int64  p -> intOrWord p
-    Word8  p -> intOrWord p
-    Word16 p -> intOrWord p
-    Word32 p -> intOrWord p
-    Word64 p -> intOrWord p
-    Float  p -> floatOrDouble p
-    Double p -> floatOrDouble p
+    Bool    -> oneOf [genOp2Bool ss, genOp2Eq ss, genOp2Ord ss]
+    Int8    -> intOrWord NumWit IntegralWit
+    Int16   -> intOrWord NumWit IntegralWit
+    Int32   -> intOrWord NumWit IntegralWit
+    Int64   -> intOrWord NumWit IntegralWit
+    Word8   -> intOrWord NumWit IntegralWit
+    Word16  -> intOrWord NumWit IntegralWit
+    Word32  -> intOrWord NumWit IntegralWit
+    Word64  -> intOrWord NumWit IntegralWit
+    Float   -> floatOrDouble NumWit
+    Double  -> floatOrDouble NumWit
 
     where
 
-      intOrWord p = oneOf
-        [ genOp2Num ss t (numWit p)
-        , genOp2Integral ss t (integralWit p) ]
+      intOrWord numWit integralWit = oneOf
+        [ genOp2Num ss t numWit
+        , genOp2Integral ss t integralWit ]
 
-      floatOrDouble p = oneOf
-        [ genOp2Num ss t (numWit p) ]
+      floatOrDouble numWit = oneOf
+        [ genOp2Num ss t numWit ]
 
   genOp3 = incDepth (genOp3Mux ss t)
 
 --------------------------------------------------------------------------------
 
-genOp1Bool :: [StreamInfo] -> Equal a Bool -> Gen (WrapExpr a)
-genOp1Bool ss p =
+genOp1Bool :: [StreamInfo] -> Gen (E.Expr Bool)
+genOp1Bool ss =
   do
     ew <- genExpr ss (typeOf :: Type Bool)
-    return
-      $ coerce (cong (symm p))
-      $ WrapExpr
-      $ E.op1 E.not
-      $ unWrapExpr ew
+    return $ E.Op1 E.Not ew
 
-genOp1Num :: [StreamInfo] -> Type a -> NumWit a -> Gen (WrapExpr a)
-genOp1Num ss t NumWit =
+genOp1Num :: Num a => [StreamInfo] -> Type a -> Gen (E.Expr a)
+genOp1Num ss t =
   do
     ew  <- genExpr ss t
-    opw <- elements [WrapOp1 $ E.abs t, WrapOp1 $ E.sign t]
-    return $ WrapExpr $ E.op1 (unWrapOp1 opw) (unWrapExpr ew)
+    opw <- elements [E.Abs t, E.Sign t]
+    return $ E.Op1 opw ew
 
-genOp2Bool :: [StreamInfo] -> Equal a Bool -> Gen (WrapExpr a)
-genOp2Bool ss p =
+genOp2Bool :: [StreamInfo] -> Gen (E.Expr Bool)
+genOp2Bool ss =
   do
     ew1 <- genExpr ss (typeOf :: Type Bool)
     ew2 <- genExpr ss (typeOf :: Type Bool)
-    opw <- elements [WrapOp2 E.and, WrapOp2 E.or]
-    return
-      $ coerce (cong (symm p))
-      $ WrapExpr
-      $ E.op2 (unWrapOp2 opw) (unWrapExpr ew1) (unWrapExpr ew2)
+    opw <- elements [E.And, E.Or]
+    return $ E.Op2 opw ew1 ew2
 
-genOp2Eq :: [StreamInfo] -> Equal a Bool -> Gen (WrapExpr a)
-genOp2Eq ss p =
+genOp2Eq :: [StreamInfo] -> Gen (E.Expr Bool)
+genOp2Eq ss =
   do
     WrapType t <- genTypeFromStreamInfo's ss
     ew1 <- genExpr ss t
     ew2 <- genExpr ss t
-    opw <- elements [WrapOp2 (E.eq t), WrapOp2 (E.ne t)]
-    return
-      $ coerce (cong (symm p))
-      $ WrapExpr
-      $ E.op2 (unWrapOp2 opw) (unWrapExpr ew1) (unWrapExpr ew2)
+    opw <- elements [E.Eq t, E.Ne t]
+    return $ E.Op2 opw ew1 ew2
 
-genOp2Ord :: [StreamInfo] -> Equal a Bool -> Gen (WrapExpr a)
-genOp2Ord ss p =
+genOp2Ord :: [StreamInfo] -> Gen (E.Expr Bool)
+genOp2Ord ss =
   do
     WrapType t <- genTypeFromStreamInfo's ss
     ew1 <- genExpr ss t
     ew2 <- genExpr ss t
     opw <- elements
-      [ WrapOp2 (E.lt t)
-      , WrapOp2 (E.gt t)
-      , WrapOp2 (E.le t)
-      , WrapOp2 (E.ge t) ]
-    return
-      $ coerce (cong (symm p))
-      $ WrapExpr
-      $ E.op2 (unWrapOp2 opw) (unWrapExpr ew1) (unWrapExpr ew2)
+      [ (E.Lt t)
+      , (E.Gt t)
+      , (E.Le t)
+      , (E.Ge t) ]
+    return $ E.Op2 opw ew1 ew2
 
-genOp2Num :: [StreamInfo] -> Type a -> NumWit a -> Gen (WrapExpr a)
+genOp2Num :: [StreamInfo] -> Type a -> NumWit a -> Gen (E.Expr a)
 genOp2Num ss t NumWit =
   do
     ew1 <- genExpr ss t
     ew2 <- genExpr ss t
     opw <-
       elements
-        [ WrapOp2 (E.add t)
-        , WrapOp2 (E.sub t)
-        , WrapOp2 (E.mul t) ]
+        [ (E.Add t)
+        , (E.Sub t)
+        , (E.Mul t) ]
     return
-      $ WrapExpr
-      $ E.op2 (unWrapOp2 opw) (unWrapExpr ew1) (unWrapExpr ew2)
+      $ E.Op2 opw ew1 ew2
 
-genOp2Integral :: [StreamInfo] -> Type a -> IntegralWit a -> Gen (WrapExpr a)
+genOp2Integral :: [StreamInfo] -> Type a -> IntegralWit a -> Gen (E.Expr a)
 genOp2Integral ss t IntegralWit =
   do
     ew1 <- genExpr ss t
     ew2 <- genExpr ss t
     opw <-
       elements
-        [ WrapOp2 (E.div t)
-        , WrapOp2 (E.mod t) ]
+        [ (E.Div t)
+        , (E.Mod t) ]
     return
-      $ WrapExpr
-      $ E.op2 (unWrapOp2 opw) (unWrapExpr ew1) (unWrapExpr ew2)
+      $ E.Op2 opw ew1 ew2
 
-genOp3Mux :: [StreamInfo] -> Type a -> Gen (WrapExpr a)
+genOp3Mux :: [StreamInfo] -> Type a -> Gen (E.Expr a)
 genOp3Mux ss t =
   do
     ew1 <- genExpr ss (typeOf :: Type Bool)
     ew2 <- genExpr ss t
     ew3 <- genExpr ss t
-    return $ WrapExpr $ E.op3 (E.mux t)
-      (unWrapExpr ew1) (unWrapExpr ew2) (unWrapExpr ew3)
-
---------------------------------------------------------------------------------
+    return $ E.Op3 (E.Mux t) ew1 ew2 ew3
 
 data NumWit a = Num a => NumWit
 
-numWit :: Num b => Equal a b -> NumWit a
-numWit p = coerce2 (symm p) NumWit
-
---------------------------------------------------------------------------------
-
 data IntegralWit a = Integral a => IntegralWit
-
-integralWit :: Integral b => Equal a b -> IntegralWit a
-integralWit p = coerce2 (symm p) IntegralWit
-
---------------------------------------------------------------------------------
