@@ -1,3 +1,9 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Copilot.Language.Operators.BitWise
   ( Bits ( (.&.), complement, (.|.) )
   , (.^.)

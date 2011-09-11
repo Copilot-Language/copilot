@@ -2,6 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -58,6 +59,7 @@ instance MuRef (Stream a) where
     Op1 op e        -> Op1G op <$> f e
     Op2 op e1 e2    -> Op2G op <$> f e1 <*> f e2
     Op3 op e1 e2 e3 -> Op3G op <$> f e1 <*> f e2 <*> f e3
+    _               -> error "Not implemented in Graph.hs in copilot-language!"
 
 --type Env = Map String (Stream a)
 

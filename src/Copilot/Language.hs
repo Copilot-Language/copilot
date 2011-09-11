@@ -9,7 +9,6 @@ module Copilot.Language
   , module Data.Word
   , module Copilot.Core
   , module Copilot.Language.Interpret
-  , module Copilot.Language.Compile
   , module Copilot.Language.Operators.Boolean
   , module Copilot.Language.Operators.Constant
   , module Copilot.Language.Operators.Eq
@@ -33,7 +32,6 @@ import Data.Word
 import Copilot.Core (Name, Typed)
 import qualified Copilot.Core.PrettyPrint as PP
 import Copilot.Language.Interpret
-import Copilot.Language.Compile
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Constant
 import Copilot.Language.Operators.Eq
