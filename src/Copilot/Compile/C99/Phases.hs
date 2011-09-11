@@ -16,7 +16,7 @@ import Copilot.Compile.C99.Params
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as Core
-import Copilot.Core.Type.Equality ((=~=), Equal (..), coerce, cong)
+import Copilot.Core.Type.Equality ((=~=), Equal (..))
 import Data.List (intersperse)
 import qualified Data.Map as M
 import Language.Atom (Atom, (<==), atom, cond, exactPhase)
@@ -44,6 +44,7 @@ schedulePhases :: Params -> MetaTable -> Core.Spec -> Atom ()
 schedulePhases params meta spec =
   A.period numberOfPhases $
     sampleExternVars    params meta spec >>
+    sampleExternArrays  params meta spec >>
     sampleExternFuns    params meta spec >>
     updateStates        params meta spec >>
     fireTriggers        params meta spec >>

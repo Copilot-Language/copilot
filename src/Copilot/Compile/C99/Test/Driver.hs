@@ -18,23 +18,23 @@ import Text.PP
 
 type ExternalEnv = Map String (UType, [Int])
 
-driver :: ExternalEnv -> Int -> String -> Spec -> Text
-driver _ numIterations pname Spec { specTriggers = trigs } =
+driver :: ExternalEnv -> Int -> Spec -> Text
+driver _ numIterations Spec { specTriggers = trigs } =
   render $
-    ppHeader pname $$
-    ppMain numIterations pname $$
+    ppHeader $$
+    ppMain numIterations $$
     ppTriggers trigs
 
-ppHeader :: String -> Doc
-ppHeader pname =
+ppHeader :: Doc
+ppHeader =
   concatH $
     [ string "#include <stdint.h>"
     , string "#include <stdio.h>"
     , string "#include \"copilot.h\""
     ]
 
-ppMain :: Int -> String -> Doc
-ppMain numIterations pname =
+ppMain :: Int -> Doc
+ppMain numIterations =
   concatH $
     [ string "int main(int argc, char const *argv[]) {"
     , string "  int i, k;"

@@ -39,7 +39,7 @@ genCFiles :: Int -> Spec -> IO ()
 genCFiles numIterations spec =
   do
     compile (defaultParams { prefix = Nothing }) spec
-    TIO.writeFile "driver.c" (driver M.empty numIterations "test" spec)
+    TIO.writeFile "driver.c" (driver M.empty numIterations spec)
     return ()
 
 compileCFiles :: IO ()
