@@ -7,6 +7,7 @@
 module Copilot.Language.Interpret
   ( Input
   , interpret
+  , prettyInterpret 
   , input
   ) where
 
@@ -22,14 +23,17 @@ data Input where
 input :: Typed a => String -> [a] -> Input
 input = Input
 
-interpret
-  :: Integer
-  -> [Input]
-  -> Spec
-  -> IO ()
-interpret i inputs spec =
-  do
-    coreSpec <- reify spec
-    putStrLn $ I.interpret I.Table (fromIntegral i) exts coreSpec
+interpret :: Integer -> [Input] -> Spec -> IO ()
+interpret = interpret' I.CSV 
+
+-- | Much slower, but pretty-printed interpreter output.  
+prettyInterpret :: Integer -> [Input] -> Spec -> IO ()
+prettyInterpret = interpret' I.Table
+
+interpret' :: I.Format -> Integer -> [Input] -> Spec -> IO ()
+interpret' format i inputs spec = do
+  coreSpec <- reify spec
+  putStrLn $ I.interpret format (fromIntegral i) exts coreSpec
   where
-    exts = map (\ (Input name xs) -> (name, toDynF typeOf xs)) inputs
+  exts = map (\ (Input name xs) -> (name, toDynF typeOf xs)) inputs
+
