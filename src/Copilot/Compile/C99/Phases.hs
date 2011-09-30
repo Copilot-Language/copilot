@@ -76,7 +76,7 @@ sampleExternArrays _ spec _ =
   where
 
   sampleExternArray :: (Core.Name, ExternArrayInfo) -> Atom ()
-  sampleExternArray (_, ExternArrayInfo _ _ _) = undefined
+  sampleExternArray (_, ExternArrayInfo _ _ _) = error "Error in sampleExternArrays in Phases.hs in copilot-c99."
 
 --------------------------------------------------------------------------------
 

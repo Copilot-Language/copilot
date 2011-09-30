@@ -81,7 +81,10 @@ allocMetaTable spec =
     externInfoMap_ <-
       liftM M.fromList $ mapM allocExternVar (externVars spec)
 
-    return (MetaTable streamInfoMap_ externInfoMap_ undefined undefined)
+    return (MetaTable streamInfoMap_ externInfoMap_ (err (0 :: Int)) (err (1 :: Int)))
+
+  where
+  err x = error $ "Error in allocMetaTable in MetaTable.hs in copilot-c99 " ++ show x
 
 --------------------------------------------------------------------------------
 
