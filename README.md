@@ -3,7 +3,7 @@ Copilot: a stream DSL
 Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
 Haskell that compiles into embedded C.  Copilot is similar in spirit to
 languages like Lustre.  Copilot contains an interpreter, multiple back-end
-compilers, and other verification tools.  See the Examples section below.
+compilers, and other verification tools.
 
 Resources
 =========
@@ -36,16 +36,18 @@ Optionally, you may which also to install
   that translates to [SBV](http://hackage.haskell.org/package/sbv), using its
   code generator to generate hard real-time C code as well.  The ad
 
-* [copilot-discussion](http://hackage.haskell.org/package/copilot-discussion)
+* [copilot-discussion](https://github.com/niswegmann/copilot-discussion)
   Contains a tutorial, todos, and other items regarding the Copilot system.
+
+**Sources** for each package are available on Github as well.  Just go to
+[Github](github.com) and search for the package of interest.  Feel free to fork!
 
 Comments, bug reports, and patches are always welcome.  Send them to leepike @
 gmail.com
 
 Examples
 =========
-
-Please see the files under the [Examples]() directory for a number of examples
+Please see the files under the Examples directory for a number of examples
 showing the syntax, use of libraries, and use of the interpreter and back-ends.
 The examples is the best way to start.
 
@@ -72,8 +74,8 @@ equivalent C, to help detect bugs in C back-ends.
 
 Copyright, License
 ==================
-The Copilot library is distributed with the BSD3 license. The license file contains
-the [BSD3](http://en.wikipedia.org/wiki/BSD_licenses) verbiage.
+Copilot is distributed with the BSD3 license. The license file contains the
+[BSD3](http://en.wikipedia.org/wiki/BSD_licenses) verbiage.
 
 Thanks
 ======
@@ -83,3 +85,4 @@ Inc. and the National Institute of Aerospace.
 
 The following people have contributed to Copilot: Lee Pike, Nis Wegmann,
 Sebastian Niller, Robin Morisset, Alwyn Goodloe, and Levent Erkok.
+

@@ -1,0 +1,3 @@
+This directory contains a number of examples.  Examples.hs contains the simplest
+examples as well as demonstrating how to use the interpreter and multiple
+back-ends.  Other files demonstrate the use of Copilot libraries.
