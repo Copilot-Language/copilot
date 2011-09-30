@@ -1,31 +1,23 @@
 cabal-version:       >=1.10
-
 name:                copilot-core
-
 version:             0.2
-
 synopsis:            An intermediate representation for Copilot.
-
 description:         Intermediate representation for Copilot.
                      Strictly follows Haskell 2010 except for universal
                      and existential quantification.
-
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe,
                      Sebastian Niller, Nis Nordby Wegmann
-
 license:             BSD3
-
 license-file:        LICENSE
-
-maintainer:          niswegmann@gmail.com
-
+maintainer:          leepike@gmail.com
 stability:           Experimental
-
 category:            Language, Embedded
-
 build-type:          Simple
-
 extra-source-files:  README.md
+
+source-repository head
+    type:       git
+    location:   git://github.com/niswegmann/copilot-core.git
 
 library
 
