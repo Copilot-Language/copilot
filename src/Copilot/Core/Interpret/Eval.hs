@@ -55,43 +55,71 @@ eval k exts spec =
 --------------------------------------------------------------------------------
 
 strictList :: [a] -> [a]
-strictList []     = []
-strictList (x:xs) = x `seq` (x : strictList xs)
+strictList = P.id
+-- strictList []     = []
+-- strictList (x:xs) = x `seq` (x : strictList xs)
 
 --------------------------------------------------------------------------------
 
-evalExpr_ :: Expr a -> Env Name -> Env Name -> Env Id -> [a]
-evalExpr_ e0 exts locs strms = case e0 of
-  Const _ x              -> x `seq` repeat x
-  Drop t i id            -> strictList $ 
+evalConst x exts locs strms = x `seq` repeat x
+evalDrop t i id exts locs strms = strictList $ 
     let Just xs = lookup id strms >>= fromDynF t
     in  P.drop (fromIntegral i) xs
-  Local t1 _  name e1 e2 -> strictList $
+evalLocal t1 name e1 e2 exts locs strms = strictList $
     let xs    = evalExpr_ e1 exts locs strms
         locs' = (name, toDynF t1 xs) : locs
     in  evalExpr_ e2 exts locs' strms
-  Var t name             -> strictList $
+evalVar t name exts locs strms             = strictList $
     let Just xs = lookup name locs >>= fromDynF t
     in  xs
-  ExternVar t name       -> strictList $ evalExtern t name exts
-  ExternArray _ _ _ _    ->
+evalExternVar t name exts locs strms       = strictList $ evalExtern t name exts
+evalExternArray =
     error "External arrays aren't supported in the interpreter"
-  ExternFun _ _ _        ->
+evalExternFun =
     error "External functions aren't supported in the interpreter"
-  Op1 op e1              -> strictList $ repeat (evalOp1 op)
-                              <*> evalExpr_ e1 exts locs strms
-  Op2 op e1 e2           -> strictList $ repeat (evalOp2 op)
-                              <*> evalExpr_ e1 exts locs strms
-                              <*> evalExpr_ e2 exts locs strms
-  Op3 op e1 e2 e3        -> strictList $ repeat (evalOp3 op)
-                              <*> evalExpr_ e1 exts locs strms
-                              <*> evalExpr_ e2 exts locs strms
-                              <*> evalExpr_ e3 exts locs strms
+-- evalOp1' op e1 exts locs strms              = strictList $ repeat (evalOp1 op)
+--                               <*> evalExpr_ e1 exts locs strms
+-- evalOp2' op e1 e2 exts locs strms          =  strictList $ repeat (evalOp2 op)
+--                              <*> evalExpr_ e1 exts locs strms
+--                               <*> evalExpr_ e2 exts locs strms
+-- evalOp3' op e1 e2 e3 exts locs strms       = strictList $ repeat (evalOp3 op)
+--                               <*> evalExpr_ e1 exts locs strms
+--                               <*> evalExpr_ e2 exts locs strms
+--                               <*> evalExpr_ e3 exts locs strms
+evalOp1' op e1 exts locs strms              = strictList $ map (evalOp1 op) (evalExpr_ e1 exts locs strms)
 
-  where
+evalOp2' op e1 e2 exts locs strms          =  strictList $ map (\(a,b) -> (evalOp2 op) a b)
+                              (zip (evalExpr_ e1 exts locs strms)
+                                 (evalExpr_ e2 exts locs strms))
+evalOp3' op e1 e2 e3 exts locs strms       = strictList $ map (\(a,b,c) -> (evalOp3 op) a b c)
+                              (zip3 (evalExpr_ e1 exts locs strms)
+                                   (evalExpr_ e2 exts locs strms)
+                                   (evalExpr_ e3 exts locs strms))
 
-  (<*>) :: [(a -> b)] -> [a] -> [b]
-  (<*>) = zipWith ($)
+
+evalExpr_ :: Expr a -> Env Name -> Env Name -> Env Id -> [a]
+evalExpr_ e0 exts locs strms = case e0 of
+  Const _ x              -> evalConst x exts locs strms
+  Drop t i id            -> evalDrop t i id exts locs strms
+  Local t1 _  name e1 e2 -> evalLocal t1 name e1 e2 exts locs strms
+  Var t name             -> evalVar t name exts locs strms
+  ExternVar t name       -> evalExternVar t name exts locs strms
+  ExternArray _ _ _ _    -> evalExternArray 
+  ExternFun _ _ _         -> evalExternFun 
+  Op1 op e1              -> evalOp1' op e1 exts locs strms
+  Op2 op e1 e2           -> evalOp2'  op e1 e2 exts locs strms
+  Op3 op e1 e2 e3        -> evalOp3'  op e1 e2 e3 exts locs strms
+
+
+-- (<*>) :: [(a -> b)] -> [a] -> [b]
+-- a <*> b = zipWith ($) a b
+
+
+-- zipWith' f l1 l2 = 
+--   [ f e1 e2 | (e1, e2) <- zipWith k l1 l2 ]
+--   where
+--   k x y = x `seq` y `seq` (x,y)
+
 
 evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
