@@ -54,25 +54,18 @@ eval k exts spec =
 
 --------------------------------------------------------------------------------
 
-strictList :: [a] -> [a]
-strictList = P.id
--- strictList []     = []
--- strictList (x:xs) = x `seq` (x : strictList xs)
-
---------------------------------------------------------------------------------
-
 evalConst x exts locs strms = x `seq` repeat x
-evalDrop t i id exts locs strms = strictList $ 
+evalDrop t i id exts locs strms = 
     let Just xs = lookup id strms >>= fromDynF t
     in  P.drop (fromIntegral i) xs
-evalLocal t1 name e1 e2 exts locs strms = strictList $
+evalLocal t1 name e1 e2 exts locs strms = 
     let xs    = evalExpr_ e1 exts locs strms
         locs' = (name, toDynF t1 xs) : locs
     in  evalExpr_ e2 exts locs' strms
-evalVar t name exts locs strms             = strictList $
+evalVar t name exts locs strms             = 
     let Just xs = lookup name locs >>= fromDynF t
     in  xs
-evalExternVar t name exts locs strms       = strictList $ evalExtern t name exts
+evalExternVar t name exts locs strms       = evalExtern t name exts
 evalExternArray =
     error "External arrays aren't supported in the interpreter"
 evalExternFun =
@@ -86,12 +79,12 @@ evalExternFun =
 --                               <*> evalExpr_ e1 exts locs strms
 --                               <*> evalExpr_ e2 exts locs strms
 --                               <*> evalExpr_ e3 exts locs strms
-evalOp1' op e1 exts locs strms              = strictList $ map (evalOp1 op) (evalExpr_ e1 exts locs strms)
+evalOp1' op e1 exts locs strms              =  map (evalOp1 op) (evalExpr_ e1 exts locs strms)
 
-evalOp2' op e1 e2 exts locs strms          =  strictList $ map (\(a,b) -> (evalOp2 op) a b)
+evalOp2' op e1 e2 exts locs strms          =   map (\(a,b) -> (evalOp2 op) a b)
                               (zip (evalExpr_ e1 exts locs strms)
                                  (evalExpr_ e2 exts locs strms))
-evalOp3' op e1 e2 e3 exts locs strms       = strictList $ map (\(a,b,c) -> (evalOp3 op) a b c)
+evalOp3' op e1 e2 e3 exts locs strms       = map (\(a,b,c) -> (evalOp3 op) a b c)
                               (zip3 (evalExpr_ e1 exts locs strms)
                                    (evalExpr_ e2 exts locs strms)
                                    (evalExpr_ e3 exts locs strms))
@@ -200,13 +193,13 @@ evalStream exts strms
     , streamExpr     = e
     , streamExprType = t
 --    , streamGuard    = g
-    } = (id, toDynF t ws)
+    } = (id, toDynF t xs)
 
   where
 
   xs = buffer ++ evalExpr_ e exts [] strms
 --  ys = withGuard (uninitialized t) (evalExpr_ g exts [] strms) xs
-  ws = strictList $ xs
+
 {-
   withGuard :: a -> [Bool] -> [a] -> [a]
   withGuard _ (True:vs)  (z:zs) = z : withGuard z vs zs
@@ -246,6 +239,6 @@ evalObserver k exts strms
   Observer
     { observerExpr     = e
     , observerExprType = t }
-  = take k $ strictList $ map (showWithType t) (evalExpr_ e exts [] strms)
+  = take k $ map (showWithType t) (evalExpr_ e exts [] strms)
 
 --------------------------------------------------------------------------------
