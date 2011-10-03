@@ -39,6 +39,7 @@ library
     pretty >= 1.0,
     random > 1.0,
     pretty-ncols >= 0.1,
+    mtl >= 2.0,
     dlist
 
   exposed-modules:
@@ -50,6 +51,7 @@ library
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Interpret.Render
+    Copilot.Core.MakeTags
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Spec.Locals
