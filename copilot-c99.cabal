@@ -2,8 +2,7 @@ cabal-version             : >= 1.10
 name                      : copilot-c99
 version                   : 0.1
 synopsis                  : A compiler for Copilot targeting C99.
-description               : This is a back-end from Copilot to the Atom DSL.  Please see
-README.mk for more details.
+description               : This is a back-end from Copilot to the Atom DSL. Please see README.mk for more details.
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : leepike@galois.com
@@ -36,7 +35,7 @@ library
                           , copilot-core
                           , directory >= 1.1
                           , process >= 1.0
-                          , pp >= 1.0
+                          , pretty >= 1.0
                           , random >= 1.0
                           , text >= 0.6
                           , QuickCheck >= 2.4
@@ -47,6 +46,7 @@ library
                           , Copilot.Compile.C99.Test.ReadCSV
                           , Copilot.Compile.C99
                           , Copilot.Compile.C99.C2A
+                          , Copilot.Compile.C99.Common
                           , Copilot.Compile.C99.MetaTable
                           , Copilot.Compile.C99.Params
                           , Copilot.Compile.C99.Phases

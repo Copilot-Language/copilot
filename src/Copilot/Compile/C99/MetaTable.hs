@@ -20,7 +20,7 @@ import Control.Monad (liftM)
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
-import Copilot.Core.External (ExtVar (..), externVars)
+import Copilot.Core.External
 import Data.Map (Map)
 import qualified Data.Map as M
 import Language.Atom (Atom)
@@ -46,21 +46,22 @@ type ExternInfoMap = Map C.Name ExternInfo
 
 --------------------------------------------------------------------------------
 
-data ExternArrayInfo = forall a b . ExternArrayInfo
-  { externArrayInfoIdxExpr  :: C.Type a
-  , externArrayInfoIdxType  :: C.Expr a
-  , externArrayInfoElemType :: C.Expr b }
+data ExternArrayInfo = forall a b . Integral a => ExternArrayInfo
+  { externArrayInfoVar      :: A.V b
+  , externArrayInfoIdxExpr  :: C.Expr a
+  , externArrayInfoIdxType  :: C.Type a
+  , externArrayInfoElemType :: C.Type b }
 
-type ExternArrayInfoMap = Map C.Name ExternArrayInfo
+type ExternArrayInfoMap = Map (C.Name, C.Tag) ExternArrayInfo
 
 --------------------------------------------------------------------------------
 
 data ExternFunInfo = forall a . ExternFunInfo
-  { externFunInfoArgs :: [(C.UType, C.UExpr)]
-  , externFunInfoVar  :: A.V a
-  , externFunInfoType :: C.Type a }
+  { externFunInfoArgs  :: [C.UExpr]
+  , externFunInfoVar   :: A.V a
+  , externFunInfoType  :: C.Type a }
 
-type ExternFunInfoMap = Map C.Name ExternFunInfo
+type ExternFunInfoMap = Map (C.Name, C.Tag) ExternFunInfo
 
 --------------------------------------------------------------------------------
 
@@ -81,10 +82,18 @@ allocMetaTable spec =
     externInfoMap_ <-
       liftM M.fromList $ mapM allocExternVar (externVars spec)
 
-    return (MetaTable streamInfoMap_ externInfoMap_ (err (0 :: Int)) (err (1 :: Int)))
+    externArrayInfoMap_ <-
+      liftM M.fromList $ mapM allocExternArray (externArrays spec)
 
-  where
-  err x = error $ "Error in allocMetaTable in MetaTable.hs in copilot-c99 " ++ show x
+    externFunInfoMap_ <-
+      liftM M.fromList $ mapM allocExternFun (externFuns spec)
+
+    return $
+      MetaTable
+        streamInfoMap_
+        externInfoMap_
+        externArrayInfoMap_
+        externFunInfoMap_
 
 --------------------------------------------------------------------------------
 
@@ -120,13 +129,32 @@ allocExternVar (ExtVar name ut) =
 
 --------------------------------------------------------------------------------
 
---allocExternInfoArray :: ExtArray -> Atom (C.Name, ExternInfo)
---allocExternInfoArray = 
+allocExternArray :: ExtArray -> Atom ((C.Name, C.Tag), ExternArrayInfo)
+allocExternArray (ExtArray name elemType idxExpr idxType (Just tag)) =
+  do
+    W.ExprInst <- return (W.exprInst elemType)
+    v <- A.var (mkExternArrayName name tag) (C.uninitialized elemType)
+    return ((name, tag), ExternArrayInfo v idxExpr idxType elemType)
 
+--------------------------------------------------------------------------------
+
+allocExternFun :: ExtFun -> Atom ((C.Name, C.Tag), ExternFunInfo)
+allocExternFun (ExtFun name t args (Just tag)) =
+  do
+    W.ExprInst <- return (W.exprInst t)
+    v <- A.var (mkExternFunName name tag) (C.uninitialized t)
+    return ((name, tag), ExternFunInfo args v t)
+  
 --------------------------------------------------------------------------------
 
 mkExternName :: C.Name -> A.Name
 mkExternName name = "ext_" ++ name
+
+mkExternArrayName :: C.Name -> C.Tag -> A.Name
+mkExternArrayName name tag = "ext_array_" ++ show tag ++ "_" ++ name
+
+mkExternFunName :: C.Name -> C.Tag -> A.Name
+mkExternFunName name tag = "ext_fun_" ++ show tag ++ "_" ++ name
 
 mkQueueName :: C.Id -> A.Name
 mkQueueName id = "str" ++ show id

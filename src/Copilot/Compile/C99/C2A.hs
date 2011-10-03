@@ -6,6 +6,7 @@
 
 module Copilot.Compile.C99.C2A
   ( c2aExpr
+--  , c2aUExpr
   , c2aType
   ) where
 
@@ -24,6 +25,9 @@ import Prelude hiding (id)
 
 c2aExpr :: MetaTable -> C.Expr a -> A.E a
 c2aExpr meta e = c2aExpr_ e M.empty meta
+
+--c2aUExpr :: MetaTable -> C.UExpr -> A.E a
+--c2aUExpr meta (C.UExpr _ e) = c2aExpr meta e
 
 --------------------------------------------------------------------------------
 
@@ -133,10 +137,10 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.ExternFun t name _ ->
+  C.ExternFun t name _ (Just tag) ->
 
     let
-      Just extFunInfo = M.lookup name (externFunInfoMap meta)
+      Just extFunInfo = M.lookup (name, tag) (externFunInfoMap meta)
     in
       externFun1 t extFunInfo
 
@@ -156,15 +160,26 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.ExternArray t1 t2 name e1 ->
+  C.ExternArray _ t name _ (Just tag) ->
 
-    case ( W.integralEInst t1, W.exprInst t2 ) of
-         ( W.IntegralEInst   , W.ExprInst    ) ->
-            let
-              arr = A.array' name (c2aType t2)
-              idx = c2aExpr_ e1 env meta
-            in
-              arr A.!. idx
+    let
+      Just extArrayInfo = M.lookup (name, tag) (externArrayInfoMap meta)
+    in
+      externArray1 t extArrayInfo
+
+    where
+
+    externArray1 t1
+      ExternArrayInfo
+        { externArrayInfoVar      = var
+        , externArrayInfoElemType = t2
+        } =
+      let
+        Just p = t2 =~= t1
+      in
+        case W.exprInst t2 of
+          W.ExprInst ->
+            coerce (cong p) (A.value var)
 
   ----------------------------------------------------
 

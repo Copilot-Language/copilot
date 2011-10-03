@@ -21,13 +21,16 @@ import qualified Language.Atom as Atom
 --------------------------------------------------------------------------------
 
 compile :: Params -> Core.Spec -> IO ()
-compile params spec =
+compile params spec0 =
   do
     (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
     putStrLn $ Atom.reportSchedule schedule
     genC99Header (prefix params) "." spec
 
   where
+
+  spec :: Core.Spec
+  spec = Core.makeTags spec0
 
   programName :: String
   programName = withPrefix (prefix params) "copilot"

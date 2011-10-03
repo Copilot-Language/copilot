@@ -10,8 +10,10 @@ module Copilot.Compile.C99.Phases
   ) where
 
 import Copilot.Compile.C99.C2A (c2aExpr, c2aType)
+import Copilot.Compile.C99.Common (mkTmpExtFunVarName)
 import Copilot.Compile.C99.MetaTable
-  (MetaTable (..), StreamInfo (..), ExternInfo (..), ExternArrayInfo (..))
+  (MetaTable (..), StreamInfo (..), ExternInfo (..), ExternArrayInfo (..)
+  ,ExternFunInfo (..))
 import Copilot.Compile.C99.Params
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
@@ -54,15 +56,15 @@ schedulePhases params meta spec =
 --------------------------------------------------------------------------------
 
 sampleExternVars :: Params -> MetaTable -> Core.Spec -> Atom ()
-sampleExternVars _ spec _ =
-  (mapM_ sampleExternVar . M.toList . externInfoMap) spec
+sampleExternVars _ meta _ =
+  (mapM_ sampleExternVar . M.toList . externInfoMap) meta
 
   where
 
   sampleExternVar :: (Core.Name, ExternInfo) -> Atom ()
   sampleExternVar (name, ExternInfo v t) =
     exactPhase (fromEnum SampleExternVars) $
-      atom ("sample_" ++ name) $
+      atom ("sample_var_" ++ name) $
         do
           W.AssignInst <- return $ W.assignInst t
           v <== A.value (A.var' name (c2aType t))
@@ -70,18 +72,51 @@ sampleExternVars _ spec _ =
 --------------------------------------------------------------------------------
 
 sampleExternArrays :: Params -> MetaTable -> Core.Spec -> Atom ()
-sampleExternArrays _ spec _ =
-  (mapM_ sampleExternArray . M.toList . externArrayInfoMap) spec
+sampleExternArrays _ meta _ =
+  (mapM_ sampleExternArray . M.toList . externArrayInfoMap) meta
 
   where
 
-  sampleExternArray :: (Core.Name, ExternArrayInfo) -> Atom ()
-  sampleExternArray (_, ExternArrayInfo _ _ _) = error "Error in sampleExternArrays in Phases.hs in copilot-c99."
+  sampleExternArray :: ((Core.Name, Core.Tag), ExternArrayInfo) -> Atom ()
+  sampleExternArray ((name, tag), ExternArrayInfo var idxExpr idxType elemType) =
+    exactPhase (fromEnum SampleExternArrays) $
+      atom ("sample_array_" ++ name ++ "_" ++ show tag) $
+        do
+          W.IntegralEInst <- return $ W.integralEInst idxType
+          W.AssignInst <- return $ W.assignInst elemType
+          W.ExprInst <- return $ W.exprInst elemType
+          let e   = c2aExpr meta idxExpr
+              arr = A.array' name (c2aType elemType)
+          var <== A.value (arr A.! e)
 
 --------------------------------------------------------------------------------
 
 sampleExternFuns :: Params -> MetaTable -> Core.Spec -> Atom ()
-sampleExternFuns _ _ _ = return ()
+sampleExternFuns _ meta _ =
+  (mapM_ sampleExternFun . M.toList . externFunInfoMap) meta
+
+  where
+
+  c2aUExpr :: Core.UExpr -> A.UE
+  c2aUExpr (Core.UExpr t e) =
+    case W.exprInst t of
+      W.ExprInst -> A.ue (c2aExpr meta e)
+
+  sampleExternFun :: ((Core.Name, Core.Tag), ExternFunInfo) -> Atom ()
+  sampleExternFun ((name, tag), ExternFunInfo args var t) =
+    exactPhase (fromEnum SampleExternFuns) $
+      atom ("sample_fun_" ++ name ++ "_" ++ show tag) $
+        do
+          let args' = map c2aUExpr args
+          A.action fnCall args'
+          W.AssignInst <- return $ W.assignInst t
+          var <== A.value (A.var' (mkTmpExtFunVarName name tag) (c2aType t))
+
+    where
+
+    fnCall :: [String] -> String
+    fnCall xs = mkTmpExtFunVarName name tag ++ " = " ++ name ++ "("
+      ++ concat (intersperse "," xs) ++ ")"
 
 --------------------------------------------------------------------------------
 

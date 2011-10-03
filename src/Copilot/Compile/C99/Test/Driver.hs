@@ -13,44 +13,45 @@ import Copilot.Core
 import Data.List (intersperse)
 import Data.Map (Map)
 import Data.Text (Text)
-import Text.PP
-  (Doc, ($$), (<>), (<+>), indent, string, empty, render, concatV, concatH)
+import Data.Text (pack)
+import Text.PrettyPrint
+  (Doc, ($$), (<>), (<+>), nest, text, empty, render, vcat, hcat)
 
 type ExternalEnv = Map String (UType, [Int])
 
 driver :: ExternalEnv -> Int -> Spec -> Text
 driver _ numIterations Spec { specTriggers = trigs } =
-  render $
+  pack $ render $
     ppHeader $$
     ppMain numIterations $$
     ppTriggers trigs
 
 ppHeader :: Doc
 ppHeader =
-  concatH $
-    [ string "#include <stdint.h>"
-    , string "#include <stdio.h>"
-    , string "#include \"copilot.h\""
+  hcat $
+    [ text "#include <stdint.h>"
+    , text "#include <stdio.h>"
+    , text "#include \"copilot.h\""
     ]
 
 ppMain :: Int -> Doc
 ppMain numIterations =
-  concatH $
-    [ string "int main(int argc, char const *argv[]) {"
-    , string "  int i, k;"
-    , string "  k = " <> string (show numIterations) <> string ";"
-    , string "  for (i = 0; i < k; i++) {"
-    , string "    " <> it <+> it <+> it <+> it <+> it
-    , string "    if (i < k-1) printf(\"#\\n\");"
-    , string "  }"
-    , string "  return 0;"
-    , string "}"
+  hcat $
+    [ text "int main(int argc, char const *argv[]) {"
+    , text "  int i, k;"
+    , text "  k = " <> text (show numIterations) <> text ";"
+    , text "  for (i = 0; i < k; i++) {"
+    , text "    " <> it <+> it <+> it <+> it <+> it
+    , text "    if (i < k-1) printf(\"#\\n\");"
+    , text "  }"
+    , text "  return 0;"
+    , text "}"
     ]
 
   where
 
     it :: Doc
-    it = string "step();"
+    it = text "step();"
 
 ppTriggers :: [Trigger] -> Doc
 ppTriggers = foldr ($$) empty . map ppTrigger
@@ -60,39 +61,39 @@ ppTrigger
   Trigger
     { triggerName = name
     , triggerArgs = args } =
-  concatH $
-    [ string "void" <+>
-        string name <+>
-        string "(" <>
+  hcat $
+    [ text "void" <+>
+        text name <+>
+        text "(" <>
         ppPars args <>
-        string ")"
-    , string "{"
-    , indent 2 $
+        text ")"
+    , text "{"
+    , nest 2 $
         ppPrintf name args <>
-        string ";"
-    , string "}"
+        text ";"
+    , text "}"
     ]
 
 ppPrintf :: String -> [UExpr] -> Doc
 ppPrintf name args =
-  string "printf(\"" <>
-  string name <>
-  string "," <>
+  text "printf(\"" <>
+  text name <>
+  text "," <>
   ppFormats args <>
-  string "\\n\"," <+>
+  text "\\n\"," <+>
   ppArgs args <>
-  string ")"
+  text ")"
 
 ppFormats :: [UExpr] -> Doc
 ppFormats
-  = concatV
-  . intersperse (string ",")
+  = vcat
+  . intersperse (text ",")
   . map ppFormat
 
 ppPars :: [UExpr] -> Doc
 ppPars
-  = concatV
-  . intersperse (string ", ")
+  = vcat
+  . intersperse (text ", ")
   . map ppPar
   . zip [0..]
 
@@ -102,22 +103,22 @@ ppPars
   ppPar (k, par) = case par of
     UExpr
       { uExprType = t } ->
-          ppUType (UType t) <+> string ("t" ++ show k)
+          ppUType (UType t) <+> text ("t" ++ show k)
 
 ppArgs :: [UExpr] -> Doc
 ppArgs args
-  = concatV
-  $ intersperse (string ", ")
+  = vcat
+  $ intersperse (text ", ")
   $ map ppArg
   $ [0..length args-1]
 
   where
 
   ppArg :: Int -> Doc
-  ppArg k = string ("t" ++ show k)
+  ppArg k = text ("t" ++ show k)
 
 ppUType :: UType -> Doc
-ppUType UType { uTypeType = t } = string $ typeSpec' t
+ppUType UType { uTypeType = t } = text $ typeSpec' t
 
   where
 
@@ -136,7 +137,7 @@ ppUType UType { uTypeType = t } = string $ typeSpec' t
 ppFormat :: UExpr -> Doc
 ppFormat
   UExpr { uExprType = t } =
-  string $ case t of
+  text $ case t of
     Bool   -> "%d"
     Int8   -> "%d"
     Int16  -> "%d"
