@@ -13,6 +13,10 @@ stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
 
+source-repository head
+    type:       git
+    location:   git://github.com/niswegmann/copilot-language.git
+
 library
   default-language: Haskell2010
 
