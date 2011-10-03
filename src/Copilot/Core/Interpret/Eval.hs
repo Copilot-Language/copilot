@@ -114,6 +114,35 @@ evalExpr_ e0 exts locs strms = case e0 of
 --   k x y = x `seq` y `seq` (x,y)
 
 
+-- evalExpr_ :: Expr a -> Env Name -> Env Name -> Env Id -> [a]
+-- evalExpr_ e0 exts locs strms = case e0 of
+--   Const _ x              -> x `seq` repeat x
+--   Drop t i id            -> 
+--     let Just xs = lookup id strms >>= fromDynF t
+--     in  P.drop (fromIntegral i) xs
+--   Local t1 _  name e1 e2 -> 
+--     let xs    = evalExpr_ e1 exts locs strms
+--         locs' = (name, toDynF t1 xs) : locs
+--     in  evalExpr_ e2 exts locs' strms
+--   Var t name             -> 
+--     let Just xs = lookup name locs >>= fromDynF t
+--     in  xs
+--   ExternVar t name       -> evalExtern t name exts
+--   ExternArray _ _ _ _    ->
+--     error "External arrays aren't supported in the interpreter"
+--   ExternFun _ _ _ _      ->
+--     error "External functions aren't supported in the interpreter"
+--   Op1 op e1              -> map (evalOp1 op)
+--                                 (evalExpr_ e1 exts locs strms)
+--   Op2 op e1 e2           -> map (\(a,b) -> (evalOp2 op) a b) $ 
+--                                 zip (evalExpr_ e1 exts locs strms)
+--                                     (evalExpr_ e2 exts locs strms)
+--   Op3 op e1 e2 e3        -> map (\(a,b,c) -> (evalOp3 op) a b c) $
+--                                 zip3 (evalExpr_ e1 exts locs strms)
+--                                      (evalExpr_ e2 exts locs strms)
+--                                      (evalExpr_ e3 exts locs strms)
+-- >>>>>>> master
+
 evalExtern :: Type a -> Name -> Env Name -> [a]
 evalExtern t name exts =
   case lookup name exts of
