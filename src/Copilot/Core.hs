@@ -25,6 +25,7 @@
 module Copilot.Core
   ( module Copilot.Core.Expr
   , module Copilot.Core.External
+  , module Copilot.Core.MakeTags
   , module Copilot.Core.Operators
   , module Copilot.Core.Spec
   , module Copilot.Core.Type
@@ -35,11 +36,10 @@ module Copilot.Core
 
 import Copilot.Core.Expr
 import Copilot.Core.External
+import Copilot.Core.MakeTags
 import Copilot.Core.Operators
 import Copilot.Core.Spec
 import Copilot.Core.Type
 import Copilot.Core.Type.Uninitialized
 import Data.Int
 import Data.Word
-
---------------------------------------------------------------------------------

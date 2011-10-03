@@ -23,14 +23,18 @@ data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
 
-data ExtArray = ExtArray
-  { externArrayName :: Name
-  , externArrayType :: UType }
+data ExtArray = forall a b . Integral a => ExtArray
+  { externArrayName     :: Name
+  , externArrayElemType :: Type b
+  , externArrayIdx      :: Expr a
+  , externArrayIdxType  :: Type a
+  , externArrayTag      :: Maybe Tag }
 
-data ExtFun = ExtFun
+data ExtFun = forall a . ExtFun
   { externFunName      :: Name
-  , externFunType      :: UType
-  , externFunArgsTypes :: [UType] }
+  , externFunType      :: Type a
+  , externFunArgs      :: [UExpr]
+  , externFunTag       :: Maybe Tag }
 
 --------------------------------------------------------------------------------
 
@@ -45,19 +49,18 @@ externVars = nubBy eqExt . toList . all externVarsExpr
 
 externVarsExpr :: Expr a -> DList ExtVar
 externVarsExpr e0 = case e0 of
-  Const  _ _          -> empty
-  Drop   _ _ _        -> empty
-  Local _ _ _ e1 e2   -> externVarsExpr e1 `append`
-                                         externVarsExpr e2
-  Var _ _             -> empty
-  ExternVar t name    -> singleton (ExtVar name (UType t))
-  ExternArray _ _ _ e -> externVarsExpr e
-  ExternFun _ _ ues   -> concat (map externVarsUExpr ues)
-  Op1 _ e             -> externVarsExpr e
-  Op2 _ e1 e2         -> externVarsExpr e1 `append` externVarsExpr e2
-  Op3 _ e1 e2 e3      -> externVarsExpr e1 `append`
-                         externVarsExpr e2 `append`
-                         externVarsExpr e3
+  Const  _ _            -> empty
+  Drop   _ _ _          -> empty
+  Local _ _ _ e1 e2     -> externVarsExpr e1 `append` externVarsExpr e2
+  Var _ _               -> empty
+  ExternVar t name      -> singleton (ExtVar name (UType t))
+  ExternArray _ _ _ e _ -> externVarsExpr e
+  ExternFun _ _ ues _   -> concat (map externVarsUExpr ues)
+  Op1 _ e               -> externVarsExpr e
+  Op2 _ e1 e2           -> externVarsExpr e1 `append` externVarsExpr e2
+  Op3 _ e1 e2 e3        -> externVarsExpr e1 `append`
+                           externVarsExpr e2 `append`
+                           externVarsExpr e3
 
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
@@ -65,30 +68,22 @@ externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
 --------------------------------------------------------------------------------
 
 externArrays :: Spec -> [ExtArray]
-externArrays = nubBy eqExt . toList . all externArraysExpr
-
-  where
-
-  eqExt :: ExtArray -> ExtArray -> Bool
-  eqExt
-    ExtArray { externArrayName = name1 }
-    ExtArray { externArrayName = name2 } = name1 == name2
+externArrays = toList . all externArraysExpr
 
 externArraysExpr :: Expr a -> DList ExtArray
 externArraysExpr e0 = case e0 of
-  Const  _ _               -> empty
-  Drop   _ _ _             -> empty
-  Local _ _ _ e1 e2        -> externArraysExpr e1 `append`
-                                                externArraysExpr e2
-  Var _ _                  -> empty
-  ExternVar _ _            -> empty
-  ExternArray t1 _  name _ -> singleton (ExtArray name (UType t1))
-  ExternFun _ _ ues        -> concat (map externArraysUExpr ues)
-  Op1 _ e                  -> externArraysExpr e
-  Op2 _ e1 e2              -> externArraysExpr e1 `append` externArraysExpr e2
-  Op3 _ e1 e2 e3           -> externArraysExpr e1 `append`
-                              externArraysExpr e2 `append`
-                              externArraysExpr e3
+  Const  _ _                      -> empty
+  Drop   _ _ _                    -> empty
+  Local _ _ _ e1 e2               -> externArraysExpr e1 `append` externArraysExpr e2
+  Var _ _                         -> empty
+  ExternVar _ _                   -> empty
+  ExternArray t1 t2  name idx tag -> singleton (ExtArray name t2 idx t1 tag)
+  ExternFun _ _ ues _             -> concat (map externArraysUExpr ues)
+  Op1 _ e                         -> externArraysExpr e
+  Op2 _ e1 e2                     -> externArraysExpr e1 `append` externArraysExpr e2
+  Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
+                                     externArraysExpr e2 `append`
+                                     externArraysExpr e3
 
 externArraysUExpr :: UExpr -> DList ExtArray
 externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
@@ -96,36 +91,22 @@ externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
 --------------------------------------------------------------------------------
 
 externFuns :: Spec -> [ExtFun]
-externFuns _ = []
+externFuns = toList . all externFunsExpr
 
-  where
-
-{-
-  eqExt :: ExtVar -> ExtVar -> Bool
-  eqExt ExtVar { externVarName = name1 } ExtVar { externVarName = name2 } =
-    name1 == name2
-
-newtype ExtVarsExpr a = ExtVarsExpr { externVarsExpr :: DList ExtVar }
-
-instance Expr ExtVarsExpr where
-  const  _ _          -> empty
-  drop   _ _ _        -> empty
-  local _ _ _ e1 e2   -> externVarsExpr e1 `append`
-                                         externVarsExpr e2
-  var _ _             -> empty
-  extern t name       -> singleton (ExtVar name (utype t))
-  externArray _ _ _ e -> externVarsExpr e
-  externFun _ _ ues   -> concat (map externVarsUExpr ues)
-  op1 _ e             -> externVarsExpr e
-  op2 _ e1 e2         -> externVarsExpr e1 `append`
-                                         externVarsExpr e2
-  op3 _ e1 e2 e3      -> externVarsExpr e1 `append`
-                                         externVarsExpr e2 `append`
-                                         externVarsExpr e3
-
-externVarsUExpr :: UExpr -> DList ExtVar
-externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
--}
+externFunsExpr :: Expr a -> DList ExtFun
+externFunsExpr e0 = case e0 of
+  Const  _ _                  -> empty
+  Drop   _ _ _                -> empty
+  Local _ _ _ e1 e2           -> externFunsExpr e1 `append` externFunsExpr e2
+  Var _ _                     -> empty
+  ExternVar _ _               -> empty
+  ExternArray _ _ _ idx _     -> externFunsExpr idx
+  ExternFun t name ues tag    -> singleton (ExtFun name t ues tag)
+  Op1 _ e                     -> externFunsExpr e
+  Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2
+  Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
+                                 externFunsExpr e2 `append`
+                                 externFunsExpr e3
 
 --------------------------------------------------------------------------------
 

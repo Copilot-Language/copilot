@@ -74,9 +74,9 @@ evalExpr_ e0 exts locs strms = case e0 of
     let Just xs = lookup name locs >>= fromDynF t
     in  xs
   ExternVar t name       -> strictList $ evalExtern t name exts
-  ExternArray _ _ _ _    ->
+  ExternArray _ _ _ _ _  ->
     error "External arrays aren't supported in the interpreter"
-  ExternFun _ _ _        ->
+  ExternFun _ _ _ _      ->
     error "External functions aren't supported in the interpreter"
   Op1 op e1              -> strictList $ repeat (evalOp1 op)
                               <*> evalExpr_ e1 exts locs strms
