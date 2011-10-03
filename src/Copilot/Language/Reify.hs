@@ -165,7 +165,7 @@ mkExpr refMkId refStreams refMap = go
 
         do
           args' <- mapM mkFunArg args
-          return $ Core.ExternFun typeOf cs args'
+          return $ Core.ExternFun typeOf cs args' Nothing
 
       ------------------------------------------------------
 
@@ -173,7 +173,7 @@ mkExpr refMkId refStreams refMap = go
 
         do
           w <- go e
-          return $ Core.ExternArray typeOf typeOf cs w
+          return $ Core.ExternArray typeOf typeOf cs w Nothing
 
       ------------------------------------------------------
 
