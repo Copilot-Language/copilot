@@ -97,8 +97,8 @@ evalExpr_ e0 exts locs strms = case e0 of
   Local t1 _  name e1 e2 -> evalLocal t1 name e1 e2 exts locs strms
   Var t name             -> evalVar t name exts locs strms
   ExternVar t name       -> evalExternVar t name exts locs strms
-  ExternArray _ _ _ _    -> evalExternArray 
-  ExternFun _ _ _         -> evalExternFun 
+  ExternArray _ _ _ _ _  -> evalExternArray 
+  ExternFun _ _ _ _      -> evalExternFun 
   Op1 op e1              -> evalOp1' op e1 exts locs strms
   Op2 op e1 e2           -> evalOp2'  op e1 e2 exts locs strms
   Op3 op e1 e2 e3        -> evalOp3'  op e1 e2 e3 exts locs strms
