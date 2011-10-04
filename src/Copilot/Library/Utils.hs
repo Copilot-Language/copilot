@@ -23,24 +23,20 @@ take n s = P.take ( fromIntegral n ) $ tails s
 
 -- Folds
 
-
 nfoldl :: ( Typed a, Typed b )
           => Int -> ( Stream a -> Stream b -> Stream a )
                  ->   Stream a -> Stream b -> Stream a
 nfoldl n f e s = foldl f e $ take n s
-
 
 nfoldl1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
                   ->   Stream a -> Stream a
 nfoldl1 n f s = foldl1 f $ take n s
 
-
 nfoldr :: ( Typed a, Typed b )
           => Int -> ( Stream a -> Stream b -> Stream b )
                  ->   Stream b -> Stream a -> Stream b
 nfoldr n f e s = foldr f e $ take n s
-
 
 nfoldr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
@@ -50,24 +46,20 @@ nfoldr1 n f s = foldr1 f $ take n s
 
 -- Scans
 
-
 nscanl :: ( Typed a, Typed b )
           => Int -> ( Stream a -> Stream b -> Stream a )
           -> Stream a -> Stream b -> [ Stream a ]
 nscanl n f e s = scanl f e $ take n s
-
 
 nscanr :: ( Typed a )
           => Int -> ( Stream a -> Stream b -> Stream b )
           -> Stream b -> Stream a -> [ Stream b ]
 nscanr n f e s = scanr f e $ take n s
 
-
 nscanl1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
            -> Stream a -> [ Stream a ]
 nscanl1 n f s = scanl1 f $ take n s
-
 
 nscanr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )

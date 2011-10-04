@@ -2,12 +2,11 @@
 -- the number of periods over which to compute the statistic (@n == 1@ computes
 -- it only over the current period).
 
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Copilot.Library.Statistics
     ( max, min, sum, mean, meanNow ) where
 
-
-import Prelude ( Num, (+), (/), Ord, Fractional, Integral
-               , fromIntegral, error, foldl1, ($), length )
 import Copilot.Language
 import Copilot.Language.Prelude
 import Copilot.Library.Utils
