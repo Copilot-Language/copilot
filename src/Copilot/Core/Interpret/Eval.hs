@@ -41,15 +41,15 @@ data ExecTrace = ExecTrace
 eval :: Int -> Env Name -> Spec -> ExecTrace
 eval k exts spec =
   let
-    strms = fmap (evalStream     exts strms) (specStreams   spec)
-    trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
-    obsvs = fmap (evalObserver k exts strms) (specObservers spec)
+    strms = map (evalStream     exts strms) (specStreams   spec)
+    trigs = map (evalTrigger  k exts strms) (specTriggers  spec)
+    obsvs = map (evalObserver k exts strms) (specObservers spec)
   in
     ExecTrace
       { interpTriggers  = M.fromList $
-          zip (fmap triggerName  (specTriggers  spec)) trigs
+          zip (map triggerName  (specTriggers  spec)) trigs
       , interpObservers = M.fromList $
-          zip (fmap observerName (specObservers spec)) obsvs
+          zip (map observerName (specObservers spec)) obsvs
       }
 
 --------------------------------------------------------------------------------
