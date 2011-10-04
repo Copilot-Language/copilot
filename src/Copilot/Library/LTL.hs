@@ -16,13 +16,11 @@
 -- In particular, you cannot determine the "future" value of an external
 -- variable.  In general, the ptLTL library is probaby more useful.
 
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Copilot.Library.LTL
   ( next, eventually, always, until, release ) where
 
-
-import Prelude ( Bool, Integral
-               , fromIntegral
-               , (+), (-), foldl1 )
 import Copilot.Language
 import Copilot.Language.Prelude
 import Copilot.Library.Utils
