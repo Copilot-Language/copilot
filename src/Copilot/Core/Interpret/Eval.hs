@@ -4,7 +4,7 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Interpret.Eval
   ( Env
@@ -32,25 +32,50 @@ type Env k = [(k, DynamicF [] Type)]
 type Output = String
 
 data ExecTrace = ExecTrace
-  { interpTriggers  :: Map String [Maybe [Output]]
-  , interpObservers :: Map String [Output] }
+  { interpTriggers  :: Map String Maybe [Output]
+  , interpObservers :: Map String Output }
   deriving Show
 
 --------------------------------------------------------------------------------
 
-eval :: Int -> Env Name -> Spec -> ExecTrace
+data Vals = forall a. Vals 
+  { vals :: [a]
+  , Type :: a }
+
+eval :: Int -> Env Name -> Spec -> [ExecTrace]
 eval k exts spec =
-  let
-    strms = map             (evalStream     exts strms) (specStreams   spec)
-    trigs = strms `seq` map (evalTrigger  k exts strms) (specTriggers  spec)
-    obsvs = strms `seq` map (evalObserver k exts strms) (specObservers spec)
+  let inits = map streamBuffer (specStreams spec) in
+  eval_ k exts spec bufs 
+
+eval_ :: Int -> Env Name -> Spec -> [Vals] -> [ExecTrace]
+eval_ 0 _ _ _ = ExecTrace { interpTriggers  = M.empty
+                          , interpObservers = M.empty }
+eval k exts spec vals =
+  let strms = map (evalStream   exts vals ) (specStreams   spec)
+
+      trigs = map (evalTrigger  exts strms) (specTriggers  spec)
+      obsvs = map (evalObserver exts strms) (specObservers spec)
   in
     ExecTrace
       { interpTriggers  = M.fromList $
           zip (map triggerName  (specTriggers  spec)) trigs
       , interpObservers = M.fromList $
           zip (map observerName (specObservers spec)) obsvs
-      }
+      } : eval (k-1) (tail exts)
+
+-- eval :: Int -> Env Name -> Spec -> ExecTrace
+-- eval k exts spec =
+--   let
+--     strms = map             (evalStream     exts strms) (specStreams   spec)
+--     trigs = strms `seq` map (evalTrigger  k exts strms) (specTriggers  spec)
+--     obsvs = strms `seq` map (evalObserver k exts strms) (specObservers spec)
+--   in
+--     ExecTrace
+--       { interpTriggers  = M.fromList $
+--           zip (map triggerName  (specTriggers  spec)) trigs
+--       , interpObservers = M.fromList $
+--           zip (map observerName (specObservers spec)) obsvs
+--       }
 
 --------------------------------------------------------------------------------
 
