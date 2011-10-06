@@ -32,36 +32,34 @@ type Env k = [(k, DynamicF [] Type)]
 type Output = String
 
 data ExecTrace = ExecTrace
-  { interpTriggers  :: Map String Maybe [Output]
+  { interpTriggers  :: Map String (Maybe [Output])
   , interpObservers :: Map String Output }
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Vals = forall a. Vals 
-  { vals :: [a]
-  , Type :: a }
+  { vals :: [a] }
 
 eval :: Int -> Env Name -> Spec -> [ExecTrace]
 eval k exts spec =
   let inits = map streamBuffer (specStreams spec) in
-  eval_ k exts spec bufs 
+  eval_ k exts spec inits
 
 eval_ :: Int -> Env Name -> Spec -> [Vals] -> [ExecTrace]
-eval_ 0 _ _ _ = ExecTrace { interpTriggers  = M.empty
-                          , interpObservers = M.empty }
-eval k exts spec vals =
-  let strms = map (evalStream   exts vals ) (specStreams   spec)
+eval_ 0 _ _ _ = []
+eval_ k exts spec vals = undefined
+  -- let strms = map (evalStream exts vals) (specStreams spec) in
 
-      trigs = map (evalTrigger  exts strms) (specTriggers  spec)
-      obsvs = map (evalObserver exts strms) (specObservers spec)
-  in
-    ExecTrace
-      { interpTriggers  = M.fromList $
-          zip (map triggerName  (specTriggers  spec)) trigs
-      , interpObservers = M.fromList $
-          zip (map observerName (specObservers spec)) obsvs
-      } : eval (k-1) (tail exts)
+  --     trigs = map (evalTrigger  exts strms) (specTriggers  spec)
+  --     obsvs = map (evalObserver exts strms) (specObservers spec)
+  -- in 
+  --   ExecTrace
+  --     { interpTriggers  = M.fromList $
+  --         zip (map triggerName  (specTriggers  spec)) trigs
+  --     , interpObservers = M.fromList $
+  --         zip (map observerName (specObservers spec)) obsvs
+  --     } : eval (k-1) (tail exts)
 
 -- eval :: Int -> Env Name -> Spec -> ExecTrace
 -- eval k exts spec =
