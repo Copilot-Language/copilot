@@ -4,7 +4,7 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, BangPatterns #-}
 
 module Copilot.Core.Interpret.Eval
   ( Env
@@ -106,16 +106,19 @@ evalExpr_ k e0 exts locs strms = case e0 of
     error "External functions aren't supported in the interpreter"
   Op1 op e1              -> 
     let ev1 = evalExpr_ k e1 exts locs strms in 
-    ev1 `seq` (evalOp1 op) ev1
+    let op1 = evalOp1 op                     in
+    ev1 `seq` op1 `seq` op1 ev1               
   Op2 op e1 e2           -> 
     let ev1 = evalExpr_ k e1 exts locs strms in 
     let ev2 = evalExpr_ k e2 exts locs strms in 
-    ev1 `seq` ev2 `seq` (evalOp2 op) ev1 ev2
+    let op2 = evalOp2 op                     in
+    ev1 `seq` ev2 `seq` op2 `seq` op2 ev1 ev2
   Op3 op e1 e2 e3        -> 
     let ev1 = evalExpr_ k e1 exts locs strms in 
     let ev2 = evalExpr_ k e2 exts locs strms in 
     let ev3 = evalExpr_ k e3 exts locs strms in 
-    ev1 `seq` ev2 `seq` ev3 `seq` (evalOp3 op) ev1 ev2 ev3
+    let op3 = evalOp3 op                     in
+    ev1 `seq` ev2 `seq` ev3 `seq` op3 `seq` op3 ev1 ev2 ev3
 
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
 evalExtern k t name exts =
@@ -174,8 +177,8 @@ evalOp2 op = case op of
   BwAnd _      -> (.&.)
   BwOr  _      -> (.|.)
   BwXor _      -> (xor)
-  BwShiftL _ _ -> ( \ a b -> shiftL a $ fromIntegral b )
-  BwShiftR _ _ -> ( \ a b -> shiftR a $ fromIntegral b )
+  BwShiftL _ _ -> ( \ !a !b -> shiftL a $! fromIntegral b )
+  BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = error "divide by zero"
@@ -184,7 +187,7 @@ catchZero f x y = f x y
 --------------------------------------------------------------------------------
 
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
-evalOp3 (Mux _) = \ v x y -> if v then x else y
+evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
 
 --------------------------------------------------------------------------------
 
@@ -215,7 +218,7 @@ evalTrigger k exts strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
-    } = take k $ map tag (zip bs vs)
+    } = map tag (zip bs vs)
 
   where
   tag :: (Bool, a) -> Maybe a
@@ -238,7 +241,7 @@ evalObserver k exts strms
   Observer
     { observerExpr     = e
     , observerExprType = t }
-  = take k $ map (showWithType t) (evalExprs_ k e exts strms)
+  = map (showWithType t) (evalExprs_ k e exts strms)
 
 --------------------------------------------------------------------------------
 
