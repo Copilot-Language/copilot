@@ -39,75 +39,52 @@ data ExecTrace = ExecTrace
 
 --------------------------------------------------------------------------------
 
--- eval :: Int -> Env Name -> Spec -> ExecTrace
--- eval k exts spec =
---   let
---     strms = fmap (evalStream     exts strms) (specStreams   spec)
---     trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
---     obsvs = fmap (evalObserver k exts strms) (specObservers spec)
---   in
---     ExecTrace
---       { interpTriggers  = M.fromList $
---           zip (fmap triggerName  (specTriggers  spec)) trigs
---       , interpObservers = M.fromList $
---           zip (fmap observerName (specObservers spec)) obsvs
---       }
+{-
+eval :: Int -> Env Name -> Spec -> ExecTrace
+eval k exts spec =
+  let
+    strms = fmap (evalStream     exts strms) (specStreams   spec)
+    trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
+    obsvs = fmap (evalObserver k exts strms) (specObservers spec)
+  in
+    ExecTrace
+      { interpTriggers  = M.fromList $
+          zip (fmap triggerName  (specTriggers  spec)) trigs
+      , interpObservers = M.fromList $
+          zip (fmap observerName (specObservers spec)) obsvs
+      }
+-}
 
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
 eval :: Int -> Env Name -> Spec -> ExecTrace
-eval k exts spec =
+eval k exts' spec =
+  let exts  = take k $ reverse exts'                          in
+
   let initStrm Stream { streamId       = id
                       , streamBuffer   = buffer
                       , streamExprType = t } =
-        (id, toDynF t buffer)                                 in
+        (id, toDynF t (reverse buffer))                       in
 
   let initStrms = map initStrm (specStreams spec)             in
 
   let strms = evalStreams k exts (specStreams spec) initStrms in
 
-  let trigs = strms `seq` map (evalTrigger  k exts strms) 
-                              (specTriggers  spec)            in
+  let trigs = map (evalTrigger  k exts strms) 
+                  (specTriggers  spec)                        in
 
-  let obsvs = strms `seq` map (evalObserver k exts strms) 
-                              (specObservers spec)            in 
-  ExecTrace
-    { interpTriggers  = M.fromList $
-        zip (fmap triggerName  (specTriggers  spec)) trigs
-    , interpObservers = M.fromList $
-        zip (fmap observerName (specObservers spec)) obsvs
-    }
+  let obsvs = map (evalObserver k exts strms) 
+                  (specObservers spec)                        in 
+
+  strms `seq` ExecTrace
+                { interpTriggers  = M.fromList $
+                    zip (map triggerName  (specTriggers  spec)) trigs
+                , interpObservers = M.fromList $
+                    zip (map observerName (specObservers spec)) obsvs
+                }
 
 --------------------------------------------------------------------------------
-
--- evalExpr_ :: Expr a -> Env Name -> Env Name -> Env Id -> [a]
--- evalExpr_ e0 exts locs strms = case e0 of
---   Const _ x              -> x `seq` repeat x
---   Drop t i id            -> 
---     let Just xs = lookup id strms >>= fromDynF t
---     in  P.drop (fromIntegral i) xs
---   Local t1 _  name e1 e2 -> 
---     let xs    = evalExpr_ e1 exts locs strms
---         locs' = (name, toDynF t1 xs) : locs
---     in  evalExpr_ e2 exts locs' strms
---   Var t name             -> 
---     let Just xs = lookup name locs >>= fromDynF t
---     in  xs
---   ExternVar t name       -> evalExtern t name exts
---   ExternArray _ _ _ _ _    ->
---     error "External arrays aren't supported in the interpreter"
---   ExternFun _ _ _ _      ->
---     error "External functions aren't supported in the interpreter"
---   Op1 op e1              -> map (evalOp1 op)
---                                 (evalExpr_ e1 exts locs strms)
---   Op2 op e1 e2           -> map (\(a,b) -> (evalOp2 op) a b) $ 
---                                 zip (evalExpr_ e1 exts locs strms)
---                                     (evalExpr_ e2 exts locs strms)
---   Op3 op e1 e2 e3        -> map (\(a,b,c) -> (evalOp3 op) a b c) $
---                                 zip3 (evalExpr_ e1 exts locs strms)
---                                      (evalExpr_ e2 exts locs strms)
---                                      (evalExpr_ e3 exts locs strms)
 
 type LocalEnv = [(Name, Dynamic Type)]
 
@@ -116,34 +93,30 @@ evalExpr_ k e0 exts locs strms = case e0 of
   Const _ x              -> x 
   Drop t i id            -> 
     let Just xs = lookup id strms >>= fromDynF t in
-    xs !! (fromIntegral i + k)
+    reverse xs !! (fromIntegral i + k)
   Local t1 _ name e1 e2 -> 
     let x     = evalExpr_ k e1 exts locs strms in
     let locs' = (name, toDyn t1 x) : locs  in
-    evalExpr_ k e2 exts locs' strms
+    x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
   Var t name             -> fromJust $ lookup name locs >>= fromDyn t
   ExternVar t name       -> evalExtern k t name exts
   ExternArray _ _ _ _ _  ->
     error "External arrays aren't supported in the interpreter"
   ExternFun _ _ _ _      ->
     error "External functions aren't supported in the interpreter"
-  Op1 op e1              -> (evalOp1 op) (evalExpr_ k e1 exts locs strms)
-  Op2 op e1 e2           -> (evalOp2 op) 
-                              (evalExpr_ k e1 exts locs strms)
-                              (evalExpr_ k e2 exts locs strms)
-  Op3 op e1 e2 e3        -> (evalOp3 op)
-                              (evalExpr_ k e1 exts locs strms)
-                              (evalExpr_ k e2 exts locs strms)
-                              (evalExpr_ k e3 exts locs strms)
+  Op1 op e1              -> 
+    let ev1 = evalExpr_ k e1 exts locs strms in 
+    ev1 `seq` (evalOp1 op) ev1
+  Op2 op e1 e2           -> 
+    let ev1 = evalExpr_ k e1 exts locs strms in 
+    let ev2 = evalExpr_ k e2 exts locs strms in 
+    ev1 `seq` ev2 `seq` (evalOp2 op) ev1 ev2
+  Op3 op e1 e2 e3        -> 
+    let ev1 = evalExpr_ k e1 exts locs strms in 
+    let ev2 = evalExpr_ k e2 exts locs strms in 
+    let ev3 = evalExpr_ k e3 exts locs strms in 
+    ev1 `seq` ev2 `seq` ev3 `seq` (evalOp3 op) ev1 ev2 ev3
 
--- evalExtern :: Type a -> Name -> Env Name -> [a]
--- evalExtern t name exts =
---   case lookup name exts of
---     Nothing -> error $ "Undefined external variable: " ++ name
---     Just dyn ->
---       case fromDynF t dyn of
---         Nothing -> error $ "Ill-typed external variable: " ++ name
---         Just xs -> xs
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
 evalExtern k t name exts =
   case lookup name exts of
@@ -215,58 +188,28 @@ evalOp3 (Mux _) = \ v x y -> if v then x else y
 
 --------------------------------------------------------------------------------
 
--- evalStream :: Env Name -> Env Id -> Stream -> (Int, DynamicF [] Type)
--- evalStream exts strms
---   Stream
---     { streamId       = id
---     , streamBuffer   = buffer
---     , streamExpr     = e
---     , streamExprType = t
---     } = (id, toDynF t xs)
-
---   where
-
---   xs = buffer ++ evalExpr_ e exts [] strms
-
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
-evalStreams_ :: Int -> Env Name -> [Stream] -> Env Id -> Env Id
-evalStreams_ 0 _    _         strms = strms
-evalStreams k exts specStrms strms = 
-  evalStreams (k-1) exts specStrms strms_ 
+evalStreams :: Int -> Env Name -> [Stream] -> Env Id -> Env Id
+evalStreams top exts specStrms initStrms = 
+  evalStreams_ 0 initStrms 
   where 
-  strms_ = map evalStream specStrms
-  evalStream Stream { streamId       = id
-                    , streamBuffer   = buffer
-                    , streamExpr     = e
-                    , streamExprType = t } =
-    let xs = fromJust $ (lookup id strms >>= fromDynF t) in
-    (id, toDynF t (xs ++ [x]))
-    where x = evalExpr_ k e exts [] strms
+  evalStreams_ :: Int -> Env Id -> Env Id
+  evalStreams_ k strms | k == top  = strms
+  evalStreams_ k strms | otherwise = 
+    evalStreams_ (k+1) $! strms_ 
+    where 
+    strms_ = map evalStream specStrms
+    evalStream Stream { streamId       = id
+                      , streamExpr     = e
+                      , streamExprType = t } =
+      let xs = fromJust $ lookup id strms >>= fromDynF t       in
+      let x  = evalExpr_ k e exts [] strms                     in
+      let ls = x `seq` (x:xs)                                  in
+      (id, toDynF t ls)
 
 --------------------------------------------------------------------------------
 
--- evalTrigger :: Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]
--- evalTrigger k exts strms
---   Trigger
---     { triggerGuard = e
---     , triggerArgs  = args
---     } = take k $ map tag (zip bs vs)
-
---   where
---   tag :: (Bool, a) -> Maybe a
---   tag (True,  x) = Just x
---   tag (False, _) = Nothing
-
---   bs :: [Bool]
---   bs = evalExpr_ e exts [] strms
-
---   vs :: [[Output]]
---   vs = transpose $ map evalUExpr args
-
---   evalUExpr :: UExpr -> [Output]
---   evalUExpr (UExpr t e1) =
---     map (showWithType t) (evalExpr_ e1 exts [] strms)
 evalTrigger :: Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]
 evalTrigger k exts strms
   Trigger
@@ -290,14 +233,6 @@ evalTrigger k exts strms
     map (showWithType t) (evalExprs_ k e1 exts strms)
 
 --------------------------------------------------------------------------------
-
-
--- evalObserver :: Int -> Env Name -> Env Id -> Observer -> [Output]
--- evalObserver k exts strms
---   Observer
---     { observerExpr     = e
---     , observerExprType = t }
---   = take k $ map (showWithType t) (evalExpr_ e exts [] strms)
 evalObserver :: Int -> Env Name -> Env Id -> Observer -> [Output]
 evalObserver k exts strms
   Observer
