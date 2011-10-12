@@ -10,7 +10,7 @@ module Main (main) where
 import Copilot.Core.PrettyPrint (prettyPrint)
 import Copilot.Core.Random (randomSpec)
 import Copilot.Core.Random.Weights (Weights (..), simpleWeights)
-import Copilot.Compile.C99.Test (testCompilerAgainstInterpreter)
+import Copilot.Compile.C99.Test.CheckSpec (checkSpec)
 import Prelude
 import System.Random
 
@@ -25,16 +25,14 @@ myWeights =
     , numStreams   = 3 }
 
 testRandomSpec :: IO Bool
-testRandomSpec =
-  do
-    g <- newStdGen
-    let spec = randomSpec myWeights g
-    putStrLn $ prettyPrint spec
-    testCompilerAgainstInterpreter 10 spec
+testRandomSpec = do
+  g <- newStdGen
+  let spec = randomSpec myWeights g
+  putStrLn $ prettyPrint spec
+  checkSpec 10 spec
 
 main :: IO ()
-main =
-  do
-    v <- testRandomSpec
-    print v
-    return ()
+main = do
+  v <- testRandomSpec
+  print v
+  return ()

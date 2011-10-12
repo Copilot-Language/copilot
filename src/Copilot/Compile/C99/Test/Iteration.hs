@@ -18,7 +18,10 @@ import Data.Maybe (isJust, fromJust)
 newtype Iteration =
   Iteration
     { iterationOutputs :: (Map String [Output]) }
-  deriving (Show, Eq)
+  deriving Eq
+
+instance Show Iteration where
+  show Iteration { iterationOutputs = io } = show $ M.toList io
 
 execTraceToIterations :: ExecTrace -> [Iteration]
 execTraceToIterations = unfoldr step
@@ -27,13 +30,10 @@ execTraceToIterations = unfoldr step
 
   step :: ExecTrace -> Maybe (Iteration, ExecTrace)
   step trace@ExecTrace { interpTriggers  = trigs }
-
     | nullary   = Nothing
-
     | otherwise = Just (iteration, tails)
 
     where
-
     iteration :: Iteration
     iteration = Iteration $
       fmap fromJust

@@ -52,7 +52,7 @@ library
                           , Copilot.Compile.C99.Phases
                           , Copilot.Compile.C99.PrePostCode
                           , Copilot.Compile.C99.Queue
-                          , Copilot.Compile.C99.Test
+--                          , Copilot.Compile.C99.Test
                           , Copilot.Compile.C99.Witness                         
 
 -- executable CopilotC99Test

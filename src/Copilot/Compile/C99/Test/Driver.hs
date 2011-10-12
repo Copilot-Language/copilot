@@ -28,7 +28,7 @@ driver _ numIterations Spec { specTriggers = trigs } =
 
 ppHeader :: Doc
 ppHeader =
-  hcat $
+  vcat $
     [ text "#include <stdint.h>"
     , text "#include <stdio.h>"
     , text "#include \"copilot.h\""
@@ -36,12 +36,12 @@ ppHeader =
 
 ppMain :: Int -> Doc
 ppMain numIterations =
-  hcat $
+  vcat $
     [ text "int main(int argc, char const *argv[]) {"
     , text "  int i, k;"
-    , text "  k = " <> text (show numIterations) <> text ";"
+    , text "  k = " <> text (show $ numIterations + 1) <> text ";"
     , text "  for (i = 0; i < k; i++) {"
-    , text "    " <> it <+> it <+> it <+> it <+> it
+    , text "    " <> it 
     , text "    if (i < k-1) printf(\"#\\n\");"
     , text "  }"
     , text "  return 0;"

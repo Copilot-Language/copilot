@@ -6,10 +6,11 @@ module Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV) where
 
 import Copilot.Core.Interpret.Eval (Output)
 import Copilot.Compile.C99.Test.Iteration (Iteration (..))
+
+import Prelude as P
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
-import Prelude as P
 import Text.CSV.ByteString
 
 parseError :: a
@@ -26,7 +27,6 @@ iterationsFromCSV' :: CSV -> [Iteration]
 iterationsFromCSV' = map Iteration . go M.empty
 
   where
-
   go m []             = [m]
   go m (x:xs)
     | nextIteration x = m : go M.empty xs
@@ -45,38 +45,3 @@ triggerName = B.unpack . head
 
 triggerOutputs :: Record -> [Output]
 triggerOutputs = fmap B.unpack . tail
-
-{-
-
-readCSV :: ByteString -> ExecTrace
-readCSV = execTraceFromCSV . handleMaybe . parseCSV
-
-execTraceFromCSV :: CSV -> ExecTrace
-execTraceFromCSV = execTraceFromIterations . iterationsFromCSV
-
-execTraceFromIterations :: [Iteration] -> ExecTrace
-execTraceFromIterations is =
-  ExecTrace
-    { interpTriggers  = triggerOutputs
-    , interpObservers = M.empty }
-
-  where
-
-  triggerNames :: [String]
-  triggerNames = nub $ concat $ fmap M.keys $ map iterationOutputs $ is
-
-  initialTriggerOutputs :: Map String [Maybe [Output]]
-  initialTriggerOutputs = M.fromList $ zip triggerNames (repeat [])
-
-  triggerOutputs :: Map String [Maybe [Output]]
-  triggerOutputs = fmap reverse $ go initialTriggerOutputs is
-
-    where
-
-    go m []     = m
-    go m (i:is) = go (M.mapWithKey step m) is
-
-      where
-
-      step cs xs = M.lookup cs i : xs
--}

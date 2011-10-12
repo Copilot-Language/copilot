@@ -6,7 +6,6 @@
 
 module Copilot.Compile.C99.C2A
   ( c2aExpr
---  , c2aUExpr
   , c2aType
   ) where
 
@@ -25,9 +24,6 @@ import Prelude hiding (id)
 
 c2aExpr :: MetaTable -> C.Expr a -> A.E a
 c2aExpr meta e = c2aExpr_ e M.empty meta
-
---c2aUExpr :: MetaTable -> C.UExpr -> A.E a
---c2aUExpr meta (C.UExpr _ e) = c2aExpr meta e
 
 --------------------------------------------------------------------------------
 
