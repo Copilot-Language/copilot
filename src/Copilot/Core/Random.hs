@@ -68,7 +68,7 @@ genType = elements
   , WrapType (typeOf :: Type Word8)
   , WrapType (typeOf :: Type Word16)
   , WrapType (typeOf :: Type Word32)
-  , WrapType (typeOf :: Type Word64)
+  , WrapType (typeOf :: Type Word64) 
   , WrapType (typeOf :: Type Float)
   , WrapType (typeOf :: Type Double) ]
 

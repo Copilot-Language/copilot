@@ -11,7 +11,7 @@ module Copilot.Core.PrettyPrint
   ) where
 
 import Copilot.Core
-import Copilot.Core.Type.Show (showWithType)
+import Copilot.Core.Type.Show (showWithType, ShowType(..), showType)
 import Prelude hiding (id)
 import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
@@ -20,7 +20,7 @@ import Data.List (intersperse)
 
 ppExpr :: Expr a -> Doc
 ppExpr e0 = case e0 of
-  Const t x            -> text (showWithType t x)
+  Const t x            -> text (showWithType Haskell t x)
   Drop _ 0 id          -> text "stream" <+> text "s" <> int id
   Drop _ i id          -> text "drop" <+> text (show i) <+> text "s" <>
                           int id
@@ -105,10 +105,12 @@ ppStream
     , streamExpr     = e
     , streamExprType = t
     }
-      = text "stream: \"s" <> int id <> text "\""
+      = (parens . text . showType) t
+          <+> text "strm: \"s" <> int id <> text "\""
     <+> text "="
     <+> text ("["
-              ++ ( concat $ intersperse "," $ map (showWithType t) buffer )
+              ++ ( concat $ intersperse "," 
+                              $ map (showWithType Haskell t) buffer )
               ++ "]")
     <+> text "++"
     <+> ppExpr e

@@ -15,12 +15,14 @@ module Copilot.Core.Interpret.Eval
 
 import Copilot.Core
 import Copilot.Core.Type.Dynamic
-import Copilot.Core.Type.Show (showWithType)
+import Copilot.Core.Type.Show (showWithType, ShowType)
+
 import Data.List (transpose)
+import qualified Data.Map as M
 import Data.Map (Map)
 import Data.Maybe (fromJust)
-import qualified Data.Map as M
 import Data.Bits
+
 import Prelude hiding (id)
 import qualified Prelude as P
 
@@ -58,8 +60,8 @@ eval k exts spec =
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
-eval :: Int -> Env Name -> Spec -> ExecTrace
-eval k exts' spec =
+eval :: ShowType -> Int -> Env Name -> Spec -> ExecTrace
+eval showType k exts' spec =
   let exts  = take k $ reverse exts'                          in
 
   let initStrm Stream { streamId       = id
@@ -71,10 +73,10 @@ eval k exts' spec =
 
   let strms = evalStreams k exts (specStreams spec) initStrms in
 
-  let trigs = map (evalTrigger  k exts strms) 
-                  (specTriggers  spec)                        in
+  let trigs = map (evalTrigger showType k exts strms) 
+                  (specTriggers spec)                         in
 
-  let obsvs = map (evalObserver k exts strms) 
+  let obsvs = map (evalObserver showType k exts strms) 
                   (specObservers spec)                        in 
 
   strms `seq` ExecTrace
@@ -213,8 +215,9 @@ evalStreams top exts specStrms initStrms =
 
 --------------------------------------------------------------------------------
 
-evalTrigger :: Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]
-evalTrigger k exts strms
+evalTrigger :: 
+  ShowType -> Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]
+evalTrigger showType k exts strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
@@ -233,15 +236,15 @@ evalTrigger k exts strms
 
   evalUExpr :: UExpr -> [Output]
   evalUExpr (UExpr t e1) =
-    map (showWithType t) (evalExprs_ k e1 exts strms)
+    map (showWithType showType t) (evalExprs_ k e1 exts strms)
 
 --------------------------------------------------------------------------------
-evalObserver :: Int -> Env Name -> Env Id -> Observer -> [Output]
-evalObserver k exts strms
+evalObserver :: ShowType -> Int -> Env Name -> Env Id -> Observer -> [Output]
+evalObserver showType k exts strms
   Observer
     { observerExpr     = e
     , observerExprType = t }
-  = map (showWithType t) (evalExprs_ k e exts strms)
+  = map (showWithType showType t) (evalExprs_ k e exts strms)
 
 --------------------------------------------------------------------------------
 
