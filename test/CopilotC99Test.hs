@@ -3,7 +3,6 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RebindableSyntax #-}
 
 module Main (main) where
 
@@ -33,6 +32,12 @@ testRandomSpec = do
 
 main :: IO ()
 main = do
-  v <- testRandomSpec
-  print v
-  return ()
+  putStrLn "Enter the number of random specifications to test:"
+  i <- readLn :: IO Int
+  go i
+  where go 0 = putStrLn "No failures found."
+        go i = do b <- testRandomSpec
+                  if b then go (i-1)
+                    else do putStrLn "Inconsistency found!" 
+                            return ()
+
