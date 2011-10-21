@@ -16,7 +16,7 @@ import Prelude ()
 
 --------------------------------------------------------------------------------
 
-infixr 3 ++
+infixr 1 ++
 
 (++) :: Typed a => [a] -> Stream a -> Stream a
 (++) = (`Append` Nothing)
