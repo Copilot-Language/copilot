@@ -1,7 +1,8 @@
 module Copilot.Library.Utils
     ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
       nscanl, nscanr, nscanl1, nscanr1,
-      case', (!!), cycle ) where
+      case', (!!), cycle ) 
+where
 
 
 import Copilot.Language
@@ -81,6 +82,7 @@ case' predicates alternatives =
   in case'' predicates alternatives
 
 
+-- | Index.  WARNING: very expensive!  Consider using this only for very short lists.
 (!!) :: ( Typed a, Integral a )
         => [ Stream a ] -> Stream a -> Stream a
 ls !! n = let indices      = map
@@ -89,13 +91,13 @@ ls !! n = let indices      = map
               select [] _  = last ls
               select
                 ( i : is )
-                ( a : as ) = mux ( i == n ) a ( select is as )
-              select _  _  = undefined -- should not happen
+                ( x : xs ) = mux ( i == n ) x ( select is xs )
+                             -- should not happen
+              select _ []  = error "Error in (!!) defined in Utils.hs in copilot-libraries." 
           in if null ls then
                error "indexing the empty list with !! is not defined"
              else
                select indices ls
-
 
 cycle :: ( Typed a ) => [ a ] -> Stream a
 cycle ls = cycle'

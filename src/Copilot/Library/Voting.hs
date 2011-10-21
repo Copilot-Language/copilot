@@ -31,10 +31,11 @@ majority (x:xs) = majority' xs x 1
 majority' :: (P.Eq a, Typed a)
    => [Stream a] -> Stream a -> Stream Word32 -> Stream a
 majority' []     can _   = can
-majority' (x:xs) can cnt = 
-  local (if cnt == 0 then x else can) $ \ can' ->
-    local (if cnt == 0 || x == can then cnt+1 else cnt-1) $ \ cnt' ->
-      majority' xs can' cnt'
+majority' (x:xs) can cnt =
+  local (cnt == 0) $ \ zero -> 
+    local (if zero then x else can) $ \ can' ->
+      local (if zero || x == can then cnt+1 else cnt-1) $ \ cnt' ->
+        majority' xs can' cnt'
 
 --------------------------------------------------------------------------------
 
