@@ -50,7 +50,7 @@ showCompare s1 s2 =
 
 genCFiles :: Int -> Spec -> IO ()
 genCFiles numIterations spec = do
-  compile (defaultParams { prefix = Nothing }) spec
+  compile (defaultParams { prefix = Nothing, verbose = False }) spec
   TIO.writeFile "driver.c" (driver M.empty numIterations spec)
   return ()
 

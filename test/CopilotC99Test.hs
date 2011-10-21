@@ -27,6 +27,8 @@ testRandomSpec :: IO Bool
 testRandomSpec = do
   g <- newStdGen
   let spec = randomSpec myWeights g
+  putStrLn "------------------------------------------"
+  putStrLn "Specification to test:"
   putStrLn $ prettyPrint spec
   checkSpec 10 spec
 
@@ -37,7 +39,8 @@ main = do
   go i
   where go 0 = putStrLn "No failures found."
         go i = do b <- testRandomSpec
-                  if b then go (i-1)
+                  if b then do putStrLn "" 
+                               go (i-1)
                     else do putStrLn "Inconsistency found!" 
                             return ()
 
