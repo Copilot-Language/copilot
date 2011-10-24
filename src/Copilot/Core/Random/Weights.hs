@@ -63,5 +63,5 @@ simpleWeights = Weights
   , word16Freq   = 1
   , word32Freq   = 1
   , word64Freq   = 1
-  , floatFreq    = 0
-  , doubleFreq   = 0 }
+  , floatFreq    = 1
+  , doubleFreq   = 1 }

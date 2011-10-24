@@ -21,10 +21,12 @@ import Data.Word
 import Prelude hiding (id)
 import System.Random (StdGen)
 
+-- XXX
+import Debug.Trace 
 --------------------------------------------------------------------------------
 
 randomSpec :: Weights -> StdGen -> Spec
-randomSpec = runGen genSpec 0
+randomSpec = trace "XXXSTART" $ runGen genSpec 0
 
 --------------------------------------------------------------------------------
 
@@ -58,19 +60,19 @@ data StreamInfo = forall a . (Eq a, Ord a) => StreamInfo
 
 data WrapType = forall a . (Eq a, Ord a) => WrapType (Type a)
 
-genType :: Gen WrapType
-genType = elements
-  [ WrapType (typeOf :: Type Bool)
-  , WrapType (typeOf :: Type Int8)
-  , WrapType (typeOf :: Type Int16)
-  , WrapType (typeOf :: Type Int32)
-  , WrapType (typeOf :: Type Int64)
-  , WrapType (typeOf :: Type Word8)
-  , WrapType (typeOf :: Type Word16)
-  , WrapType (typeOf :: Type Word32)
-  , WrapType (typeOf :: Type Word64) 
-  , WrapType (typeOf :: Type Float)
-  , WrapType (typeOf :: Type Double) ]
+genType :: Weights -> Gen WrapType
+genType ws = freq
+  [ (boolFreq   ws, return $ WrapType (typeOf :: Type Bool  ))
+  , (int8Freq   ws, return $ WrapType (typeOf :: Type Int8  ))
+  , (int16Freq  ws, return $ WrapType (typeOf :: Type Int16 ))
+  , (int32Freq  ws, return $ WrapType (typeOf :: Type Int32 ))
+  , (int64Freq  ws, return $ WrapType (typeOf :: Type Int64 ))
+  , (word8Freq  ws, return $ WrapType (typeOf :: Type Word8 ))
+  , (word16Freq ws, return $ WrapType (typeOf :: Type Word16))
+  , (word32Freq ws, return $ WrapType (typeOf :: Type Word32))
+  , (word64Freq ws, return $ WrapType (typeOf :: Type Word64))
+  , (floatFreq  ws, return $ WrapType (typeOf :: Type Float ))
+  , (floatFreq  ws, return $ WrapType (typeOf :: Type Double)) ]
 
 genTypeFromStreamInfo's :: [StreamInfo] -> Gen WrapType
 genTypeFromStreamInfo's = elements . map (\ (StreamInfo _ t _) -> WrapType t)
@@ -87,13 +89,12 @@ genStreamInfo's =
     return (s0 : ss)
 
   where
-
   genStreamInfo :: Int -> Gen StreamInfo
   genStreamInfo id =
     do
       ws <- weights
       k  <- choose (1, maxBuffSize ws)
-      WrapType t <- genType
+      WrapType t <- genType ws
       return
         StreamInfo
           { streamInfoId         = id
@@ -165,12 +166,10 @@ genExpr ss t =
         , (op3Freq   ws, genOp3) ]
 
   where
-
   genConst =
     do
       x <- randomFromType t
       return $ E.Const t x
-
   genDrop =
     do
       s <- findStreamInfoWithMatchingType
@@ -178,7 +177,6 @@ genExpr ss t =
       return $ E.Drop t (fromIntegral k) (streamInfoId s)
 
     where
-
     findStreamInfoWithMatchingType =
       let
         p (StreamInfo _ t1 _) =

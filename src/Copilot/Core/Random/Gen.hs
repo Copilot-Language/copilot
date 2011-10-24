@@ -21,8 +21,12 @@ import Copilot.Core.Random.Weights
 import Copilot.Core.Type
 import System.Random (StdGen, Random, random, randomR, split)
 
+-- XXX
+import Debug.Trace 
 --------------------------------------------------------------------------------
 
+-- | @runGen@ takes a @Gen a@, a max depth of the expression, the weights, and
+-- the standard random generator.
 newtype Gen a = MkGen { runGen :: Depth -> Weights -> StdGen -> a }
 
 --------------------------------------------------------------------------------
@@ -32,12 +36,11 @@ instance Functor Gen where
 
 instance Monad Gen where
   return x = MkGen (\ _ _ _ -> x)
+
   MkGen m >>= k = MkGen $ \ d ws r ->
-    let
-      (r1, r2) = split r
-      MkGen m' = k (m d ws r1)
-     in
-      m' d ws r2
+    let (r1, r2) = split r       in
+    let MkGen m' = k (m d ws r1) in
+    m' d ws r2
 
 --------------------------------------------------------------------------------
 
@@ -67,8 +70,8 @@ randomFromType t =
     Word16 -> genBoundedIntegral
     Word32 -> genBoundedIntegral
     Word64 -> genBoundedIntegral
-    Float  -> genFractional
-    Double -> genFractional
+    Float  -> trace "XXXfloat" genFractional
+    Double -> trace "XXXdouble" genFractional
 
   where
 
@@ -103,12 +106,16 @@ oneOf :: [Gen a] -> Gen a
 oneOf [] = error "Copilot.Core.Spec.Random.Gen.oneof used with empty list"
 oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 
+-- | Takes a list of pairs (weight, Gen), and choose the Gen based on the
+-- weights.  To get the frequency of choosing a Gen, sum up all the weights, and
+-- choose c between 1 and the total.  Now recurse down the list, choosing an
+-- item only when c <= weight.  If not, subtract the current weight from c.
 freq :: [(Int, Gen a)] -> Gen a
 freq [] = error "Copilot.Core.Spec.Random.Gen.freq used with empty list"
 freq xs0 = choose (1, tot) >>= (`pick` xs0)
+
  where
   tot = sum (map fst xs0)
-
   pick n ((k,x):xs)
     | n <= k    = x
     | otherwise = pick (n-k) xs
