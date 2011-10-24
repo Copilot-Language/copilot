@@ -21,12 +21,10 @@ import Data.Word
 import Prelude hiding (id)
 import System.Random (StdGen)
 
--- XXX
-import Debug.Trace 
 --------------------------------------------------------------------------------
 
 randomSpec :: Weights -> StdGen -> Spec
-randomSpec = trace "XXXSTART" $ runGen genSpec 0
+randomSpec = runGen genSpec 0
 
 --------------------------------------------------------------------------------
 
@@ -214,9 +212,12 @@ genExpr ss t =
 
     where
 
-      intOrWord numWit integralWit = oneOf
-        [ genOp2Num ss t numWit
-        , genOp2Integral ss t integralWit ]
+      intOrWord numWit integralWit = do 
+        ws <- weights 
+        if divModFreq ws 
+          then oneOf $ num ++ [genOp2Integral ss t integralWit ]
+          else oneOf num
+        where num = [ genOp2Num ss t numWit ]
 
       floatOrDouble numWit = oneOf
         [ genOp2Num ss t numWit ]

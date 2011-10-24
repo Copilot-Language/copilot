@@ -21,8 +21,6 @@ import Copilot.Core.Random.Weights
 import Copilot.Core.Type
 import System.Random (StdGen, Random, random, randomR, split)
 
--- XXX
-import Debug.Trace 
 --------------------------------------------------------------------------------
 
 -- | @runGen@ takes a @Gen a@, a max depth of the expression, the weights, and
@@ -70,8 +68,8 @@ randomFromType t =
     Word16 -> genBoundedIntegral
     Word32 -> genBoundedIntegral
     Word64 -> genBoundedIntegral
-    Float  -> trace "XXXfloat" genFractional
-    Double -> trace "XXXdouble" genFractional
+    Float  -> genFractional
+    Double -> genFractional
 
   where
 
