@@ -21,7 +21,10 @@ myWeights =
     , maxTriggers  = 1
     , maxTrigArgs  = 1
     , maxObservers = 0
-    , numStreams   = 3 }
+    , numStreams   = 3 
+    , floatFreq    = 0
+    , doubleFreq   = 0 
+    }
 
 testRandomSpec :: IO Bool
 testRandomSpec = do
