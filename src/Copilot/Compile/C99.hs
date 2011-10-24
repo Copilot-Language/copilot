@@ -17,6 +17,7 @@ import Copilot.Compile.C99.PrePostCode (preCode, postCode)
 import qualified Copilot.Core as Core
 import Language.Atom (Atom)
 import qualified Language.Atom as Atom
+import Control.Monad (when)
 
 --------------------------------------------------------------------------------
 
@@ -24,7 +25,7 @@ compile :: Params -> Core.Spec -> IO ()
 compile params spec0 =
   do
     (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
-    putStrLn $ Atom.reportSchedule schedule
+    when (verbose params) $ putStrLn (Atom.reportSchedule schedule)
     genC99Header (prefix params) "." spec
 
   where

@@ -30,6 +30,7 @@ ppHeader :: Doc
 ppHeader =
   vcat $
     [ text "#include <stdint.h>"
+    , text "#include <inttypes.h>"
     , text "#include <stdio.h>"
     , text "#include \"copilot.h\""
     ]
@@ -80,7 +81,7 @@ ppPrintf name args =
   text name <>
   text "," <>
   ppFormats args <>
-  text "\\n\"," <+>
+  text "\"\\n\"," <+>
   ppArgs args <>
   text ")"
 
@@ -88,6 +89,7 @@ ppFormats :: [UExpr] -> Doc
 ppFormats
   = vcat
   . intersperse (text ",")
+  . map (text "%\"" <>)
   . map ppFormat
 
 ppPars :: [UExpr] -> Doc
@@ -138,17 +140,17 @@ ppFormat :: UExpr -> Doc
 ppFormat
   UExpr { uExprType = t } =
   text $ case t of
-    Bool   -> "%d"
-    Int8   -> "%d"
-    Int16  -> "%d"
-    Int32  -> "%d"
-    Int64  -> "%lld"
-    Word8  -> "%d"
-    Word16 -> "%d"
-    Word32 -> "%d"
-    Word64 -> "%lld"
-    Float  -> "%f"
-    Double -> "%lf"
+    Bool   -> "PRIu8"
+    Int8   -> "PRIi8"
+    Int16  -> "PRIi16"
+    Int32  -> "PRIi32"
+    Int64  -> "PRIi64"
+    Word8  -> "PRIu8"
+    Word16 -> "PRIu16"
+    Word32 -> "PRIu32"
+    Word64 -> "PRIu64"
+    Float  -> "\"f\""
+    Double -> "\"lf\""
 
 --ppExterns :: 
 --ppExterns = undefined

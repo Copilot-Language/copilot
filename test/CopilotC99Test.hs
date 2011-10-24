@@ -24,6 +24,7 @@ myWeights =
     , numStreams   = 3 
     , floatFreq    = 0
     , doubleFreq   = 0 
+    , divModFreq   = False
     }
 
 testRandomSpec :: IO Bool
