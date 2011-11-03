@@ -9,7 +9,7 @@ module Copilot.Core.Interpret.Render
   , renderAsCSV
   ) where
 
-import Data.List (intersperse, transpose)
+import Data.List (intersperse, transpose, foldl')
 import Data.Maybe (catMaybes)
 import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import qualified Data.Map as M
@@ -60,17 +60,21 @@ unfold r =
     (cs, Just r') -> cs $$ unfold r'
 
 step :: ExecTrace -> (Doc, Maybe ExecTrace)
-step
-  ExecTrace
-    { interpTriggers  = trigs
-    , interpObservers = obsvs
-    } = (foldr ($$) empty (text "#" : ppTriggerOutputs), tails)
+step ExecTrace
+       { interpTriggers  = trigs
+       , interpObservers = obsvs
+       } = 
+  (foldl' ($$) empty (text "#" : ppTriggerOutputs), tails)
 
   where
 
   ppTriggerOutputs :: [Doc]
   ppTriggerOutputs =
-    catMaybes . fmap ppTriggerOutput . M.assocs . fmap head $ trigs
+      catMaybes 
+    . fmap ppTriggerOutput 
+    . M.assocs 
+    . fmap head 
+    $ trigs
 
   ppTriggerOutput :: (String, Maybe [Output]) -> Maybe Doc
   ppTriggerOutput (_,  Nothing) = Nothing

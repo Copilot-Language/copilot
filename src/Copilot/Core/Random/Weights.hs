@@ -39,7 +39,7 @@ data Weights = Weights
   , divModFreq   :: Bool }
 
 simpleWeights :: Weights
-simpleWeights = Weights
+simpleWeights = Weights 
   { maxExprDepth = 10
   , maxBuffSize  = 8
   , maxTriggers  = 5

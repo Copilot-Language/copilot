@@ -198,7 +198,9 @@ genExpr ss t =
     Double -> genOp1Num  ss t
 
   genOp2 = incDepth $ case t of
-    Bool    -> oneOf [genOp2Bool ss, genOp2Eq ss, genOp2Ord ss]
+-- XXX 
+--    Bool    -> oneOf [genOp2Bool ss, genOp2Eq ss, genOp2Ord ss]
+    Bool    -> oneOf [genOp2Bool ss, genOp2Eq ss]
     Int8    -> intOrWord NumWit IntegralWit
     Int16   -> intOrWord NumWit IntegralWit
     Int32   -> intOrWord NumWit IntegralWit
@@ -256,6 +258,8 @@ genOp2Eq ss =
     opw <- elements [E.Eq t, E.Ne t]
     return $ E.Op2 opw ew1 ew2
 
+-- XXX
+-- Figure out how to ensure t comes from a Numeric Class
 genOp2Ord :: [StreamInfo] -> Gen (E.Expr Bool)
 genOp2Ord ss =
   do

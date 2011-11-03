@@ -18,12 +18,16 @@ import Data.List (intersperse)
 
 --------------------------------------------------------------------------------
 
+strmName :: Int -> Doc
+strmName id = text "strm" <> text "s" <> int id
+
+--------------------------------------------------------------------------------
+
 ppExpr :: Expr a -> Doc
 ppExpr e0 = case e0 of
   Const t x            -> text (showWithType Haskell t x)
-  Drop _ 0 id          -> text "stream" <+> text "s" <> int id
-  Drop _ i id          -> text "drop" <+> text (show i) <+> text "s" <>
-                          int id
+  Drop _ 0 id          -> strmName id
+  Drop _ i id          -> text "drop" <+> text (show i) <+> strmName id
   ExternVar _ name     -> text "extern \"" <> text name <> text "\""
   Local _ _ name e1 e2 -> text "local \"" <> text name <> text "\" ="
                                     <+> ppExpr e1 $$ text "in" <+> ppExpr e2
@@ -123,7 +127,7 @@ ppTrigger
     { triggerName  = name
     , triggerGuard = e
     , triggerArgs  = args }
-  =   text "trigger: \"" <> text name <> text "\""
+  =   text "trigger" <+> text "\"" <> text name <> text "\""
   <+> text "="
   <+> ppExpr e
   $$  nest 2 (foldr (($$) . ppUExpr) empty argsAndNum)

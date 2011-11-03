@@ -41,7 +41,7 @@ showType :: Type a -> String
 showType t =
   case t of
     Bool   -> "Bool"
-    Int8   -> "ShowWit"
+    Int8   -> "Int8"
     Int16  -> "Int16"
     Int32  -> "Int32"
     Int64  -> "Int64"
@@ -66,7 +66,9 @@ showWithType showT t x =
     C         -> case t of
                    Bool -> if x then "1" else "0"
                    _    -> sw
-    Haskell   -> sw
+    Haskell   -> case t of
+                   Bool -> if x then "true" else "false"
+                   _    -> sw                   
   where
   sw = case showWit t of
          ShowWit -> show x
