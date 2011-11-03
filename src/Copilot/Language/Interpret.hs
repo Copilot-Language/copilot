@@ -6,8 +6,8 @@
 
 module Copilot.Language.Interpret
   ( Input
-  , interpret
-  , prettyInterpret 
+  , csv
+  , interpret 
   , input
   ) where
 
@@ -23,12 +23,14 @@ data Input where
 input :: Typed a => String -> [a] -> Input
 input = Input
 
-interpret :: Integer -> [Input] -> Spec -> IO ()
-interpret = interpret' I.CSV 
+csv :: Integer -> [Input] -> Spec -> IO ()
+csv i input_ spec = do
+  putStrLn "Note: CSV does not output observers."
+  interpret' I.CSV i input_ spec
 
 -- | Much slower, but pretty-printed interpreter output.  
-prettyInterpret :: Integer -> [Input] -> Spec -> IO ()
-prettyInterpret = interpret' I.Table
+interpret :: Integer -> [Input] -> Spec -> IO ()
+interpret = interpret' I.Table
 
 interpret' :: I.Format -> Integer -> [Input] -> Spec -> IO ()
 interpret' format i inputs spec = do
