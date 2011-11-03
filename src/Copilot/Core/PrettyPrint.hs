@@ -19,7 +19,7 @@ import Data.List (intersperse)
 --------------------------------------------------------------------------------
 
 strmName :: Int -> Doc
-strmName id = text "strm" <> text "s" <> int id
+strmName id = text "s" <> int id
 
 --------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ ppStream
     , streamExprType = t
     }
       = (parens . text . showType) t
-          <+> text "strm: \"s" <> int id <> text "\""
+          <+> strmName id 
     <+> text "="
     <+> text ("["
               ++ ( concat $ intersperse "," 
@@ -130,18 +130,14 @@ ppTrigger
   =   text "trigger" <+> text "\"" <> text name <> text "\""
   <+> text "="
   <+> ppExpr e
-  $$  nest 2 (foldr (($$) . ppUExpr) empty argsAndNum)
+  <+> lbrack
+  $$  (nest 2 $ vcat (punctuate comma $ 
+                          map (\a -> text "arg" <+> ppUExpr a) args))
+  $$  nest 2 rbrack
 
   where
-
-  argsAndNum :: [(UExpr, Int)]
-  argsAndNum = zip args [0..]
-
-  ppUExpr :: (UExpr, Int) -> Doc
-  ppUExpr (UExpr _ e1, k)
-    =   text "arg: " <> int k
-    <+> text "="
-    <+> ppExpr e1
+  ppUExpr :: UExpr -> Doc
+  ppUExpr (UExpr _ e_) = ppExpr e_
 
 --------------------------------------------------------------------------------
 
@@ -150,7 +146,7 @@ ppObserver
   Observer
     { observerName     = name
     , observerExpr     = e }
-  =   text "observer: \"" <> text name <> text "\""
+  =   text "observer \"" <> text name <> text "\""
   <+> text "="
   <+> ppExpr e
 

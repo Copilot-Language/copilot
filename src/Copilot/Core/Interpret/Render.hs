@@ -62,9 +62,9 @@ unfold r =
 step :: ExecTrace -> (Doc, Maybe ExecTrace)
 step ExecTrace
        { interpTriggers  = trigs
-       , interpObservers = obsvs
        } = 
-  (foldl' ($$) empty (text "#" : ppTriggerOutputs), tails)
+  if M.null trigs then (empty, Nothing)
+    else (foldl' ($$) empty (text "#" : ppTriggerOutputs), tails)
 
   where
 
@@ -89,6 +89,7 @@ step ExecTrace
       else Just
         ExecTrace
           { interpTriggers  = fmap tail trigs
-          , interpObservers = obsvs }
+          , interpObservers = M.empty
+          }
 
 --------------------------------------------------------------------------------
