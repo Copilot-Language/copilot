@@ -49,10 +49,8 @@ test2 = copilotRegexpB
 
 
 spec = do
-   observer "test1" test1
-   observer "test2" test2
-   observer "reset" reset
+  observer "test1" test1
+  observer "test2" test2
+  observer "reset" reset
 
-
-test = do
-   interpret 15 [ input "e" e ] spec
+test = interpret 15 [ input "e" e ] spec
