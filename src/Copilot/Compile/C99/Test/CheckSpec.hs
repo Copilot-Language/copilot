@@ -19,7 +19,7 @@ import qualified Data.Map as M
 import qualified Data.Text.IO as TIO
 import System.Directory (removeFile)
 import System.Process (system, readProcess)
-import Control.Monad (when)
+import Control.Monad (when, unless)
 import Text.PrettyPrint (text, (<+>), ($$), render, vcat, hang)
 
 --------------------------------------------------------------------------------
@@ -30,12 +30,12 @@ checkSpec numIterations spec = do
   compileCFiles
   csv <- execute numIterations
   let is1 = iterationsFromCSV csv     
-  let is2 = interp numIterations spec 
-  putStrLn $ showCompare is1 is2
+  let is2 = interp numIterations spec
   -- print is1
   -- print "..."
   -- print is2
   let eq = is1 == is2
+  unless eq (putStrLn $ showCompare is1 is2)
   -- Keep things around if there's a failure
   when eq cleanUp
   return eq

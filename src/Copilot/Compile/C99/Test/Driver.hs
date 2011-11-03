@@ -41,7 +41,7 @@ ppMain numIterations =
     [ text "int main(int argc, char const *argv[]) {"
     , text "  int i, k;"
     , text "  k = " <> text (show $ numIterations + 1) <> text ";"
-    , text "  for (i = 0; i < k; i++) {"
+    , text "  for (i = 1; i < k; i++) {"
     , text "    " <> it 
     , text "    if (i < k-1) printf(\"#\\n\");"
     , text "  }"
