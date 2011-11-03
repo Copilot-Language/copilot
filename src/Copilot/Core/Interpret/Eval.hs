@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | An tagless interpreter for Copilot specifications.
+-- | A tagless interpreter for Copilot specifications.
 
 {-# LANGUAGE GADTs, BangPatterns #-}
 
@@ -35,7 +35,11 @@ type Env k = [(k, DynamicF [] Type)]
 type Output = String
 
 data ExecTrace = ExecTrace
+    -- map from trigger names to their maybe output, which is a list of strings
+    -- representing their valus.  (Nothing output if the guard for the trigger
+    -- is false).
   { interpTriggers  :: Map String [Maybe [Output]]
+    -- map from observer names to their outputs.  We also show observer outputs.
   , interpObservers :: Map String [Output] }
   deriving Show
 
@@ -221,7 +225,7 @@ evalTrigger showType k exts strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
-    } = map tag (zip bs vs)
+    } = take k $ map tag (zip bs vs) ++ repeat Nothing -- there might be 0 args!
 
   where
   tag :: (Bool, a) -> Maybe a
@@ -232,7 +236,7 @@ evalTrigger showType k exts strms
   bs = evalExprs_ k e exts strms
 
   vs :: [[Output]]
-  vs = transpose $ map evalUExpr args
+  vs = transpose $ map evalUExpr args 
 
   evalUExpr :: UExpr -> [Output]
   evalUExpr (UExpr t e1) =
