@@ -9,10 +9,9 @@
 module Main where
 
 import qualified Prelude as P
-import Copilot.Language
-import Copilot.Language.Prelude hiding (even, odd)
-import Copilot.Language.Reify (reify)
+import Language.Copilot hiding (even, odd)
 import Copilot.Compile.C99
+import qualified Copilot.Tools.CBMC as C
 --------------------------------------------------------------------------------
 
 --
@@ -56,10 +55,19 @@ bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
 sumExterns :: Stream Word64
 sumExterns =
   let
-    e1 = extern "e1"
-    e2 = extern "e2"
+    ex1 = extern "e1"
+    ex2 = extern "e2"
   in
-    e1 + e2
+    ex1 + ex2
+
+oddSpec :: Spec
+oddSpec = trigger "f" true [arg (odd nats)]
+
+prop :: Stream Bool
+prop = (x - x') <= 5 && (x - x') <= (-5)
+  where
+  x  = [0] ++ externI32 "x"
+  x' = drop 1 x
 
 --------------------------------------------------------------------------------
 
@@ -73,7 +81,7 @@ spec =
   do
 
     -- A trigger with four arguments:
-    trigger "f" true -- booleans
+    trigger "e" true -- booleans
       [ arg fib, arg nats, arg sumExterns, arg bitWise ]
 
     -- A trigger with two arguments:
@@ -112,7 +120,11 @@ main =
     putStrLn ""
     putStrLn ""
     putStrLn "Atom:"
-    r <- reify spec
-    compile defaultParams r 
+    reify spec >>= compile defaultParams 
+    putStrLn "Check equivalence:"
+    putStrLn ""
+    putStrLn ""
+    reify spec >>= 
+      C.genCBMC C.defaultParams {C.numIterations = 20}
 
 --------------------------------------------------------------------------------
