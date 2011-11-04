@@ -21,6 +21,11 @@ import Data.Bits
 
 --------------------------------------------------------------------------------
 
+badInst :: a
+badInst = C.impossible "witnesses" "copilot-c99"
+
+--------------------------------------------------------------------------------
+
 data ExprInst a = A.Expr a => ExprInst
 
 exprInst :: C.Type a -> ExprInst a
@@ -68,7 +73,7 @@ data OrdEInst a = A.OrdE a => OrdEInst
 ordEInst :: Ord a => C.Type a -> OrdEInst a
 ordEInst t =
   case t of
-    C.Bool   -> error "ordEInst!"
+    C.Bool   -> badInst 
     C.Int8   -> OrdEInst ; C.Int16  -> OrdEInst
     C.Int32  -> OrdEInst ; C.Int64  -> OrdEInst
     C.Word8  -> OrdEInst ; C.Word16 -> OrdEInst
@@ -82,7 +87,7 @@ data NumEInst a = A.NumE a => NumEInst
 numEInst :: Num a => C.Type a -> NumEInst a
 numEInst t =
   case t of
-    C.Bool   -> error "numEInst!" -- !! supress warning !!
+    C.Bool   -> badInst
     C.Int8   -> NumEInst ; C.Int16  -> NumEInst
     C.Int32  -> NumEInst ; C.Int64  -> NumEInst
     C.Word8  -> NumEInst ; C.Word16 -> NumEInst
@@ -96,13 +101,13 @@ data IntegralEInst a = A.IntegralE a => IntegralEInst
 integralEInst :: Integral a => C.Type a -> IntegralEInst a
 integralEInst t =
   case t of
-    C.Bool   -> error "integralEInst!" -- !! supress warning !!
+    C.Bool   -> badInst 
     C.Int8   -> IntegralEInst ; C.Int16  -> IntegralEInst
     C.Int32  -> IntegralEInst ; C.Int64  -> IntegralEInst
     C.Word8  -> IntegralEInst ; C.Word16 -> IntegralEInst
     C.Word32 -> IntegralEInst ; C.Word64 -> IntegralEInst
-    C.Float  -> error "integralEInst!" -- !! supress warning !!
-    C.Double -> error "integralEInst!" -- !! supress warning !!
+    C.Float  -> badInst
+    C.Double -> badInst 
 
 --------------------------------------------------------------------------------
 
@@ -113,7 +118,7 @@ floatingEInst t =
   case t of
     C.Float  -> FloatingEInst
     C.Double -> FloatingEInst
-    _          -> error "integralEInst!" -- !! supress warning !!
+    _          -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -122,7 +127,7 @@ data BitsEInst a = ( A.Expr a, A.OrdE a, A.EqE a, A.IntegralE a, Bits a ) => Bit
 bitsEInst :: Bits a => C.Type a -> BitsEInst a
 bitsEInst t =
   case t of
-    C.Bool   -> error "bitsEInst Bool!" -- !! supress warning !!
+    C.Bool   -> badInst
     C.Int8   -> BitsEInst
     C.Int16  -> BitsEInst
     C.Int32  -> BitsEInst
@@ -131,7 +136,7 @@ bitsEInst t =
     C.Word16 -> BitsEInst
     C.Word32 -> BitsEInst
     C.Word64 -> BitsEInst
-    C.Float  -> error "bitsEInst Float!" -- !! supress warning !!
-    C.Double -> error "bitsEInst Double!" -- !! supress warning !!
+    C.Float  -> badInst
+    C.Double -> badInst
 
 --------------------------------------------------------------------------------

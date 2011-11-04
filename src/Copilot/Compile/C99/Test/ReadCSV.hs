@@ -5,6 +5,7 @@
 module Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV) where
 
 import Copilot.Core.Interpret.Eval (Output)
+import Copilot.Core.Error (impossible)
 import Copilot.Compile.C99.Test.Iteration (Iteration (..))
 
 import Prelude as P
@@ -14,7 +15,7 @@ import qualified Data.Map as M
 import Text.CSV.ByteString
 
 parseError :: a
-parseError = error "Utilities.Parser.readCSV: parse error!"
+parseError = impossible "CSV parsing" "copilot-c99"
 
 iterationsFromCSV :: ByteString -> [Iteration]
 iterationsFromCSV = iterationsFromCSV' . handleMaybe . parseCSV

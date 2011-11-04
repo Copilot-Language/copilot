@@ -5,8 +5,8 @@
 module Copilot.Compile.C99.Params (Params (..), defaultParams, withPrefix) where
 
 data Params = Params
-  { prefix  :: Maybe String
-  , verbose :: Bool
+  { prefix  :: Maybe String -- An string to prefix the output with
+  , verbose :: Bool 
   }
 
 defaultParams :: Params
