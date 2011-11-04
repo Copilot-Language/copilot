@@ -18,6 +18,7 @@ module Copilot.Core.Random.Gen
   ) where
 
 import Copilot.Core.Random.Weights
+import Copilot.Core.Error
 import Copilot.Core.Type
 import System.Random (StdGen, Random, random, randomR, split)
 
@@ -101,7 +102,7 @@ choose rng =
     return $ fst (randomR rng g)
 
 oneOf :: [Gen a] -> Gen a
-oneOf [] = error "Copilot.Core.Spec.Random.Gen.oneof used with empty list"
+oneOf [] = impossible "oneof" "copilot-core" 
 oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 
 -- | Takes a list of pairs (weight, Gen), and choose the Gen based on the
@@ -109,7 +110,7 @@ oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 -- choose c between 1 and the total.  Now recurse down the list, choosing an
 -- item only when c <= weight.  If not, subtract the current weight from c.
 freq :: [(Int, Gen a)] -> Gen a
-freq [] = error "Copilot.Core.Spec.Random.Gen.freq used with empty list"
+freq [] = impossible "feq" "copilot-core" 
 freq xs0 = choose (1, tot) >>= (`pick` xs0)
 
  where
@@ -117,10 +118,10 @@ freq xs0 = choose (1, tot) >>= (`pick` xs0)
   pick n ((k,x):xs)
     | n <= k    = x
     | otherwise = pick (n-k) xs
-  pick _ _  = error "Copilot.Core.Spec.Random.Gen.pick used with empty list"
+  pick _ _  = impossible "pick" "copilot-core" 
 
 elements :: [a] -> Gen a
-elements [] = error "Copilot.Core.Spec.Random.Gen.elements used with empty list"
+elements [] = impossible "elements" "copilot-core" 
 elements xs = (xs !!) `fmap` choose (0, length xs - 1)
 
 --------------------------------------------------------------------------------

@@ -129,10 +129,10 @@ evalExpr_ k e0 exts locs strms = case e0 of
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
 evalExtern k t name exts =
   case lookup name exts of
-    Nothing -> error $ "Undefined external variable: " ++ name
+    Nothing -> impossible "evalExtern" "copilot-core" 
     Just dyn ->
       case fromDynF t dyn of
-        Nothing -> error $ "Ill-typed external variable: " ++ name
+        Nothing -> impossible "evalExtern-2" "copilot-core" 
         Just xs -> xs !! k
 
 --------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ evalOp2 op = case op of
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
-catchZero _ _ 0 = error "divide by zero"
+catchZero _ _ 0 = badUsage "divide by zero"
 catchZero f x y = f x y
 
 --------------------------------------------------------------------------------

@@ -46,6 +46,7 @@ library
 
     Copilot.Compile.Header.C99
     Copilot.Core
+    Copilot.Core.Error
     Copilot.Core.Expr
     Copilot.Core.External
     Copilot.Core.Interpret

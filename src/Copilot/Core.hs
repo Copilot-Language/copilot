@@ -23,7 +23,8 @@
 -- ("Copilot.Core.PrettyPrint").
 
 module Copilot.Core
-  ( module Copilot.Core.Expr
+  ( module Copilot.Core.Error
+  , module Copilot.Core.Expr
   , module Copilot.Core.External
   , module Copilot.Core.MakeTags
   , module Copilot.Core.Operators
@@ -34,6 +35,7 @@ module Copilot.Core
   , module Data.Word
   ) where
 
+import Copilot.Core.Error
 import Copilot.Core.Expr
 import Copilot.Core.External
 import Copilot.Core.MakeTags

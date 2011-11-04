@@ -260,18 +260,18 @@ genOp2Eq ss =
 
 -- XXX
 -- Figure out how to ensure t comes from a Numeric Class
-genOp2Ord :: [StreamInfo] -> Gen (E.Expr Bool)
-genOp2Ord ss =
-  do
-    WrapType t <- genTypeFromStreamInfo's ss
-    ew1 <- genExpr ss t
-    ew2 <- genExpr ss t
-    opw <- elements
-      [ (E.Lt t)
-      , (E.Gt t)
-      , (E.Le t)
-      , (E.Ge t) ]
-    return $ E.Op2 opw ew1 ew2
+-- genOp2Ord :: [StreamInfo] -> Gen (E.Expr Bool)
+-- genOp2Ord ss =
+--   do
+--     WrapType t <- genTypeFromStreamInfo's ss
+--     ew1 <- genExpr ss t
+--     ew2 <- genExpr ss t
+--     opw <- elements
+--       [ (E.Lt t)
+--       , (E.Gt t)
+--       , (E.Le t)
+--       , (E.Ge t) ]
+--     return $ E.Op2 opw ew1 ew2
 
 genOp2Num :: [StreamInfo] -> Type a -> NumWit a -> Gen (E.Expr a)
 genOp2Num ss t NumWit =

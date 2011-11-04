@@ -2,8 +2,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 -- | 
 
 {-# LANGUAGE ExistentialQuantification, GADTs, KindSignatures #-}
