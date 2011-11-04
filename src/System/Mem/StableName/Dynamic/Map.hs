@@ -23,6 +23,8 @@ import System.Mem.StableName.Dynamic
 import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap)
 
+import Copilot.Core.Error (impossible)
+
 newtype Map a = Map { getMap :: IntMap [(DynStableName, a)] } 
 
 empty :: Map a
@@ -78,7 +80,7 @@ lookup k (Map m) = do
 
 find :: DynStableName -> Map v -> v
 find k m = case lookup k m of
-    Nothing -> error "Map.find: element not in the map"
+    Nothing -> impossible "find" "copilot-language"
     Just x -> x 
 
 -- | /O(log n)/. The expression @('findWithDefault' def k map)@ returns

@@ -14,6 +14,7 @@ module Copilot.Language.Stream
   ) where
 
 import Copilot.Core (Typed, typeOf)
+import Copilot.Core.Error
 import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
 import qualified Prelude as P
@@ -90,8 +91,8 @@ instance Show (Stream a) where
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance P.Eq (Stream a) where
-  (==)        = error "'Prelude.(==)' isn't implemented for streams!"
-  (/=)        = error "'Prelude.(/=)' isn't implemented for streams!"
+  (==)        = badUsage "'Prelude.(==)' isn't implemented for streams!"
+  (/=)        = badUsage "'Prelude.(/=)' isn't implemented for streams!"
 
 --------------------------------------------------------------------------------
 

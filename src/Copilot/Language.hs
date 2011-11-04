@@ -8,6 +8,7 @@ module Copilot.Language
   ( module Data.Int
   , module Data.Word
   , module Copilot.Core
+  , module Copilot.Language.Error
   , module Copilot.Language.Interpret
   , module Copilot.Language.Operators.Boolean
   , module Copilot.Language.Operators.Constant
@@ -31,6 +32,7 @@ import Data.Int hiding (Int)
 import Data.Word
 import Copilot.Core (Name, Typed)
 import qualified Copilot.Core.PrettyPrint as PP
+import Copilot.Language.Error
 import Copilot.Language.Interpret
 import Copilot.Language.Operators.Boolean
 import Copilot.Language.Operators.Constant

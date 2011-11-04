@@ -11,7 +11,7 @@ module Copilot.Language.Reify
   ( reify
   ) where
 
-import Copilot.Core (Typed, Type, Id, typeOf)
+import Copilot.Core (Typed, Type, Id, typeOf, impossible)
 import qualified Copilot.Core as Core
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
@@ -128,7 +128,7 @@ mkExpr refMkId refStreams refMap = go
             do
               s <- mkStream refMkId refStreams refMap e1
               return $ Core.Drop typeOf (fromIntegral k) s
-          _ -> error "dfs: Drop"
+          _ -> impossible "mkExpr" "copilot-language"
 
       ------------------------------------------------------
 
