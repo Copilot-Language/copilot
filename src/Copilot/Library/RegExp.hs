@@ -15,7 +15,6 @@ import Control.Monad.State ( evalState, get, modify )
 
 import qualified Copilot.Language as C
 
-
 -- The symbols in a regular expression, "Any" is any value of type t
 -- (matches any symbol, the "point" character in a regular expression).
 data Sym t = Any | Sym t
@@ -188,17 +187,17 @@ opConcat   = return RConcat
 
 opSuffix   :: GenParser Char () ( RegExp t )
            -> GenParser Char () ( RegExp t )
-opSuffix r = do { subexp   <- r
-                ; suffixes <- many $ choice [ star, plus, qmark ]
-                ; let transform rexp suffix =
-                          case suffix of
-                            '*'   -> RStar   rexp
-                            '+'   -> RConcat rexp ( RStar rexp )
-                            '?'   -> ROr     rexp   REpsilon
-                            other -> error
-                                     $ "unhandled operator: " ++ show other
-                  in return $ foldl transform subexp suffixes
-                }
+opSuffix r = do 
+  subexp   <- r
+  suffixes <- many $ choice [ star, plus, qmark ]
+  let transform rexp suffix =
+          case suffix of
+            '*'   -> RStar   rexp
+            '+'   -> RConcat rexp ( RStar rexp )
+            '?'   -> ROr     rexp   REpsilon
+            other -> C.badUsage ("in Regular Expression library: " ++
+                               "unhandled operator: " ++ show other)
+  return $ foldl transform subexp suffixes
 
 parser :: ( SymbolParser t )
          => GenParser Char () ( RegExp t )
@@ -326,17 +325,16 @@ copilotRegexp :: ( C.Typed t, SymbolParser t, Eq t )
                  => C.Stream t -> SourceName -> C.Stream Bool -> C.Stream Bool
 copilotRegexp inStream rexp reset =
   case parse parser rexp rexp of
-    Left  err ->
-        error $ "parse error: " ++ show err
+    Left  err -> C.badUsage ("parsing regular exp: " ++ show err)
     Right rexp' -> let nrexp = enumSyms rexp' in
         if hasFinitePath nrexp then
-            error $
+            C.badUsage $
             concat [ "The regular expression contains a finite path "
                    , "which is something that will fail to match "
                    , "since we do not have a distinct end-of-input "
                    , "symbol on infinite streams." ]
         else if hasEpsilon nrexp then
-                 error $
+                 C.badUsage $
                  concat [ "The regular expression matches a language "
                         , "that contains epsilon. This cannot be handled "
                         , "on infinite streams, since we do not have "
@@ -358,9 +356,9 @@ regexp2CopilotNFAB rexp propositions reset =
                                              | i <- map ( fromJust . symbolNum ) ps ]
 
         lookup' a l = case lookup a l of
-                        Nothing -> error $ "boolean stream "
-                                           ++ a
-                                           ++ " is not defined"
+                        Nothing -> C.badUsage ("boolean stream "
+                                             ++ a
+                                             ++ " is not defined")
                         Just s  -> s
 
         matchesInput numSym        = case symbol numSym of
@@ -387,17 +385,16 @@ copilotRegexpB :: SourceName -> [ ( StreamName, C.Stream Bool ) ]
                   -> C.Stream Bool -> C.Stream Bool
 copilotRegexpB rexp propositions reset =
   case parse parser rexp rexp of
-    Left  err ->
-        error $ "parse error: " ++ show err
+    Left  err -> C.badUsage ("parsing regular exp: " ++ show err)
     Right rexp' -> let nrexp = enumSyms rexp' in
         if hasFinitePath nrexp then
-            error $
+            C.badUsage $
             concat [ "The regular expression contains a finite path "
                    , "which is something that will fail to match "
                    , "since we do not have a distinct end-of-input "
                    , "symbol on infinite streams." ]
         else if hasEpsilon nrexp then
-                 error $
+                 C.badUsage $
                  concat [ "The regular expression matches a language "
                         , "that contains epsilon. This cannot be handled "
                         , "on infinite streams, since we do not have "

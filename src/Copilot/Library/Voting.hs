@@ -25,7 +25,7 @@ import qualified Prelude as P
 --------------------------------------------------------------------------------
 
 majority :: (P.Eq a, Typed a) => [Stream a] -> Stream a
-majority []     = error "Copilot.Library.Voting.majority: empty list!"
+majority []     = badUsage "majority: empty list not allowed"
 majority (x:xs) = majority' xs x 1
 
 majority' :: (P.Eq a, Typed a)
@@ -40,7 +40,7 @@ majority' (x:xs) can cnt =
 --------------------------------------------------------------------------------
 
 aMajority :: (P.Eq a, Typed a) => [Stream a] -> Stream a -> Stream Bool
-aMajority [] _ = error "Copilot.Library.Voting.aMajority: empty list!"
+aMajority [] _ = badUsage "aMajority: empty list not allowed"
 aMajority xs can =
   let
     cnt = aMajority' 0 xs can

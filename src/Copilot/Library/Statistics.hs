@@ -32,6 +32,6 @@ mean n s = ( sum n s ) / ( fromIntegral n )
 
 -- | Mean value over the current set of streams passed in.
 meanNow :: ( Typed a, Integral a ) => [ Stream a ] -> Stream a
-meanNow [] = error
-    "Error in majority: list of arguments must be nonempty."
+meanNow [] = 
+  badUsage "list of arguments to meanNow must be nonempty"
 meanNow ls = ( foldl1 (+) ls ) `div` ( fromIntegral $ length ls )

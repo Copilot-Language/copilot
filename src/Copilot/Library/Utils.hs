@@ -77,8 +77,9 @@ case' predicates alternatives =
   let case'' []         ( default' : _ ) = default'
       case'' ( p : ps ) ( a : as )       = mux p a ( case'' ps as )
       case'' _          _                =
-        error $ "length of alternatives list is not "
-        P.++ "greater by one than the length of predicates list"
+        badUsage $ "in case' in Utils library: "
+                   P.++ "length of alternatives list is not "
+                   P.++ "greater by one than the length of predicates list"
   in case'' predicates alternatives
 
 
@@ -93,9 +94,11 @@ ls !! n = let indices      = map
                 ( i : is )
                 ( x : xs ) = mux ( i == n ) x ( select is xs )
                              -- should not happen
-              select _ []  = error "Error in (!!) defined in Utils.hs in copilot-libraries." 
+              select _ []  = badUsage ("in (!!) defined in Utils.hs " P.++ 
+                               "in copilot-libraries")
           in if null ls then
-               error "indexing the empty list with !! is not defined"
+               badUsage ("in (!!) defined in Utils.hs " P.++ 
+                            "indexing the empty list with !! is not defined")
              else
                select indices ls
 
