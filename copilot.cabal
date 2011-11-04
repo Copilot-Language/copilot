@@ -46,3 +46,4 @@ executable copilot-regression
                    , copilot-language
                    , copilot-libraries
                    , copilot-c99
+                   , directory >= 1.1

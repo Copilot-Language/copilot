@@ -12,6 +12,7 @@ import qualified Prelude as P
 import Language.Copilot hiding (even, odd)
 import Copilot.Compile.C99
 
+import System.Directory (removeFile)
 --------------------------------------------------------------------------------
 
 --
@@ -105,7 +106,10 @@ main = do
   putStrLn ""
   putStrLn "Atom compilation:"
   reify spec >>= compile defaultParams 
-  cleanup 
+  cleanUp 
+  putStrLn "*********************************"
+  putStrLn " Ok, things seem to work.  Enjoy!"
+  putStrLn "*********************************"
 
   -- Don't assume SBV is installed.
   -- putStrLn "Check equivalence:"
