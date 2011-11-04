@@ -47,7 +47,7 @@ library
     Copilot.Language.Operators.BitWise
     Copilot.Language.Prelude
     Copilot.Language.Reify
-    Copilot.Language.Reify.Graph
+--    Copilot.Language.Reify.Graph
 
   other-modules:
     Copilot.Language.Analyze
