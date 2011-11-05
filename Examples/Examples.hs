@@ -38,8 +38,8 @@ odd = not . even
 counter :: (Num a, Typed a) => Stream Bool -> Stream a
 counter reset = y
   where
-    zy = [0] ++ y
-    y  = if reset then 0 else zy + 1
+  zy = [0] ++ y
+  y  = if reset then 0 else zy + 1
 
 booleans :: Stream Bool
 booleans = [True, True, False] ++ booleans
@@ -54,11 +54,9 @@ bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
 
 sumExterns :: Stream Word64
 sumExterns =
-  let
-    ex1 = extern "e1"
-    ex2 = extern "e2"
-  in
-    ex1 + ex2
+  let ex1 = extern "e1"
+      ex2 = extern "e2"
+  in  ex1 + ex2
 
 oddSpec :: Spec
 oddSpec = trigger "f" true [arg (odd nats)]
