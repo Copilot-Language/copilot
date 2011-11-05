@@ -1,8 +1,8 @@
 {- Copyright (c) 2011 National Institute of Aerospace / Galois, Inc. -}
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, FlexibleInstances #-}
 
--- |
+-- | The interpreter.
 
 module Copilot.Language.Interpret
   ( Input
@@ -12,20 +12,30 @@ module Copilot.Language.Interpret
   ) where
 
 import Copilot.Core.Type (Typed, typeOf)
+import Copilot.Core.Interpret (ExtEnv (..))
 import Copilot.Core.Type.Dynamic (toDynF)
 import qualified Copilot.Core.Interpret as I
 import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
 
-data Input where
-  Input :: Typed a => String -> [a] -> Input
+import Data.List (foldl')
 
-input :: Typed a => String -> [a] -> Input
-input = Input
+data Input where
+  Var :: Typed a => String -> [a] -> Input
+  Arr :: Typed a => String -> [[a]] -> Input
+
+class Inputs a where
+  input :: Typed a => String -> a -> Input
+
+instance Typed a => Inputs [a] where
+  input = Var
+
+instance Typed a => Inputs [[a]] where
+  input = Arr
 
 csv :: Integer -> [Input] -> Spec -> IO ()
 csv i input_ spec = do
-  putStrLn "Note: CSV does not output observers."
+  putStrLn "Note: CSV format does not output observers."
   interpret' I.CSV i input_ spec
 
 -- | Much slower, but pretty-printed interpreter output.  
@@ -37,5 +47,10 @@ interpret' format i inputs spec = do
   coreSpec <- reify spec
   putStrLn $ I.interpret format (fromIntegral i) exts coreSpec
   where
-  exts = map (\ (Input name xs) -> (name, toDynF typeOf xs)) inputs
+  exts = foldl' env (ExtEnv [] []) inputs
+  env acc (Var name xs) = 
+    acc { varEnv = (name, toDynF typeOf xs) : varEnv acc } 
+  env acc (Arr name xs) = 
+    acc { arrEnv = (name, map (toDynF typeOf) xs) : arrEnv acc }
+
 

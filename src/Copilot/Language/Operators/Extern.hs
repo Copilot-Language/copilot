@@ -16,7 +16,6 @@ module Copilot.Language.Operators.Extern
   , externI64
   , externF
   , externD
-
   , FunArg
   , externFun
   , externArray
