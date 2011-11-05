@@ -5,7 +5,7 @@
 module Copilot.Compile.C99.Test.CheckSpec (checkSpec) where
 
 import Copilot.Core (Spec)
-import Copilot.Core.Interpret.Eval (eval)
+import Copilot.Core.Interpret.Eval (eval, ExtEnv(..))
 import Copilot.Compile.C99 (compile)
 import Copilot.Compile.C99.Params (Params (..), defaultParams)
 import Copilot.Compile.C99.Test.Driver (driver)
@@ -64,7 +64,8 @@ execute _ = do
   fmap B.pack (readProcess "./_test" [] "")
 
 interp :: Int -> Spec -> [Iteration]
-interp numIterations = execTraceToIterations . eval C numIterations []
+interp numIterations = 
+  execTraceToIterations . eval C numIterations (ExtEnv [] [])
 
 cleanUp :: IO ()
 cleanUp = do
