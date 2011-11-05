@@ -36,6 +36,7 @@ library
     Copilot.Language.Error
     Copilot.Language.Interpret
     Copilot.Language.Operators.Boolean
+    Copilot.Language.Operators.Cast
     Copilot.Language.Operators.Constant
     Copilot.Language.Operators.Eq
     Copilot.Language.Operators.Extern

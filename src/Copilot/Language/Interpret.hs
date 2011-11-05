@@ -8,7 +8,8 @@ module Copilot.Language.Interpret
   ( Input
   , csv
   , interpret 
-  , input
+  , var
+  , array
   ) where
 
 import Copilot.Core.Type (Typed, typeOf)
@@ -24,14 +25,11 @@ data Input where
   Var :: Typed a => String -> [a] -> Input
   Arr :: Typed a => String -> [[a]] -> Input
 
-class Inputs a where
-  input :: Typed a => String -> a -> Input
+var :: Typed a => String -> [a] -> Input
+var = Var
 
-instance Typed a => Inputs [a] where
-  input = Var
-
-instance Typed a => Inputs [[a]] where
-  input = Arr
+array :: Typed a => String -> [[a]] -> Input
+array = Arr
 
 csv :: Integer -> [Input] -> Spec -> IO ()
 csv i input_ spec = do

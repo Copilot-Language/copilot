@@ -11,6 +11,7 @@ module Copilot.Language
   , module Copilot.Language.Error
   , module Copilot.Language.Interpret
   , module Copilot.Language.Operators.Boolean
+  , module Copilot.Language.Operators.Cast
   , module Copilot.Language.Operators.Constant
   , module Copilot.Language.Operators.Eq
   , module Copilot.Language.Operators.Extern
@@ -35,6 +36,7 @@ import qualified Copilot.Core.PrettyPrint as PP
 import Copilot.Language.Error
 import Copilot.Language.Interpret
 import Copilot.Language.Operators.Boolean
+import Copilot.Language.Operators.Cast
 import Copilot.Language.Operators.Constant
 import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
