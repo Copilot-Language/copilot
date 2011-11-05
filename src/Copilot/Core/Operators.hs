@@ -40,8 +40,10 @@ data Op1 a b where
   Asinh    :: Floating a => Type a -> Op1 a a
   Atanh    :: Floating a => Type a -> Op1 a a
   Acosh    :: Floating a => Type a -> Op1 a a
-  -- Bitwise operators:
+  -- Bitwise operators.
   BwNot    :: Bits     a => Type a -> Op1 a a
+  -- Casting operaators.
+  Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
 
 -- | Binary operators.
 data Op2 a b c where

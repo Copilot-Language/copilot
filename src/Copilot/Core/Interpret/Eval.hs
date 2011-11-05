@@ -181,6 +181,7 @@ evalOp1 op = case op of
   Atanh _    -> P.atanh
   Acosh _    -> P.acosh
   BwNot _    -> complement
+  Cast _ _   -> P.fromIntegral 
 
 --------------------------------------------------------------------------------
 

@@ -68,6 +68,7 @@ ppOp1 op = case op of
   Atanh _  -> ppPrefix "atanh"
   Acosh _  -> ppPrefix "acosh"
   BwNot _  -> ppPrefix "~"
+  Cast _ _ -> ppPrefix "(cast)"
 
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
