@@ -7,7 +7,7 @@
 {-# LANGUAGE GADTs, BangPatterns #-}
 
 module Copilot.Core.Interpret.Eval
-  ( Env
+  ( ExtEnv (..)
   , Output
   , ExecTrace (..)
   , eval
@@ -20,7 +20,7 @@ import Copilot.Core.Type.Show (showWithType, ShowType)
 import Data.List (transpose)
 import qualified Data.Map as M
 import Data.Map (Map)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, catMaybes)
 import Data.Bits
 
 import Prelude hiding (id)
@@ -28,7 +28,14 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
-type Env k = [(k, DynamicF [] Type)]
+type Env nm = [(nm, DynamicF [] Type)]
+
+-- | External arrays.
+type ArrEnv = [(Name, [DynamicF [] Type])] 
+
+-- | (External variables, External arrays).
+data ExtEnv = ExtEnv { varEnv :: Env Name
+                     , arrEnv :: ArrEnv }
 
 --------------------------------------------------------------------------------
 
@@ -64,9 +71,9 @@ eval k exts spec =
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
-eval :: ShowType -> Int -> Env Name -> Spec -> ExecTrace
-eval showType k exts' spec =
-  let exts  = take k $ reverse exts'                          in
+eval :: ShowType -> Int -> ExtEnv -> Spec -> ExecTrace
+eval showType k exts spec =
+--  let exts  = take k $ reverse exts'                          in
 
   let initStrm Stream { streamId       = id
                       , streamBuffer   = buffer
@@ -94,7 +101,7 @@ eval showType k exts' spec =
 
 type LocalEnv = [(Name, Dynamic Type)]
 
-evalExpr_ :: Int -> Expr a -> Env Name -> LocalEnv -> Env Id -> a
+evalExpr_ :: Int -> Expr a -> ExtEnv -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 exts locs strms = case e0 of
   Const _ x              -> x 
   Drop t i id            -> 
@@ -105,9 +112,9 @@ evalExpr_ k e0 exts locs strms = case e0 of
     let locs' = (name, toDyn t1 x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
   Var t name             -> fromJust $ lookup name locs >>= fromDyn t
-  ExternVar t name       -> evalExtern k t name exts
-  ExternArray _ _ _ _ _  ->
-    error "External arrays aren't supported in the interpreter"
+  ExternVar t name       -> evalExtern k t name (varEnv exts)
+  ExternArray _ t name idx _ -> evalArray k t name evalIdx (arrEnv exts)
+    where evalIdx = evalExpr_ k idx exts locs strms
   ExternFun _ _ _ _      ->
     error "External functions aren't supported in the interpreter"
   Op1 op e1              -> 
@@ -129,12 +136,27 @@ evalExpr_ k e0 exts locs strms = case e0 of
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
 evalExtern k t name exts =
   case lookup name exts of
-    Nothing -> impossible "evalExtern" "copilot-core" 
+    Nothing -> badUsage $ "you need to supply a list of values " ++
+                 "for interpreting variable " ++ name
     Just dyn ->
       case fromDynF t dyn of
-        Nothing -> impossible "evalExtern-2" "copilot-core" 
+        Nothing -> impossible "evalExtern" "copilot-core" 
         Just xs -> xs !! k
 
+evalArray :: Integral b => Int -> Type a -> Name -> b -> ArrEnv -> a
+evalArray k t name idx exts =
+  case lookup name exts of
+    Nothing -> badUsage $ "you need to supply a list of finite lists " ++ 
+                 "for interpreting array " ++ name
+    Just dyn ->
+      case catMaybes $ map (fromDynF t) dyn of
+        [] -> impossible "evalArray" "copilot-core" 
+        xs -> let arr = (xs !! k) in
+              if length arr < fromIntegral idx
+                then arr !! fromIntegral idx
+                else badUsage $ "in the environment for array " ++ name ++ 
+                          ", you tried to index out of bounds."
+  
 --------------------------------------------------------------------------------
 
 evalOp1 :: Op1 a b -> (a -> b)
@@ -199,7 +221,7 @@ evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
 
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
-evalStreams :: Int -> Env Name -> [Stream] -> Env Id -> Env Id
+evalStreams :: Int -> ExtEnv -> [Stream] -> Env Id -> Env Id
 evalStreams top exts specStrms initStrms = 
   evalStreams_ 0 initStrms 
   where 
@@ -220,7 +242,7 @@ evalStreams top exts specStrms initStrms =
 --------------------------------------------------------------------------------
 
 evalTrigger :: 
-  ShowType -> Int -> Env Name -> Env Id -> Trigger -> [Maybe [Output]]
+  ShowType -> Int -> ExtEnv -> Env Id -> Trigger -> [Maybe [Output]]
 evalTrigger showType k exts strms
   Trigger
     { triggerGuard = e
@@ -243,7 +265,7 @@ evalTrigger showType k exts strms
     map (showWithType showType t) (evalExprs_ k e1 exts strms)
 
 --------------------------------------------------------------------------------
-evalObserver :: ShowType -> Int -> Env Name -> Env Id -> Observer -> [Output]
+evalObserver :: ShowType -> Int -> ExtEnv -> Env Id -> Observer -> [Output]
 evalObserver showType k exts strms
   Observer
     { observerExpr     = e
@@ -252,7 +274,7 @@ evalObserver showType k exts strms
 
 --------------------------------------------------------------------------------
 
-evalExprs_ :: Int -> Expr a -> Env Name -> Env Id -> [a]
+evalExprs_ :: Int -> Expr a -> ExtEnv -> Env Id -> [a]
 evalExprs_ k e exts strms = 
   map (\i -> evalExpr_ i e exts [] strms) [0..k]
                                        

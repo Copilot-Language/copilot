@@ -25,17 +25,26 @@ strmName id = text "s" <> int id
 
 ppExpr :: Expr a -> Doc
 ppExpr e0 = case e0 of
-  Const t x            -> text (showWithType Haskell t x)
-  Drop _ 0 id          -> strmName id
-  Drop _ i id          -> text "drop" <+> text (show i) <+> strmName id
-  ExternVar _ name     -> text "extern \"" <> text name <> text "\""
-  Local _ _ name e1 e2 -> text "local \"" <> text name <> text "\" ="
-                                    <+> ppExpr e1 $$ text "in" <+> ppExpr e2
-  Var _ name           -> text "var \"" <> text name <> text "\""
-  Op1 op e             -> ppOp1 op (ppExpr e)
-  Op2 op e1 e2         -> ppOp2 op (ppExpr e1) (ppExpr e2)
-  Op3 op e1 e2 e3      -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
-  _                    -> error "Expression not implemented in PrettyPrint.hs in copilot-core!"
+  Const t x                  -> text (showWithType Haskell t x)
+  Drop _ 0 id                -> strmName id
+  Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
+  ExternVar _ name           -> text "extern" <+> doubleQuotes (text name)
+  ExternFun _ name args _    -> 
+    text "extern" <+> doubleQuotes 
+      (text name <> lparen <> 
+         hcat (punctuate (comma <> space) (map ppUExpr args))
+       <> rparen)
+  ExternArray _ _ name idx _ -> text "extern" <+> doubleQuotes (text name <> lbrack 
+                                  <> ppExpr idx <> rbrack)
+  Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
+                                          <+> ppExpr e1 $$ text "in" <+> ppExpr e2
+  Var _ name                 -> text "var" <+> doubleQuotes (text name)
+  Op1 op e                   -> ppOp1 op (ppExpr e)
+  Op2 op e1 e2               -> ppOp2 op (ppExpr e1) (ppExpr e2)
+  Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+
+ppUExpr :: UExpr -> Doc
+ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
 
 ppOp1 :: Op1 a b -> Doc -> Doc
 ppOp1 op = case op of
@@ -134,10 +143,6 @@ ppTrigger
   $$  (nest 2 $ vcat (punctuate comma $ 
                           map (\a -> text "arg" <+> ppUExpr a) args))
   $$  nest 2 rbrack
-
-  where
-  ppUExpr :: UExpr -> Doc
-  ppUExpr (UExpr _ e_) = ppExpr e_
 
 --------------------------------------------------------------------------------
 

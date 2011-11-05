@@ -5,7 +5,7 @@
 -- | An interpreter for Copilot specifications.
 
 module Copilot.Core.Interpret
-  ( Env
+  ( ExtEnv (..)
   , Format (..)
   , interpret
   ) where
@@ -18,7 +18,7 @@ import Copilot.Core.Type.Show (ShowType(..))
 data Format = Table | CSV
 
 -- | Interprets a Copilot specification.
-interpret :: Format -> Int -> Env Name -> Spec -> String
+interpret :: Format -> Int -> ExtEnv -> Spec -> String
 interpret format k exts spec =
   case format of
     Table -> renderAsTable e

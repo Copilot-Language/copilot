@@ -69,17 +69,18 @@ locsObserver Observer { observerExpr = e } = locsExpr e
 
 locsExpr :: Expr a -> DList Loc
 locsExpr e0 = case e0 of
-  Const  _ _           -> empty
-  Drop   _ _ _         -> empty
-  Local t _ name e1 e2 -> singleton (Loc name t)
-                                      `append` locsExpr e1
-                                      `append` locsExpr e2
-  Var _ _              -> empty
-  ExternVar _ _        -> empty
-  Op1 _ e              -> locsExpr e
-  Op2 _ e1 e2          -> locsExpr e1 `append` locsExpr e2
-  Op3 _ e1 e2 e3       -> locsExpr e1 `append` locsExpr e2
-                                       `append` locsExpr e3
-  _                    -> error "Expression not implemented in Locals.hs in copilot-core!"
+  Const  _ _             -> empty
+  Drop   _ _ _           -> empty
+  Local t _ name e1 e2   -> singleton (Loc name t)
+                                        `append` locsExpr e1
+                                        `append` locsExpr e2
+  Var _ _                -> empty
+  ExternVar _ _          -> empty
+  ExternFun _ _ _ _      -> empty
+  ExternArray _ _ _ _ _  -> empty
+  Op1 _ e                -> locsExpr e
+  Op2 _ e1 e2            -> locsExpr e1 `append` locsExpr e2
+  Op3 _ e1 e2 e3         -> locsExpr e1 `append` locsExpr e2
+                                        `append` locsExpr e3
 
 --------------------------------------------------------------------------------
