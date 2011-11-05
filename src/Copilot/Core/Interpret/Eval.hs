@@ -152,10 +152,10 @@ evalArray k t name idx exts =
       case catMaybes $ map (fromDynF t) dyn of
         [] -> impossible "evalArray" "copilot-core" 
         xs -> let arr = (xs !! k) in
-              if length arr < fromIntegral idx
+              if length arr > fromIntegral idx
                 then arr !! fromIntegral idx
                 else badUsage $ "in the environment for array " ++ name ++ 
-                          ", you tried to index out of bounds."
+                          ", you tried to index out of bounds"
   
 --------------------------------------------------------------------------------
 
