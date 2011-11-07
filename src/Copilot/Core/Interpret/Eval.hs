@@ -30,12 +30,14 @@ import qualified Prelude as P
 
 type Env nm = [(nm, DynamicF [] Type)]
 
--- | External arrays.
+-- | External arrays environment.
 type ArrEnv = [(Name, [DynamicF [] Type])] 
 
--- | (External variables, External arrays).
-data ExtEnv = ExtEnv { varEnv :: Env Name
-                     , arrEnv :: ArrEnv }
+-- | Environment for simulation.
+data ExtEnv = ExtEnv { varEnv  :: Env Name
+                     , arrEnv  :: ArrEnv 
+                     , funcEnv :: [(Name, Spec)] 
+                     }
 
 --------------------------------------------------------------------------------
 
@@ -75,11 +77,6 @@ eval :: ShowType -> Int -> ExtEnv -> Spec -> ExecTrace
 eval showType k exts spec =
 --  let exts  = take k $ reverse exts'                          in
 
-  let initStrm Stream { streamId       = id
-                      , streamBuffer   = buffer
-                      , streamExprType = t } =
-        (id, toDynF t (reverse buffer))                       in
-
   let initStrms = map initStrm (specStreams spec)             in
 
   let strms = evalStreams k exts (specStreams spec) initStrms in
@@ -111,12 +108,11 @@ evalExpr_ k e0 exts locs strms = case e0 of
     let x     = evalExpr_ k e1 exts locs strms in
     let locs' = (name, toDyn t1 x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
-  Var t name             -> fromJust $ lookup name locs >>= fromDyn t
-  ExternVar t name       -> evalExtern k t name (varEnv exts)
+  Var t name                 -> fromJust $ lookup name locs >>= fromDyn t
+  ExternVar t name           -> evalExtern k t name (varEnv exts)
+  ExternFun t name _ _       -> evalFunc k t name exts
   ExternArray _ t name idx _ -> evalArray k t name evalIdx (arrEnv exts)
     where evalIdx = evalExpr_ k idx exts locs strms
-  ExternFun _ _ _ _      ->
-    error "External functions aren't supported in the interpreter"
   Op1 op e1              -> 
     let ev1 = evalExpr_ k e1 exts locs strms in 
     let op1 = evalOp1 op                     in
@@ -133,15 +129,42 @@ evalExpr_ k e0 exts locs strms = case e0 of
     let op3 = evalOp3 op                     in
     ev1 `seq` ev2 `seq` ev3 `seq` op3 `seq` op3 ev1 ev2 ev3
 
+--------------------------------------------------------------------------------
+
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
-evalExtern k t name exts =
+evalExtern k t name exts = 
   case lookup name exts of
-    Nothing -> badUsage $ "you need to supply a list of values " ++
-                 "for interpreting variable " ++ name
+    Nothing -> badUsage $ "you need to supply a list of values for interpreting variable " ++ name
     Just dyn ->
       case fromDynF t dyn of
-        Nothing -> impossible "evalExtern" "copilot-core" 
+        Nothing -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
         Just xs -> xs !! k
+
+--------------------------------------------------------------------------------
+
+evalFunc :: Int -> Type a -> Name -> ExtEnv -> a
+evalFunc k t name exts  = 
+  case lookup name (funcEnv exts) of
+    Nothing -> 
+      badUsage $ "to simulate a spec containing the external function "
+                   ++ name ++ ", you need to include a stream to simulate it"
+
+    -- We created this spec in Interpreter.hs, copilot-language, so it should
+    -- contain no triggers and exactly one observer.
+    Just Spec { specStreams   = specStrms
+              , specObservers = obsLs }  -> 
+     let initStrms = map initStrm specStrms             in
+     let strms = evalStreams k exts specStrms initStrms in
+     case obsLs of
+       [Observer { observerExpr     = expr_
+                 , observerExprType = t1 }] -> 
+         let dyn = toDynF t1 expr_ in
+           case fromDynF t dyn of
+             Nothing    -> impossible "evalFunc" "copilot-core"
+             Just expr  -> evalExpr_ k expr exts [] strms
+       _ -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
+
+--------------------------------------------------------------------------------
 
 evalArray :: Integral b => Int -> Type a -> Name -> b -> ArrEnv -> a
 evalArray k t name idx exts =
@@ -150,7 +173,7 @@ evalArray k t name idx exts =
                  "for interpreting array " ++ name
     Just dyn ->
       case catMaybes $ map (fromDynF t) dyn of
-        [] -> impossible "evalArray" "copilot-core" 
+        [] -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
         xs -> let arr = (xs !! k) in
               if length arr > fromIntegral idx
                 then arr !! fromIntegral idx
@@ -219,6 +242,12 @@ evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
 evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
 
 --------------------------------------------------------------------------------
+
+initStrm :: Stream -> (Id, DynamicF [] Type)
+initStrm Stream { streamId       = id
+                , streamBuffer   = buffer
+                , streamExprType = t } =
+  (id, toDynF t (reverse buffer))
 
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
