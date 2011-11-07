@@ -4,9 +4,12 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
+-- Examples of casting types.  
+
 module Main where
 
 import Language.Copilot hiding (even, odd)
+import Copilot.Compile.C99
 
 b :: Stream Bool
 b = [True] ++ not b
@@ -24,4 +27,6 @@ spec :: Spec
 spec = trigger "trigger" true [arg y, arg i]
 
 main :: IO ()
-main = interpret 10 [] spec
+main = do 
+  interpret 10 [] spec
+  reify spec >>= compile defaultParams
