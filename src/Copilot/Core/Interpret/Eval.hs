@@ -306,5 +306,5 @@ evalObserver showType k exts strms
 
 evalExprs_ :: Int -> Expr a -> ExtEnv -> Env Id -> [a]
 evalExprs_ k e exts strms = 
-  map (\i -> evalExpr_ i e exts [] strms) [0..k]
+  map (\i -> evalExpr_ i e exts [] strms) [0..(k-1)]
                                        
