@@ -27,7 +27,7 @@ library
   ghc-options             : -Wall -fwarn-tabs
   ghc-prof-options        : -auto-all -caf-all
 
-  build-depends           : atom >= 1.0.9
+  build-depends           : atom >= 1.0.10
                           , base >= 4.3 && < 5
                           , bytestring
                           , bytestring-csv
