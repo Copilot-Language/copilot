@@ -4,7 +4,7 @@ cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
 author:              Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
-synopsis:            A stream DSL for writing embedded C (constant memory and constant time) programs.
+synopsis:            A stream DSL for writing embedded C programs.
 build-type:          Simple
 maintainer:          Lee Pike <leepike@galois.com>
 category:            Language, Embedded
@@ -28,7 +28,7 @@ library
       -caf-all
       -fno-warn-orphans
     build-depends:
-                       base >= 4.0
+                       base >= 4.0 && <5
                      , copilot-core
                      , copilot-language
                      , copilot-libraries
