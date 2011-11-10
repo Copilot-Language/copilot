@@ -18,6 +18,7 @@ import qualified Copilot.Tools.CBMC as C
 -- Some utility functions:
 --
 
+
 implyStream :: Stream Bool -> Stream Bool -> Stream Bool
 implyStream p q = not p || q
 
@@ -34,6 +35,9 @@ even x = x `mod` 2 == 0
 
 odd :: (P.Integral a, Typed a) => Stream a -> Stream Bool
 odd = not . even
+
+extEven :: Stream Bool
+extEven = externI64 "x" `mod` 2 == 0
 
 counter :: (Num a, Typed a) => Stream Bool -> Stream a
 counter reset = y
@@ -66,6 +70,11 @@ prop = (x - x') <= 5 && (x - x') <= (-5)
   where
   x  = [0] ++ externI32 "x"
   x' = drop 1 x
+
+foo = do
+  let x = externW8 "x"
+  trigger "trigger" true [arg $ x < 3]
+  observer "debug_x" x
 
 --------------------------------------------------------------------------------
 
@@ -114,7 +123,7 @@ main =
     putStrLn ""
     putStrLn "Interpreter:"
     putStrLn ""
-    interpret 10 [input "e1" e1, input "e2" e2, input "e3" e3] spec
+    interpret 10 [var "e1" e1, var "e2" e2, var "e3" e3] spec
     putStrLn ""
     putStrLn ""
     putStrLn "Atom:"

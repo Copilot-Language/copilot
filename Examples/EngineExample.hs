@@ -30,8 +30,8 @@ main :: IO ()
 main = 
   interpret 
     10
-    [ input "cooler" cooler, input "tmp_probe_0" two51
-    , input "tmp_probe_1" two51, input "tmp_probe_2" zero]
+    [ var "cooler" cooler, var "tmp_probe_0" two51
+    , var "tmp_probe_1" two51, var "tmp_probe_2" zero]
     engineMonitor
   where
   two51 = [251, 251] P.++ repeat (250 :: Word8)
