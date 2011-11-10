@@ -18,6 +18,7 @@ import Copilot.Core.Type.Equality ((=~=), coerce, cong)
 import Data.Map (Map)
 import qualified Data.Map as M
 import qualified Language.Atom as A
+import qualified Prelude as P
 import Prelude hiding (id)
 
 --------------------------------------------------------------------------------
@@ -220,6 +221,12 @@ c2aOp1 op = case op of
   Atanh t -> case W.floatingEInst   t of W.FloatingEInst   -> atanh
   Acosh t -> case W.floatingEInst   t of W.FloatingEInst   -> acosh
   BwNot t -> case W.bitsEInst       t of W.BitsEInst       -> (A.complement)
+  Cast C.Bool C.Bool ->                                       P.id
+  Cast C.Bool t -> case W.numEInst  t of 
+                     W.NumEInst     -> \e -> A.mux e (A.Const 1) (A.Const 0)
+  Cast t0 t1    -> case W.numEInst  t0 of 
+                     W.NumEInst     -> 
+                       case W.numEInst t1 of W.NumEInst    -> A.Cast
 
 c2aOp2 :: C.Op2 a b c -> A.E a -> A.E b -> A.E c
 c2aOp2 op = case op of

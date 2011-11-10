@@ -28,7 +28,7 @@ library
   ghc-prof-options        : -auto-all -caf-all
 
   build-depends           : atom >= 1.0.9
-                          , base >= 4.3
+                          , base >= 4.3 && < 5
                           , bytestring
                           , bytestring-csv
                           , containers >= 0.4

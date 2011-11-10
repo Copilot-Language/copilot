@@ -65,7 +65,7 @@ execute _ = do
 
 interp :: Int -> Spec -> [Iteration]
 interp numIterations = 
-  execTraceToIterations . eval C numIterations (ExtEnv [] [])
+  execTraceToIterations . eval C numIterations (ExtEnv [] [] [])
 
 cleanUp :: IO ()
 cleanUp = do
