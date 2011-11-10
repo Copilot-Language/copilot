@@ -59,7 +59,6 @@ library
 
   ghc-options:
     -fwarn-tabs
-    -O2
     -auto-all
     -caf-all
     -Wall
