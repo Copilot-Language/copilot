@@ -1,5 +1,5 @@
 name:                copilot
-version:             2.0
+version:             2.0.1
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -45,5 +45,5 @@ executable copilot-regression
                    , copilot-core
                    , copilot-language
                    , copilot-libraries
-                   , copilot-c99
+                   , copilot-c99 >= 0.2
                    , directory >= 1.1
