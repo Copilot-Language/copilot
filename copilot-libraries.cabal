@@ -24,7 +24,7 @@ library
 
   build-depends:
     array,
-    base >= 4.0,
+    base >= 4.0 && < 5,
     containers,
     copilot-language,
     parsec >= 2.0,
@@ -44,7 +44,6 @@ library
 
   ghc-options:
     -fwarn-tabs
-    -O2
     -auto-all
     -caf-all
     -Wall
