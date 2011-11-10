@@ -29,7 +29,7 @@ library
     data-reify >= 0.6,
     mtl >= 2.0 && < 3,
     ghc-prim >= 0.2 && < 0.3,
-    copilot-core
+    copilot-core >= 0.1
   exposed-modules:
     Copilot
     Copilot.Language
