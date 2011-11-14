@@ -4,7 +4,7 @@
 
 module Copilot.Compile.C99.Test.CheckSpec (checkSpec) where
 
-import Copilot.Core (Spec)
+import Copilot.Core ( Spec (..))
 import Copilot.Core.Interpret.Eval (eval, ExtEnv(..))
 import Copilot.Compile.C99 (compile)
 import Copilot.Compile.C99.Params (Params (..), defaultParams)
@@ -15,7 +15,6 @@ import Copilot.Core.Type.Show (ShowType(..))
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import qualified Data.Map as M
 import qualified Data.Text.IO as TIO
 import System.Directory (removeFile)
 import System.Process (system, readProcess)
@@ -24,21 +23,19 @@ import Text.PrettyPrint (text, (<+>), ($$), render, vcat, hang)
 
 --------------------------------------------------------------------------------
 
-checkSpec :: Int -> Spec -> IO Bool
-checkSpec numIterations spec = do
-  genCFiles numIterations spec
+checkSpec :: Int -> ExtEnv -> Spec -> IO Bool
+checkSpec numIterations env spec = do
+  genCFiles numIterations env spec
   compileCFiles
   csv <- execute numIterations
   let is1 = iterationsFromCSV csv     
-  let is2 = interp numIterations spec
-  -- print is1
-  -- print "..."
-  -- print is2
+  let is2 = interp numIterations env spec
   let eq = is1 == is2
   unless eq (putStrLn $ showCompare is1 is2)
-  -- Keep things around if there's a failure
-  when eq cleanUp
+  when eq cleanUp -- Keep things around if there's a failure
   return eq
+
+--------------------------------------------------------------------------------
 
 showCompare :: [Iteration] -> [Iteration] -> String
 showCompare s1 s2 =
@@ -48,24 +45,34 @@ showCompare s1 s2 =
   zipped  = zip (toDoc s1) (toDoc s2)
   toDoc   = map (text . show) 
 
-genCFiles :: Int -> Spec -> IO ()
-genCFiles numIterations spec = do
+--------------------------------------------------------------------------------
+
+genCFiles :: Int -> ExtEnv -> Spec -> IO ()
+genCFiles numIterations env spec = do
   compile (defaultParams { prefix = Nothing, verbose = False }) spec
-  TIO.writeFile "driver.c" (driver M.empty numIterations spec)
+  TIO.writeFile "driver.c" (driver numIterations env spec)
   return ()
+
+--------------------------------------------------------------------------------
 
 compileCFiles :: IO ()
 compileCFiles = do
   _ <- system $ "gcc copilot.c driver.c -o _test"
   return ()
 
+--------------------------------------------------------------------------------
+
 execute :: Int -> IO ByteString
 execute _ = do
   fmap B.pack (readProcess "./_test" [] "")
 
-interp :: Int -> Spec -> [Iteration]
-interp numIterations = 
-  execTraceToIterations . eval C numIterations (ExtEnv [] [] [])
+--------------------------------------------------------------------------------
+
+interp :: Int -> ExtEnv -> Spec -> [Iteration]
+interp numIterations env = 
+  execTraceToIterations . eval C numIterations env 
+
+--------------------------------------------------------------------------------
 
 cleanUp :: IO ()
 cleanUp = do
@@ -74,3 +81,6 @@ cleanUp = do
   removeFile "driver.c"
   removeFile "_test"
   return ()
+
+--------------------------------------------------------------------------------
+

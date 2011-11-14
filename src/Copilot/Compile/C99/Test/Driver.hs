@@ -9,22 +9,30 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  (Spec (..), Trigger (..), UExpr (..), Type (..), UType (..))
+  ( Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), Name
+  )
+import Copilot.Core.Type.Dynamic (DynamicF (..))
+import Copilot.Core.Type.Show (showWithType, ShowType (..))
+import Copilot.Core.Interpret.Eval (ExtEnv(..))
 import Data.List (intersperse)
-import Data.Map (Map)
 import Data.Text (Text)
 import Data.Text (pack)
 import Text.PrettyPrint
-  (Doc, ($$), (<>), (<+>), nest, text, empty, render, vcat, hcat)
+  ( Doc, ($$), (<>), (<+>), nest, text, empty, render, vcat
+  , hcat, space, equals, semi, lbrack, rbrack, comma
+  , punctuate, hsep, lbrace, rbrace)
 
-type ExternalEnv = Map String (UType, [Int])
+--------------------------------------------------------------------------------
 
-driver :: ExternalEnv -> Int -> Spec -> Text
-driver _ numIterations Spec { specTriggers = trigs } =
+driver :: Int -> ExtEnv -> Spec -> Text
+driver numIterations env Spec { specTriggers = trigs } =
   pack $ render $
     ppHeader $$
-    ppMain numIterations $$
+    ppEnvDecls numIterations env $$
+    ppMain numIterations env $$
     ppTriggers trigs
+
+--------------------------------------------------------------------------------
 
 ppHeader :: Doc
 ppHeader =
@@ -35,24 +43,70 @@ ppHeader =
     , text "#include \"copilot.h\""
     ]
 
-ppMain :: Int -> Doc
-ppMain numIterations =
-  vcat $
-    [ text "int main(int argc, char const *argv[]) {"
-    , text "  int i, k;"
-    , text "  k = " <> text (show $ numIterations + 1) <> text ";"
-    , text "  for (i = 1; i < k; i++) {"
-    , text "    " <> it 
-    , text "    if (i < k-1) printf(\"#\\n\");"
-    , text "  }"
-    , text "  return 0;"
-    , text "}"
+--------------------------------------------------------------------------------
+
+ppEnvDecls :: Int -> ExtEnv -> Doc
+ppEnvDecls numIterations ExtEnv { varEnv = vars } = 
+  vcat $  
+    [ space  
+    , text "// External variables" 
+    , vcat $ map ppEnvDecl vars
+    , space
+    , text "// External values" 
+    , vcat $ map ppVals vars
+    , space
+    , space
     ]
 
   where
+  ppEnvDecl :: (Name, DynamicF [] Type) -> Doc
+  ppEnvDecl (name, DynamicF _ t) = 
+    cType <+> text name <> semi
+    where
+    cType = ppUType UType { uTypeType = t }
 
-    it :: Doc
-    it = text "step();"
+  ppVals :: (Name, DynamicF [] Type) -> Doc
+  ppVals (name, DynamicF vals t) = 
+    cType <+> valsName name 
+      <> lbrack <> (text . show) numIterations <> rbrack 
+      <+> equals <+> lbrace <+> arrVals <+> rbrace <> semi
+    where
+    cType = ppUType UType { uTypeType = t }
+    arrVals = hsep $ punctuate comma $ map text showVals
+    showVals = map (showWithType C t) vals
+
+--------------------------------------------------------------------------------
+
+valsName :: Name -> Doc
+valsName name = text name <> text "_vals" 
+
+--------------------------------------------------------------------------------
+
+ppMain :: Int -> ExtEnv -> Doc
+ppMain numIterations ExtEnv { varEnv = vars } =
+  vcat $
+    [ text "int main(int argc, char const *argv[]) {"
+    , text "  int i;"
+    , text "  for (i = 0; i < " <> rnds <> text "; i++) {"
+    , space
+    , vcat $ map (nest 3) $ map assignVals vars
+    , space
+    , text "    if (i > 0) printf(\"#\\n\");"
+    , text "    " <> text "step();"
+    , text "  }"
+    , text "  return 0;"
+    , text "}"
+    , space
+    ]
+
+  where
+  rnds = text $ show numIterations
+  assignVals :: (Name, DynamicF [] Type) -> Doc
+  assignVals (name, _) = 
+    text name <+> equals <+> 
+      valsName name <> lbrack <> text "i" <> rbrack <> semi
+
+--------------------------------------------------------------------------------
 
 ppTriggers :: [Trigger] -> Doc
 ppTriggers = foldr ($$) empty . map ppTrigger
@@ -75,6 +129,8 @@ ppTrigger
     , text "}"
     ]
 
+--------------------------------------------------------------------------------
+
 ppPrintf :: String -> [UExpr] -> Doc
 ppPrintf name args =
   text "printf(\"" <>
@@ -85,12 +141,16 @@ ppPrintf name args =
   ppArgs args <>
   text ")"
 
+--------------------------------------------------------------------------------
+
 ppFormats :: [UExpr] -> Doc
 ppFormats
   = vcat
   . intersperse (text ",")
   . map (text "%\"" <>)
   . map ppFormat
+
+--------------------------------------------------------------------------------
 
 ppPars :: [UExpr] -> Doc
 ppPars
@@ -107,6 +167,8 @@ ppPars
       { uExprType = t } ->
           ppUType (UType t) <+> text ("t" ++ show k)
 
+--------------------------------------------------------------------------------
+
 ppArgs :: [UExpr] -> Doc
 ppArgs args
   = vcat
@@ -118,6 +180,8 @@ ppArgs args
 
   ppArg :: Int -> Doc
   ppArg k = text ("t" ++ show k)
+
+--------------------------------------------------------------------------------
 
 ppUType :: UType -> Doc
 ppUType UType { uTypeType = t } = text $ typeSpec' t
@@ -136,6 +200,8 @@ ppUType UType { uTypeType = t } = text $ typeSpec' t
   typeSpec' Float  = "float"
   typeSpec' Double = "double"
 
+--------------------------------------------------------------------------------
+
 ppFormat :: UExpr -> Doc
 ppFormat
   UExpr { uExprType = t } =
@@ -152,5 +218,5 @@ ppFormat
     Float  -> "\"f\""
     Double -> "\"lf\""
 
---ppExterns :: 
---ppExterns = undefined
+--------------------------------------------------------------------------------
+
