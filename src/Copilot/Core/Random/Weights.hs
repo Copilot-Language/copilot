@@ -14,10 +14,12 @@ data Weights = Weights
   , maxBuffSize  :: Int
   , maxTriggers  :: Int
   , maxTrigArgs  :: Int
+  , maxExtVars   :: Int
   , maxObservers :: Int
   , numStreams   :: Int
   -- Expression frequencies:
   , constFreq    :: Int
+  , extVarFreq   :: Int
   , drop0Freq    :: Int
   , dropFreq     :: Int
   , externFreq   :: Int
@@ -44,10 +46,12 @@ simpleWeights = Weights
   , maxBuffSize  = 8
   , maxTriggers  = 5
   , maxTrigArgs  = 5
+  , maxExtVars   = 5
   , maxObservers = 8
   , numStreams   = 10
   -- Expression frequencies:
   , constFreq    = 1
+  , extVarFreq   = 1
   , drop0Freq    = 1
   , dropFreq     = 1
   , externFreq   = 1

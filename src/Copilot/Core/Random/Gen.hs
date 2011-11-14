@@ -15,11 +15,13 @@ module Copilot.Core.Random.Gen
   , depth
   , weights
   , incDepth
+  , randomReplicate
   ) where
 
 import Copilot.Core.Random.Weights
 import Copilot.Core.Error
 import Copilot.Core.Type
+
 import System.Random (StdGen, Random, random, randomR, split)
 
 --------------------------------------------------------------------------------
@@ -28,14 +30,11 @@ import System.Random (StdGen, Random, random, randomR, split)
 -- the standard random generator.
 newtype Gen a = MkGen { runGen :: Depth -> Weights -> StdGen -> a }
 
---------------------------------------------------------------------------------
-
 instance Functor Gen where
   fmap f (MkGen h) = MkGen (\ d ws r -> f (h d ws r))
 
 instance Monad Gen where
   return x = MkGen (\ _ _ _ -> x)
-
   MkGen m >>= k = MkGen $ \ d ws r ->
     let (r1, r2) = split r       in
     let MkGen m' = k (m d ws r1) in
@@ -75,31 +74,35 @@ randomFromType t =
   where
 
   genBool :: Gen Bool
-  genBool =
-    do
-      g <- stdGen
-      return $ fst (random g)
+  genBool = do
+    g <- stdGen
+    return $ fst (random g)
 
   genBoundedIntegral :: (Bounded a, Integral a) => Gen a
-  genBoundedIntegral =
-    do let mn = minBound
-           mx = maxBound `asTypeOf` mn
-       n <- choose (toInteger mn, toInteger mx)
-       return (fromInteger n `asTypeOf` mn)
+  genBoundedIntegral = do
+    let mn = minBound
+        mx = maxBound `asTypeOf` mn
+    n <- choose (toInteger mn, toInteger mx)
+    return (fromInteger n `asTypeOf` mn)
 
   genFractional :: (Random a, Fractional a) => Gen a
-  genFractional =
-    do
-      g <- stdGen
-      return $ fst (random g)
+  genFractional = do
+    g <- stdGen
+    return $ fst (random g)
+
+--------------------------------------------------------------------------------
+
+-- Given an int i and type t, make a list of length i containing random values
+-- over the type.
+randomReplicate :: Int -> Type a -> Gen [a]
+randomReplicate i t = mapM (\_ -> randomFromType t) [1..i]
 
 --------------------------------------------------------------------------------
 
 choose :: Random a => (a, a) -> Gen a
-choose rng =
-  do
-    g <- stdGen
-    return $ fst (randomR rng g)
+choose rng = do
+  g <- stdGen
+  return $ fst (randomR rng g)
 
 oneOf :: [Gen a] -> Gen a
 oneOf [] = impossible "oneof" "copilot-core" 
@@ -112,8 +115,7 @@ oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 freq :: [(Int, Gen a)] -> Gen a
 freq [] = impossible "feq" "copilot-core" 
 freq xs0 = choose (1, tot) >>= (`pick` xs0)
-
- where
+  where
   tot = sum (map fst xs0)
   pick n ((k,x):xs)
     | n <= k    = x

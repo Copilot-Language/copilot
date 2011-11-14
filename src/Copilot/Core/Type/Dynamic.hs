@@ -16,7 +16,7 @@
 
 module Copilot.Core.Type.Dynamic
   ( Dynamic
-  , DynamicF
+  , DynamicF (..)
   , toDyn
   , fromDyn
   , toDynF

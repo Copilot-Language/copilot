@@ -8,6 +8,7 @@
 
 module Copilot.Core.Interpret.Eval
   ( ExtEnv (..)
+  , Env 
   , Output
   , ExecTrace (..)
   , eval
