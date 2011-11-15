@@ -46,8 +46,9 @@ type Output = String
 
 data ExecTrace = ExecTrace
     -- map from trigger names to their maybe output, which is a list of strings
-    -- representing their valus.  (Nothing output if the guard for the trigger
-    -- is false).
+    -- representing their values.  (Nothing output if the guard for the trigger
+    -- is false).  The order is important, since we compare the arg lists
+    -- between the interpreter and backends.
   { interpTriggers  :: Map String [Maybe [Output]]
     -- map from observer names to their outputs.  We also show observer outputs.
   , interpObservers :: Map String [Output] }
