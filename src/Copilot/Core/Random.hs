@@ -86,7 +86,7 @@ genType ws = freq
   , (floatFreq  ws, return $ WrapType (typeOf :: Type Double)) ]
 
 genTypeFromStreamInfo's :: [StreamInfo] -> Gen WrapType
-genTypeFromStreamInfo's = elements . map (\ (StreamInfo _ t _) -> WrapType t)
+genTypeFromStreamInfo's = elements . map (\(StreamInfo _ t _) -> WrapType t)
 
 --------------------------------------------------------------------------------
 
@@ -209,6 +209,8 @@ genExpr extVars ss t = do
                                     _      -> False
       in  elements (filter p ss)
 
+  genOp3 = incDepth (genOp3Mux extVars ss t)    
+
   genOp1 = incDepth $ case t of
     Bool   -> genOp1Bool extVars ss
     Int8   -> genOp1Num  extVars ss t
@@ -223,9 +225,10 @@ genExpr extVars ss t = do
     Double -> genOp1Num  extVars ss t
 
   genOp2 = incDepth $ case t of
--- XXX 
---    Bool    -> oneOf [genOp2Bool ss, genOp2Eq ss, genOp2Ord ss]
-    Bool    -> oneOf [genOp2Bool extVars ss, genOp2Eq extVars ss]
+    Bool    -> oneOf [ genOp2Bool extVars ss
+                     , genOp2Eq extVars ss
+                     , genOp2Ord extVars ss 
+                     ]
     Int8    -> intOrWord NumWit IntegralWit
     Int16   -> intOrWord NumWit IntegralWit
     Int32   -> intOrWord NumWit IntegralWit
@@ -238,99 +241,90 @@ genExpr extVars ss t = do
     Double  -> floatOrDouble NumWit
 
     where
+    floatOrDouble numWit = oneOf [ genOp2Num extVars ss t numWit ]
 
-      intOrWord numWit integralWit = do 
-        ws <- weights 
-        if divModFreq ws 
-          then oneOf $ num ++ [ genOp2Integral extVars ss t integralWit ]
-          else oneOf num
-        where num = [ genOp2Num extVars ss t numWit ]
-
-      floatOrDouble numWit = oneOf
-        [ genOp2Num extVars ss t numWit ]
-
-  genOp3 = incDepth (genOp3Mux extVars ss t)    
+    intOrWord numWit integralWit = do 
+      ws <- weights 
+      if divModFreq ws 
+        then oneOf $ num ++ [ genOp2Integral extVars ss t integralWit ]
+        else oneOf num
+      where 
+      num = [ genOp2Num extVars ss t numWit ]
+      
 
 --------------------------------------------------------------------------------
 
 genOp1Bool :: [DynExtVar] -> [StreamInfo] -> Gen (Expr Bool)
-genOp1Bool extVars ss =
-  do
-    ew <- genExpr extVars ss (typeOf :: Type Bool)
-    return $ Op1 Not ew
+genOp1Bool extVars ss = do
+  ew <- genExpr extVars ss (typeOf :: Type Bool)
+  return $ Op1 Not ew
 
 genOp1Num :: Num a => [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
-genOp1Num extVars ss t =
-  do
-    ew  <- genExpr extVars ss t
-    opw <- elements [Abs t, Sign t]
-    return $ Op1 opw ew
+genOp1Num extVars ss t = do
+  ew  <- genExpr extVars ss t
+  opw <- elements [Abs t, Sign t]
+  return $ Op1 opw ew
 
 genOp2Bool :: [DynExtVar] -> [StreamInfo] -> Gen (Expr Bool)
-genOp2Bool extVars ss =
-  do
-    ew1 <- genExpr extVars ss (typeOf :: Type Bool)
-    ew2 <- genExpr extVars ss (typeOf :: Type Bool)
-    opw <- elements [And, Or]
-    return $ Op2 opw ew1 ew2
+genOp2Bool extVars ss = do
+  ew1 <- genExpr extVars ss (typeOf :: Type Bool)
+  ew2 <- genExpr extVars ss (typeOf :: Type Bool)
+  opw <- elements [And, Or]
+  return $ Op2 opw ew1 ew2
 
 genOp2Eq :: [DynExtVar] -> [StreamInfo] -> Gen (Expr Bool)
-genOp2Eq extVars ss =
-  do
-    WrapType t <- genTypeFromStreamInfo's ss
-    ew1 <- genExpr extVars ss t
-    ew2 <- genExpr extVars ss t
-    opw <- elements [Eq t, Ne t]
-    return $ Op2 opw ew1 ew2
+genOp2Eq extVars ss = do
+  WrapType t <- genTypeFromStreamInfo's ss
+  ew1 <- genExpr extVars ss t
+  ew2 <- genExpr extVars ss t
+  opw <- elements [Eq t, Ne t]
+  return $ Op2 opw ew1 ew2
 
--- XXX
--- Figure out how to ensure t comes from a Numeric Class
--- genOp2Ord :: [StreamInfo] -> Gen (Expr Bool)
--- genOp2Ord ss =
---   do
---     WrapType t <- genTypeFromStreamInfo's ss
---     ew1 <- genExpr extVars ss t
---     ew2 <- genExpr extVars ss t
---     opw <- elements
---       [ (Lt t)
---       , (Gt t)
---       , (Le t)
---       , (Ge t) ]
---     return $ Op2 opw ew1 ew2
+genOp2Ord :: [DynExtVar] -> [StreamInfo] -> Gen (Expr Bool)
+genOp2Ord extVars ss = 
+  let ss' = findStreamOmittingType Bool in
+  if (null ss') then genExpr extVars ss Bool 
+    else do
+      WrapType t <- genTypeFromStreamInfo's ss'
+      ew1 <- genExpr extVars ss t
+      ew2 <- genExpr extVars ss t
+      opw <- elements [ (Lt t)
+                      , (Gt t)
+                      , (Le t)
+                      , (Ge t) ]
+      return $ Op2 opw ew1 ew2
+  where
+  findStreamOmittingType :: Type a -> [StreamInfo]
+  findStreamOmittingType t0 = 
+    let p (StreamInfo _ t1 _) = case t0 =~= t1 of
+                                  Just _ -> True
+                                  _      -> False
+    in  filter (not . p) ss
 
 genOp2Num :: [DynExtVar] -> [StreamInfo] -> Type a -> NumWit a -> Gen (Expr a)
-genOp2Num extVars ss t NumWit =
-  do
-    ew1 <- genExpr extVars ss t
-    ew2 <- genExpr extVars ss t
-    opw <- 
-      elements
-        [ (Add t)
-        , (Sub t)
-        , (Mul t) ]
-    return
-      $ Op2 opw ew1 ew2
+genOp2Num extVars ss t NumWit = do
+  ew1 <- genExpr extVars ss t
+  ew2 <- genExpr extVars ss t
+  opw <- elements [ (Add t)
+                  , (Sub t)
+                  , (Mul t) ]
+  return $ Op2 opw ew1 ew2
 
 genOp2Integral :: 
   [DynExtVar] -> [StreamInfo] -> Type a -> IntegralWit a -> Gen (Expr a)
-genOp2Integral extVars ss t IntegralWit =
-  do
-    ew1 <- genExpr extVars ss t
-    ew2 <- genExpr extVars ss t
-    opw <- 
-      elements
-        [ (Div t)
-        , (Mod t) ]
-    return
-      $ Op2 opw ew1 ew2
+genOp2Integral extVars ss t IntegralWit = do
+  ew1 <- genExpr extVars ss t
+  ew2 <- genExpr extVars ss t
+  opw <- elements [ (Div t)
+                  , (Mod t) ]
+  return $ Op2 opw ew1 ew2
 
 genOp3Mux :: [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
-genOp3Mux extVars ss t =
-  do
-    ew1 <- genExpr extVars ss (typeOf :: Type Bool)
-    ew2 <- genExpr extVars ss t
-    ew3 <- genExpr extVars ss t
-    return $ Op3 (Mux t) ew1 ew2 ew3
+genOp3Mux extVars ss t = do
+  ew1 <- genExpr extVars ss (typeOf :: Type Bool)
+  ew2 <- genExpr extVars ss t
+  ew3 <- genExpr extVars ss t
+  return $ Op3 (Mux t) ew1 ew2 ew3
 
 data NumWit a = Num a => NumWit
 
