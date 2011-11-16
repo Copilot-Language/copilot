@@ -62,6 +62,7 @@ library
     Copilot.Core.Type
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
+    Copilot.Core.Type.Eq
     Copilot.Core.Type.Show
     Copilot.Core.Type.Read
     Copilot.Core.Type.Uninitialized
