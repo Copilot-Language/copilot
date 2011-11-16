@@ -24,8 +24,8 @@ myWeights =
     , maxTrigArgs  = 1
     , maxObservers = 0
     , numStreams   = 3 
-    , floatFreq    = 0
-    , doubleFreq   = 0 
+    , floatFreq    = 1
+    , doubleFreq   = 1
     , divModFreq   = False
     }
 
