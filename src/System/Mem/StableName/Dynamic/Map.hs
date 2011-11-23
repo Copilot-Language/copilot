@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 module System.Mem.StableName.Dynamic.Map
-    ( Map
+    ( Map(..)
     , empty
     , null
     , singleton
@@ -46,7 +46,7 @@ notMember k m = not $ member k m
 
 insert :: DynStableName -> a -> Map a -> Map a
 insert k v = Map . IntMap.insertWith (++) (hashDynStableName k) [(k,v)] . getMap
-    
+
 -- | /O(log n)/. Insert with a function for combining the new value and old value.
 -- @'insertWith' f key value mp@
 -- will insert the pair (key, value) into @mp@ if the key does not exist

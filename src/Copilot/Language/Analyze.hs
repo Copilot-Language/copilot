@@ -19,8 +19,10 @@ import Copilot.Language.Stream (Stream (..), FunArg (..))
 import Data.IORef
 import Data.Typeable
 import System.Mem.StableName.Dynamic
-import System.Mem.StableName.Dynamic.Map (Map)
+import System.Mem.StableName.Dynamic.Map (Map(..))
+import Data.IntMap (size)
 import qualified System.Mem.StableName.Dynamic.Map as M
+import Control.Monad (when)
 
 --------------------------------------------------------------------------------
 
@@ -31,6 +33,7 @@ data AnalyzeException
   | DropMaxViolation
   | NestedExternFun
   | NestedArray
+  | TooMuchRecussion
   deriving Typeable
 
 instance Show AnalyzeException where
@@ -43,8 +46,13 @@ instance Show AnalyzeException where
     "Extern function takes an extern function or extern array as an argument!"
   show NestedArray            = 
     "Extern array takes an extern function or extern array as an argument!"
+  show TooMuchRecussion       =
+    "You have exceeded the limit of " ++ show maxRecusion ++ " recursive calls in a stream definition.  Likely, you have accidently defined a circular stream, such as 'x = x'.  Another possibility is you have defined a a polymorphic function with type constraints that references other streams.  For example,\n\n  nats :: (Typed a, Num a) => Stream a\n  nats = [0] ++ nats + 1\n\nis not allowed.  Add a level of indirection, like \n\n  nats :: (Typed a, Num a) => Stream a\n  nats = n\n    where n = [0] ++ nats + 1\n\n  Finally, you may have intended to generate a very large expression.  You can try shrinking the expression by using local variables.  It all else fails, you can increase the maximum size of ecursive calls by modifying 'maxRecursion' in copilot-language."
 
 instance Exception AnalyzeException
+
+maxRecusion :: Int
+maxRecusion = 50000
 
 --------------------------------------------------------------------------------
 
@@ -84,10 +92,12 @@ data SeenExtern = NoExtern
 --------------------------------------------------------------------------------
 
 analyzeExpr :: IORef Env -> Stream a -> IO ()
-analyzeExpr refStreams = go NoExtern M.empty 
+analyzeExpr refStreams s = do
+  b <- mapCheck
+  when b (throw TooMuchRecussion)
+  go NoExtern M.empty s
 
   where
-
   go :: SeenExtern -> Env -> Stream b -> IO ()
   go seenExt nodes e0 =
     do
@@ -123,6 +133,11 @@ analyzeExpr refStreams = go NoExtern M.empty
     case M.lookup dstn nodes of
       Just () -> throw ReferentialCycle
       Nothing -> return ()
+
+  mapCheck :: IO Bool
+  mapCheck = do
+    ref <- readIORef refStreams
+    return $ size (getMap ref) > maxRecusion
 
 --------------------------------------------------------------------------------
 
