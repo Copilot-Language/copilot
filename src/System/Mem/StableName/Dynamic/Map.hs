@@ -25,16 +25,18 @@ import Data.IntMap (IntMap)
 
 import Copilot.Core.Error (impossible)
 
-newtype Map a = Map { getMap :: IntMap [(DynStableName, a)] } 
+data Map a = Map { getMap  :: IntMap [(DynStableName, a)] 
+                 , getSize :: Int } 
 
 empty :: Map a
-empty = Map IntMap.empty
+empty = Map IntMap.empty 0
 
 null :: Map a -> Bool
-null (Map m) = IntMap.null m
+null (Map m _) = IntMap.null m
 
 singleton :: DynStableName -> a -> Map a
-singleton k v = Map $ IntMap.singleton (hashDynStableName k) [(k,v)]
+singleton k v = 
+  Map (IntMap.singleton (hashDynStableName k) [(k,v)]) 1
 
 member :: DynStableName -> Map a -> Bool
 member k m = case lookup k m of
@@ -45,7 +47,10 @@ notMember :: DynStableName -> Map a -> Bool
 notMember k m = not $ member k m 
 
 insert :: DynStableName -> a -> Map a -> Map a
-insert k v = Map . IntMap.insertWith (++) (hashDynStableName k) [(k,v)] . getMap
+insert k v Map { getMap  = mp
+               , getSize = sz }
+  = Map (IntMap.insertWith (++) (hashDynStableName k) [(k,v)] mp)
+        (sz + 1)
 
 -- | /O(log n)/. Insert with a function for combining the new value and old value.
 -- @'insertWith' f key value mp@
@@ -53,7 +58,10 @@ insert k v = Map . IntMap.insertWith (++) (hashDynStableName k) [(k,v)] . getMap
 -- in the map. If the key does exist, the function will insert the pair
 -- @(key, f new_value old_value)@
 insertWith :: (a -> a -> a) -> DynStableName -> a -> Map a -> Map a
-insertWith f k v = Map . IntMap.insertWith go (hashDynStableName k) [(k,v)] . getMap 
+insertWith f k v Map { getMap  = mp
+                     , getSize = sz } 
+  = Map (IntMap.insertWith go (hashDynStableName k) [(k,v)] mp)
+        (sz + 1)
     where 
         go _ ((k',v'):kvs) 
             | k == k' = (k', f v v') : kvs
@@ -62,7 +70,10 @@ insertWith f k v = Map . IntMap.insertWith go (hashDynStableName k) [(k,v)] . ge
 
 -- | Same as 'insertWith', but with the combining function applied strictly.
 insertWith' :: (a -> a -> a) -> DynStableName -> a -> Map a -> Map a
-insertWith' f k v = Map . IntMap.insertWith go (hashDynStableName k) [(k,v)] . getMap 
+insertWith' f k v Map { getMap  = mp
+                      , getSize = sz } 
+  = Map (IntMap.insertWith go (hashDynStableName k) [(k,v)] mp)
+        (sz + 1)
     where 
         go _ ((k',v'):kvs) 
             | k == k' = let v'' = f v v' in v'' `seq` (k', v'') : kvs
@@ -74,7 +85,7 @@ insertWith' f k v = Map . IntMap.insertWith go (hashDynStableName k) [(k,v)] . g
 -- The function will return the corresponding value as a @('Just' value)@
 -- or 'Nothing' if the key isn't in the map.
 lookup :: DynStableName -> Map v -> Maybe v
-lookup k (Map m) = do
+lookup k (Map m _) = do
     pairs <- IntMap.lookup (hashDynStableName k) m
     Prelude.lookup k pairs
 
