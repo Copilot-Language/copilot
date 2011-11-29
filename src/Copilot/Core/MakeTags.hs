@@ -37,7 +37,6 @@ mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
 
   where
-
     mkTagsStrm Stream
       { streamId         = id
       , streamBuffer     = xs
@@ -57,7 +56,6 @@ mkTagsObsvs :: [Observer] -> State Int [Observer]
 mkTagsObsvs = mapM mkTagsObsv
 
   where
-
     mkTagsObsv Observer
       { observerName     = name
       , observerExpr     = e
@@ -73,7 +71,6 @@ mkTagsTrigs :: [Trigger] -> State Int [Trigger]
 mkTagsTrigs = mapM mkTagsTrig
 
  where
-
    mkTagsTrig Trigger
      { triggerName      = name
      , triggerGuard     = g
