@@ -104,27 +104,27 @@ analyzeExpr refStreams s = do
       assertNotVisited e0 dstn nodes
       let nodes' = M.insert dstn () nodes
       case e0 of
-        Append _ _ e       -> analyzeAppend refStreams dstn e
-        Const _            -> return ()
-        Drop k e1          -> analyzeDrop (fromIntegral k) e1
-        Local e f          -> go seenExt nodes' e >> 
-                              go seenExt nodes' (f (Var "dummy"))
-        Op1 _ e            -> go seenExt nodes' e
-        Op2 _ e1 e2        -> go seenExt nodes' e1 >> 
-                              go seenExt nodes' e2
-        Op3 _ e1 e2 e3     -> go seenExt nodes' e1 >> 
-                              go seenExt nodes' e2 >> 
-                              go seenExt nodes' e3
-        ExternFun _ args   -> case seenExt of 
-                                NoExtern -> mapM_ (\(FunArg a) -> 
-                                                      go SeenFun nodes' a) args
-                                SeenFun  -> throw NestedExternFun
-                                SeenArr  -> throw NestedArray
-        ExternArray _ idx  -> case seenExt of 
-                                NoExtern -> go SeenArr nodes' idx
-                                SeenFun  -> throw NestedExternFun
-                                SeenArr  -> throw NestedArray
-        _                  -> return ()
+        Append _ _ e        -> analyzeAppend refStreams dstn e
+        Const _             -> return ()
+        Drop k e1           -> analyzeDrop (fromIntegral k) e1
+        Local e f           -> go seenExt nodes' e >> 
+                               go seenExt nodes' (f (Var "dummy"))
+        Op1 _ e             -> go seenExt nodes' e
+        Op2 _ e1 e2         -> go seenExt nodes' e1 >> 
+                               go seenExt nodes' e2
+        Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >> 
+                               go seenExt nodes' e2 >> 
+                               go seenExt nodes' e3
+        ExternFun _ args    -> case seenExt of 
+                                 NoExtern -> mapM_ (\(FunArg a) -> 
+                                                       go SeenFun nodes' a) args
+                                 SeenFun  -> throw NestedExternFun
+                                 SeenArr  -> throw NestedArray
+        ExternArray _ idx _ -> case seenExt of 
+                                     NoExtern -> go SeenArr nodes' idx
+                                     SeenFun  -> throw NestedExternFun
+                                     SeenArr  -> throw NestedArray
+        _                       -> return ()
 
   assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
   assertNotVisited (Append _ _ _) _    _     = return ()

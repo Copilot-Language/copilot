@@ -35,7 +35,8 @@ extern = Extern
 externFun :: Typed a => String -> [FunArg] -> Stream a
 externFun = ExternFun
 
-externArray :: (Typed a, Typed b, Integral a) => String -> Stream a -> Stream b
+externArray :: (Typed a, Typed b, Integral a) 
+            => String -> Stream a -> Int -> Stream b
 externArray = ExternArray
 
 funArg :: Typed a => Stream a -> FunArg

@@ -52,8 +52,7 @@ mkObserver
   -> IORef [Core.Stream]
   -> Observer
   -> IO Core.Observer
-mkObserver refMkId refStreams refMap (Observer name e) =
-  do 
+mkObserver refMkId refStreams refMap (Observer name e) = do
     w <- mkExpr refMkId refStreams refMap e
     return $
       Core.Observer
@@ -70,8 +69,7 @@ mkTrigger
   -> IORef [Core.Stream]
   -> Trigger
   -> IO Core.Trigger
-mkTrigger refMkId refStreams refMap (Trigger name guard args) =
-  do
+mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
     w1 <- mkExpr refMkId refStreams refMap guard 
     args' <- mapM mkTriggerArg args
     return $
@@ -83,8 +81,7 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) =
   where
 
   mkTriggerArg :: TriggerArg -> IO Core.UExpr
-  mkTriggerArg (TriggerArg e) =
-    do
+  mkTriggerArg (TriggerArg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
 
@@ -103,44 +100,32 @@ mkExpr refMkId refStreams refMap = go
 --  (>>= go) . makeSharingExplicit refMkId
 
   where
-
-  go
-    :: Typed a
-    => Stream a
-    -> IO (Core.Expr a)
+  go :: Typed a => Stream a -> IO (Core.Expr a)
   go e0 =
-
     case e0 of
 
       ------------------------------------------------------
 
-      Append _ _ _ ->
-
-        do s <- mkStream refMkId refStreams refMap e0
-           return $ Core.Drop typeOf 0 s
+      Append _ _ _ -> do
+        s <- mkStream refMkId refStreams refMap e0
+        return $ Core.Drop typeOf 0 s
 
       ------------------------------------------------------
 
       Drop k e1 ->
-
         case e1 of
-          Append _ _ _ ->
-            do
+          Append _ _ _ -> do
               s <- mkStream refMkId refStreams refMap e1
               return $ Core.Drop typeOf (fromIntegral k) s
           _ -> impossible "mkExpr" "copilot-language"
 
       ------------------------------------------------------
 
-      Const x ->
-
-        return $ Core.Const typeOf x
+      Const x -> return $ Core.Const typeOf x
 
       ------------------------------------------------------
 
-      Local e f ->
-
-        do
+      Local e f -> do
           id <- mkId refMkId
           let cs = "local_" ++ show id
           w1 <- go e
@@ -149,54 +134,40 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      Var cs ->
-
-        return $ Core.Var typeOf cs
+      Var cs -> return $ Core.Var typeOf cs
 
       ------------------------------------------------------
 
-      Extern cs ->
-
-        return $ Core.ExternVar typeOf cs
+      Extern cs -> return $ Core.ExternVar typeOf cs
 
       ------------------------------------------------------
 
-      ExternFun cs args ->
-
-        do
+      ExternFun cs args -> do
           args' <- mapM mkFunArg args
           return $ Core.ExternFun typeOf cs args' Nothing
 
       ------------------------------------------------------
 
-      ExternArray cs e ->
-
-        do
+      ExternArray cs e size -> do
           w <- go e
-          return $ Core.ExternArray typeOf typeOf cs w Nothing
+          return $ Core.ExternArray typeOf typeOf cs size w Nothing
 
       ------------------------------------------------------
 
-      Op1 op e ->
-
-        do
+      Op1 op e -> do
           w <- go e
           return $ Core.Op1 op w
 
       ------------------------------------------------------
 
-      Op2 op e1 e2 ->
-
-        do
+      Op2 op e1 e2 -> do
           w1 <- go e1
           w2 <- go e2
           return $ Core.Op2 op w1 w2
 
       ------------------------------------------------------
 
-      Op3 op e1 e2 e3 ->
-
-        do
+      Op3 op e1 e2 e3 -> do
           w1 <- go e1
           w2 <- go e2
           w3 <- go e3
@@ -205,8 +176,7 @@ mkExpr refMkId refStreams refMap = go
       ------------------------------------------------------
 
   mkFunArg :: FunArg -> IO Core.UExpr
-  mkFunArg (FunArg e) =
-    do
+  mkFunArg (FunArg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
 
