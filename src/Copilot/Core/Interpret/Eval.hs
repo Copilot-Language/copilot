@@ -4,7 +4,7 @@
 
 -- | A tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE GADTs, BangPatterns #-}
+{-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
 
 module Copilot.Core.Interpret.Eval
   ( ExtEnv (..)
@@ -18,14 +18,40 @@ import Copilot.Core
 import Copilot.Core.Type.Dynamic
 import Copilot.Core.Type.Show (showWithType, ShowType)
 
+import Prelude hiding (id)
+import qualified Prelude as P
+
 import Data.List (transpose)
 import qualified Data.Map as M
 import Data.Map (Map)
 import Data.Maybe (fromJust, catMaybes)
 import Data.Bits
+import Control.Exception (Exception, throw)
+import Data.Typeable
 
-import Prelude hiding (id)
-import qualified Prelude as P
+--------------------------------------------------------------------------------
+
+data InterpException
+  = NoValues Name
+  | BadType Name
+  | ArrayWrongSize Name Int Int 
+  | ArrayIdxOutofBounds Name Int Int
+  | DivideByZero
+  deriving Typeable
+
+instance Show InterpException where
+ show (NoValues name)                                                 =
+   badUsage $ "you need to supply a list of values for interpreting variable " ++ name
+ show (BadType name)                                                  =
+   badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate"
+ show (ArrayWrongSize name actualSize expectedSize)                   =
+   badUsage $ "in the environment for array " ++ name ++ ", we expect a list of length " ++ show expectedSize ++ ", but the length of the array you supplied is " ++ show actualSize ++ ".  Please redefine the environment"
+ show (ArrayIdxOutofBounds name index size)                                  =
+   badUsage $ "in the environment for array " ++ name ++ ", you gave an index of " ++ show index ++ " where the size of the array is " ++ show size
+ show DivideByZero                                                    =
+   badUsage "divide by zero"
+
+instance Exception InterpException
 
 --------------------------------------------------------------------------------
 
@@ -110,10 +136,10 @@ evalExpr_ k e0 exts locs strms = case e0 of
     let x     = evalExpr_ k e1 exts locs strms in
     let locs' = (name, toDyn t1 x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
-  Var t name                 -> fromJust $ lookup name locs >>= fromDyn t
-  ExternVar t name           -> evalExtern k t name (varEnv exts)
-  ExternFun t name _ _       -> evalFunc k t name exts
-  ExternArray _ t name idx _ -> evalArray k t name evalIdx (arrEnv exts)
+  Var t name                      -> fromJust $ lookup name locs >>= fromDyn t
+  ExternVar t name                -> evalExtern k t name (varEnv exts)
+  ExternFun t name _ _            -> evalFunc k t name exts
+  ExternArray _ t name size idx _ -> evalArray k t name evalIdx (arrEnv exts) size
     where evalIdx = evalExpr_ k idx exts locs strms
   Op1 op e1              -> 
     let ev1 = evalExpr_ k e1 exts locs strms in 
@@ -136,10 +162,10 @@ evalExpr_ k e0 exts locs strms = case e0 of
 evalExtern :: Int -> Type a -> Name -> Env Name -> a
 evalExtern k t name exts = 
   case lookup name exts of
-    Nothing -> badUsage $ "you need to supply a list of values for interpreting variable " ++ name
+    Nothing -> throw (NoValues name)
     Just dyn ->
       case fromDynF t dyn of
-        Nothing -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
+        Nothing -> throw (BadType name) 
         Just xs -> xs !! k
 
 --------------------------------------------------------------------------------
@@ -147,9 +173,7 @@ evalExtern k t name exts =
 evalFunc :: Int -> Type a -> Name -> ExtEnv -> a
 evalFunc k t name exts  = 
   case lookup name (funcEnv exts) of
-    Nothing -> 
-      badUsage $ "to simulate a spec containing the external function "
-                   ++ name ++ ", you need to include a stream to simulate it"
+    Nothing -> throw (NoValues name)
 
     -- We created this spec in Interpreter.hs, copilot-language, so it should
     -- contain no triggers and exactly one observer.
@@ -164,23 +188,24 @@ evalFunc k t name exts  =
            case fromDynF t dyn of
              Nothing    -> impossible "evalFunc" "copilot-core"
              Just expr  -> evalExpr_ k expr exts [] strms
-       _ -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
+       _ -> throw (BadType name) 
 
 --------------------------------------------------------------------------------
 
-evalArray :: Integral b => Int -> Type a -> Name -> b -> ArrEnv -> a
-evalArray k t name idx exts =
+evalArray :: Integral b => Int -> Type a -> Name -> b -> ArrEnv -> Int -> a
+evalArray k t name idx exts size =
   case lookup name exts of
-    Nothing -> badUsage $ "you need to supply a list of finite lists " ++ 
-                 "for interpreting array " ++ name
+    Nothing -> throw (NoValues name) 
     Just dyn ->
       case catMaybes $ map (fromDynF t) dyn of
-        [] -> badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate."
+        [] -> throw (BadType name)
         xs -> let arr = (xs !! k) in
-              if length arr > fromIntegral idx
-                then arr !! fromIntegral idx
-                else badUsage $ "in the environment for array " ++ name ++ 
-                          ", you tried to index out of bounds"
+              if length arr /= size 
+                 then throw (ArrayWrongSize name (length arr) size)
+                 else if length arr > fromIntegral idx
+                        then arr !! fromIntegral idx
+                        else throw (ArrayIdxOutofBounds
+                                      name (fromIntegral idx) size) 
   
 --------------------------------------------------------------------------------
 
@@ -235,7 +260,7 @@ evalOp2 op = case op of
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
-catchZero _ _ 0 = badUsage "divide by zero"
+catchZero _ _ 0 = throw DivideByZero
 catchZero f x y = f x y
 
 --------------------------------------------------------------------------------
