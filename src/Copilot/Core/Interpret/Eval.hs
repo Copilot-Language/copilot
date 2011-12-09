@@ -37,19 +37,22 @@ data InterpException
   | ArrayWrongSize Name Int Int 
   | ArrayIdxOutofBounds Name Int Int
   | DivideByZero
+  | NotEnoughValues Name Int
   deriving Typeable
 
 instance Show InterpException where
  show (NoValues name)                                                 =
-   badUsage $ "you need to supply a list of values for interpreting variable " ++ name
+   badUsage $ "you need to supply a list of values for interpreting external element " ++ name
  show (BadType name)                                                  =
-   badUsage $ "you probably gave the wrong type for external variable " ++ name ++ ".  Recheck your types and re-evaluate"
+   badUsage $ "you probably gave the wrong type for external element " ++ name ++ ".  Recheck your types and re-evaluate"
  show (ArrayWrongSize name actualSize expectedSize)                   =
-   badUsage $ "in the environment for array " ++ name ++ ", we expect a list of length " ++ show expectedSize ++ ", but the length of the array you supplied is " ++ show actualSize ++ ".  Please redefine the environment"
+   badUsage $ "in the environment for external array " ++ name ++ ", we expect a list of length " ++ show expectedSize ++ ", but the length of the array you supplied is " ++ show actualSize ++ ".  Please redefine the environment"
  show (ArrayIdxOutofBounds name index size)                                  =
-   badUsage $ "in the environment for array " ++ name ++ ", you gave an index of " ++ show index ++ " where the size of the array is " ++ show size
+   badUsage $ "in the environment for external array " ++ name ++ ", you gave an index of " ++ show index ++ " where the size of the array is " ++ show size
  show DivideByZero                                                    =
    badUsage "divide by zero"
+ show (NotEnoughValues name k)                                  =
+   badUsage $ "you asked to interpret the specification for at least" ++ show k ++ " iterations, but for external element " ++ name ++ ", there is no " ++ show k ++ "th value"
 
 instance Exception InterpException
 
@@ -137,7 +140,7 @@ evalExpr_ k e0 exts locs strms = case e0 of
     let locs' = (name, toDyn t1 x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
   Var t name                      -> fromJust $ lookup name locs >>= fromDyn t
-  ExternVar t name                -> evalExtern k t name (varEnv exts)
+  ExternVar t name                -> evalExternVar k t name (varEnv exts)
   ExternFun t name _ _            -> evalFunc k t name exts
   ExternArray _ t name size idx _ -> evalArray k t name evalIdx (arrEnv exts) size
     where evalIdx = evalExpr_ k idx exts locs strms
@@ -159,14 +162,15 @@ evalExpr_ k e0 exts locs strms = case e0 of
 
 --------------------------------------------------------------------------------
 
-evalExtern :: Int -> Type a -> Name -> Env Name -> a
-evalExtern k t name exts = 
+evalExternVar :: Int -> Type a -> Name -> Env Name -> a
+evalExternVar k t name exts = 
   case lookup name exts of
     Nothing -> throw (NoValues name)
     Just dyn ->
       case fromDynF t dyn of
         Nothing -> throw (BadType name) 
-        Just xs -> xs !! k
+        Just xs -> if length xs <= k then throw (NotEnoughValues name k)
+                     else xs !! k
 
 --------------------------------------------------------------------------------
 
@@ -199,13 +203,14 @@ evalArray k t name idx exts size =
     Just dyn ->
       case catMaybes $ map (fromDynF t) dyn of
         [] -> throw (BadType name)
-        xs -> let arr = (xs !! k) in
-              if length arr /= size 
-                 then throw (ArrayWrongSize name (length arr) size)
-                 else if length arr > fromIntegral idx
-                        then arr !! fromIntegral idx
-                        else throw (ArrayIdxOutofBounds
-                                      name (fromIntegral idx) size) 
+        xs -> if k >= length xs then throw (NotEnoughValues name k)
+                else let arr = (xs !! k) in
+                     if length arr /= size 
+                       then throw (ArrayWrongSize name (length arr) size)
+                       else if length arr > fromIntegral idx
+                              then arr !! fromIntegral idx
+                              else throw (ArrayIdxOutofBounds
+                                          name (fromIntegral idx) size) 
   
 --------------------------------------------------------------------------------
 
