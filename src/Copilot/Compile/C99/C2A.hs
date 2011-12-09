@@ -13,6 +13,7 @@ import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import Copilot.Compile.C99.MetaTable
 import Copilot.Core (Op1 (..), Op2 (..), Op3 (..))
+import Copilot.Core.Error (impossible)
 import qualified Copilot.Core as C
 import Copilot.Core.Type.Equality ((=~=), coerce, cong)
 import Data.Map (Map)
@@ -53,147 +54,119 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.Const _ x ->
-
-    A.Const x
+  C.Const _ x -> A.Const x
 
   ----------------------------------------------------
 
   C.Drop t i id ->
-
-    let
-      Just strmInfo = M.lookup id (streamInfoMap meta)
-    in
-      drop1 t strmInfo
+    let Just strmInfo = M.lookup id (streamInfoMap meta) in
+    drop1 t strmInfo
 
     where
-
     drop1 :: C.Type a -> StreamInfo -> A.E a
     drop1 t1
       StreamInfo
         { streamInfoQueue = que
         , streamInfoType  = t2
         } =
-      let
-        Just p = t2 =~= t1
-      in
-        case W.exprInst t2 of
-          W.ExprInst ->
-            coerce (cong p) (Q.lookahead (fromIntegral i) que)
+      let Just p = t2 =~= t1 in
+      case W.exprInst t2 of
+        W.ExprInst ->
+          coerce (cong p) (Q.lookahead (fromIntegral i) que)
 
   ----------------------------------------------------
 
   C.Local t1 _ name e1 e2 ->
-
-    let
-      e1'  = c2aExpr_ e1 env meta
-      env' = M.insert name (Local e1' t1) env
-    in
-      c2aExpr_ e2 env' meta
+    let e1'  = c2aExpr_ e1 env meta in
+    let env' = M.insert name (Local e1' t1) env in
+    c2aExpr_ e2 env' meta
 
   ----------------------------------------------------
 
   C.Var t1 name ->
-
-    let
-      Just local = M.lookup name env
-    in
-      case local of
-        Local
-          { localAtomExpr = e
-          , localType     = t2
-          } ->
-            let
-              Just p = t2 =~= t1
-            in
-              case W.exprInst t2 of
-                W.ExprInst ->
-                  coerce (cong p) e
+    let Just local = M.lookup name env in
+    case local of
+      Local
+        { localAtomExpr = e
+        , localType     = t2
+        } ->
+          let Just p = t2 =~= t1 in
+          case W.exprInst t2 of
+            W.ExprInst ->
+              coerce (cong p) e
 
   ----------------------------------------------------
 
   C.ExternVar t name ->
-
-    let
-      Just externInfo = M.lookup name (externInfoMap meta)
-    in
-      externVar1 t externInfo
+    let Just externInfo = M.lookup name (externInfoMap meta) in
+    externVar1 t externInfo
 
     where
-
     externVar1 :: C.Type a -> ExternInfo -> A.E a
     externVar1 t1
       ExternInfo
         { externInfoVar  = v
         , externInfoType = t2
         } =
-      let
-        Just p = t2 =~= t1
-      in
-        coerce (cong p) (A.value v)
+      let Just p = t2 =~= t1 in
+      coerce (cong p) (A.value v)
 
   ----------------------------------------------------
 
-  C.ExternFun t name _ (Just tag) ->
-
-    let
-      Just extFunInfo = M.lookup (name, tag) (externFunInfoMap meta)
+  C.ExternFun t name _ maybeTag ->
+    let tag = case maybeTag of
+                Nothing  -> impossible "c2aExpr_ /ExternFun" "copilot-c99"
+                Just tg  -> tg
     in
-      externFun1 t extFunInfo
+    let Just extFunInfo = M.lookup (name, tag) (externFunInfoMap meta) in
+    externFun1 t extFunInfo
 
     where
-
     externFun1 t1
       ExternFunInfo
         { externFunInfoVar  = var
         , externFunInfoType = t2
         } =
-      let
-        Just p = t2 =~= t1
-      in
-        case W.exprInst t2 of
-          W.ExprInst ->
-            coerce (cong p) (A.value var)
+      let Just p = t2 =~= t1 in
+      case W.exprInst t2 of
+        W.ExprInst ->
+          coerce (cong p) (A.value var)
 
   ----------------------------------------------------
 
-  C.ExternArray _ t name _ (Just tag) ->
-
-    let
-      Just extArrayInfo = M.lookup (name, tag) (externArrayInfoMap meta)
+  C.ExternArray _ t name _ _ maybeTag -> 
+    let tag = case maybeTag of
+                Nothing  -> impossible "c2aExpr_ /ExternArray" "copilot-c99"
+                Just tg  -> tg
     in
-      externArray1 t extArrayInfo
+    let Just extArrayInfo = M.lookup (name, tag) (externArrayInfoMap meta) in
+    externArray1 t extArrayInfo
 
     where
-
     externArray1 t1
       ExternArrayInfo
         { externArrayInfoVar      = var
         , externArrayInfoElemType = t2
         } =
-      let
-        Just p = t2 =~= t1
-      in
-        case W.exprInst t2 of
-          W.ExprInst ->
-            coerce (cong p) (A.value var)
+      let Just p = t2 =~= t1 in
+      case W.exprInst t2 of
+        W.ExprInst ->
+          coerce (cong p) (A.value var)
 
   ----------------------------------------------------
 
-  C.Op1 op e ->
+  C.Op1 op e -> c2aOp1 op (c2aExpr_ e env meta)
 
-    c2aOp1 op (c2aExpr_ e env meta)
+    
 
   ----------------------------------------------------
 
   C.Op2 op e1 e2 ->
-
     c2aOp2 op (c2aExpr_ e1 env meta) (c2aExpr_ e2 env meta)
 
   ----------------------------------------------------
 
   C.Op3 op e1 e2 e3 ->
-
     c2aOp3 op (c2aExpr_ e1 env meta) (c2aExpr_ e2 env meta)
       (c2aExpr_ e3 env meta)
 

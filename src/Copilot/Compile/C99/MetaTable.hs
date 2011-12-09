@@ -20,6 +20,8 @@ import Control.Monad (liftM)
 import qualified Copilot.Compile.C99.Queue as Q
 import qualified Copilot.Compile.C99.Witness as W
 import qualified Copilot.Core as C
+import Copilot.Core.Error (impossible)
+
 import Copilot.Core.External
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -130,8 +132,10 @@ allocExternVar (ExtVar name ut) =
 --------------------------------------------------------------------------------
 
 allocExternArray :: ExtArray -> Atom ((C.Name, C.Tag), ExternArrayInfo)
-allocExternArray (ExtArray name elemType idxExpr idxType (Just tag)) =
-  do
+allocExternArray (ExtArray name elemType idxExpr idxType _ maybeTag) = do
+    let tag = case maybeTag of
+                Nothing  -> impossible "allocExternArray" "copilot-c99"
+                Just tg  -> tg
     W.ExprInst <- return (W.exprInst elemType)
     v <- A.var (mkExternArrayName name tag) (C.uninitialized elemType)
     return ((name, tag), ExternArrayInfo v idxExpr idxType elemType)
@@ -139,8 +143,10 @@ allocExternArray (ExtArray name elemType idxExpr idxType (Just tag)) =
 --------------------------------------------------------------------------------
 
 allocExternFun :: ExtFun -> Atom ((C.Name, C.Tag), ExternFunInfo)
-allocExternFun (ExtFun name t args (Just tag)) =
-  do
+allocExternFun (ExtFun name t args maybeTag) = do
+    let tag = case maybeTag of
+                Nothing  -> impossible "allocExternFun" "copilot-c99"
+                Just tg  -> tg
     W.ExprInst <- return (W.exprInst t)
     v <- A.var (mkExternFunName name tag) (C.uninitialized t)
     return ((name, tag), ExternFunInfo args v t)
