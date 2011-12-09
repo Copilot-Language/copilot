@@ -50,6 +50,7 @@ data Stream :: * -> * where
     :: (Typed a, Typed b, Integral a)
     => String
     -> Stream a
+    -> Int
     -> Stream b
   Local
     :: (Typed a, Typed b)
