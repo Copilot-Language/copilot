@@ -75,6 +75,7 @@ data Expr a where
     => Type a
     -> Type b
     -> Name
+    -> Int
     -> Expr a
     -> Maybe Tag
     -> Expr b

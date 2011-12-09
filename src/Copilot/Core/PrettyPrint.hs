@@ -34,7 +34,8 @@ ppExpr e0 = case e0 of
       (text name <> lparen <> 
          hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
-  ExternArray _ _ name idx _ -> text "extern" <+> doubleQuotes (text name <> lbrack 
+  ExternArray _ _ name 
+              _ idx _        -> text "extern" <+> doubleQuotes (text name <> lbrack 
                                   <> ppExpr idx <> rbrack)
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
                                           <+> ppExpr e1 $$ text "in" <+> ppExpr e2

@@ -28,6 +28,7 @@ data ExtArray = forall a b . Integral a => ExtArray
   , externArrayElemType :: Type b
   , externArrayIdx      :: Expr a
   , externArrayIdxType  :: Type a
+  , externArraySize     :: Int
   , externArrayTag      :: Maybe Tag }
 
 data ExtFun = forall a . ExtFun
@@ -49,18 +50,18 @@ externVars = nubBy eqExt . toList . all externVarsExpr
 
 externVarsExpr :: Expr a -> DList ExtVar
 externVarsExpr e0 = case e0 of
-  Const  _ _            -> empty
-  Drop   _ _ _          -> empty
-  Local _ _ _ e1 e2     -> externVarsExpr e1 `append` externVarsExpr e2
-  Var _ _               -> empty
-  ExternVar t name      -> singleton (ExtVar name (UType t))
-  ExternArray _ _ _ e _ -> externVarsExpr e
-  ExternFun _ _ ues _   -> concat (map externVarsUExpr ues)
-  Op1 _ e               -> externVarsExpr e
-  Op2 _ e1 e2           -> externVarsExpr e1 `append` externVarsExpr e2
-  Op3 _ e1 e2 e3        -> externVarsExpr e1 `append`
-                           externVarsExpr e2 `append`
-                           externVarsExpr e3
+  Const  _ _              -> empty
+  Drop   _ _ _            -> empty
+  Local _ _ _ e1 e2       -> externVarsExpr e1 `append` externVarsExpr e2
+  Var _ _                 -> empty
+  ExternVar t name        -> singleton (ExtVar name (UType t))
+  ExternArray _ _ _ _ e _ -> externVarsExpr e
+  ExternFun _ _ ues _     -> concat (map externVarsUExpr ues)
+  Op1 _ e                 -> externVarsExpr e
+  Op2 _ e1 e2             -> externVarsExpr e1 `append` externVarsExpr e2
+  Op3 _ e1 e2 e3          -> externVarsExpr e1 `append`
+                             externVarsExpr e2 `append`
+                             externVarsExpr e3
 
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
@@ -77,7 +78,8 @@ externArraysExpr e0 = case e0 of
   Local _ _ _ e1 e2               -> externArraysExpr e1 `append` externArraysExpr e2
   Var _ _                         -> empty
   ExternVar _ _                   -> empty
-  ExternArray t1 t2  name idx tag -> singleton (ExtArray name t2 idx t1 tag)
+  ExternArray t1 t2  name 
+              size idx tag        -> singleton (ExtArray name t2 idx t1 size tag)
   ExternFun _ _ ues _             -> concat (map externArraysUExpr ues)
   Op1 _ e                         -> externArraysExpr e
   Op2 _ e1 e2                     -> externArraysExpr e1 `append` externArraysExpr e2
@@ -100,7 +102,7 @@ externFunsExpr e0 = case e0 of
   Local _ _ _ e1 e2           -> externFunsExpr e1 `append` externFunsExpr e2
   Var _ _                     -> empty
   ExternVar _ _               -> empty
-  ExternArray _ _ _ idx _     -> externFunsExpr idx
+  ExternArray _ _ _ _ idx _   -> externFunsExpr idx
   ExternFun t name ues tag    -> singleton (ExtFun name t ues tag)
   Op1 _ e                     -> externFunsExpr e
   Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2

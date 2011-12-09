@@ -369,16 +369,16 @@ extVals rnds Spec { specStreams = strms
   extsFromExpr :: Expr a -> [(Name, UType)]
   extsFromExpr expr =
     case expr of
-      Const _ _              -> []
-      Drop _ _ _             -> []
-      Local _ _ _ e1 e2      -> extsFromExpr e1 ++ extsFromExpr e2
-      Var _ _                -> []
-      ExternVar t name       -> [(name, UType { uTypeType = t })]
-      ExternFun _ _ _ _      -> []
-      ExternArray _ _ _ _ _  -> []
-      Op1 _ e                -> extsFromExpr e
-      Op2 _ e1 e2            -> extsFromExpr e1 ++ extsFromExpr e2
-      Op3 _ e1 e2 e3         -> extsFromExpr e1 ++ extsFromExpr e2
-                                  ++ extsFromExpr e3
+      Const _ _                -> []
+      Drop _ _ _               -> []
+      Local _ _ _ e1 e2        -> extsFromExpr e1 ++ extsFromExpr e2
+      Var _ _                  -> []
+      ExternVar t name         -> [(name, UType { uTypeType = t })]
+      ExternFun _ _ _ _        -> []
+      ExternArray _ _ _ _ _ _  -> []
+      Op1 _ e                  -> extsFromExpr e
+      Op2 _ e1 e2              -> extsFromExpr e1 ++ extsFromExpr e2
+      Op3 _ e1 e2 e3           -> extsFromExpr e1 ++ extsFromExpr e2
+                                    ++ extsFromExpr e3
 
 --------------------------------------------------------------------------------
