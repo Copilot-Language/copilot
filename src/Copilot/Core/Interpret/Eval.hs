@@ -34,25 +34,40 @@ import Data.Typeable
 data InterpException
   = NoValues Name
   | BadType Name
-  | ArrayWrongSize Name Int Int 
+  | ArrayWrongSize Name Int 
   | ArrayIdxOutofBounds Name Int Int
   | DivideByZero
   | NotEnoughValues Name Int
   deriving Typeable
 
 instance Show InterpException where
- show (NoValues name)                                                 =
-   badUsage $ "you need to supply a list of values for interpreting external element " ++ name
- show (BadType name)                                                  =
-   badUsage $ "you probably gave the wrong type for external element " ++ name ++ ".  Recheck your types and re-evaluate"
- show (ArrayWrongSize name actualSize expectedSize)                   =
-   badUsage $ "in the environment for external array " ++ name ++ ", we expect a list of length " ++ show expectedSize ++ ", but the length of the array you supplied is " ++ show actualSize ++ ".  Please redefine the environment"
- show (ArrayIdxOutofBounds name index size)                                  =
-   badUsage $ "in the environment for external array " ++ name ++ ", you gave an index of " ++ show index ++ " where the size of the array is " ++ show size
- show DivideByZero                                                    =
-   badUsage "divide by zero"
- show (NotEnoughValues name k)                                  =
-   badUsage $ "you asked to interpret the specification for at least" ++ show k ++ " iterations, but for external element " ++ name ++ ", there is no " ++ show k ++ "th value"
+  ---------------------------------------
+  show (NoValues name)                                                 =
+    badUsage $ "you need to supply a list of values for interpreting external element " 
+      ++ name
+  ---------------------------------------
+  show (BadType name)                                                  =
+    badUsage $ "you probably gave the wrong type for external element " 
+      ++ name ++ ".  Recheck your types and re-evaluate"
+  ---------------------------------------
+  show (ArrayWrongSize name expectedSize)                   =
+    badUsage $ "in the environment for external array " ++ name 
+      ++ ", we expect a list of length " ++ show expectedSize 
+      ++ ", but the length of the array you supplied is of a different length"
+  ---------------------------------------
+  show (ArrayIdxOutofBounds name index size)                                  =
+    badUsage $ "in the environment for external array " ++ name 
+      ++ ", you gave an index of " ++ show index 
+      ++ " where the size of the array is " ++ show size
+  ---------------------------------------
+  show DivideByZero                                                    =
+    badUsage "divide by zero"
+  ---------------------------------------
+  show (NotEnoughValues name k)                                  =
+    badUsage $ "you asked to interpret the specification for at least" 
+      ++ show k ++ " iterations, but for external element " ++ name 
+      ++ ", there is no " ++ show k ++ "th value"
+  ---------------------------------------
 
 instance Exception InterpException
 
@@ -169,7 +184,7 @@ evalExternVar k t name exts =
     Just dyn ->
       case fromDynF t dyn of
         Nothing -> throw (BadType name) 
-        Just xs -> if length xs <= k then throw (NotEnoughValues name k)
+        Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
                      else xs !! k
 
 --------------------------------------------------------------------------------
@@ -203,11 +218,13 @@ evalArray k t name idx exts size =
     Just dyn ->
       case catMaybes $ map (fromDynF t) dyn of
         [] -> throw (BadType name)
-        xs -> if k >= length xs then throw (NotEnoughValues name k)
+        xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
                 else let arr = (xs !! k) in
-                     if length arr /= size 
-                       then throw (ArrayWrongSize name (length arr) size)
-                       else if length arr > fromIntegral idx
+                     -- convoluted form in case the array is of infinite length
+                     if not (   length (take size arr) == size  
+                             && length (take (size+1) arr) == size)
+                       then throw (ArrayWrongSize name size)
+                       else if longEnough arr (fromIntegral idx)
                               then arr !! fromIntegral idx
                               else throw (ArrayIdxOutofBounds
                                           name (fromIntegral idx) size) 
@@ -339,4 +356,11 @@ evalObserver showType k exts strms
 evalExprs_ :: Int -> Expr a -> ExtEnv -> Env Id -> [a]
 evalExprs_ k e exts strms = 
   map (\i -> evalExpr_ i e exts [] strms) [0..(k-1)]
+
+--------------------------------------------------------------------------------
+
+-- Length on possibly infinite lists
+longEnough :: [a] -> Int -> Bool
+longEnough ls k = length (take k ls) >= k
                                        
+--------------------------------------------------------------------------------
