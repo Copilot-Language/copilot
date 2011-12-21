@@ -6,6 +6,7 @@
 
 module Copilot.Language.Operators.Extern
   ( extern
+  , externB
   , externW8
   , externW16
   , externW32
@@ -19,6 +20,17 @@ module Copilot.Language.Operators.Extern
   , FunArg
   , externFun
   , externArray
+  , externArrayB
+  , externArrayW8
+  , externArrayW16
+  , externArrayW32
+  , externArrayW64
+  , externArrayI8
+  , externArrayI16
+  , externArrayI32
+  , externArrayI64
+  , externArrayF
+  , externArrayD
   , funArg
   ) where
 
@@ -26,6 +38,8 @@ import Copilot.Core (Typed)
 import Copilot.Language.Stream
 import Data.Word
 import Data.Int
+
+type Size = Int
 
 --------------------------------------------------------------------------------
 
@@ -36,7 +50,7 @@ externFun :: Typed a => String -> [FunArg] -> Stream a
 externFun = ExternFun
 
 externArray :: (Typed a, Typed b, Integral a) 
-            => String -> Stream a -> Int -> Stream b
+            => String -> Stream a -> Size -> Stream b
 externArray = ExternArray
 
 funArg :: Typed a => Stream a -> FunArg
@@ -44,6 +58,8 @@ funArg = FunArg
 
 --------------------------------------------------------------------------------
 
+externB   :: String -> Stream Bool
+externB   = extern 
 externW8  :: String -> Stream Word8
 externW8  = extern 
 externW16 :: String -> Stream Word16
@@ -64,3 +80,39 @@ externF   :: String -> Stream Float
 externF   = extern
 externD   :: String -> Stream Double
 externD   = extern
+
+--------------------------------------------------------------------------------
+
+externArrayB   :: (Typed a, Integral a) 
+               => String -> Stream a -> Size -> Stream Bool
+externArrayB   = externArray 
+externArrayW8  :: (Typed a, Integral a) 
+               => String -> Stream a -> Size -> Stream Word8
+externArrayW8  = externArray 
+externArrayW16 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Word16
+externArrayW16 = externArray
+externArrayW32 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Word32
+externArrayW32 = externArray
+externArrayW64 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Word64
+externArrayW64 = externArray
+externArrayI8  :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Int8
+externArrayI8  = externArray
+externArrayI16 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Int16
+externArrayI16 = externArray
+externArrayI32 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Int32
+externArrayI32 = externArray
+externArrayI64 :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Int64
+externArrayI64 = externArray
+externArrayF   :: (Typed a, Integral a)
+               => String -> Stream a -> Size -> Stream Float
+externArrayF   = externArray
+externArrayD   :: (Typed a, Integral a)
+               => String -> Stream a -> Size ->  Stream Double
+externArrayD   = externArray
