@@ -98,6 +98,6 @@ data Expr a where
 --------------------------------------------------------------------------------
 
 -- | A untyped expression (no phantom type).
-data UExpr = forall a . UExpr
+data UExpr = forall a. UExpr
   { uExprType :: Type a
   , uExprExpr :: Expr a }

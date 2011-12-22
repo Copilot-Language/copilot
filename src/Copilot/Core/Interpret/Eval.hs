@@ -46,6 +46,8 @@ instance Show InterpException where
     badUsage $ "you need to supply a list of values for interpreting external element " 
       ++ name
   ---------------------------------------
+
+  -- Should be caught by Analyze.hs in copilot-language.
   show (BadType name)                                                  =
     badUsage $ "you probably gave the wrong type for external element " 
       ++ name ++ ".  Recheck your types and re-evaluate"
