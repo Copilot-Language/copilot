@@ -16,13 +16,23 @@ nats :: Stream Word16
 nats = [0] ++ nats + 1
 
 func0 :: Stream Word16
-func0 = externFun "func0" [funArg $ externW8 "x", funArg nats]
+func0 = externFun "func0" [ funArg $ externW8 "x"
+                          , funArg nats]
 
 func1 :: Stream Bool
 func1 = externFun "func1" []
 
+func2 :: Stream Word16
+func2 = externFun "func0" [ funArg $ constW8 3
+                          , funArg $ constW16 4]
+
+a :: Stream Word16
+a = func0 + func0
+
 spec :: Spec
-spec = trigger "trigger" true [ arg func0, arg func1 ]
+spec = trigger "trigger" true [ arg func0
+                              , arg func1
+                              , arg a ]
   
 main :: IO ()
 main = do
