@@ -62,7 +62,7 @@ instance Show AnalyzeException where
   show (BadNumberOfArgs name) =
     "The function symbol " ++ name ++ " has been redeclared to have different number of arguments."
   show (BadFunctionArgType name) =
-    "the funciton symbol " ++ name ++ " has been declared to have an argument with a different type."
+    "The funciton symbol " ++ name ++ " has been redeclared to an argument with different types."
 
 instance Exception AnalyzeException
 
