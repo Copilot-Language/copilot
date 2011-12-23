@@ -17,6 +17,7 @@ import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
 import Copilot.Language.Stream (Stream (..), FunArg (..))
 import Copilot.Language.Spec
+import Copilot.Language.Error (badUsage)
 
 import Data.List (foldl', groupBy)
 import Data.IORef
@@ -44,24 +45,24 @@ data AnalyzeException
   deriving Typeable
 
 instance Show AnalyzeException where
-  show DropAppliedToNonAppend = "Drop applied to non-append operation!"
-  show DropIndexOverflow      = "Drop index overflow!"
-  show ReferentialCycle       = "Referential cycle!"
-  show DropMaxViolation       = "Maximum drop violation (" ++ 
+  show DropAppliedToNonAppend = badUsage $  "Drop applied to non-append operation!"
+  show DropIndexOverflow      = badUsage $  "Drop index overflow!"
+  show ReferentialCycle       = badUsage $  "Referential cycle!"
+  show DropMaxViolation       = badUsage $  "Maximum drop violation (" ++ 
                                   show (maxBound :: DropIdx) ++ ")!"
-  show NestedExternFun        = 
+  show NestedExternFun        = badUsage $  
     "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
-  show NestedArray            = 
+  show NestedArray            = badUsage $  
     "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
-  show TooMuchRecussion       =
+  show TooMuchRecussion       = badUsage $ 
     "You have exceeded the limit of " ++ show maxRecursion ++ " recursive calls in a stream definition.  Likely, you have accidently defined a circular stream, such as 'x = x'.  Another possibility is you have defined a a polymorphic function with type constraints that references other streams.  For example,\n\n  nats :: (Typed a, Num a) => Stream a\n  nats = [0] ++ nats + 1\n\nis not allowed.  Make the definition monomorphic, or add a level of indirection, like \n\n  nats :: (Typed a, Num a) => Stream a\n  nats = n\n    where n = [0] ++ nats + 1\n\nFinally, you may have intended to generate a very large expression.  You can try shrinking the expression by using local variables.  It all else fails, you can increase the maximum size of ecursive calls by modifying 'maxRecursion' in copilot-language."
-  show (DifferentTypes name) = 
+  show (DifferentTypes name) = badUsage $  
     "The external symbol " ++ name ++ " has been declared to have two different types!"
-  show (Redeclared name) =
+  show (Redeclared name) = badUsage $ 
     "The external symbol " ++ name ++ " has been redeclared to be a different symbol (e.g., a variable and an array, or a variable and a funciton symbol, etc.)."
-  show (BadNumberOfArgs name) =
+  show (BadNumberOfArgs name) = badUsage $ 
     "The function symbol " ++ name ++ " has been redeclared to have different number of arguments."
-  show (BadFunctionArgType name) =
+  show (BadFunctionArgType name) = badUsage $ 
     "The funciton symbol " ++ name ++ " has been redeclared to an argument with different types."
 
 instance Exception AnalyzeException

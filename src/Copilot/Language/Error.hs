@@ -13,4 +13,4 @@ impossible function package =
     "(remove spaces) or file a bug report on github.com."
 
 badUsage :: String -> a
-badUsage msg = error $ "Copilot error: " ++ msg ++ "."
+badUsage msg = error $ "Copilot error: " ++ msg
