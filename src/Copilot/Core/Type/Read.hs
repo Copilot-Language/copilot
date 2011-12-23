@@ -42,7 +42,7 @@ readWithType t str =
     Bool -> case str of
               "0" -> False
               "1" -> True
-              x   -> badUsage $ "in readWithType in copilot-core: expecting a \"0\" or \"1\" when reading a Boolean value " ++ show x
+              x   -> badUsage $ "in readWithType in copilot-core: expecting a \"0\" or \"1\" when reading a Boolean value " ++ show x ++ "."
     _    -> rd
   where
   rd = case readWit t of

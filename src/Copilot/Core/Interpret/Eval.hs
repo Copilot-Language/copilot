@@ -44,31 +44,31 @@ instance Show InterpException where
   ---------------------------------------
   show (NoValues name)                                                 =
     badUsage $ "you need to supply a list of values for interpreting external element " 
-      ++ name
+      ++ name ++ "."
   ---------------------------------------
 
-  -- Should be caught by Analyze.hs in copilot-language.
+  -- Should always be caught by Analyze.hs in copilot-language.
   show (BadType name)                                                  =
     badUsage $ "you probably gave the wrong type for external element " 
-      ++ name ++ ".  Recheck your types and re-evaluate"
+      ++ name ++ ".  Recheck your types and re-evaluate."
   ---------------------------------------
   show (ArrayWrongSize name expectedSize)                   =
     badUsage $ "in the environment for external array " ++ name 
       ++ ", we expect a list of length " ++ show expectedSize 
-      ++ ", but the length of the array you supplied is of a different length"
+      ++ ", but the length of the array you supplied is of a different length."
   ---------------------------------------
   show (ArrayIdxOutofBounds name index size)                                  =
     badUsage $ "in the environment for external array " ++ name 
       ++ ", you gave an index of " ++ show index 
-      ++ " where the size of the array is " ++ show size
+      ++ " where the size of the array is " ++ show size ++ "."
   ---------------------------------------
   show DivideByZero                                                    =
-    badUsage "divide by zero"
+    badUsage "divide by zero."
   ---------------------------------------
   show (NotEnoughValues name k)                                  =
     badUsage $ "you asked to interpret the specification for at least" 
       ++ show k ++ " iterations, but for external element " ++ name 
-      ++ ", there is no " ++ show k ++ "th value"
+      ++ ", there is no " ++ show k ++ "th value."
   ---------------------------------------
 
 instance Exception InterpException
@@ -207,7 +207,7 @@ evalFunc k t name exts  =
                  , observerExprType = t1 }] -> 
          let dyn = toDynF t1 expr_ in
            case fromDynF t dyn of
-             Nothing    -> impossible "evalFunc" "copilot-core"
+             Nothing    -> throw (BadType name)
              Just expr  -> evalExpr_ k expr exts [] strms
        _ -> throw (BadType name) 
 
@@ -222,14 +222,15 @@ evalArray k t name idx exts size =
         [] -> throw (BadType name)
         xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
                 else let arr = (xs !! k) in
-                     -- convoluted form in case the array is of infinite length
-                     if not (   length (take size arr) == size  
-                             && length (take (size+1) arr) == size)
-                       then throw (ArrayWrongSize name size)
-                       else if longEnough arr (fromIntegral idx)
+                     -- convoluted form in case the array is env of infinite
+                     -- length.
+                     if    length (take size arr) == size  
+                        && length (take (size+1) arr) == size
+                       then if longEnough arr (fromIntegral idx)
                               then arr !! fromIntegral idx
                               else throw (ArrayIdxOutofBounds
-                                          name (fromIntegral idx) size) 
+                                           name (fromIntegral idx) size) 
+                       else throw (ArrayWrongSize name size)
   
 --------------------------------------------------------------------------------
 
