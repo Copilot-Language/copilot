@@ -19,13 +19,13 @@ import Copilot.Language.Stream (Stream (..), FunArg (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
 
-import Data.List (foldl', groupBy)
+import Data.List (groupBy)
 import Data.IORef
 import Data.Typeable
 import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Dynamic.Map (Map(..))
 import qualified System.Mem.StableName.Dynamic.Map as M
-import Control.Monad (when, foldM_)
+import Control.Monad (when, foldM_, foldM)
 import Control.Exception (Exception, throw)
 
 --------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ analyze spec = do
   refStreams <- newIORef M.empty
   mapM_ (analyzeTrigger  refStreams) (triggers  $ runSpec spec)
   mapM_ (analyzeObserver refStreams) (observers $ runSpec spec)
-  analyzeExts (specExts spec)
+  specExts refStreams spec >>= analyzeExts 
 
 --------------------------------------------------------------------------------
 
@@ -108,65 +108,68 @@ data SeenExtern = NoExtern
 
 analyzeExpr :: IORef Env -> Stream a -> IO ()
 analyzeExpr refStreams s = do
-  b <- mapCheck
+  b <- mapCheck refStreams
   when b (throw TooMuchRecussion)
   go NoExtern M.empty s
 
   where
   go :: SeenExtern -> Env -> Stream b -> IO ()
-  go seenExt nodes e0 =
-    do
-      dstn <- makeDynStableName e0
-      assertNotVisited e0 dstn nodes
-      let nodes' = M.insert dstn () nodes
-      case e0 of
-        Append _ _ e        -> analyzeAppend refStreams dstn e
-        Const _             -> return ()
-        Drop k e1           -> analyzeDrop (fromIntegral k) e1
-        Extern _            -> return ()
-        ExternFun _ args    -> case seenExt of 
-                                 NoExtern -> mapM_ (\(FunArg a) -> 
-                                                       go SeenFun nodes' a) args
-                                 SeenFun  -> throw NestedExternFun
-                                 SeenArr  -> throw NestedArray
-        ExternArray _ idx _ -> case seenExt of 
-                                     NoExtern -> go SeenArr nodes' idx
-                                     SeenFun  -> throw NestedExternFun
-                                     SeenArr  -> throw NestedArray
-        Local e f           -> go seenExt nodes' e >> 
-                               go seenExt nodes' (f (Var "dummy"))
-        Var _               -> return ()
-        Op1 _ e             -> go seenExt nodes' e
-        Op2 _ e1 e2         -> go seenExt nodes' e1 >> 
-                               go seenExt nodes' e2
-        Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >> 
-                               go seenExt nodes' e2 >> 
-                               go seenExt nodes' e3
-
-  assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
-  assertNotVisited (Append _ _ _) _    _     = return ()
-  assertNotVisited _              dstn nodes =
-    case M.lookup dstn nodes of
-      Just () -> throw ReferentialCycle
-      Nothing -> return ()
-
-  mapCheck :: IO Bool
-  mapCheck = do
-    ref <- readIORef refStreams
-    return $ getSize ref > maxRecursion
+  go seenExt nodes e0 = do
+    dstn <- makeDynStableName e0
+    assertNotVisited e0 dstn nodes
+    let nodes' = M.insert dstn () nodes
+    case e0 of
+      Append _ _ e        -> analyzeAppend refStreams dstn e () analyzeExpr
+      Const _             -> return ()
+      Drop k e1           -> analyzeDrop (fromIntegral k) e1
+      Extern _            -> return ()
+      ExternFun _ args    -> case seenExt of 
+                               NoExtern -> mapM_ (\(FunArg a) -> 
+                                                      go SeenFun nodes' a) args
+                               SeenFun  -> throw NestedExternFun
+                               SeenArr  -> throw NestedArray
+      ExternArray _ idx _ -> case seenExt of 
+                                   NoExtern -> go SeenArr nodes' idx
+                                   SeenFun  -> throw NestedExternFun
+                                   SeenArr  -> throw NestedArray
+      Local e f           -> go seenExt nodes' e >> 
+                             go seenExt nodes' (f (Var "dummy"))
+      Var _               -> return ()
+      Op1 _ e             -> go seenExt nodes' e
+      Op2 _ e1 e2         -> go seenExt nodes' e1 >> 
+                             go seenExt nodes' e2
+      Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >> 
+                             go seenExt nodes' e2 >> 
+                             go seenExt nodes' e3
 
 --------------------------------------------------------------------------------
 
-analyzeAppend :: IORef Env -> DynStableName -> Stream a -> IO ()
-analyzeAppend refStreams dstn e =
-  do
-    streams <- readIORef refStreams
-    case M.lookup dstn streams of
-      Just () -> return ()
-      Nothing ->
-        do
-          modifyIORef refStreams $ M.insert dstn ()
-          analyzeExpr refStreams e
+assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
+assertNotVisited (Append _ _ _) _    _     = return ()
+assertNotVisited _              dstn nodes =
+  case M.lookup dstn nodes of
+    Just () -> throw ReferentialCycle
+    Nothing -> return ()
+
+--------------------------------------------------------------------------------
+
+mapCheck :: IORef Env -> IO Bool
+mapCheck refStreams = do
+  ref <- readIORef refStreams
+  return $ getSize ref > maxRecursion
+
+--------------------------------------------------------------------------------
+
+analyzeAppend :: 
+     IORef Env -> DynStableName -> Stream a -> b
+  -> (IORef Env -> Stream a -> IO b) -> IO b
+analyzeAppend refStreams dstn e b f = do
+  streams <- readIORef refStreams
+  case M.lookup dstn streams of
+    Just () -> return b
+    Nothing -> do
+      modifyIORef refStreams $ M.insert dstn ()
+      f refStreams e
 
 --------------------------------------------------------------------------------
 
@@ -196,12 +199,14 @@ data ExternEnv = ExternEnv
 
 --------------------------------------------------------------------------------
 
+-- Make sure external variables, functions, and arrays are correctly typed.
+
 analyzeExts :: ExternEnv -> IO ()
 analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
                       , externFunEnv  = funs 
                       , externFunArgs = args }
-  = do
+    = do
     -- symbol names redeclared?
     findDups vars arrs
     findDups vars funs
@@ -259,55 +264,70 @@ analyzeExts ExternEnv { externVarEnv  = vars
 
 --------------------------------------------------------------------------------
 
-specExts :: Spec -> ExternEnv
-specExts spec = 
-  let env  = foldl' triggerExts
-                    (ExternEnv [] [] [] []) 
-                    (triggers $ runSpec spec) in
-  foldl' observerExts env (observers $ runSpec spec) 
+specExts :: IORef Env -> Spec -> IO ExternEnv
+specExts refStreams spec = do
+  env <- foldM triggerExts
+           (ExternEnv [] [] [] []) 
+           (triggers $ runSpec spec)
+  foldM observerExts env (observers $ runSpec spec) 
 
   where
-  observerExts :: ExternEnv -> Observer -> ExternEnv
-  observerExts env (Observer _ stream) = collectExts stream env
+  observerExts :: ExternEnv -> Observer -> IO ExternEnv
+  observerExts env (Observer _ stream) = collectExts refStreams stream env
 
-  triggerExts :: ExternEnv -> Trigger -> ExternEnv
-  triggerExts env (Trigger _ guard args) = 
-    let env' = collectExts guard env in
-    foldl' (\env'' (TriggerArg arg_) -> collectExts arg_ env'')
-           env' args
+  triggerExts :: ExternEnv -> Trigger -> IO ExternEnv
+  triggerExts env (Trigger _ guard args) = do
+    env' <- collectExts refStreams guard env 
+    foldM (\env'' (TriggerArg arg_) -> collectExts refStreams arg_ env'')
+          env' args
 
-collectExts :: forall a. C.Typed a => Stream a -> ExternEnv -> ExternEnv
-collectExts stream env =
-  case stream of
-    Append _ _ e           -> collectExts e env
-    Const _                -> env
-    Drop _ e1              -> collectExts e1 env
-    Extern name            -> 
-      let ext = ( name, getSimpleType stream ) in
-      env { externVarEnv = ext : externVarEnv env }
+collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
+collectExts refStreams stream_ env_ = do
+  b <- mapCheck refStreams
+  when b (throw TooMuchRecussion)
+  go M.empty env_ stream_
 
-    ExternFun name args    -> 
-      let argsEnv = foldl' (\env' (FunArg arg_) -> collectExts arg_ env') 
-                           env args 
-      in
-      let argTypes = map (\(FunArg arg_) -> getSimpleType arg_) args in
-      let fun = (name, getSimpleType stream) in
-      let env' = argsEnv { externFunEnv = fun : externFunEnv argsEnv } in
-      env' { externFunArgs = (name, argTypes) : externFunArgs env' }
+  where
+  go :: Env -> ExternEnv -> Stream b -> IO ExternEnv
+  go nodes env stream = do
+    dstn <- makeDynStableName stream
+    assertNotVisited stream dstn nodes
 
-    ExternArray name idx _ -> 
-      let env' = collectExts idx env in
-      let arr = ( name, getSimpleType stream ) in
-      env' { externArrEnv = arr : externArrEnv env' }
+    case stream of
+      Append _ _ e           -> analyzeAppend refStreams dstn e env 
+                                  (\refs str -> collectExts refs str env)
+      Const _                -> return env
+      Drop _ e1              -> go nodes env e1
+      Extern name            -> 
+        let ext = ( name, getSimpleType stream ) in
+        return env { externVarEnv = ext : externVarEnv env }
 
-    Local e _              -> collectExts e env
-    Var _                  -> env
-    Op1 _ e                -> collectExts e env
-    Op2 _ e1 e2            -> let env' = collectExts e1 env   in
-                              collectExts e2 env'
-    Op3 _ e1 e2 e3         -> let env'  = collectExts e1 env  in
-                              let env'' = collectExts e2 env' in
-                              collectExts e3 env''
+      ExternFun name args    -> do
+        env' <- foldM (\env' (FunArg arg_) -> go nodes env' arg_)
+                  env args 
+        let argTypes = map (\(FunArg arg_) -> getSimpleType arg_) args 
+        let fun = (name, getSimpleType stream) 
+        return env' { externFunEnv  = fun : externFunEnv env'
+                    , externFunArgs = (name, argTypes) : externFunArgs env'
+                    }
+
+      ExternArray name idx _ -> do
+        env' <- go nodes env idx
+        let arr = ( name, getSimpleType stream )
+        return env' { externArrEnv = arr : externArrEnv env' }
+
+      Local e _              -> go nodes env e 
+      Var _                  -> return env
+      Op1 _ e                -> go nodes env e 
+      Op2 _ e1 e2            -> do env' <- go nodes env e1
+                                   go nodes env' e2
+      Op3 _ e1 e2 e3         -> do env' <- go nodes env e1  
+                                   env'' <- go nodes env' e2 
+                                   go nodes env'' e3 
+
+--------------------------------------------------------------------------------
 
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
+
+--------------------------------------------------------------------------------

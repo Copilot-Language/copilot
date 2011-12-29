@@ -27,7 +27,7 @@ import qualified System.Mem.StableName.Dynamic.Map as M
 
 reify :: Spec -> IO Core.Spec
 reify spec =
-  do
+  do 
     analyze spec
     let trigs = triggers  $ runSpec spec
     let obsvs = observers $ runSpec spec
