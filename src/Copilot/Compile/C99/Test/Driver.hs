@@ -6,14 +6,20 @@
 
 module Copilot.Compile.C99.Test.Driver
   ( driver
+--  , ExtVars
   ) where
 
 import Copilot.Core
   ( Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), Name
+  , Expr(..) 
   )
-import Copilot.Core.Type.Dynamic (DynamicF (..))
+
+import Copilot.Core.Error (impossible)
+--import Copilot.Core.Type (typeOf, Typed)
+import Copilot.Core.Type.Dynamic (DynamicF (..), toDynF)
 import Copilot.Core.Type.Show (showWithType, ShowType (..))
-import Copilot.Core.Interpret.Eval (ExtEnv(..))
+--import Copilot.Core.Interpret.Eval (ExtEnv(..))
+
 import Data.List (intersperse)
 import Data.Text (Text)
 import Data.Text (pack)
@@ -24,13 +30,44 @@ import Text.PrettyPrint
 
 --------------------------------------------------------------------------------
 
-driver :: Int -> ExtEnv -> Spec -> Text
-driver numIterations env Spec { specTriggers = trigs } =
-  pack $ render $
+driver :: Int -> Spec -> Text
+driver numIterations Spec { specTriggers = trigs } =
+  pack . render $
     ppHeader $$
     ppEnvDecls numIterations env $$
     ppMain numIterations env $$
     ppTriggers trigs
+  where 
+  env :: [ExtVars]
+  env = concatMap extractExts (concatMap triggerArgs trigs)
+
+--------------------------------------------------------------------------------
+
+-- XXX will need to be generalized to external arrays and functions at some
+-- point.
+type  ExtVars = (Name, DynamicF [] Type)
+
+extractExts :: UExpr -> [ExtVars]
+extractExts UExpr { uExprExpr = expr } 
+  = go expr
+
+  where
+  go :: Expr a -> [ExtVars]
+  go e =
+    case e of
+      Const _ _                    -> []
+      Drop _ _ _                   -> []
+      Local _ _ _ e0 e1            -> go e0 ++ go e1
+      Var _ _                      -> []
+      ExternVar t name mvals       -> 
+        case mvals of
+          Nothing   -> impossible "extractExts" "copilot-c99/Test" 
+          Just vals -> [(name, toDynF t vals)]
+      ExternFun _ _ es _ _         -> concatMap extractExts es
+      ExternArray _ _ _ _ idx _ _  -> go idx
+      Op1 _ e0                     -> go e0
+      Op2 _ e0 e1                  -> go e0 ++ go e1
+      Op3 _ e0 e1 e2               -> go e0 ++ go e1 ++ go e2
 
 --------------------------------------------------------------------------------
 
@@ -45,8 +82,8 @@ ppHeader =
 
 --------------------------------------------------------------------------------
 
-ppEnvDecls :: Int -> ExtEnv -> Doc
-ppEnvDecls numIterations ExtEnv { varEnv = vars } = 
+ppEnvDecls :: Int -> [ExtVars] -> Doc
+ppEnvDecls numIterations vars = 
   vcat $  
     [ space  
     , text "// External variables" 
@@ -82,8 +119,8 @@ valsName name = text name <> text "_vals"
 
 --------------------------------------------------------------------------------
 
-ppMain :: Int -> ExtEnv -> Doc
-ppMain numIterations ExtEnv { varEnv = vars } =
+ppMain :: Int -> [ExtVars] -> Doc
+ppMain numIterations vars =
   vcat $
     [ text "int main(int argc, char const *argv[]) {"
     , text "  int i;"
@@ -112,20 +149,14 @@ ppTriggers :: [Trigger] -> Doc
 ppTriggers = foldr ($$) empty . map ppTrigger
 
 ppTrigger :: Trigger -> Doc
-ppTrigger
-  Trigger
-    { triggerName = name
-    , triggerArgs = args } =
+ppTrigger Trigger { triggerName = name
+                  , triggerArgs = args } 
+  =
   hcat $
-    [ text "void" <+>
-        text name <+>
-        text "(" <>
-        ppPars args <>
-        text ")"
+    [ text "void" <+> text name <+> 
+           text "(" <> ppPars args <> text ")"
     , text "{"
-    , nest 2 $
-        ppPrintf name args <>
-        text ";"
+    , nest 2 $ ppPrintf name args <> text ";"
     , text "}"
     ]
 

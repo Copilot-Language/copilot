@@ -97,7 +97,7 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.ExternVar t name ->
+  C.ExternVar t name _ ->
     let Just externInfo = M.lookup name (externInfoMap meta) in
     externVar1 t externInfo
 
@@ -134,7 +134,7 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.ExternArray _ t name _ _ maybeTag -> 
+  C.ExternArray _ t name _ _ _ maybeTag -> 
     let tag = case maybeTag of
                 Nothing  -> impossible "c2aExpr_ /ExternArray" "copilot-c99"
                 Just tg  -> tg

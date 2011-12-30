@@ -7,7 +7,7 @@
 module Main (main) where
 
 import Copilot.Core.PrettyPrint (prettyPrint)
-import Copilot.Core.Random (randomSpec, randomExtVals)
+import Copilot.Core.Random (randomSpec)
 import Copilot.Core.Random.Weights (Weights (..), simpleWeights)
 import Copilot.Compile.C99.Test.CheckSpec (checkSpec)
 
@@ -36,12 +36,12 @@ numIterations = 10
 testRandomSpec :: IO Bool
 testRandomSpec = do
   g <- newStdGen
-  let spec = randomSpec myWeights g
-  let env = randomExtVals numIterations spec myWeights g
+  let spec = randomSpec numIterations myWeights g
+--  let env = randomExtVals numIterations spec myWeights g
   putStrLn "------------------------------------------"
   putStrLn "Specification to test:"
   putStrLn $ prettyPrint spec
-  checkSpec numIterations env spec
+  checkSpec numIterations spec
 
 main :: IO ()
 main = do

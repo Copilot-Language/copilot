@@ -9,7 +9,7 @@ module Copilot.Compile.C99.Test.CheckSpec (checkSpec) where
 import Copilot.Core ( Spec (..), Trigger(..))
 import Copilot.Core.Expr (Name, UExpr (..))
 import Copilot.Core.Type.Eq (UVal (..))
-import Copilot.Core.Interpret.Eval (eval, ExtEnv(..))
+import Copilot.Core.Interpret.Eval (eval)
 import Copilot.Compile.C99 (compile)
 import Copilot.Compile.C99.Params (Params (..), defaultParams)
 import Copilot.Compile.C99.Test.Driver (driver)
@@ -30,13 +30,13 @@ import Text.PrettyPrint (text, (<+>), ($$), render, vcat, hang)
 
 --------------------------------------------------------------------------------
 
-checkSpec :: Int -> ExtEnv -> Spec -> IO Bool
-checkSpec numIterations env spec = do
-  genCFiles numIterations env spec
+checkSpec :: Int -> Spec -> IO Bool
+checkSpec numIterations spec = do
+  genCFiles numIterations spec
   compileCFiles
   csv <- execute numIterations
   let is1 = iterationsFromCSV csv
-  let is2 = interp numIterations env spec
+  let is2 = interp numIterations spec
   let eq = typedOutputs spec is1 == typedOutputs spec is2
   unless eq (putStrLn $ showCompare is1 is2)
   when eq cleanUp -- Keep things around if there's a failure
@@ -85,10 +85,10 @@ typedOutputs Spec { specTriggers = triggers } =
 
 --------------------------------------------------------------------------------
 
-genCFiles :: Int -> ExtEnv -> Spec -> IO ()
-genCFiles numIterations env spec = do
+genCFiles :: Int -> Spec -> IO ()
+genCFiles numIterations spec = do
   compile (defaultParams { prefix = Nothing, verbose = False }) spec
-  TIO.writeFile "driver.c" (driver numIterations env spec)
+  TIO.writeFile "driver.c" (driver numIterations spec)
   return ()
 
 --------------------------------------------------------------------------------
@@ -106,9 +106,9 @@ execute _ = do
 
 --------------------------------------------------------------------------------
 
-interp :: Int -> ExtEnv -> Spec -> [Iteration]
-interp numIterations env = 
-  execTraceToIterations . eval C numIterations env 
+interp :: Int -> Spec -> [Iteration]
+interp numIterations = 
+  execTraceToIterations . eval C numIterations 
 
 --------------------------------------------------------------------------------
 
