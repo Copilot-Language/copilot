@@ -27,7 +27,7 @@ installed when you install Copilot from Hackage, as described below:
   Currently, this includes the C99 back-end and the SBV back-end.
 
 * [copilot-c99](http://hackage.haskell.org/package/copilot-c99) A back-end that
-  translates to [Atom](http://hackage.haskell.org/package/copilot-cbmc) to
+  translates to [Atom](http://hackage.haskell.org/package/atom) to
   generate hard real-time C code.
 
 Optionally, you may which also to install
