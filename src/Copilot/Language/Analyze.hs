@@ -122,7 +122,7 @@ analyzeExpr refStreams s = do
       Append _ _ e        -> analyzeAppend refStreams dstn e () analyzeExpr
       Const _             -> return ()
       Drop k e1           -> analyzeDrop (fromIntegral k) e1
-      Extern _            -> return ()
+      Extern _ _          -> return ()
       ExternFun _ args me -> 
         checkInterp >> checkArgs
         where
@@ -134,10 +134,10 @@ analyzeExpr refStreams s = do
                                              go SeenFun nodes' a) args
                       SeenFun  -> throw NestedExternFun
                       SeenArr  -> throw NestedArray
-      ExternArray _ idx _ -> case seenExt of 
-                                   NoExtern -> go SeenArr nodes' idx
-                                   SeenFun  -> throw NestedExternFun
-                                   SeenArr  -> throw NestedArray
+      ExternArray _ idx _ _ -> case seenExt of 
+                                 NoExtern -> go SeenArr nodes' idx
+                                 SeenFun  -> throw NestedExternFun
+                                 SeenArr  -> throw NestedArray
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -304,7 +304,7 @@ collectExts refStreams stream_ env_ = do
                                   (\refs str -> collectExts refs str env)
       Const _                -> return env
       Drop _ e1              -> go nodes env e1
-      Extern name            -> 
+      Extern name _          -> 
         let ext = ( name, getSimpleType stream ) in
         return env { externVarEnv = ext : externVarEnv env }
 
@@ -320,7 +320,7 @@ collectExts refStreams stream_ env_ = do
                      , externFunArgs = (name, argTypes) : externFunArgs env''
                      }
 
-      ExternArray name idx _ -> do
+      ExternArray name idx _ _ -> do
         env' <- go nodes env idx
         let arr = ( name, getSimpleType stream )
         return env' { externArrEnv = arr : externArrEnv env' }

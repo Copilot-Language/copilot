@@ -5,68 +5,68 @@
 -- | The interpreter.
 
 module Copilot.Language.Interpret
-  ( Input
-  , csv
+  ( --Input
+    csv
   , interpret 
-  , var
-  , array
+--  , var
+--  , array
 --  , func
   ) where
 
-import Copilot.Core.Type (Typed, typeOf)
-import Copilot.Core.Interpret (ExtEnv (..))
-import Copilot.Core.Type.Dynamic (toDynF)
+--import Copilot.Core.Type (Typed, typeOf)
+--import Copilot.Core.Interpret (ExtEnv (..))
+--import Copilot.Core.Type.Dynamic (toDynF)
 import qualified Copilot.Core.Interpret as I
 
 import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
 
-import Data.List (foldl')
+--import Data.List (foldl')
 
 --------------------------------------------------------------------------------
 
-data Input where
-  -- External variables.
-  Var  :: Typed a => String -> [a] -> Input
-  -- External arrays (list of lists).
-  Arr  :: Typed a => String -> [[a]] -> Input
-  -- -- External functions (streams).
-  -- Func :: Typed a => String -> Stream a -> Input
+-- data Input where
+--   -- External variables.
+--   Var  :: Typed a => String -> [a] -> Input
+--   -- External arrays (list of lists).
+--   Arr  :: Typed a => String -> [[a]] -> Input
+--   -- -- External functions (streams).
+--   -- Func :: Typed a => String -> Stream a -> Input
 
-var :: Typed a => String -> [a] -> Input
-var = Var
+-- var :: Typed a => String -> [a] -> Input
+-- var = Var
 
-array :: Typed a => String -> [[a]] -> Input
-array = Arr
+-- array :: Typed a => String -> [[a]] -> Input
+-- array = Arr
 
 -- func :: Typed a => String -> Stream a -> Input
 -- func = Func
 
 --------------------------------------------------------------------------------
 
-csv :: Integer -> [Input] -> Spec -> IO ()
-csv i input_ spec = do
+csv :: Integer -> Spec -> IO ()
+csv i spec = do
   putStrLn "Note: CSV format does not output observers."
-  interpret' I.CSV i input_ spec
+  interpret' I.CSV i spec
 
 --------------------------------------------------------------------------------
 
 -- | Much slower, but pretty-printed interpreter output.  
-interpret :: Integer -> [Input] -> Spec -> IO ()
+interpret :: Integer -> Spec -> IO ()
 interpret = interpret' I.Table
 
-interpret' :: I.Format -> Integer -> [Input] -> Spec -> IO ()
-interpret' format i inputs spec = do
+interpret' :: I.Format -> Integer -> Spec -> IO ()
+interpret' format i spec = do
   coreSpec <- reify spec
 --  fexts    <- funcExts
-  putStrLn $ I.interpret format (fromIntegral i) unionExts coreSpec
+  putStrLn $ I.interpret format (fromIntegral i) coreSpec
 
-  where
-  unionExts :: ExtEnv
-  unionExts = ExtEnv { varEnv  = varEnv varArrExts
-                     , arrEnv  = arrEnv varArrExts
---                     , funcEnv = fexts
-                     }
+--  where
+--   unionExts :: ExtEnv
+--   unionExts = ExtEnv { varEnv  = varEnv varArrExts
+--                      , arrEnv  = arrEnv varArrExts
+-- --                     , funcEnv = fexts
+--                      }
 
   -- -- We do the two folds below over the data type separately, since one
   -- -- component is monadic.
@@ -81,14 +81,14 @@ interpret' format i inputs spec = do
   --     (name, reify $ observer name strm) : acc
   --   envf acc _ = acc
 
-  varArrExts :: ExtEnv
-  varArrExts = foldl' env (ExtEnv [] []) inputs
-    where 
-    env :: ExtEnv -> Input -> ExtEnv
-    env acc (Var name xs) = 
-      acc { varEnv = (name, toDynF typeOf xs) : varEnv acc } 
-    env acc (Arr name xs) = 
-      acc { arrEnv = (name, map (toDynF typeOf) xs) : arrEnv acc }
+  -- varArrExts :: ExtEnv
+  -- varArrExts = foldl' env (ExtEnv [] []) inputs
+  --   where 
+  --   env :: ExtEnv -> Input -> ExtEnv
+  --   env acc (Var name xs) = 
+  --     acc { varEnv = (name, toDynF typeOf xs) : varEnv acc } 
+  --   env acc (Arr name xs) = 
+  --     acc { arrEnv = (name, map (toDynF typeOf) xs) : arrEnv acc }
 --    env acc _ = acc
 
 --------------------------------------------------------------------------------

@@ -141,7 +141,7 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      Extern cs -> return $ Core.ExternVar typeOf cs
+      Extern cs mXs -> return $ Core.ExternVar typeOf cs mXs
 
       ------------------------------------------------------
 
@@ -154,9 +154,9 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      ExternArray cs e size -> do
+      ExternArray cs e size mXs -> do
           w <- go e
-          return $ Core.ExternArray typeOf typeOf cs size w Nothing
+          return $ Core.ExternArray typeOf typeOf cs size w mXs Nothing
 
       ------------------------------------------------------
 

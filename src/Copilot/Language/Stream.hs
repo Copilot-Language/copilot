@@ -40,6 +40,7 @@ data Stream :: * -> * where
   Extern
     :: Typed a
     => String
+    -> Maybe [a]
     -> Stream a
   ExternFun
     :: Typed a
@@ -52,6 +53,7 @@ data Stream :: * -> * where
     => String
     -> Stream a
     -> Int
+    -> Maybe [[b]]
     -> Stream b
   Local
     :: (Typed a, Typed b)
