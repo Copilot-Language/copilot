@@ -11,17 +11,20 @@ module Copilot.Language.Reify
   ( reify
   ) where
 
-import Copilot.Core (Typed, Type, Id, typeOf, impossible)
 import qualified Copilot.Core as Core
+import Copilot.Core (Typed, Type, Id, typeOf, impossible)
+
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream (..), FunArg (..))
-import Data.IORef
+
 import Prelude hiding (id)
+import Data.IORef
 import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Dynamic.Map (Map)
 import qualified System.Mem.StableName.Dynamic.Map as M
+import Control.Monad (liftM)
 
 --------------------------------------------------------------------------------
 
@@ -142,9 +145,12 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      ExternFun cs args -> do
+      ExternFun cs args interpExpr -> do
           args' <- mapM mkFunArg args
-          return $ Core.ExternFun typeOf cs args' Nothing
+          w <- case interpExpr of
+                 Nothing -> return Nothing
+                 Just e  -> liftM Just (go e)
+          return $ Core.ExternFun typeOf cs args' w Nothing
 
       ------------------------------------------------------
 

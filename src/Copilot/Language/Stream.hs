@@ -45,6 +45,7 @@ data Stream :: * -> * where
     :: Typed a
     => String
     -> [FunArg]
+    -> Maybe (Stream a)
     -> Stream a
   ExternArray
     :: (Typed a, Typed b, Integral a)

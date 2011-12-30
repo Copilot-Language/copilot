@@ -123,11 +123,17 @@ analyzeExpr refStreams s = do
       Const _             -> return ()
       Drop k e1           -> analyzeDrop (fromIntegral k) e1
       Extern _            -> return ()
-      ExternFun _ args    -> case seenExt of 
-                               NoExtern -> mapM_ (\(FunArg a) -> 
-                                                      go SeenFun nodes' a) args
-                               SeenFun  -> throw NestedExternFun
-                               SeenArr  -> throw NestedArray
+      ExternFun _ args me -> 
+        checkInterp >> checkArgs
+        where
+        checkInterp = case me of 
+                        Nothing -> return ()
+                        Just e  -> go seenExt nodes' e
+        checkArgs = case seenExt of 
+                      NoExtern -> mapM_ (\(FunArg a) -> 
+                                             go SeenFun nodes' a) args
+                      SeenFun  -> throw NestedExternFun
+                      SeenArr  -> throw NestedArray
       ExternArray _ idx _ -> case seenExt of 
                                    NoExtern -> go SeenArr nodes' idx
                                    SeenFun  -> throw NestedExternFun
@@ -302,14 +308,17 @@ collectExts refStreams stream_ env_ = do
         let ext = ( name, getSimpleType stream ) in
         return env { externVarEnv = ext : externVarEnv env }
 
-      ExternFun name args    -> do
-        env' <- foldM (\env' (FunArg arg_) -> go nodes env' arg_)
-                  env args 
+      ExternFun name args me -> do
+        env' <- case me of
+                  Nothing -> return env 
+                  Just e  -> go nodes env e
+        env'' <- foldM (\env'' (FunArg arg_) -> go nodes env'' arg_)
+                   env' args 
         let argTypes = map (\(FunArg arg_) -> getSimpleType arg_) args 
         let fun = (name, getSimpleType stream) 
-        return env' { externFunEnv  = fun : externFunEnv env'
-                    , externFunArgs = (name, argTypes) : externFunArgs env'
-                    }
+        return env'' { externFunEnv  = fun : externFunEnv env''
+                     , externFunArgs = (name, argTypes) : externFunArgs env''
+                     }
 
       ExternArray name idx _ -> do
         env' <- go nodes env idx

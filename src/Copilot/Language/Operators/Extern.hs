@@ -46,7 +46,7 @@ type Size = Int
 extern :: Typed a => String -> Stream a
 extern = Extern
 
-externFun :: Typed a => String -> [FunArg] -> Stream a
+externFun :: Typed a => String -> [FunArg] -> Maybe (Stream a) -> Stream a
 externFun = ExternFun
 
 externArray :: (Typed a, Typed b, Integral a) 
