@@ -26,10 +26,7 @@ preCode params spec = unlines $
 
 observerDecl :: Params -> Observer -> String
 observerDecl params (Observer cs _ t) = typeSpec t ++ " " ++ name ++ ";"
-
-  where
-
-    name = withPrefix (prefix params) cs
+  where name = withPrefix (prefix params) cs
 
 --------------------------------------------------------------------------------
 
@@ -37,9 +34,11 @@ tmpExtFunVar :: Params -> ExtFun -> String
 tmpExtFunVar _ ExtFun
   { externFunName = name
   , externFunType = t
---  , externFunArgs = args
-  , externFunTag  = Just tag } =
-    "static " ++ typeSpec t ++ " " ++ mkTmpExtFunVarName name tag ++ ";"
+  , externFunTag  = mtag } =
+    case mtag of
+      Nothing  -> impossible "tmpExtFunVar" "copilot-c99"
+      Just tag -> "static " ++ typeSpec t ++ " " 
+                    ++ mkTmpExtFunVarName name tag ++ ";"
 
 --------------------------------------------------------------------------------
 
@@ -52,6 +51,5 @@ postCode params _ =
     , "}"
     ]
 
-  where
-
-  step = withPrefix (prefix params) "copilot" ++ "();"
+  where step = withPrefix (prefix params) "copilot" ++ "();"
+  

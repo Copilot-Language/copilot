@@ -32,7 +32,7 @@ and other packages automatically.  Execute
 Dependencies
 =============
 copilot-c99 depends on the
-[Atom](http://hackage.haskell.org/package/copilot-cbmc) to generate hard
+[Atom](http://hackage.haskell.org/package/copilot-atom) to generate hard
 real-time C code.
 
 Resources

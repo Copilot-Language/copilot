@@ -113,7 +113,7 @@ c2aExpr_ e0 env meta = case e0 of
 
   ----------------------------------------------------
 
-  C.ExternFun t name _ maybeTag ->
+  C.ExternFun t name _ _ maybeTag ->
     let tag = case maybeTag of
                 Nothing  -> impossible "c2aExpr_ /ExternFun" "copilot-c99"
                 Just tg  -> tg
