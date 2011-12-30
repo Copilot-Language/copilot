@@ -7,8 +7,8 @@
 {-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
 
 module Copilot.Core.Interpret.Eval
-  ( ExtEnv (..)
-  , Env 
+  ( --ExtEnv (..)
+    Env 
   , Output
   , ExecTrace (..)
   , eval
@@ -24,7 +24,7 @@ import qualified Prelude as P
 import Data.List (transpose)
 import qualified Data.Map as M
 import Data.Map (Map)
-import Data.Maybe (fromJust, catMaybes)
+import Data.Maybe (fromJust)
 import Data.Bits
 import Control.Exception (Exception, throw)
 import Data.Typeable
@@ -32,26 +32,27 @@ import Data.Typeable
 --------------------------------------------------------------------------------
 
 data InterpException
-  = NoValues Name
-  | BadType Name
-  | ArrayWrongSize Name Int 
+  = -- NoValues Name
+--  | BadType Name
+    ArrayWrongSize Name Int 
   | ArrayIdxOutofBounds Name Int Int
   | DivideByZero
   | NotEnoughValues Name Int
-  | NoExtFunEval Name
+--  | NoExtFunEval Name
+  | NoExtsInterp Name
   deriving Typeable
 
 instance Show InterpException where
   ---------------------------------------
-  show (NoValues name)                                                         =
-    badUsage $ "you need to supply a list of values for interpreting "
-      ++ "external element " ++ name ++ "."
+  -- show (NoValues name)                                                         =
+  --   badUsage $ "you need to supply a list of values for interpreting "
+  --     ++ "external element " ++ name ++ "."
   ---------------------------------------
 
-  -- Should always be caught by Analyze.hs in copilot-language.
-  show (BadType name)                                                          =
-    badUsage $ "you probably gave the wrong type for external element " 
-      ++ name ++ ".  Recheck your types and re-evaluate."
+  -- -- Should always be caught by Analyze.hs in copilot-language.
+  -- show (BadType name)                                                          =
+  --   badUsage $ "you probably gave the wrong type for external element " 
+  --     ++ name ++ ".  Recheck your types and re-evaluate."
   ---------------------------------------
   show (ArrayWrongSize name expectedSize)                                      =
     badUsage $ "in the environment for external array " ++ name 
@@ -71,8 +72,8 @@ instance Show InterpException where
       ++ show k ++ " iterations, but for external element " ++ name 
       ++ ", there is no " ++ show k ++ "th value."
   ---------------------------------------
-  show (NoExtFunEval name)                                                     =
-    badUsage $ "in a call of external function " ++ name ++ ", you did not "
+  show (NoExtsInterp name)                                                     =
+    badUsage $ "in a call of external symbol " ++ name ++ ", you did not "
       ++ "provide an expression for interpretation.  In your external "
       ++ "declaration, you need to provide a 'Just strm', where 'strm' is "
       ++ "some stream with which to simulate the function."
@@ -84,14 +85,14 @@ instance Exception InterpException
 
 type Env nm = [(nm, DynamicF [] Type)]
 
--- | External arrays environment.
-type ArrEnv = [(Name, [DynamicF [] Type])] 
+-- -- | External arrays environment.
+-- type ArrEnv = [(Name, [DynamicF [] Type])] 
 
--- | Environment for simulation.
-data ExtEnv = ExtEnv { varEnv  :: Env Name
-                     , arrEnv  :: ArrEnv 
---                     , funcEnv :: [(Name, Spec)] 
-                     }
+-- -- | Environment for simulation.
+-- data ExtEnv = ExtEnv { varEnv  :: Env Name
+--                      , arrEnv  :: ArrEnv 
+-- --                     , funcEnv :: [(Name, Spec)] 
+--                      }
 
 --------------------------------------------------------------------------------
 
@@ -128,18 +129,18 @@ eval k exts spec =
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
-eval :: ShowType -> Int -> ExtEnv -> Spec -> ExecTrace
-eval showType k exts spec =
+eval :: ShowType -> Int -> Spec -> ExecTrace
+eval showType k spec =
 --  let exts  = take k $ reverse exts'                          in
 
   let initStrms = map initStrm (specStreams spec)             in
 
-  let strms = evalStreams k exts (specStreams spec) initStrms in
+  let strms = evalStreams k (specStreams spec) initStrms      in
 
-  let trigs = map (evalTrigger showType k exts strms) 
+  let trigs = map (evalTrigger showType k strms) 
                   (specTriggers spec)                         in
 
-  let obsvs = map (evalObserver showType k exts strms) 
+  let obsvs = map (evalObserver showType k strms) 
                   (specObservers spec)                        in 
 
   strms `seq` ExecTrace
@@ -153,51 +154,48 @@ eval showType k exts spec =
 
 type LocalEnv = [(Name, Dynamic Type)]
 
-evalExpr_ :: Int -> Expr a -> ExtEnv -> LocalEnv -> Env Id -> a
-evalExpr_ k e0 exts locs strms = case e0 of
-  Const _ x              -> x 
-  Drop t i id            -> 
+evalExpr_ :: Int -> Expr a -> LocalEnv -> Env Id -> a
+evalExpr_ k e0 locs strms = case e0 of
+  Const _ x                          -> x 
+  Drop t i id                        -> 
     let Just xs = lookup id strms >>= fromDynF t in
     reverse xs !! (fromIntegral i + k)
-  Local t1 _ name e1 e2 -> 
-    let x     = evalExpr_ k e1 exts locs strms in
+  Local t1 _ name e1 e2              -> 
+    let x     = evalExpr_ k e1 locs strms in
     let locs' = (name, toDyn t1 x) : locs  in
-    x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
-  Var t name                      -> fromJust $ lookup name locs >>= fromDyn t
-  ExternVar t name                -> evalExternVar k t name (varEnv exts)
-  ExternFun _ name _ expr _       -> --evalFunc k t name expr exts
+    x `seq` locs' `seq` evalExpr_ k e2  locs' strms
+  Var t name                         -> fromJust $ lookup name locs >>= fromDyn t
+  ExternVar _ name xs                -> evalExternVar k name xs
+  ExternFun _ name _ expr _          -> --evalFunc k t name expr 
     case expr of
-      Nothing -> throw (NoExtFunEval name)
-      Just e  -> evalExpr_ k e exts locs strms
-  ExternArray _ t name size idx _ -> evalArray k t name evalIdx (arrEnv exts) size
-    where evalIdx = evalExpr_ k idx exts locs strms
-  Op1 op e1              -> 
-    let ev1 = evalExpr_ k e1 exts locs strms in 
-    let op1 = evalOp1 op                     in
+      Nothing -> throw (NoExtsInterp name)
+      Just e  -> evalExpr_ k e locs strms
+  ExternArray _ _ name size idx xs _ -> evalArray k name evalIdx xs size
+    where evalIdx = evalExpr_ k idx locs strms
+  Op1 op e1                          -> 
+    let ev1 = evalExpr_ k e1 locs strms in 
+    let op1 = evalOp1 op                in
     ev1 `seq` op1 `seq` op1 ev1               
-  Op2 op e1 e2           -> 
-    let ev1 = evalExpr_ k e1 exts locs strms in 
-    let ev2 = evalExpr_ k e2 exts locs strms in 
-    let op2 = evalOp2 op                     in
+  Op2 op e1 e2                       -> 
+    let ev1 = evalExpr_ k e1 locs strms in 
+    let ev2 = evalExpr_ k e2 locs strms in 
+    let op2 = evalOp2 op                in
     ev1 `seq` ev2 `seq` op2 `seq` op2 ev1 ev2
-  Op3 op e1 e2 e3        -> 
-    let ev1 = evalExpr_ k e1 exts locs strms in 
-    let ev2 = evalExpr_ k e2 exts locs strms in 
-    let ev3 = evalExpr_ k e3 exts locs strms in 
-    let op3 = evalOp3 op                     in
+  Op3 op e1 e2 e3                    -> 
+    let ev1 = evalExpr_ k e1 locs strms in 
+    let ev2 = evalExpr_ k e2 locs strms in 
+    let ev3 = evalExpr_ k e3 locs strms in 
+    let op3 = evalOp3 op                in
     ev1 `seq` ev2 `seq` ev3 `seq` op3 `seq` op3 ev1 ev2 ev3
 
 --------------------------------------------------------------------------------
 
-evalExternVar :: Int -> Type a -> Name -> Env Name -> a
-evalExternVar k t name exts = 
-  case lookup name exts of
-    Nothing -> throw (NoValues name)
-    Just dyn ->
-      case fromDynF t dyn of
-        Nothing -> throw (BadType name) 
-        Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
-                     else xs !! k
+evalExternVar :: Int -> Name -> Maybe [a] -> a
+evalExternVar k name exts = 
+  case exts of
+    Nothing -> throw (NoExtsInterp name)
+    Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
+                 else xs !! k
 
 --------------------------------------------------------------------------------
 
@@ -225,15 +223,12 @@ evalExternVar k t name exts =
 
 --------------------------------------------------------------------------------
 
-evalArray :: Integral b => Int -> Type a -> Name -> b -> ArrEnv -> Int -> a
-evalArray k t name idx exts size =
-  case lookup name exts of
-    Nothing -> throw (NoValues name) 
-    Just dyn ->
-      case catMaybes $ map (fromDynF t) dyn of
-        [] -> throw (BadType name)
-        xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
-                else let arr = (xs !! k) in
+evalArray :: Integral b => Int -> Name -> b -> Maybe [[a]] -> Int -> a
+evalArray k name idx exts size =
+  case exts of 
+    Nothing -> throw (NoExtsInterp name)
+    Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
+                  else let arr = (xs !! k) in
                      -- convoluted form in case the array is env of infinite
                      -- length.
                      if    length (take size arr) == size  
@@ -315,8 +310,8 @@ initStrm Stream { streamId       = id
 
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
-evalStreams :: Int -> ExtEnv -> [Stream] -> Env Id -> Env Id
-evalStreams top exts specStrms initStrms = 
+evalStreams :: Int -> [Stream] -> Env Id -> Env Id
+evalStreams top specStrms initStrms = 
   evalStreams_ 0 initStrms 
   where 
   evalStreams_ :: Int -> Env Id -> Env Id
@@ -329,15 +324,15 @@ evalStreams top exts specStrms initStrms =
                       , streamExpr     = e
                       , streamExprType = t } =
       let xs = fromJust $ lookup id strms >>= fromDynF t       in
-      let x  = evalExpr_ k e exts [] strms                     in
+      let x  = evalExpr_ k e [] strms                          in
       let ls = x `seq` (x:xs)                                  in
       (id, toDynF t ls)
 
 --------------------------------------------------------------------------------
 
 evalTrigger :: 
-  ShowType -> Int -> ExtEnv -> Env Id -> Trigger -> [Maybe [Output]]
-evalTrigger showType k exts strms
+  ShowType -> Int -> Env Id -> Trigger -> [Maybe [Output]]
+evalTrigger showType k strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
@@ -349,28 +344,28 @@ evalTrigger showType k exts strms
   tag (False, _) = Nothing
 
   bs :: [Bool]
-  bs = evalExprs_ k e exts strms
+  bs = evalExprs_ k e strms
 
   vs :: [[Output]]
   vs = transpose $ map evalUExpr args 
 
   evalUExpr :: UExpr -> [Output]
   evalUExpr (UExpr t e1) =
-    map (showWithType showType t) (evalExprs_ k e1 exts strms)
+    map (showWithType showType t) (evalExprs_ k e1 strms)
 
 --------------------------------------------------------------------------------
-evalObserver :: ShowType -> Int -> ExtEnv -> Env Id -> Observer -> [Output]
-evalObserver showType k exts strms
+evalObserver :: ShowType -> Int -> Env Id -> Observer -> [Output]
+evalObserver showType k strms
   Observer
     { observerExpr     = e
     , observerExprType = t }
-  = map (showWithType showType t) (evalExprs_ k e exts strms)
+  = map (showWithType showType t) (evalExprs_ k e strms)
 
 --------------------------------------------------------------------------------
 
-evalExprs_ :: Int -> Expr a -> ExtEnv -> Env Id -> [a]
-evalExprs_ k e exts strms = 
-  map (\i -> evalExpr_ i e exts [] strms) [0..(k-1)]
+evalExprs_ :: Int -> Expr a -> Env Id -> [a]
+evalExprs_ k e strms = 
+  map (\i -> evalExpr_ i e [] strms) [0..(k-1)]
 
 --------------------------------------------------------------------------------
 

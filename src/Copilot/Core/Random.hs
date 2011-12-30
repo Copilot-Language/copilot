@@ -2,34 +2,36 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+-- | Random spec generator.
+
 {-# LANGUAGE GADTs, ExistentialQuantification #-}
 
 module Copilot.Core.Random
-  ( randomSpec
-  , randomExtVals ) where
+  ( randomSpec ) where
+--  , randomExtVals 
 
 import Copilot.Core 
-import Copilot.Core.Interpret.Eval (ExtEnv (..), Env)
+--import Copilot.Core.Interpret.Eval (Env)
 import Copilot.Core.Random.Gen
 import Copilot.Core.Random.Weights
 import Copilot.Core.Type.Dynamic
 import Copilot.Core.Type.Equality ((=~=))
 
 import Control.Monad
-import Data.List (foldl', nubBy)
+import Data.List (foldl')
 import Prelude hiding (id)
 import System.Random (StdGen)
 import Control.Monad.Reader
 
 --------------------------------------------------------------------------------
 
-randomSpec :: Weights -> StdGen -> Spec
-randomSpec = runGen genSpec 0
+randomSpec :: Int -> Weights -> StdGen -> Spec
+randomSpec rnds = runGen (genSpec rnds) 0
 
 --------------------------------------------------------------------------------
 
-genSpec :: Gen Spec
-genSpec = do
+genSpec :: Int -> Gen Spec
+genSpec rnds = do
   ws          <- weights
   numTriggers <- choose (1, maxTriggers ws)
   ss          <- genStreamInfo's
@@ -57,7 +59,8 @@ genSpec = do
     genExtVar i = do 
       ws <- weights                 
       WrapType t <- genType ws
-      let expr = ExternVar t ("ext" ++ show i)
+      evalExpr <- randomReplicate rnds t
+      let expr = ExternVar t ("ext" ++ show i) (Just evalExpr)
       return $ toDynF t expr
 
 --------------------------------------------------------------------------------
@@ -332,53 +335,53 @@ data IntegralWit a = Integral a => IntegralWit
 
 --------------------------------------------------------------------------------
 
-randomExtVals :: Int -> Spec -> Weights -> StdGen -> ExtEnv
-randomExtVals rnds spec = runGen env 0
-  where env = do vars <- extVals rnds spec
-                 return ExtEnv { varEnv = vars
-                               , arrEnv = []
---                               , funcEnv = []
-                               }
+-- randomExtVals :: Int -> Spec -> Weights -> StdGen -> ExtEnv
+-- randomExtVals rnds spec = runGen env 0
+--   where env = do vars <- extVals rnds spec
+--                  return ExtEnv { varEnv = vars
+--                                , arrEnv = []
+-- --                               , funcEnv = []
+--                                }
 
 --------------------------------------------------------------------------------
 
 -- Extract the external variables, returning randomly-generated lists for their
 -- values.
-extVals :: Int -> Spec -> Gen (Env Name)
-extVals rnds Spec { specStreams = strms
-                  , specTriggers = triggers } 
-  = 
-  let vars = nubBy (\a b -> fst a == fst b) $ 
-               concatMap strmExts strms ++ 
-               concatMap triggerExts triggers  in
-  mapM randomLst vars
+-- extVals :: Int -> Spec -> Gen (Env Name)
+-- extVals rnds Spec { specStreams = strms
+--                   , specTriggers = triggers } 
+--   = 
+--   let vars = nubBy (\a b -> fst a == fst b) $ 
+--                concatMap strmExts strms ++ 
+--                concatMap triggerExts triggers  in
+--   mapM randomLst vars
 
-  where 
-  randomLst :: (Name, UType) -> Gen (Name, DynamicF [] Type)
-  randomLst (nm, UType { uTypeType = t }) = do
-    rnd <- randomReplicate rnds t
-    return $ (nm, toDynF t rnd)
+--   where 
+--   randomLst :: (Name, UType) -> Gen (Name, DynamicF [] Type)
+--   randomLst (nm, UType { uTypeType = t }) = do
+--     rnd <- randomReplicate rnds t
+--     return $ (nm, toDynF t rnd)
 
-  strmExts Stream { streamExpr = expr } = extsFromExpr expr
+--   strmExts Stream { streamExpr = expr } = extsFromExpr expr
 
-  triggerExts Trigger { triggerGuard = grd
-                      , triggerArgs = args } = 
-    extsFromExpr grd ++ concatMap getExpr args
-      where getExpr UExpr { uExprExpr = expr } = extsFromExpr expr
+--   triggerExts Trigger { triggerGuard = grd
+--                       , triggerArgs = args } = 
+--     extsFromExpr grd ++ concatMap getExpr args
+--       where getExpr UExpr { uExprExpr = expr } = extsFromExpr expr
   
-  extsFromExpr :: Expr a -> [(Name, UType)]
-  extsFromExpr expr =
-    case expr of
-      Const _ _                -> []
-      Drop _ _ _               -> []
-      Local _ _ _ e1 e2        -> extsFromExpr e1 ++ extsFromExpr e2
-      Var _ _                  -> []
-      ExternVar t name         -> [(name, UType { uTypeType = t })]
-      ExternFun _ _ _ _ _      -> []
-      ExternArray _ _ _ _ _ _  -> []
-      Op1 _ e                  -> extsFromExpr e
-      Op2 _ e1 e2              -> extsFromExpr e1 ++ extsFromExpr e2
-      Op3 _ e1 e2 e3           -> extsFromExpr e1 ++ extsFromExpr e2
-                                    ++ extsFromExpr e3
+--   extsFromExpr :: Expr a -> [(Name, UType)]
+--   extsFromExpr expr =
+--     case expr of
+--       Const _ _                  -> []
+--       Drop _ _ _                 -> []
+--       Local _ _ _ e1 e2          -> extsFromExpr e1 ++ extsFromExpr e2
+--       Var _ _                    -> []
+--       ExternVar t name _         -> [(name, UType { uTypeType = t })]
+--       ExternFun _ _ _ _ _        -> []
+--       ExternArray _ _ _ _ _ _ _  -> []
+--       Op1 _ e                    -> extsFromExpr e
+--       Op2 _ e1 e2                -> extsFromExpr e1 ++ extsFromExpr e2
+--       Op3 _ e1 e2 e3             -> extsFromExpr e1 ++ extsFromExpr e2
+--                                       ++ extsFromExpr e3
 
 --------------------------------------------------------------------------------

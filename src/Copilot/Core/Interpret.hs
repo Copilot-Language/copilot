@@ -5,8 +5,8 @@
 -- | An interpreter for Copilot specifications.
 
 module Copilot.Core.Interpret
-  ( ExtEnv (..)
-  , Format (..)
+  ( --ExtEnv (..)
+    Format (..)
   , interpret
   ) where
 
@@ -18,10 +18,9 @@ import Copilot.Core.Type.Show (ShowType(..))
 data Format = Table | CSV
 
 -- | Interprets a Copilot specification.
-interpret :: Format -> Int -> ExtEnv -> Spec -> String
-interpret format k exts spec =
+interpret :: Format -> Int -> Spec -> String
+interpret format k spec =
   case format of
     Table -> renderAsTable e
     CSV   -> renderAsCSV e
-
-  where e = eval Haskell k exts spec
+  where e = eval Haskell k spec

@@ -63,6 +63,7 @@ data Expr a where
   ExternVar
     :: Type a
     -> Name
+    -> Maybe [a]
     -> Expr a
   ExternFun
     :: Type a
@@ -78,6 +79,7 @@ data Expr a where
     -> Name
     -> Int
     -> Expr a
+    -> Maybe [[b]]
     -> Maybe Tag
     -> Expr b
   Op1
