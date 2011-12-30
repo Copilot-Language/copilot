@@ -12,11 +12,10 @@ import Control.Monad.State
 import Prelude hiding (id)
 
 next :: State Int Int
-next =
-  do
-    k <- get
-    put (succ k)
-    return k
+next = do
+  k <- get
+  put (succ k)
+  return k
 
 makeTags :: Spec -> Spec
 makeTags spec = evalState (mkTagsSpec spec) 0
@@ -96,9 +95,9 @@ mkTagsExpr e0 = case e0 of
   Local t1 t2 name e1 e2         -> liftM2 (Local t1 t2 name) (mkTagsExpr e1) (mkTagsExpr e2)
   Var t name                     -> return $ Var t name
   ExternVar t name               -> return $ ExternVar t name
-  ExternFun t name args _        -> do args' <- mapM mkTagsUExpr args
+  ExternFun t name args expr _   -> do args' <- mapM mkTagsUExpr args
                                        k <- next
-                                       return $ ExternFun t name args' (Just k)
+                                       return $ ExternFun t name args' expr (Just k)
   ExternArray t1 t2 name 
               size idx _         -> do idx' <- mkTagsExpr idx
                                        k <- next

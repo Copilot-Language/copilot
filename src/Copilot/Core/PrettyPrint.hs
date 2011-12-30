@@ -29,7 +29,7 @@ ppExpr e0 = case e0 of
   Drop _ 0 id                -> strmName id
   Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
   ExternVar _ name           -> text "extern" <+> doubleQuotes (text name)
-  ExternFun _ name args _    -> 
+  ExternFun _ name args _ _  -> 
     text "extern" <+> doubleQuotes 
       (text name <> lparen <> 
          hcat (punctuate (comma <> space) (map ppUExpr args))

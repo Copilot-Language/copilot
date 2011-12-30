@@ -68,6 +68,7 @@ data Expr a where
     :: Type a
     -> Name
     -> [UExpr]
+    -> Maybe (Expr a)
     -> Maybe Tag
     -> Expr a
   ExternArray

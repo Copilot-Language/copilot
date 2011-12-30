@@ -337,7 +337,7 @@ randomExtVals rnds spec = runGen env 0
   where env = do vars <- extVals rnds spec
                  return ExtEnv { varEnv = vars
                                , arrEnv = []
-                               , funcEnv = []
+--                               , funcEnv = []
                                }
 
 --------------------------------------------------------------------------------
@@ -374,7 +374,7 @@ extVals rnds Spec { specStreams = strms
       Local _ _ _ e1 e2        -> extsFromExpr e1 ++ extsFromExpr e2
       Var _ _                  -> []
       ExternVar t name         -> [(name, UType { uTypeType = t })]
-      ExternFun _ _ _ _        -> []
+      ExternFun _ _ _ _ _      -> []
       ExternArray _ _ _ _ _ _  -> []
       Op1 _ e                  -> extsFromExpr e
       Op2 _ e1 e2              -> extsFromExpr e1 ++ extsFromExpr e2

@@ -38,37 +38,44 @@ data InterpException
   | ArrayIdxOutofBounds Name Int Int
   | DivideByZero
   | NotEnoughValues Name Int
+  | NoExtFunEval Name
   deriving Typeable
 
 instance Show InterpException where
   ---------------------------------------
-  show (NoValues name)                                                 =
-    badUsage $ "you need to supply a list of values for interpreting external element " 
-      ++ name ++ "."
+  show (NoValues name)                                                         =
+    badUsage $ "you need to supply a list of values for interpreting "
+      ++ "external element " ++ name ++ "."
   ---------------------------------------
 
   -- Should always be caught by Analyze.hs in copilot-language.
-  show (BadType name)                                                  =
+  show (BadType name)                                                          =
     badUsage $ "you probably gave the wrong type for external element " 
       ++ name ++ ".  Recheck your types and re-evaluate."
   ---------------------------------------
-  show (ArrayWrongSize name expectedSize)                   =
+  show (ArrayWrongSize name expectedSize)                                      =
     badUsage $ "in the environment for external array " ++ name 
       ++ ", we expect a list of length " ++ show expectedSize 
       ++ ", but the length of the array you supplied is of a different length."
   ---------------------------------------
-  show (ArrayIdxOutofBounds name index size)                                  =
+  show (ArrayIdxOutofBounds name index size)                                   =
     badUsage $ "in the environment for external array " ++ name 
       ++ ", you gave an index of " ++ show index 
       ++ " where the size of the array is " ++ show size ++ "."
   ---------------------------------------
-  show DivideByZero                                                    =
+  show DivideByZero                                                            =
     badUsage "divide by zero."
   ---------------------------------------
-  show (NotEnoughValues name k)                                  =
+  show (NotEnoughValues name k)                                                =
     badUsage $ "you asked to interpret the specification for at least" 
       ++ show k ++ " iterations, but for external element " ++ name 
       ++ ", there is no " ++ show k ++ "th value."
+  ---------------------------------------
+  show (NoExtFunEval name)                                                     =
+    badUsage $ "in a call of external function " ++ name ++ ", you did not "
+      ++ "provide an expression for interpretation.  In your external "
+      ++ "declaration, you need to provide a 'Just strm', where 'strm' is "
+      ++ "some stream with which to simulate the function."
   ---------------------------------------
 
 instance Exception InterpException
@@ -83,7 +90,7 @@ type ArrEnv = [(Name, [DynamicF [] Type])]
 -- | Environment for simulation.
 data ExtEnv = ExtEnv { varEnv  :: Env Name
                      , arrEnv  :: ArrEnv 
-                     , funcEnv :: [(Name, Spec)] 
+--                     , funcEnv :: [(Name, Spec)] 
                      }
 
 --------------------------------------------------------------------------------
@@ -158,7 +165,10 @@ evalExpr_ k e0 exts locs strms = case e0 of
     x `seq` locs' `seq` evalExpr_ k e2 exts locs' strms
   Var t name                      -> fromJust $ lookup name locs >>= fromDyn t
   ExternVar t name                -> evalExternVar k t name (varEnv exts)
-  ExternFun t name _ _            -> evalFunc k t name exts
+  ExternFun _ name _ expr _       -> --evalFunc k t name expr exts
+    case expr of
+      Nothing -> throw (NoExtFunEval name)
+      Just e  -> evalExpr_ k e exts locs strms
   ExternArray _ t name size idx _ -> evalArray k t name evalIdx (arrEnv exts) size
     where evalIdx = evalExpr_ k idx exts locs strms
   Op1 op e1              -> 
@@ -191,25 +201,27 @@ evalExternVar k t name exts =
 
 --------------------------------------------------------------------------------
 
-evalFunc :: Int -> Type a -> Name -> ExtEnv -> a
-evalFunc k t name exts  = 
-  case lookup name (funcEnv exts) of
-    Nothing -> throw (NoValues name)
+-- evalFunc :: Int -> Type a -> Name -> Expr a -> ExtEnv -> a
+-- evalFunc k t name expr exts  = 
+--   evalExpr k expr 
 
-    -- We created this spec in Interpreter.hs, copilot-language, so it should
-    -- contain no triggers and exactly one observer.
-    Just Spec { specStreams   = specStrms
-              , specObservers = obsLs }  -> 
-     let initStrms = map initStrm specStrms             in
-     let strms = evalStreams k exts specStrms initStrms in
-     case obsLs of
-       [Observer { observerExpr     = expr_
-                 , observerExprType = t1 }] -> 
-         let dyn = toDynF t1 expr_ in
-           case fromDynF t dyn of
-             Nothing    -> throw (BadType name)
-             Just expr  -> evalExpr_ k expr exts [] strms
-       _ -> throw (BadType name) 
+--   case lookup name (funcEnv exts) of
+--     Nothing -> throw (NoValues name)
+
+--     -- We created this spec in Interpreter.hs, copilot-language, so it should
+--     -- contain no triggers and exactly one observer.
+--     Just Spec { specStreams   = specStrms
+--               , specObservers = obsLs }  -> 
+--      let initStrms = map initStrm specStrms             in
+--      let strms = evalStreams k exts specStrms initStrms in
+--      case obsLs of
+--        [Observer { observerExpr     = expr_
+--                  , observerExprType = t1 }] -> 
+--          let dyn = toDynF t1 expr_ in
+--            case fromDynF t dyn of
+--              Nothing    -> throw (BadType name)
+--              Just expr  -> evalExpr_ k expr exts [] strms
+--        _ -> throw (BadType name) 
 
 --------------------------------------------------------------------------------
 
