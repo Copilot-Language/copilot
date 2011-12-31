@@ -6,7 +6,10 @@
 
 module Main where
 
-import System.Directory (removeDirectoryRecursive, doesDirectoryExist)
+import System.Directory ( removeDirectoryRecursive
+                        , doesDirectoryExist
+                        , doesFileExist
+                        , removeFile )
 import qualified Copilot.Compile.C99 as C99
 import qualified Copilot.Compile.SBV as SBV
 import Control.Monad (when)
@@ -99,5 +102,8 @@ cleanup = do
   when b0 (removeDirectoryRecursive SBV.sbvDirName)
   b1 <- doesDirectoryExist C99.c99DirName
   when b1 (removeDirectoryRecursive C99.c99DirName)
+  let cbmc = "cbmc_driver.c"
+  b2 <- doesFileExist cbmc
+  when b2 (removeFile cbmc)
 
 --------------------------------------------------------------------------------

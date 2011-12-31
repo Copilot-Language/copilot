@@ -10,8 +10,9 @@ module Examples ( examples ) where
 
 import qualified Prelude as P
 import Language.Copilot hiding (even, odd)
-import Copilot.Compile.C99
+--import Copilot.Compile.C99
 import qualified Copilot.Tools.CBMC as C
+
 --------------------------------------------------------------------------------
 
 --

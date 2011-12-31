@@ -48,6 +48,5 @@ executable copilot-regression
                    , copilot-sbv
                    , copilot-cbmc
                    , copilot-c99 >= 0.2
-
                    , directory >= 1.1
                    , random
