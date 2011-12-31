@@ -1,6 +1,6 @@
 -- | Stack library tests.
 
-module Copilot.Examples.StackExamples where
+module StackExamples ( stackExamples ) where
 
 
 import Prelude ()
@@ -26,7 +26,7 @@ popSignal = replicate 6 False P.++ replicate 6 True ++ false
 -- all operations on a stack of depth 5, of type Word16 and with
 -- start/default value 0
 stackStream :: Stream Word16
-stackStream = stack 5 0 popSignal pushSignal pushValue
+stackStream = stack (5::Int) 0 popSignal pushSignal pushValue
 
 
 stackTest :: Spec
@@ -34,8 +34,9 @@ stackTest = do
   observer "stack" stackStream
 
 
-test = do
+stackExamples :: IO ()
+stackExamples = do
   prettyPrint stackTest
   putStrLn ""
   putStrLn ""
-  interpret 15 [] stackTest
+  interpret 15 stackTest

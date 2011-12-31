@@ -6,7 +6,7 @@
 
 -- Examples of casting types.  
 
-module Main where
+module Cast ( castEx ) where
 
 import Language.Copilot hiding (even, odd)
 import Copilot.Compile.C99
@@ -26,7 +26,7 @@ y = 1 + cast x
 spec :: Spec
 spec = trigger "trigger" true [arg y, arg i]
 
-main :: IO ()
-main = do 
-  interpret 10 [] spec
+castEx :: IO ()
+castEx = do 
+  interpret 10 spec
   reify spec >>= compile defaultParams

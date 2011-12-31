@@ -6,7 +6,7 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
-module Main where
+module Examples ( examples ) where
 
 import qualified Prelude as P
 import Language.Copilot hiding (even, odd)
@@ -18,9 +18,35 @@ import qualified Copilot.Tools.CBMC as C
 -- Some utility functions:
 --
 
+{-
 
 implyStream :: Stream Bool -> Stream Bool -> Stream Bool
 implyStream p q = not p || q
+
+
+extEven :: Stream Bool
+extEven = externX `mod` 2 == 0
+
+oddSpec :: Spec
+oddSpec = trigger "f" true [arg (odd nats)]
+
+prop :: Stream Bool
+prop = (x - x') <= 5 && (x - x') <= (-5)
+  where
+  x :: Stream Int32
+  x  = [0] ++ cast externX
+  x' = drop 1 x
+
+externX :: Stream Int8
+externX = extern "x" (Just [0..])
+
+foo :: Spec
+foo = do
+  let x = cast externX :: Stream Int16
+  trigger "trigger" true [arg $ x < 3]
+  observer "debug_x" x
+
+-}
 
 flipflop :: Stream Bool -> Stream Bool
 flipflop x = y
@@ -35,9 +61,6 @@ even x = x `mod` 2 == 0
 
 odd :: (P.Integral a, Typed a) => Stream a -> Stream Bool
 odd = not . even
-
-extEven :: Stream Bool
-extEven = externI64 "x" `mod` 2 == 0
 
 counter :: (Num a, Typed a) => Stream Bool -> Stream a
 counter reset = y
@@ -58,23 +81,14 @@ bitWise = ( let a = [ 1, 1, 0 ] ++ a in a )
 
 sumExterns :: Stream Word64
 sumExterns =
-  let ex1 = extern "e1"
-      ex2 = extern "e2"
+  let ex1 = extern "e1" (Just e1)
+      ex2 = extern "e2" (Just e2)
   in  ex1 + ex2
 
-oddSpec :: Spec
-oddSpec = trigger "f" true [arg (odd nats)]
-
-prop :: Stream Bool
-prop = (x - x') <= 5 && (x - x') <= (-5)
-  where
-  x  = [0] ++ externI32 "x"
-  x' = drop 1 x
-
-foo = do
-  let x = externW8 "x"
-  trigger "trigger" true [arg $ x < 3]
-  observer "debug_x" x
+--- Some infinite lists for simulating external variables:
+e1, e2 :: [Word64]
+e1 = [0..]
+e2 = 5 : 4 : e2
 
 --------------------------------------------------------------------------------
 
@@ -84,8 +98,7 @@ foo = do
 
 -- A specification:
 spec :: Spec 
-spec =
-  do
+spec = do
 
     -- A trigger with four arguments:
     trigger "e" true -- booleans
@@ -102,36 +115,30 @@ spec =
 --      [ arg (counter false + 25 :: Stream Int32) ]
 
     -- A trigger with a single argument (should never fire):
-    trigger "h" (extern "e3" /= fib)
+    let e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
+    trigger "h" (extern "e3" (Just e3) /= fib)
       [ arg (0 :: Stream Int8) ]
 
     observer "i" (odd nats)
 
---- Some infinite lists for simulating external variables:
-e1, e2, e3 :: [Word64]
-e1 = [0..]
-e2 = 5 : 4 : e2
-e3 = [1, 1] P.++ zipWith (+) e3 (P.drop 1 e3)
-
-main :: IO ()
-main =
-  do
-    putStrLn "PrettyPrinter:"
-    putStrLn ""
-    prettyPrint spec
-    putStrLn ""
-    putStrLn ""
-    putStrLn "Interpreter:"
-    putStrLn ""
-    interpret 10 [var "e1" e1, var "e2" e2, var "e3" e3] spec
-    putStrLn ""
-    putStrLn ""
-    putStrLn "Atom:"
-    reify spec >>= compile defaultParams 
-    putStrLn "Check equivalence:"
-    putStrLn ""
-    putStrLn ""
-    reify spec >>= 
-      C.genCBMC C.defaultParams {C.numIterations = 20}
+examples :: IO ()
+examples = do
+  putStrLn "PrettyPrinter:"
+  putStrLn ""
+  prettyPrint spec
+  putStrLn ""
+  putStrLn ""
+  putStrLn "Interpreter:"
+  putStrLn ""
+  interpret 10 spec
+  putStrLn ""
+  putStrLn ""
+  putStrLn "Atom:"
+  reify spec >>= compile defaultParams 
+  putStrLn "Check equivalence:"
+  putStrLn ""
+  putStrLn ""
+  reify spec >>= 
+    C.genCBMC C.defaultParams {C.numIterations = 20}
 
 --------------------------------------------------------------------------------

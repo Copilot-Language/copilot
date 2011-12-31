@@ -1,58 +1,85 @@
-module Test where
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
-import qualified Prelude as P
+-- | A test suite to check for basic functionality.
 
-import Copilot.Language.Prelude
-import Copilot.Language
-import Copilot.Language.Reify (reify)
+module Main where
 
-import qualified Copilot.Compile.SBV as S
+import System.Directory (removeFile, removeDirectoryRecursive)
 
-nats :: Stream Word64
-nats = [0] ++ nats + 1
-
-alt :: Stream Bool
-alt = [True] ++ not alt
-
-alt2 :: Stream Word64
-alt2 = [0,1,2] ++ alt2 + 1
-
-alt3 :: Stream Bool
-alt3 = [True,True,False] ++ alt3
-
-fib :: Stream Word64
-fib = [0, 1] ++ fib + drop 1 fib
-
-fib' :: Stream Word64
-fib' = [0, 1] ++ fib' + drop 1 fib
-
-logic :: Stream Bool
-logic = [True, False] ++ logic || drop 1 logic
-
-sumExterns :: Stream Word64
-sumExterns =
-  let
-    e1 = extern "e1"
-    e2 = extern "e2"
-  in
-    e1 + e2 + e1
+import AddMult
+import Array
+--import BadExtVars
+import Cast
+import ClockExamples
+import EngineExample
+import Examples
+import Examples2
+import ExtFuns
+import Local
+import LTLExamples
+import PTLTLExamples
+import Random
+import RegExpExamples
+import StackExamples
+import StatExamples
+import VotingExamples
 
 
-spec :: Spec
-spec = do
-  trigger "trig1" alt [ arg $ nats < 3
-                      , arg sumExterns 
-                      , arg logic
-                      ]
+--------------------------------------------------------------------------------
 
-specC :: IO ()
-specC = reify spec >>= S.compile "test1" 
-  
+main :: IO ()
+main = do
+  putStrLn "Testing addMult ..."
+  addMult         >> sbvCleanup
+  putStrLn "Testing array ..."
+  array           >> cleanup
+  putStrLn "Testing badExtVars ..."
+--  badExtVars      >> cleanup
+  putStrLn "Testing castEx ..."
+  castEx          >> cleanup
+  putStrLn "Testing clockExamples ..."
+  clockExamples   >> cleanup
+  putStrLn "Testing engineExample ..."
+  engineExample   >> cleanup
+  putStrLn "Testing examples ..."
+  examples        >> sbvCleanup
+  putStrLn "Testing examples2 ..."
+  examples2       >> sbvCleanup
+  putStrLn "Testing extFuns ..."
+  extFuns         >> cleanup
+  putStrLn "Testing localEx ..."
+  localEx         >> cleanup
+  putStrLn "Testing ltlExamples ..."
+  ltlExamples     >> cleanup
+  putStrLn "Testing ptltlExamples ..."
+  ptltlExamples   >> cleanup
+  putStrLn "Testing randomEx ..."
+  randomEx        >> cleanup
+  putStrLn "Testing regExpExamples ..."
+  regExpExamples  >> cleanup
+  putStrLn "Testing stackExamples ..."
+  stackExamples   >> cleanup
+  putStrLn "Testing statExamples ..."
+  statExamples    >> cleanup
+  putStrLn "Testing votingExamples ..."
+  votingExamples  >> cleanup
 
-fibSpec :: Spec
-fibSpec = do
-  trigger "fib_out" true [arg fib]
+  putStrLn "*********************************"
+  putStrLn " Ok, things seem to work.  Enjoy!"
+  putStrLn "*********************************"
 
-fibC :: IO ()
-fibC = reify fibSpec >>= S.compile "fib" 
+--------------------------------------------------------------------------------
 
+sbvCleanup :: IO ()
+sbvCleanup = removeDirectoryRecursive "copilot"
+
+cleanup :: IO ()
+cleanup = do
+  --
+  -- removeFile "copilot.c"
+  -- removeFile "copilot.h"
+  return ()
+
+--------------------------------------------------------------------------------

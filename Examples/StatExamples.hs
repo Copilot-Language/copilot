@@ -1,9 +1,10 @@
-module Copilot.Examples.StatExamples where
+module StatExamples ( statExamples ) where
 
+-- | Statistics examples
 
 import Prelude ()
 import Copilot.Language
-import Copilot.Language.Prelude hiding ( min, max, sum )
+import Copilot.Language.Prelude
 import Copilot.Library.Statistics
 
 
@@ -35,9 +36,9 @@ statisticsTest = do
   observer "meanV" meanV
 
 
-
-test = do
+statExamples :: IO ()
+statExamples = do
   prettyPrint statisticsTest
   putStrLn ""
   putStrLn ""
-  interpret 20 [] statisticsTest
+  interpret 20 statisticsTest

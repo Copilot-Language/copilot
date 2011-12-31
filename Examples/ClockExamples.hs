@@ -1,19 +1,15 @@
 -- | Clocks library tests.
 
-module Copilot.Examples.ClockExamples where
+module ClockExamples ( clockExamples ) where
 
-
-import Prelude ( ($), putStrLn )
-import qualified Prelude as P
+import Prelude ( putStrLn, IO, Bool )
 import Copilot.Language
 import Copilot.Library.Clocks
-import Data.Bool
-import Data.List ( replicate )
 
+p :: Word8
+p = 5 
 
-p = 5 :: Word8
-
-
+clkStream, clk1Stream :: Stream Bool
 clkStream  = clk  ( period p ) ( phase 0 )
 clk1Stream = clk1 ( period p ) ( phase 0 )
 
@@ -24,8 +20,9 @@ clockTest = do
   observer "clk1" clk1Stream
 
 
-test = do
+clockExamples :: IO ()
+clockExamples = do
   prettyPrint clockTest
   putStrLn ""
   putStrLn ""
-  interpret 10 [] clockTest
+  interpret 10 clockTest

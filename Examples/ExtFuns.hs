@@ -6,10 +6,10 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
-module Main where
+module ExtFuns ( extFuns ) where
 
 import Language.Copilot 
-import qualified Copilot.Compile.C99 as C
+--import qualified Copilot.Compile.C99 as C
 
 --------------------------------------------------------------------------------
 
@@ -20,15 +20,16 @@ nats = [0] ++ nats + 1
 -- Function func0 and it's environment for interpreting
 
 func0 :: Stream Word16
-func0 = externFun "func0" [ funArg $ externW8 "x", funArg nats ]
-          (Just $ cast (externW8 "x") + nats)
+func0 = externFun "func0" [ funArg x, funArg nats ]
+          (Just $ cast x + nats)
+  where x = externW8 "x" (Just [0..])
           
 ---------------------------------------------------------------------------------
 -- Function func0 with another set of args and it's environment for interpreting
 
-func2 :: Stream Word16
-func2 = externFun "func0" [ funArg $ constW8 3, funArg $ constW16 4 ]
-          (Just $ constW16 4 + 1)
+-- func2 :: Stream Word16
+-- func2 = externFun "func0" [ funArg $ constW8 3, funArg $ constW16 4 ]
+--           (Just $ constW16 4 + 1)
 
 ---------------------------------------------------------------------------------
 
@@ -47,10 +48,9 @@ spec = trigger "trigger" true [ arg func0
                               , arg func1
                               , arg a ]
   
-main :: IO ()
-main = do
+extFuns :: IO ()
+extFuns = do
 --    reify spec >>= C.compile C.defaultParams 
-    interpret 10 [ var "x" ([0..] :: [Word8]) ]
-              spec
+    interpret 10 spec
 
 --------------------------------------------------------------------------------

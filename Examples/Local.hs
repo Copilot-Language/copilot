@@ -4,12 +4,11 @@
 
 -- | Example demonstrating local variables.
 
-module Main where
+module Local ( localEx ) where
 
-import qualified Prelude as P
+import Prelude ()
 import Copilot.Language
 import Copilot.Language.Prelude
-import Data.List (replicate, foldl')
 
 --------------------------------------------------------------------------------
 
@@ -19,20 +18,6 @@ nats = [0] ++ (1 + nats)
 strm :: Stream Int32
 strm =
   local (nats + 1) $ \nats' -> nats' + nats'
-
-replStrm :: Int -> Stream Int32
-replStrm i =
-  local (nats + 1) $ \nats' -> plus nats'
-  where 
-  plus :: Stream Int32 -> Stream Int32
-  plus nats' = foldl' (+) 0 (replicate i nats')
-
-replStrm_ :: Int -> Int -> Stream Int32
-replStrm_ i j =
-  local (replStrm i) $ \sum -> plus sum
-  where 
-  plus :: Stream Int32 -> Stream Int32
-  plus sum = foldl' (+) 0 (replicate j sum)
 
 -- The above code corresponds to
 --
@@ -51,9 +36,9 @@ spec = do
 
 --------------------------------------------------------------------------------
 
-main :: IO ()
-main = do
-  interpret 20 [] spec
+localEx :: IO ()
+localEx = do
+  interpret 20 spec
   prettyPrint spec
 
 --------------------------------------------------------------------------------

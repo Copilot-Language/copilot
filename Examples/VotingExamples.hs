@@ -6,7 +6,7 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
-module Main where
+module VotingExamples ( votingExamples ) where
 
 import Copilot.Library.Voting
 import Copilot.Language
@@ -56,8 +56,8 @@ vote = do
 
 --------------------------------------------------------------------------------
 
-main :: IO ()
-main =
+votingExamples :: IO ()
+votingExamples =
   do
-    interpret 20 [] vote
+    interpret 20 vote
 --    prettyPrint vote
