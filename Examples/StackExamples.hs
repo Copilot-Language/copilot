@@ -22,17 +22,14 @@ pushValue  = [ 1 ] ++ pushValue + 1
 popSignal :: Stream Bool
 popSignal = replicate 6 False P.++ replicate 6 True ++ false
 
-
 -- all operations on a stack of depth 5, of type Word16 and with
 -- start/default value 0
 stackStream :: Stream Word16
 stackStream = stack (5::Int) 0 popSignal pushSignal pushValue
 
-
 stackTest :: Spec
-stackTest = do
+stackTest = 
   observer "stack" stackStream
-
 
 stackExamples :: IO ()
 stackExamples = do
