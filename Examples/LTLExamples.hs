@@ -38,7 +38,7 @@ ltlTest = do
   trigger "testAlways1" true [ arg $ testAlways  0  0    ]
   trigger "testAlways2" true [ arg $ testAlways  5  1    ]
   trigger "testNext"    true [ arg $ testNext            ]
-  trigger "testFuture"  true [ arg $ testFuture  9  10   ]
+  trigger "testFuture"  true [ arg $ testFuture  12  10   ]
   trigger "testUntil"   true [ arg $ testUntil   5  6  4 ]
   trigger "testRelease" true [ arg $ testRelease 5  5  4 ]
 

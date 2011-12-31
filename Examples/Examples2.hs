@@ -12,12 +12,6 @@ import Data.List (cycle)
 
 --------------------------------------------------------------------------------
 
-nats :: Stream Word64
-nats = [0] ++ nats + 1
-
-alt :: Stream Bool
-alt = [True] ++ not alt
-
 {-
 alt2 :: Stream Word64
 alt2 = [0,1,2] ++ alt2 + 1
@@ -27,10 +21,20 @@ alt3 = [True,True,False] ++ alt3
 
 fib' :: Stream Word64
 fib' = [0, 1] ++ fib' + drop 1 fib
--}
 
 fib :: Stream Word64
 fib = [0, 1] ++ fib + drop 1 fib
+
+fibSpec :: Spec
+fibSpec = do
+  trigger "fib_out" true [arg fib]
+-}
+
+nats :: Stream Word64
+nats = [0] ++ nats + 1
+
+alt :: Stream Bool
+alt = [True] ++ not alt
 
 logic :: Stream Bool
 logic = [True, False] ++ logic || drop 1 logic
@@ -50,11 +54,7 @@ spec = do
                       , arg logic
                       ]
 
-fibSpec :: Spec
-fibSpec = do
-  trigger "fib_out" true [arg fib]
-
 examples2 :: IO ()
 examples2 = do
-  reify fibSpec >>= S.compile S.defaultParams
+--  reify fibSpec >>= S.compile S.defaultParams
   reify spec >>= S.compile S.defaultParams 

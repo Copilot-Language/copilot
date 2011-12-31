@@ -131,10 +131,10 @@ examples = do
   putStrLn "Interpreter:"
   putStrLn ""
   interpret 10 spec
-  putStrLn ""
-  putStrLn ""
-  putStrLn "Atom:"
-  reify spec >>= compile defaultParams 
+  -- putStrLn ""
+  -- putStrLn ""
+  -- putStrLn "Atom:"
+  -- reify spec >>= compile defaultParams 
   putStrLn "Check equivalence:"
   putStrLn ""
   putStrLn ""

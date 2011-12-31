@@ -6,7 +6,10 @@
 
 module Main where
 
-import System.Directory (removeFile, removeDirectoryRecursive)
+import System.Directory (removeDirectoryRecursive, doesDirectoryExist)
+import qualified Copilot.Compile.C99 as C99
+import qualified Copilot.Compile.SBV as SBV
+import Control.Monad (when)
 
 import AddMult
 import Array
@@ -31,55 +34,70 @@ import VotingExamples
 
 main :: IO ()
 main = do
+  cleanup
   putStrLn "Testing addMult ..."
-  addMult         >> sbvCleanup
+  addMult         >> cleanup
+  putStrLn ""
   putStrLn "Testing array ..."
   array           >> cleanup
-  putStrLn "Testing badExtVars ..."
+  putStrLn ""
+--  putStrLn "Testing badExtVars ..."
 --  badExtVars      >> cleanup
+  putStrLn ""
   putStrLn "Testing castEx ..."
   castEx          >> cleanup
+  putStrLn ""
   putStrLn "Testing clockExamples ..."
   clockExamples   >> cleanup
+  putStrLn ""
   putStrLn "Testing engineExample ..."
   engineExample   >> cleanup
+  putStrLn ""
   putStrLn "Testing examples ..."
-  examples        >> sbvCleanup
+  examples        >> cleanup
+  putStrLn ""
   putStrLn "Testing examples2 ..."
-  examples2       >> sbvCleanup
+  examples2       >> cleanup
+  putStrLn ""
   putStrLn "Testing extFuns ..."
   extFuns         >> cleanup
+  putStrLn ""
   putStrLn "Testing localEx ..."
   localEx         >> cleanup
+  putStrLn ""
   putStrLn "Testing ltlExamples ..."
   ltlExamples     >> cleanup
+  putStrLn ""
   putStrLn "Testing ptltlExamples ..."
   ptltlExamples   >> cleanup
+  putStrLn ""
   putStrLn "Testing randomEx ..."
   randomEx        >> cleanup
+  putStrLn ""
   putStrLn "Testing regExpExamples ..."
   regExpExamples  >> cleanup
+  putStrLn ""
   putStrLn "Testing stackExamples ..."
   stackExamples   >> cleanup
+  putStrLn ""
   putStrLn "Testing statExamples ..."
   statExamples    >> cleanup
+  putStrLn ""
   putStrLn "Testing votingExamples ..."
   votingExamples  >> cleanup
-
-  putStrLn "*********************************"
-  putStrLn " Ok, things seem to work.  Enjoy!"
-  putStrLn "*********************************"
+  putStrLn ""
+  putStrLn ""
+  putStrLn "************************************"
+  putStrLn " Ok, the basic tests passed.  Enjoy!"
+  putStrLn "************************************"
 
 --------------------------------------------------------------------------------
 
-sbvCleanup :: IO ()
-sbvCleanup = removeDirectoryRecursive "copilot"
-
 cleanup :: IO ()
 cleanup = do
-  --
-  -- removeFile "copilot.c"
-  -- removeFile "copilot.h"
-  return ()
+  b0 <- doesDirectoryExist SBV.sbvDirName
+  when b0 (removeDirectoryRecursive SBV.sbvDirName)
+  b1 <- doesDirectoryExist C99.c99DirName
+  when b1 (removeDirectoryRecursive C99.c99DirName)
 
 --------------------------------------------------------------------------------
