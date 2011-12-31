@@ -10,7 +10,7 @@ import Copilot.Core ( Spec (..), Trigger(..))
 import Copilot.Core.Expr (Name, UExpr (..))
 import Copilot.Core.Type.Eq (UVal (..))
 import Copilot.Core.Interpret.Eval (eval)
-import Copilot.Compile.C99 (compile)
+import Copilot.Compile.C99 (compile, c99DirName, c99FileRoot)
 import Copilot.Compile.C99.Params (Params (..), defaultParams)
 import Copilot.Compile.C99.Test.Driver (driver)
 import Copilot.Compile.C99.Test.Iteration (Iteration(..), execTraceToIterations)
@@ -23,7 +23,7 @@ import qualified Data.Map as M
 import Data.List (foldl')
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text.IO as TIO
-import System.Directory (removeFile)
+import System.Directory (removeDirectoryRecursive)
 import System.Process (system, readProcess)
 import Control.Monad (when, unless)
 import Text.PrettyPrint (text, (<+>), ($$), render, vcat, hang)
@@ -85,24 +85,37 @@ typedOutputs Spec { specTriggers = triggers } =
 
 --------------------------------------------------------------------------------
 
+driverFile :: String
+driverFile = "driver.c"
+
+outputFile :: String
+outputFile = "_test"
+
+--------------------------------------------------------------------------------
+
 genCFiles :: Int -> Spec -> IO ()
 genCFiles numIterations spec = do
   compile (defaultParams { prefix = Nothing, verbose = False }) spec
-  TIO.writeFile "driver.c" (driver numIterations spec)
-  return ()
+  TIO.writeFile (c99DirName ++ "/" ++ driverFile) 
+                (driver numIterations spec)
 
 --------------------------------------------------------------------------------
 
 compileCFiles :: IO ()
 compileCFiles = do
-  _ <- system $ "gcc copilot.c driver.c -o _test"
+  _ <- system $ unwords [ "cd " ++ c99DirName ++ ";"
+                        , "gcc"
+                        , c99FileRoot ++ ".c" 
+                        , driverFile 
+                        , "-o"
+                        , outputFile ]
   return ()
 
 --------------------------------------------------------------------------------
 
 execute :: Int -> IO ByteString
-execute _ = do
-  fmap B.pack (readProcess "./_test" [] "")
+execute _ =
+  fmap B.pack (readProcess ("./" ++ c99DirName ++ "/" ++ outputFile) [] "")
 
 --------------------------------------------------------------------------------
 
@@ -113,11 +126,10 @@ interp numIterations =
 --------------------------------------------------------------------------------
 
 cleanUp :: IO ()
-cleanUp = do
-  removeFile "copilot.c"
-  removeFile "copilot.h"
-  removeFile "driver.c"
-  removeFile "_test"
-  return ()
+cleanUp = removeDirectoryRecursive c99DirName
+  -- removeFile $ c99FileRoot ++ ".c"
+  -- removeFile $ c99FileRoot ++ ".h"
+  -- removeFile driverFile
+  -- removeFile outputFile
 
 --------------------------------------------------------------------------------

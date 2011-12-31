@@ -10,17 +10,18 @@ module Copilot.Compile.C99.Test.Driver
   ) where
 
 import Copilot.Core
-  ( Spec (..), Trigger (..), UExpr (..), Type (..), UType (..), Name
-  , Expr(..) 
+  ( Spec(..), Trigger(..), UExpr(..), Type(..), UType(..), Name
+  , Expr(..), Stream(..)
   )
 
+
 import Copilot.Core.Error (impossible)
---import Copilot.Core.Type (typeOf, Typed)
+import Copilot.Core.Type (Typed, typeOf)
 import Copilot.Core.Type.Dynamic (DynamicF (..), toDynF)
 import Copilot.Core.Type.Show (showWithType, ShowType (..))
 --import Copilot.Core.Interpret.Eval (ExtEnv(..))
 
-import Data.List (intersperse)
+import Data.List (intersperse, nubBy)
 import Data.Text (Text)
 import Data.Text (pack)
 import Text.PrettyPrint
@@ -31,7 +32,9 @@ import Text.PrettyPrint
 --------------------------------------------------------------------------------
 
 driver :: Int -> Spec -> Text
-driver numIterations Spec { specTriggers = trigs } =
+driver numIterations Spec { specTriggers = trigs 
+                          , specStreams = streams } 
+  =
   pack . render $
     ppHeader $$
     ppEnvDecls numIterations env $$
@@ -39,7 +42,15 @@ driver numIterations Spec { specTriggers = trigs } =
     ppTriggers trigs
   where 
   env :: [ExtVars]
-  env = concatMap extractExts (concatMap triggerArgs trigs)
+  env = nubBy (\(name0,_) (name1,_) -> name0 == name1) 
+              (concatMap extractExts exprs)
+  exprs =    map strmExpr streams
+          ++ concatMap triggerArgs trigs 
+          ++ map uexpr (map triggerGuard trigs)
+  strmExpr Stream { streamExpr = expr } = uexpr expr
+  uexpr :: Typed a => Expr a -> UExpr
+  uexpr e = UExpr { uExprType = typeOf
+                  , uExprExpr = e }
 
 --------------------------------------------------------------------------------
 
