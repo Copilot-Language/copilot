@@ -40,63 +40,18 @@ type Tag = Int
 --------------------------------------------------------------------------------
 
 data Expr a where
-  Const
-    :: Type a
-    -> a
-    -> Expr a
-  Drop
-    :: Type a
-    -> DropIdx
-    -> Id
-    -> Expr a
-  Local
-    :: Type a
-    -> Type b
-    -> Name
-    -> Expr a
-    -> Expr b
-    -> Expr b
-  Var
-    :: Type a
-    -> Name
-    -> Expr a
-  ExternVar
-    :: Type a
-    -> Name
-    -> Maybe [a]
-    -> Expr a
-  ExternFun
-    :: Type a
-    -> Name
-    -> [UExpr]
-    -> Maybe (Expr a)
-    -> Maybe Tag
-    -> Expr a
-  ExternArray
-    :: Integral a
-    => Type a
-    -> Type b
-    -> Name
-    -> Int
-    -> Expr a
-    -> Maybe [[b]]
-    -> Maybe Tag
-    -> Expr b
-  Op1
-    :: Op1 a b
-    -> Expr a
-    -> Expr b
-  Op2
-    :: Op2 a b c
-    -> Expr a
-    -> Expr b
-    -> Expr c
-  Op3
-    :: Op3 a b c d
-    -> Expr a
-    -> Expr b
-    -> Expr c
-    -> Expr d
+  Const        :: Type a -> a -> Expr a
+  Drop         :: Type a -> DropIdx -> Id -> Expr a
+  Local        :: Type a -> Type b -> Name -> Expr a -> Expr b -> Expr b
+  Var          :: Type a -> Name -> Expr a 
+  ExternVar    :: Type a -> Name -> Maybe [a] -> Expr a 
+  ExternFun    :: Type a -> Name -> [UExpr] -> Maybe (Expr a) 
+               -> Maybe Tag -> Expr a
+  ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
+               -> Maybe [[b]] -> Maybe Tag -> Expr b 
+  Op1          :: Op1 a b -> Expr a -> Expr b 
+  Op2          :: Op2 a b c -> Expr a -> Expr b -> Expr c
+  Op3          :: Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d
 
 --------------------------------------------------------------------------------
 

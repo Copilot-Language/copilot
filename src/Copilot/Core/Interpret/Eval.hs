@@ -62,15 +62,15 @@ instance Show InterpException where
   show (ArrayIdxOutofBounds name index size)                                   =
     badUsage $ "in the environment for external array " ++ name 
       ++ ", you gave an index of " ++ show index 
-      ++ " where the size of the array is " ++ show size ++ "."
+      ++ " where the size of the array is " ++ show size ++ "; the size must "
+      ++ " be strictly greater than the index."
   ---------------------------------------
   show DivideByZero                                                            =
     badUsage "divide by zero."
   ---------------------------------------
   show (NotEnoughValues name k)                                                =
-    badUsage $ "you asked to interpret the specification for at least" 
-      ++ show k ++ " iterations, but for external element " ++ name 
-      ++ ", there is no " ++ show k ++ "th value."
+    badUsage $ "on the " ++ show k ++ "th iteration, we ran out of "
+      ++ "values for simulating the external element " ++ name ++ "."
   ---------------------------------------
   show (NoExtsInterp name)                                                     =
     badUsage $ "in a call of external symbol " ++ name ++ ", you did not "
@@ -194,8 +194,10 @@ evalExternVar :: Int -> Name -> Maybe [a] -> a
 evalExternVar k name exts = 
   case exts of
     Nothing -> throw (NoExtsInterp name)
-    Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
-                 else xs !! k
+    Just xs -> 
+      case safeIndex k xs of
+        Nothing -> throw (NotEnoughValues name k)
+        Just x  -> x
 
 --------------------------------------------------------------------------------
 
@@ -227,17 +229,18 @@ evalArray :: Integral b => Int -> Name -> b -> Maybe [[a]] -> Int -> a
 evalArray k name idx exts size =
   case exts of 
     Nothing -> throw (NoExtsInterp name)
-    Just xs -> if not (longEnough xs k) then throw (NotEnoughValues name k)
-                  else let arr = (xs !! k) in
-                     -- convoluted form in case the array is env of infinite
-                     -- length.
-                     if    length (take size arr) == size  
-                        && length (take (size+1) arr) == size
-                       then if longEnough arr (fromIntegral idx)
-                              then arr !! fromIntegral idx
-                              else throw (ArrayIdxOutofBounds
-                                           name (fromIntegral idx) size) 
-                       else throw (ArrayWrongSize name size)
+    Just xs -> 
+      case safeIndex k xs of
+        Nothing  -> throw (NotEnoughValues name k)
+        Just arr -> -- convoluted form in case the array is env of infinite
+                    -- length.
+                    if    length (take size arr) == size  
+                       && length (take (size+1) arr) == size
+                      then case safeIndex (fromIntegral idx) arr of
+                             Nothing -> throw (ArrayIdxOutofBounds
+                                                 name (fromIntegral idx) size)
+                             Just x  -> x
+                      else throw (ArrayWrongSize name size)
   
 --------------------------------------------------------------------------------
 
@@ -369,8 +372,11 @@ evalExprs_ k e strms =
 
 --------------------------------------------------------------------------------
 
--- Length on possibly infinite lists
-longEnough :: [a] -> Int -> Bool
-longEnough ls k = length (take k ls) >= k
-                                       
+-- | Safe indexing (!!) on possibly infininite lists.
+safeIndex :: Int -> [a] -> Maybe a
+safeIndex i ls =
+  let ls' = take (i+1) ls in
+  if length ls' > i then Just (ls' !! i)
+    else Nothing
+
 --------------------------------------------------------------------------------
