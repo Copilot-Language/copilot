@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Fault-tolerant voting examples.
 
 {-# LANGUAGE RebindableSyntax #-}
 

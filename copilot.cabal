@@ -1,5 +1,5 @@
 name:                copilot
-version:             2.0.1
+version:             2.0.2
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -50,3 +50,19 @@ executable copilot-regression
                    , copilot-c99 >= 0.2
                    , directory >= 1.1
                    , random
+  other-modules:    AddMult
+                  , Array
+                  , Cast
+                  , ClockExamples
+                  , EngineExample
+                  , Examples
+                  , Examples2
+                  , ExtFuns
+                  , Local
+                  , LTLExamples
+                  , PTLTLExamples
+                  , Random
+                  , RegExpExamples
+                  , StackExamples
+                  , StatExamples
+                  , VotingExamples
