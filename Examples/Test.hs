@@ -12,6 +12,7 @@ import System.Directory ( removeDirectoryRecursive
                         , removeFile )
 import qualified Copilot.Compile.C99 as C99
 import qualified Copilot.Compile.SBV as SBV
+import qualified Copilot.Tools.CBMC as M
 import Control.Monad (when)
 
 import AddMult
@@ -98,12 +99,23 @@ main = do
 
 cleanup :: IO ()
 cleanup = do
+
   b0 <- doesDirectoryExist SBV.sbvDirName
   when b0 (removeDirectoryRecursive SBV.sbvDirName)
+
   b1 <- doesDirectoryExist C99.c99DirName
   when b1 (removeDirectoryRecursive C99.c99DirName)
+
   let cbmc = "cbmc_driver.c"
   b2 <- doesFileExist cbmc
   when b2 (removeFile cbmc)
+
+  let atomCBMC = M.appendPrefix M.atomPrefix C99.c99DirName
+  b3 <- doesDirectoryExist atomCBMC
+  when b3 (removeDirectoryRecursive atomCBMC)
+
+  let sbvCBMC = M.appendPrefix M.sbvPrefix SBV.sbvDirName
+  b4 <- doesDirectoryExist sbvCBMC
+  when b4 (removeDirectoryRecursive sbvCBMC)
 
 --------------------------------------------------------------------------------
