@@ -12,12 +12,12 @@ module Copilot.Core.Spec
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
-import Copilot.Core.Type (Type)
+import Copilot.Core.Type (Type, Typed)
 
 --------------------------------------------------------------------------------
 
 -- | A stream.
-data Stream = forall a  . Stream
+data Stream = forall a. Typed a => Stream
   { streamId         :: Id
   , streamBuffer     :: [a]
   , streamGuard      :: Expr Bool
@@ -27,7 +27,7 @@ data Stream = forall a  . Stream
 --------------------------------------------------------------------------------
 
 -- | An observer.
-data Observer = forall a . Observer
+data Observer = forall a. Observer
   { observerName     :: Name
   , observerExpr     :: Expr a
   , observerExprType :: Type a }

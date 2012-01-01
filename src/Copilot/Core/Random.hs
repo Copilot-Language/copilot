@@ -65,14 +65,14 @@ genSpec rnds = do
 
 --------------------------------------------------------------------------------
 
-data StreamInfo = forall a . (Eq a, Ord a) => StreamInfo
+data StreamInfo = forall a . (Eq a, Ord a, Typed a) => StreamInfo
   { streamInfoId         :: Id
   , streamInfoType       :: Type a
   , streamInfoBufferSize :: Int }
 
 --------------------------------------------------------------------------------
 
-data WrapType = forall a . (Eq a, Ord a) => WrapType (Type a)
+data WrapType = forall a . (Eq a, Ord a, Typed a) => WrapType (Type a)
 
 genType :: Weights -> Gen WrapType
 genType ws = freq
