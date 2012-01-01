@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Compile through the Atom backend.
 
 module Copilot.Compile.C99
   ( compile
@@ -42,8 +42,7 @@ compile params spec0 = do
   when (verbose params) $ putStrLn (Atom.reportSchedule schedule)
   genC99Header (prefix params) dirName spec
   mv ".c" -- the C file Atom generates
-  -- We don't want Atom's .h file, but our own
-  removeFile (programName ++ ".h")  
+  removeFile (programName ++ ".h")  -- We don't want Atom's .h file, but our own
 
   where
   mv ext = renameFile p (dirName ++ "/" ++ p)
