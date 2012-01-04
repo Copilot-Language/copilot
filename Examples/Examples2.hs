@@ -1,14 +1,11 @@
 module Examples2 ( examples2 ) where
 
 import Prelude ()
-
-import Copilot.Language.Prelude
-import Copilot.Language
-import Copilot.Language.Reify (reify)
+import Language.Copilot
 
 import qualified Copilot.Compile.SBV as S
 
-import Data.List (cycle)
+import qualified Data.List as L
 
 --------------------------------------------------------------------------------
 
@@ -43,7 +40,7 @@ sumExterns :: Stream Word64
 sumExterns =
   let
     e1 = extern "e1" (Just [0..])
-    e2 = extern "e2" (Just $ cycle [2,3,4])
+    e2 = extern "e2" (Just $ L.cycle [2,3,4])
   in
     e1 + e2 + e1
 

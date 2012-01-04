@@ -2,9 +2,7 @@
 
 module PTLTLExamples ( ptltlExamples ) where 
 
-import Copilot.Language
-import Copilot.Language.Prelude
-import Copilot.Library.PTLTL
+import Language.Copilot
 import Prelude ()
 import qualified Data.List as L
 

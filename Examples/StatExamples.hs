@@ -3,10 +3,7 @@ module StatExamples ( statExamples ) where
 -- | Statistics examples
 
 import Prelude ()
-import Copilot.Language
-import Copilot.Language.Prelude
-import Copilot.Library.Statistics
-
+import Language.Copilot
 
 inputData :: Stream Word16
 inputData = replicate 5 0 ++ inputData + 5

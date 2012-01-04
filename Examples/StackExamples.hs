@@ -2,13 +2,8 @@
 
 module StackExamples ( stackExamples ) where
 
-
-import Prelude ()
 import qualified Prelude as P
-import Copilot.Language
-import Copilot.Library.Stacks
-import Copilot.Language.Prelude
-
+import Language.Copilot
 
 -- push a counter from 1 to 5 onto the stack
 pushSignal :: Stream Bool

@@ -8,9 +8,7 @@
 
 module VotingExamples ( votingExamples ) where
 
-import Copilot.Library.Voting
-import Copilot.Language
-import Copilot.Language.Prelude
+import Language.Copilot
 
 --------------------------------------------------------------------------------
 

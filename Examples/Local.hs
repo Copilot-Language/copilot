@@ -7,8 +7,7 @@
 module Local ( localEx ) where
 
 import Prelude ()
-import Copilot.Language
-import Copilot.Language.Prelude
+import Language.Copilot
 
 --------------------------------------------------------------------------------
 

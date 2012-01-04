@@ -4,10 +4,7 @@
 module RegExpExamples ( regExpExamples ) where
 
 import qualified Prelude as P
-import Copilot.Language
-import Copilot.Language.Prelude
-import Copilot.Library.RegExp
-import Copilot.Library.Utils
+import Language.Copilot
 
 reset :: Stream Bool
 reset = [ False ] ++ cycle [ False, False, False, True ]

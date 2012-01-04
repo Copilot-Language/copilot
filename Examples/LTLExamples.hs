@@ -1,9 +1,7 @@
 module LTLExamples where
 
 import qualified Prelude as P
-import Copilot.Language
-import Copilot.Language.Prelude
-import Copilot.Library.LTL
+import Language.Copilot
 
 ----------------
 -- LTL tests ---
