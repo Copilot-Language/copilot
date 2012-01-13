@@ -2,7 +2,7 @@
 -- an external variable.  Assume the input doesn't given tokens outside the
 -- alphabet, and the result is always delayed by one w.r.t. the input stream.
 
--- I think Copilot can express polynomial-time algorithms.
+-- I think Copilot can recognize context-sensitive grammars.
 
 {-# LANGUAGE RebindableSyntax #-}
 
@@ -113,10 +113,49 @@ csAccept n = do
 -- Context-sensitive grammars
 
 {-
-I don't think the "copy language" <xx | x \in {0,1}*> can be recognized by a
-Copilot program.  It requires non-constant space.  Note: some context-sensitive
-grammars have PSACE recognizers.
+This Copilot program recognizes the "copy language" <xx | x \in {0,1}*>.
+
+Note: the "trick" is to encode the history of streams in a bitvector.  Thus, we
+can only recognize arbitrarily long words if we have arbitrarily long
+bitvectors.  There is nothing in Copilot preventing this, but the largest base
+type is currently a Word64.  
+
+Without this encoding, we couldn't build a recognizers, because we can't
+generate new streams on the fly or look back arbitrarily far in the history of a
+stream; both are fixed at compile time.
+
 -}
+
+
+copyAccept :: Spec
+copyAccept = do
+  observer "accept" accept
+  observer "hist" hist
+  observer "string" string
+  observer "cnt" cnt
+  where
+
+  accept :: Stream Bool
+  accept = if cnt `mod` 2 == 1 then false else bottom == top 
+    where
+    halfCnt  = cnt `div` 2
+    zeroBot  = (complement $ (2^halfCnt) - 1) .&. hist
+    top      = zeroBot .>>. halfCnt
+    bottom   = hist - zeroBot
+
+  hist :: Stream Word64
+  hist = [0] ++ ((2^cnt) * cast string) + hist
+
+  cnt :: Stream Word64
+  cnt = [0] ++ cnt + 1
+
+  -- Input tokens.
+  string :: Stream Word8
+  string = let x = [1,0,0,1,0,1] in 
+           x P.++ x
+             ++ 0 -- don't care about part of
+                  -- stream after ++
+
 
 ---------------------------------------------------------------------------------
 -- -- Recognize the language of arbitrarily long sequence of prime numbers.
