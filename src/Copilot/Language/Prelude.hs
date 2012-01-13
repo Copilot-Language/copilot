@@ -15,6 +15,7 @@ import Prelude hiding
   , div, mod
   , (<=), (>=), (<), (>)
   , (&&)
+  , (^)
   , (||)
   , const
   , drop

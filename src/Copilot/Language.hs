@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Main Copilot language export file.
 
 module Copilot.Language
   ( module Data.Int

@@ -7,6 +7,7 @@
 module Copilot.Language.Operators.Integral
   ( div
   , mod
+  , (^)
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -27,5 +28,12 @@ _         `mod` (Const 0) = Core.badUsage "in mod: division by zero."
 (Const 0) `mod` _         = (Const 0)
 (Const x) `mod` (Const y) = Const (x `P.mod` y)
 x `mod` y = Op2 (Core.Mod typeOf) x y
+
+(^) :: (Typed a, Typed b, P.Num a, P.Integral b) 
+    => Stream a -> Stream b -> Stream a
+(Const 0) ^ _          = Const 0
+(Const 1) ^ _          = Const 1
+(Const x) ^ (Const y)  = Const (x P.^ y)
+x ^ y                  = Op2 (Core.IntegPow typeOf) x y
 
 --------------------------------------------------------------------------------

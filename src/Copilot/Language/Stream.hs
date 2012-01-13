@@ -22,63 +22,27 @@ import qualified Prelude as P
 --------------------------------------------------------------------------------
 
 data Stream :: * -> * where
-  Append
-    :: Typed a
-    => [a]
-    -> Maybe (Stream Bool)
-    -> Stream a
-    -> Stream a
-  Const
-    :: Typed a
-    => a
-    -> Stream a
-  Drop
-    :: Typed a
-    => Int
-    -> Stream a
-    -> Stream a
-  Extern
-    :: Typed a
-    => String
-    -> Maybe [a]
-    -> Stream a
-  ExternFun
-    :: Typed a
-    => String
-    -> [FunArg]
-    -> Maybe (Stream a)
-    -> Stream a
-  ExternArray
-    :: (Typed a, Typed b, Integral a)
-    => String
-    -> Stream a
-    -> Int
-    -> Maybe [[b]]
-    -> Stream b
-  Local
-    :: (Typed a, Typed b)
-    => Stream a
-    -> (Stream a -> Stream b)
-    -> Stream b
-  Var
-    :: Typed a
-    => String
-    -> Stream a
-  Op1
-    :: (Typed a, Typed b)
-    => Core.Op1 a b
-    -> Stream a -> Stream b
-  Op2
-    :: (Typed a, Typed b, Typed c)
-    => Core.Op2 a b c
-    -> Stream a -> Stream b -> Stream c
-  Op3
-    :: (Typed a, Typed b, Typed c, Typed d)
-    => Core.Op3 a b c d
-    -> Stream a
-    -> Stream b
-    -> Stream c
-    -> Stream d
+  Append      :: Typed a 
+              => [a] -> Maybe (Stream Bool) -> Stream a -> Stream a
+  Const       :: Typed a => a -> Stream a
+  Drop        :: Typed a
+              => Int -> Stream a -> Stream a
+  Extern      :: Typed a
+              => String -> Maybe [a] -> Stream a
+  ExternFun   :: Typed a 
+              => String -> [FunArg] -> Maybe (Stream a) -> Stream a
+  ExternArray :: (Typed a, Typed b, Integral a)
+              => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
+  Local       :: (Typed a, Typed b) 
+              => Stream a -> (Stream a -> Stream b) -> Stream b
+  Var         :: Typed a 
+              => String -> Stream a
+  Op1         :: (Typed a, Typed b)
+              => Core.Op1 a b -> Stream a -> Stream b
+  Op2         :: (Typed a, Typed b, Typed c)
+              => Core.Op2 a b c -> Stream a -> Stream b -> Stream c
+  Op3         :: (Typed a, Typed b, Typed c, Typed d)
+              => Core.Op3 a b c d -> Stream a -> Stream b -> Stream c -> Stream d
 
 --------------------------------------------------------------------------------
 
