@@ -80,6 +80,7 @@ ppOp2 op = case op of
   Mul      _   -> ppInfix "*"
   Div      _   -> ppInfix "div"
   Mod      _   -> ppInfix "mod"
+  IntegPow _   -> ppInfix "^"
   Fdiv     _   -> ppInfix "/"
   Pow      _   -> ppInfix "**"
   Logb     _   -> ppInfix "logBase"
