@@ -1,3 +1,11 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+-- | Some more Copilot examples.
+
+{-# LANGUAGE RebindableSyntax #-}
+
 module Examples2 ( examples2 ) where
 
 import Prelude ()
@@ -26,6 +34,15 @@ fibSpec :: Spec
 fibSpec = do
   trigger "fib_out" true [arg fib]
 -}
+
+counter :: Stream Bool -> Stream Bool 
+        -> Stream Int32
+counter inc reset = cnt
+  where 
+  cnt = if reset then 0
+          else if inc then z + 1
+                 else z
+  z = [0] ++ cnt
 
 nats :: Stream Word64
 nats = [0] ++ nats + 1

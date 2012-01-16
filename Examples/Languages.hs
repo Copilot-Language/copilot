@@ -2,7 +2,7 @@
 -- an external variable.  Assume the input doesn't given tokens outside the
 -- alphabet, and the result is always delayed by one w.r.t. the input stream.
 
--- I think Copilot can recognize context-sensitive grammars.
+-- Copilot can compute at least NP-Complete problems.
 
 {-# LANGUAGE RebindableSyntax #-}
 
