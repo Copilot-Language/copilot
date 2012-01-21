@@ -22,8 +22,13 @@ import Copilot.Compile.C99.PrePostCode (preCode, postCode)
 import Language.Atom (Atom)
 import qualified Language.Atom as Atom
 
-import Control.Monad (when)
-import System.Directory (createDirectory, renameFile, removeFile)
+import Data.Char (toUpper)
+import Control.Monad (when, unless)
+import System.Directory ( doesDirectoryExist
+                        , createDirectory
+                        , removeDirectoryRecursive
+                        , renameFile
+                        , removeFile)
 
 --------------------------------------------------------------------------------
 
@@ -37,14 +42,22 @@ c99FileRoot = "copilot"
 
 compile :: Params -> Core.Spec -> IO ()
 compile params spec0 = do
-  createDirectory dirName
-  (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
-  when (verbose params) $ putStrLn (Atom.reportSchedule schedule)
-  genC99Header (prefix params) dirName spec
-  mv ".c" -- the C file Atom generates
-  removeFile (programName ++ ".h")  -- We don't want Atom's .h file, but our own
-
+  b <- doesDirectoryExist dirName
+  when b $ do putStrLn "Directory exists.  Delete? [y/N]:"
+              input <- getLine
+              if (map toUpper input == "Y") 
+                then (removeDirectoryRecursive dirName) >> build
+                else putStrLn "Ok, nothing done.  Terminating."
+  unless b build 
   where
+  build = do 
+    createDirectory dirName
+    (schedule, _, _, _, _) <- Atom.compile programName atomDefaults atomProgram
+    when (verbose params) $ putStrLn (Atom.reportSchedule schedule)
+    genC99Header (prefix params) dirName spec
+    mv ".c" -- the C file Atom generates
+    removeFile (programName ++ ".h")  -- We don't want Atom's .h file, but our own
+
   mv ext = renameFile p (dirName ++ "/" ++ p)
     where p = programName ++ ext
 
