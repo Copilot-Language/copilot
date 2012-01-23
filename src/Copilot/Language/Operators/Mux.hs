@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | if-then-else.
 
 module Copilot.Language.Operators.Mux
   ( mux

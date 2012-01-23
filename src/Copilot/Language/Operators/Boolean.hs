@@ -28,7 +28,7 @@ true = constant True
 false :: Stream Bool
 false = constant False
 
-infix 4 &&
+infixr 4 &&
 
 (&&) :: Stream Bool -> Stream Bool -> Stream Bool
 (Const False) && _ = false
@@ -37,7 +37,7 @@ _ && (Const False) = false
 x && (Const True)  = x
 x && y             = Op2 Core.And x y
 
-infix 4 ||
+infixr 4 ||
 
 (||) :: Stream Bool -> Stream Bool -> Stream Bool
 (Const True) || _  = true
