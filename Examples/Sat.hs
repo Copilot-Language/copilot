@@ -1,6 +1,8 @@
 -- | Example of a simple SAT solver (simply constructs the truth table) in
 -- Copilot.
 
+-- {-# LANGUAGE RebindableSyntax #-}
+
 module Languages where
 
 import Language.Copilot
@@ -24,7 +26,6 @@ sat (i,f) = (xs, res)
   xs' 0 = []
   xs' n = clk (period $ 2 P.^ n) (phase (0 :: Int)) : xs' (n P.- 1)
 
-
 satSpec :: SatFunc -> Spec
 satSpec f = do
   observer "sat" (snd $ sat f)
@@ -40,9 +41,16 @@ satSpec f = do
   mkObs idx strm = do observer ("obs" P.++ show idx) strm
                       return (idx P.+ 1)
 
-
 -- Example SAT function.
 f0 :: SatFunc
 f0 = (3, \[a,b,c] -> a && (b || (not c)))
+
+f1 :: SatFunc
+f1 = (9, \[a,b,c,d,e,f,g,h,i] -> a && b && c && d && e && 
+                                 f && g && h && i && i && not i)
+
+-- | Run the interpreter long enough to get an answer.
+runFunc :: SatFunc -> IO ()
+runFunc f = interpret (2 P.^ fst f) (satSpec f)
 
 ---------------------------------------------------------------------------------
