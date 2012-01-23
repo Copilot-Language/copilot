@@ -340,18 +340,21 @@ evalTrigger showType k strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
-    } = take k $ map tag (zip bs vs) ++ repeat Nothing -- there might be 0 args!
+    } = map tag (zip bs vs) 
 
   where
   tag :: (Bool, a) -> Maybe a
   tag (True,  x) = Just x
   tag (False, _) = Nothing
 
+  -- Is the guard true?
   bs :: [Bool]
   bs = evalExprs_ k e strms
 
+  -- The argument outputs.
   vs :: [[Output]]
-  vs = transpose $ map evalUExpr args 
+  vs = if null args then replicate k []  -- might be 0 args.
+         else transpose $ map evalUExpr args
 
   evalUExpr :: UExpr -> [Output]
   evalUExpr (UExpr t e1) =
