@@ -1,5 +1,5 @@
 name:                copilot
-version:             2.0.4
+version:             2.0.5
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -29,8 +29,8 @@ library
       -fno-warn-orphans
     build-depends:
                        base >= 4.0 && <5
-                     , copilot-core
-                     , copilot-language
+                     , copilot-core >= 0.2.3
+                     , copilot-language >= 0.3
                      , copilot-libraries
                      , copilot-cbmc
     exposed-modules: Language.Copilot
