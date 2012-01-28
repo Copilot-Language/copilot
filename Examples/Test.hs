@@ -25,11 +25,13 @@ import EngineExample
 import Examples
 import Examples2
 import ExtFuns
+import Languages
 import Local
 import LTLExamples
 import PTLTLExamples
 import Random
 import RegExpExamples
+import Sat
 import StackExamples
 import StatExamples
 import VotingExamples
@@ -75,6 +77,9 @@ runTests = do
   putStrLn "Testing extFuns ..."
   extFuns         >> cleanup
   putStrLn ""
+  putStrLn "Testing language ..."
+  languages       >> cleanup
+  putStrLn ""
   putStrLn "Testing localEx ..."
   localEx         >> cleanup
   putStrLn ""
@@ -89,6 +94,9 @@ runTests = do
   putStrLn ""
   putStrLn "Testing regExpExamples ..."
   regExpExamples  >> cleanup
+  putStrLn ""
+  putStrLn "Testing satExamples ..."
+  satExamples     >> cleanup
   putStrLn ""
   putStrLn "Testing stackExamples ..."
   stackExamples   >> cleanup

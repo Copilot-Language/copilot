@@ -3,7 +3,7 @@
 
 -- {-# LANGUAGE RebindableSyntax #-}
 
-module Languages where
+module Sat where
 
 import Language.Copilot
 import qualified Prelude as P
@@ -41,16 +41,27 @@ satSpec f = do
   mkObs idx strm = do observer ("obs" P.++ show idx) strm
                       return (idx P.+ 1)
 
--- Example SAT function.
+
 f0 :: SatFunc
-f0 = (3, \[a,b,c] -> a && (b || (not c)))
+--f0 = (3, \[a,b,c] -> a && (b || (not c)))
+f0 = (3, f) 
+  where 
+  f [a,b,c] = a && (b || (not c))
+  f _       = error "Bad SAT function."
 
 f1 :: SatFunc
-f1 = (9, \[a,b,c,d,e,f,g,h,i] -> a && b && c && d && e && 
-                                 f && g && h && i && i && not i)
+f1 = (9, f')
+  where
+  f' [a,b,c,d,e,f,g,h,i] = 
+    a && b && c && d && e && 
+      f && g && h && i && i && not i
+  f' _ = error "Bad SAT function."
 
 -- | Run the interpreter long enough to get an answer.
 runFunc :: SatFunc -> IO ()
 runFunc f = interpret (2 P.^ fst f) (satSpec f)
+
+satExamples :: IO ()
+satExamples = runFunc f0 >> runFunc f1
 
 ---------------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
-module Languages where
+module Languages (languages) where
 
 import Language.Copilot
 import qualified Prelude as P
@@ -156,6 +156,14 @@ copyAccept = do
              ++ 0 -- don't care about part of
                   -- stream after ++
 
+---------------------------------------------------------------------------------
+
+languages :: IO ()
+languages = do
+  interpret 20 reAccept 
+  interpret 20 (cfAccept 10)
+  interpret 20 (csAccept 10)
+  interpret 20 copyAccept
 
 ---------------------------------------------------------------------------------
 -- -- Recognize the language of arbitrarily long sequence of prime numbers.
