@@ -278,7 +278,6 @@ evalOp2 op = case op of
   Sub _        -> (-)
   Mul _        -> (*)
   Mod _        -> (catchZero P.mod)
-  IntegPow _   -> (^)
   Div _        -> (catchZero P.div)
   Fdiv _       -> (P./)
   Pow _        -> (P.**)

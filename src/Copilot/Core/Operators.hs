@@ -57,7 +57,6 @@ data Op2 a b c where
   -- Integral operators.
   Mod      :: Integral a => Type a -> Op2 a a a
   Div      :: Integral a => Type a -> Op2 a a a
-  IntegPow :: (Num a, Integral b) => Type a -> Op2 a b a
   -- Fractional operators.
   Fdiv     :: Fractional a => Type a -> Op2 a a a
   -- Floating operators.
