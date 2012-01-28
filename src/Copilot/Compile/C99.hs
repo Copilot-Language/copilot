@@ -33,7 +33,7 @@ import System.Directory ( doesDirectoryExist
 --------------------------------------------------------------------------------
 
 c99DirName :: String
-c99DirName = "copilot-c99"
+c99DirName = "copilot-c99-codegen"
 
 c99FileRoot :: String
 c99FileRoot = "copilot"
