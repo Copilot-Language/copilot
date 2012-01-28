@@ -13,7 +13,8 @@ import System.Directory ( removeDirectoryRecursive
 import qualified Copilot.Compile.C99 as C99
 import qualified Copilot.Compile.SBV as SBV
 import qualified Copilot.Tools.CBMC as M
-import Control.Monad (when)
+import Control.Monad (when, unless)
+import Data.Maybe (catMaybes)
 
 import AddMult
 import Array
@@ -38,6 +39,14 @@ import VotingExamples
 
 main :: IO ()
 main = do
+  ls <- checkExists
+  when (null ls) runTests
+  unless (null ls) $ do putStrLn "*** Warning! ***"
+                        putStrLn "Cannot run tests in this directory.  You have the following files or directories that would be deleted: "
+                        mapM_ putStrLn ls
+                                
+runTests :: IO ()
+runTests = do
   cleanup
   putStrLn "Testing addMult ..."
   addMult         >> cleanup
@@ -97,6 +106,33 @@ main = do
 
 --------------------------------------------------------------------------------
 
+cbmcName :: String
+cbmcName = "cbmc_driver.c"
+
+atomCBMC :: String
+atomCBMC = M.appendPrefix M.atomPrefix C99.c99DirName
+
+sbvCBMC :: String
+sbvCBMC = M.appendPrefix M.sbvPrefix SBV.sbvDirName
+
+--------------------------------------------------------------------------------
+
+checkExists :: IO [String]
+checkExists = do
+  b0 <- nmBool doesDirectoryExist SBV.sbvDirName
+  b1 <- nmBool doesDirectoryExist C99.c99DirName
+  b2 <- nmBool doesFileExist cbmcName
+  b3 <- nmBool doesDirectoryExist atomCBMC
+  b4 <- nmBool doesDirectoryExist sbvCBMC
+  return $ catMaybes $ map getName [b0, b1, b2, b3, b4]
+
+  where
+  getName (nm, bool) = if bool then Just nm else Nothing
+  nmBool f nm = do b <- f nm 
+                   return (nm, b)
+
+--------------------------------------------------------------------------------
+
 cleanup :: IO ()
 cleanup = do
 
@@ -106,15 +142,12 @@ cleanup = do
   b1 <- doesDirectoryExist C99.c99DirName
   when b1 (removeDirectoryRecursive C99.c99DirName)
 
-  let cbmc = "cbmc_driver.c"
-  b2 <- doesFileExist cbmc
-  when b2 (removeFile cbmc)
+  b2 <- doesFileExist cbmcName
+  when b2 (removeFile cbmcName)
 
-  let atomCBMC = M.appendPrefix M.atomPrefix C99.c99DirName
   b3 <- doesDirectoryExist atomCBMC
   when b3 (removeDirectoryRecursive atomCBMC)
 
-  let sbvCBMC = M.appendPrefix M.sbvPrefix SBV.sbvDirName
   b4 <- doesDirectoryExist sbvCBMC
   when b4 (removeDirectoryRecursive sbvCBMC)
 
