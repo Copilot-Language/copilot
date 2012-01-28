@@ -33,7 +33,6 @@ fib = [0, 1] ++ fib + drop 1 fib
 fibSpec :: Spec
 fibSpec = do
   trigger "fib_out" true [arg fib]
--}
 
 counter :: Stream Bool -> Stream Bool 
         -> Stream Int32
@@ -43,6 +42,7 @@ counter inc reset = cnt
           else if inc then z + 1
                  else z
   z = [0] ++ cnt
+-}
 
 nats :: Stream Word64
 nats = [0] ++ nats + 1
