@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-core
-version:             0.2.2
+version:             0.2.3
 synopsis:            An intermediate representation for Copilot.
 description:         Intermediate representation for Copilot.
                      Strictly follows Haskell 2010 except for universal
