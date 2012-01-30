@@ -41,9 +41,7 @@ data ExtFun = forall a . ExtFun
 
 externVars :: Spec -> [ExtVar]
 externVars = nubBy eqExt . toList . all externVarsExpr
-
   where
-
   eqExt :: ExtVar -> ExtVar -> Bool
   eqExt ExtVar { externVarName = name1 } ExtVar { externVarName = name2 } =
     name1 == name2

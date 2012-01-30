@@ -125,9 +125,7 @@ ppExternalVariable
 
 ppExternalArrays :: [ExtArray] -> Doc
 ppExternalArrays = vcat . map ppExternalArray . nubBy eq
-
   where
-
   eq ExtArray { externArrayName = name1 } ExtArray { externArrayName = name2 } =
     name1 == name2
 
@@ -146,9 +144,7 @@ ppExternalArray
 
 ppExternalFunctions :: [ExtFun] -> Doc
 ppExternalFunctions = vcat . map ppExternalFunction . nubBy eq
-
   where
-
   eq ExtFun { externFunName = name1 } ExtFun { externFunName = name2 } =
     name1 == name2
 
@@ -162,7 +158,6 @@ ppExternalFunction
         text "(" <> ppArgs args <> text ");"
 
   where
-
   ppArgs :: [UExpr] -> Doc
   ppArgs = hcat . intersperse (text ",") . map ppArg
 
@@ -175,7 +170,6 @@ typeSpec :: UType -> String
 typeSpec UType { uTypeType = t } = typeSpec' t
 
   where
-
   typeSpec' Bool = "bool"
   typeSpec' Int8   = "int8_t"
   typeSpec' Int16  = "int16_t"
@@ -197,3 +191,5 @@ ppStep prefix = text "void" <+> text (prefix ++ "step") <> text "();"
 
 unlines :: [String] -> Doc
 unlines = vcat . map text
+
+--------------------------------------------------------------------------------
