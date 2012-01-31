@@ -2,15 +2,15 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Abstract syntax for streams and operators.
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Language.Stream
-  ( Stream (..)
-  , FunArg (..)
+  ( Stream (..) 
+  , Arg (..) 
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -30,7 +30,7 @@ data Stream :: * -> * where
   Extern      :: Typed a
               => String -> Maybe [a] -> Stream a
   ExternFun   :: Typed a 
-              => String -> [FunArg] -> Maybe (Stream a) -> Stream a
+              => String -> [Arg] -> Maybe (Stream a) -> Stream a
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
   Local       :: (Typed a, Typed b) 
@@ -46,8 +46,8 @@ data Stream :: * -> * where
 
 --------------------------------------------------------------------------------
 
-data FunArg where
-  FunArg :: Typed a => Stream a -> FunArg
+data Arg where
+  Arg :: Typed a => Stream a -> Arg
 
 --------------------------------------------------------------------------------
 

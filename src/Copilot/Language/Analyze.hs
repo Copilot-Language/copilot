@@ -15,7 +15,7 @@ module Copilot.Language.Analyze
 
 import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
-import Copilot.Language.Stream (Stream (..), FunArg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
 
@@ -90,8 +90,8 @@ analyzeTrigger refStreams (Trigger _ e0 args) =
   analyzeExpr refStreams e0 >> mapM_ analyzeTriggerArg args
 
   where
-  analyzeTriggerArg :: TriggerArg -> IO ()
-  analyzeTriggerArg (TriggerArg e) = analyzeExpr refStreams e
+  analyzeTriggerArg :: Arg -> IO ()
+  analyzeTriggerArg (Arg e) = analyzeExpr refStreams e
 
 --------------------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ analyzeExpr refStreams s = do
                         Nothing -> return ()
                         Just e  -> go seenExt nodes' e
         checkArgs = case seenExt of 
-                      NoExtern -> mapM_ (\(FunArg a) -> 
+                      NoExtern -> mapM_ (\(Arg a) -> 
                                              go SeenFun nodes' a) args
                       SeenFun  -> throw NestedExternFun
                       SeenArr  -> throw NestedArray
@@ -284,7 +284,7 @@ specExts refStreams spec = do
   triggerExts :: ExternEnv -> Trigger -> IO ExternEnv
   triggerExts env (Trigger _ guard args) = do
     env' <- collectExts refStreams guard env 
-    foldM (\env'' (TriggerArg arg_) -> collectExts refStreams arg_ env'')
+    foldM (\env'' (Arg arg_) -> collectExts refStreams arg_ env'')
           env' args
 
 collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
@@ -312,9 +312,9 @@ collectExts refStreams stream_ env_ = do
         env' <- case me of
                   Nothing -> return env 
                   Just e  -> go nodes env e
-        env'' <- foldM (\env'' (FunArg arg_) -> go nodes env'' arg_)
+        env'' <- foldM (\env'' (Arg arg_) -> go nodes env'' arg_)
                    env' args 
-        let argTypes = map (\(FunArg arg_) -> getSimpleType arg_) args 
+        let argTypes = map (\(Arg arg_) -> getSimpleType arg_) args 
         let fun = (name, getSimpleType stream) 
         return env'' { externFunEnv  = fun : externFunEnv env''
                      , externFunArgs = (name, argTypes) : externFunArgs env''

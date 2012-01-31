@@ -17,7 +17,6 @@ module Copilot.Language.Operators.Extern
   , externI64
   , externF
   , externD
-  , FunArg
   , externFun
   , externArray
   , externArrayB
@@ -31,7 +30,7 @@ module Copilot.Language.Operators.Extern
   , externArrayI64
   , externArrayF
   , externArrayD
-  , funArg
+  , funArg -- ^ Deprecated.
   ) where
 
 import Copilot.Core (Typed)
@@ -46,15 +45,16 @@ type Size = Int
 extern :: Typed a => String -> Maybe [a] -> Stream a
 extern = Extern
 
-externFun :: Typed a => String -> [FunArg] -> Maybe (Stream a) -> Stream a
+externFun :: Typed a => String -> [Arg] -> Maybe (Stream a) -> Stream a
 externFun = ExternFun
 
 externArray :: (Typed a, Typed b, Integral a) 
             => String -> Stream a -> Size -> Maybe [[b]] -> Stream b
 externArray = ExternArray
 
-funArg :: Typed a => Stream a -> FunArg
-funArg = FunArg
+-- | Deprecated.
+funArg :: Typed a => Stream a -> Arg
+funArg = Arg
 
 --------------------------------------------------------------------------------
 

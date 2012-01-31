@@ -16,7 +16,6 @@ module Copilot.Language.Spec
   , observer
   , observers
   , Trigger (..)
-  , TriggerArg (..)
   , triggers
   , trigger
   , arg
@@ -67,50 +66,26 @@ data SpecItem
 --------------------------------------------------------------------------------
 
 data Observer where
-  Observer
-    :: Typed a
-    => String
-    -> Stream a
-    -> Observer
+  Observer :: Typed a => String -> Stream a -> Observer
 
 --------------------------------------------------------------------------------
 
-observer 
-  :: Typed a
-  => String
-  -> Stream a
-  -> Spec
+observer :: Typed a => String -> Stream a -> Spec
 observer name e = tell [ObserverItem $ Observer name e]
 
 --------------------------------------------------------------------------------
 
 data Trigger where
-  Trigger
-    :: Core.Name
-    -> Stream Bool
-    -> [TriggerArg]
-    -> Trigger
+  Trigger :: Core.Name -> Stream Bool -> [Arg] -> Trigger
 
 --------------------------------------------------------------------------------
 
-data TriggerArg where
-  TriggerArg
-    :: Typed a
-    => Stream a
-    -> TriggerArg
-
---------------------------------------------------------------------------------
-
-trigger
-  :: String
-  -> Stream Bool
-  -> [TriggerArg]
-  -> Spec
+trigger :: String -> Stream Bool -> [Arg] -> Spec
 trigger name e args = tell [TriggerItem $ Trigger name e args]
 
 --------------------------------------------------------------------------------
 
-arg :: Typed a => Stream a -> TriggerArg
-arg = TriggerArg
+arg :: Typed a => Stream a -> Arg
+arg = Arg
 
 --------------------------------------------------------------------------------

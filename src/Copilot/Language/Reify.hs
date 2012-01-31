@@ -17,7 +17,7 @@ import Copilot.Core (Typed, Type, Id, typeOf, impossible)
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
-import Copilot.Language.Stream (Stream (..), FunArg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..))
 
 import Prelude hiding (id)
 import Data.IORef
@@ -83,8 +83,8 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
 
   where
 
-  mkTriggerArg :: TriggerArg -> IO Core.UExpr
-  mkTriggerArg (TriggerArg e) = do
+  mkTriggerArg :: Arg -> IO Core.UExpr
+  mkTriggerArg (Arg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
 
@@ -181,8 +181,8 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-  mkFunArg :: FunArg -> IO Core.UExpr
-  mkFunArg (FunArg e) = do
+  mkFunArg :: Arg -> IO Core.UExpr
+  mkFunArg (Arg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
 
