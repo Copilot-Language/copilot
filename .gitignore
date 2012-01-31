@@ -1,2 +1,3 @@
-dist/
-*~
+dist
+cabal-dev
+copilot-profiling

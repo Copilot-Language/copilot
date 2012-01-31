@@ -71,9 +71,9 @@ interp2 = interpret 10 spec2
 
 -- Not Ok---different number of args.
 func0 :: Stream Bool
-func0 = externFun "func0" [funArg x] (Just $ x < 4)
+func0 = externFun "func0" [arg x] (Just $ x < 4)
 func1 :: Stream Bool
-func1 = externFun "func0" [funArg x, funArg y] (Just $ (cast x + y) > 10)
+func1 = externFun "func0" [arg x, arg y] (Just $ (cast x + y) > 10)
 
 spec3 :: Spec
 spec3 = trigger "trigger" true [ arg func0
@@ -85,7 +85,7 @@ interp3 :: IO ()
 interp3 = interpret 10 spec3
 
 func2 :: Stream Bool
-func2 = externFun "func0" [funArg y] (Just $ y > 4)
+func2 = externFun "func0" [arg y] (Just $ y > 4)
 
 -- Should fail: func0 and func2 say that "func0" have different typed arguments.
 spec4 :: Spec
