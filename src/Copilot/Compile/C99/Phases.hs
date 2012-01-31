@@ -30,6 +30,7 @@ import Prelude hiding (id)
 data Phase
   = SampleExternVars
   | SampleExternArrays
+  | CallExternFuns
   | SampleExternFuns
   | UpdateStates
   | FireTriggers
@@ -46,6 +47,7 @@ schedulePhases :: Params -> MetaTable -> Core.Spec -> Atom ()
 schedulePhases params meta spec =
   A.period numberOfPhases $
     sampleExternVars    params meta spec >>
+    callExternFuns      params meta spec >>
     sampleExternArrays  params meta spec >>
     sampleExternFuns    params meta spec >>
     fireTriggers        params meta spec >>
@@ -87,8 +89,8 @@ sampleExternArrays _ meta _ =
 
 --------------------------------------------------------------------------------
 
-sampleExternFuns :: Params -> MetaTable -> Core.Spec -> Atom ()
-sampleExternFuns _ meta _ =
+callExternFuns :: Params -> MetaTable -> Core.Spec -> Atom ()
+callExternFuns _ meta _ =
   (mapM_ sampleExternFun . M.toList . externFunInfoMap) meta
 
   where
@@ -98,18 +100,30 @@ sampleExternFuns _ meta _ =
       W.ExprInst -> A.ue (c2aExpr meta e)
 
   sampleExternFun :: ((Core.Name, Core.Tag), ExternFunInfo) -> Atom ()
-  sampleExternFun ((name, tag), ExternFunInfo args var t) =
-    exactPhase (fromEnum SampleExternFuns) $
-      atom ("sample_fun_" ++ name ++ "_" ++ show tag) $ do
+  sampleExternFun ((name, tag), ExternFunInfo args _ _) =
+    exactPhase (fromEnum CallExternFuns) $
+      atom ("call_fun_" ++ name ++ "_" ++ show tag) $ do
         let args' = map c2aUExpr args
         A.action fnCall args'
-        W.AssignInst <- return $ W.assignInst t
-        var <== A.value (A.var' (mkTmpExtFunVarName name tag) (c2aType t))
 
     where
     fnCall :: [String] -> String
     fnCall xs = mkTmpExtFunVarName name tag ++ " = " ++ name ++ "("
       ++ concat (intersperse "," xs) ++ ")"
+
+--------------------------------------------------------------------------------
+
+sampleExternFuns :: Params -> MetaTable -> Core.Spec -> Atom ()
+sampleExternFuns _ meta _ =
+  (mapM_ sampleExternFun . M.toList . externFunInfoMap) meta
+
+  where
+  sampleExternFun :: ((Core.Name, Core.Tag), ExternFunInfo) -> Atom ()
+  sampleExternFun ((name, tag), ExternFunInfo _ var t) =
+    exactPhase (fromEnum CallExternFuns) $
+      atom ("sample_fun_" ++ name ++ "_" ++ show tag) $ do
+        W.AssignInst <- return $ W.assignInst t
+        var <== A.value (A.var' (mkTmpExtFunVarName name tag) (c2aType t))
 
 --------------------------------------------------------------------------------
 
@@ -139,8 +153,8 @@ updateStates _ meta
   updateStreamState1 t1 id e1 g1
     StreamInfo
       { streamInfoTempVar = tmp
-      , streamInfoType    = t2
-      } =
+      , streamInfoType    = t2  }
+    =
     exactPhase (fromEnum UpdateStates) $
       atom ("update_state_s" ++ show id) $ do
         g1
@@ -153,8 +167,8 @@ updateStates _ meta
 fireTriggers :: Params -> MetaTable -> Core.Spec -> Atom ()
 fireTriggers params meta
   Core.Spec
-    { Core.specTriggers = triggers
-    } =
+    { Core.specTriggers = triggers }
+  =
   mapM_ fireTrigger triggers
 
   where
@@ -173,7 +187,6 @@ fireTriggers params meta
         A.action fnCall args'
 
       where
-
       triggerArg2UE :: Core.UExpr -> A.UE
       triggerArg2UE (Core.UExpr t e) =
         case W.exprInst t of
