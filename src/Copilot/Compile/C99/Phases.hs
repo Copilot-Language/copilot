@@ -48,9 +48,9 @@ schedulePhases params meta spec =
     sampleExternVars    params meta spec >>
     sampleExternArrays  params meta spec >>
     sampleExternFuns    params meta spec >>
-    updateStates        params meta spec >>
     fireTriggers        params meta spec >>
     updateObservers     params meta spec >>
+    updateStates        params meta spec >>
     updateBuffers       params meta spec
 
 --------------------------------------------------------------------------------
@@ -60,14 +60,12 @@ sampleExternVars _ meta _ =
   (mapM_ sampleExternVar . M.toList . externInfoMap) meta
 
   where
-
   sampleExternVar :: (Core.Name, ExternInfo) -> Atom ()
   sampleExternVar (name, ExternInfo v t) =
     exactPhase (fromEnum SampleExternVars) $
-      atom ("sample_var_" ++ name) $
-        do
-          W.AssignInst <- return $ W.assignInst t
-          v <== A.value (A.var' name (c2aType t))
+      atom ("sample_var_" ++ name) $ do
+        W.AssignInst <- return $ W.assignInst t
+        v <== A.value (A.var' name (c2aType t))
 
 --------------------------------------------------------------------------------
 
@@ -76,18 +74,16 @@ sampleExternArrays _ meta _ =
   (mapM_ sampleExternArray . M.toList . externArrayInfoMap) meta
 
   where
-
   sampleExternArray :: ((Core.Name, Core.Tag), ExternArrayInfo) -> Atom ()
   sampleExternArray ((name, tag), ExternArrayInfo var idxExpr idxType elemType) =
     exactPhase (fromEnum SampleExternArrays) $
-      atom ("sample_array_" ++ name ++ "_" ++ show tag) $
-        do
-          W.IntegralEInst <- return $ W.integralEInst idxType
-          W.AssignInst <- return $ W.assignInst elemType
-          W.ExprInst <- return $ W.exprInst elemType
-          let e   = c2aExpr meta idxExpr
-              arr = A.array' name (c2aType elemType)
-          var <== A.value (arr A.! e)
+      atom ("sample_array_" ++ name ++ "_" ++ show tag) $ do
+        W.IntegralEInst <- return $ W.integralEInst idxType
+        W.AssignInst <- return $ W.assignInst elemType
+        W.ExprInst <- return $ W.exprInst elemType
+        let e   = c2aExpr meta idxExpr
+            arr = A.array' name (c2aType elemType)
+        var <== A.value (arr A.! e)
 
 --------------------------------------------------------------------------------
 
@@ -96,7 +92,6 @@ sampleExternFuns _ meta _ =
   (mapM_ sampleExternFun . M.toList . externFunInfoMap) meta
 
   where
-
   c2aUExpr :: Core.UExpr -> A.UE
   c2aUExpr (Core.UExpr t e) =
     case W.exprInst t of
@@ -105,15 +100,13 @@ sampleExternFuns _ meta _ =
   sampleExternFun :: ((Core.Name, Core.Tag), ExternFunInfo) -> Atom ()
   sampleExternFun ((name, tag), ExternFunInfo args var t) =
     exactPhase (fromEnum SampleExternFuns) $
-      atom ("sample_fun_" ++ name ++ "_" ++ show tag) $
-        do
-          let args' = map c2aUExpr args
-          A.action fnCall args'
-          W.AssignInst <- return $ W.assignInst t
-          var <== A.value (A.var' (mkTmpExtFunVarName name tag) (c2aType t))
+      atom ("sample_fun_" ++ name ++ "_" ++ show tag) $ do
+        let args' = map c2aUExpr args
+        A.action fnCall args'
+        W.AssignInst <- return $ W.assignInst t
+        var <== A.value (A.var' (mkTmpExtFunVarName name tag) (c2aType t))
 
     where
-
     fnCall :: [String] -> String
     fnCall xs = mkTmpExtFunVarName name tag ++ " = " ++ name ++ "("
       ++ concat (intersperse "," xs) ++ ")"
@@ -127,7 +120,6 @@ updateStates _ meta
     } = mapM_ updateStreamState streams
 
   where
-
   updateStreamState :: Core.Stream -> Atom ()
   updateStreamState
     Core.Stream
@@ -135,12 +127,12 @@ updateStates _ meta
       , Core.streamExpr     = e
       , Core.streamExprType = t1
       , Core.streamGuard    = g
-      } =
-    do
-      let e' = c2aExpr meta e
-          Just strmInfo = M.lookup id (streamInfoMap meta)
-          g' = cond (c2aExpr meta g)
-      updateStreamState1 t1 id e' g' strmInfo
+      } 
+    = do
+    let e' = c2aExpr meta e
+        Just strmInfo = M.lookup id (streamInfoMap meta)
+        g' = cond (c2aExpr meta g)
+    updateStreamState1 t1 id e' g' strmInfo
 
   updateStreamState1
     :: Core.Type a -> Core.Id -> A.E a -> Atom () -> StreamInfo -> Atom ()
@@ -150,12 +142,11 @@ updateStates _ meta
       , streamInfoType    = t2
       } =
     exactPhase (fromEnum UpdateStates) $
-      atom ("update_state_s" ++ show id) $
-        do
-          g1
-          W.AssignInst <- return (W.assignInst t2)
-          Just Refl <- return (t1 =~= t2)
-          tmp <== e1 -- coerce (cong p) e1
+      atom ("update_state_s" ++ show id) $ do
+        g1
+        W.AssignInst <- return (W.assignInst t2)
+        Just Refl <- return (t1 =~= t2)
+        tmp <== e1 -- coerce (cong p) e1
 
 --------------------------------------------------------------------------------
 
@@ -167,7 +158,6 @@ fireTriggers params meta
   mapM_ fireTrigger triggers
 
   where
-
   fireTrigger :: Core.Trigger -> Atom ()
   fireTrigger
     Core.Trigger
@@ -176,12 +166,11 @@ fireTriggers params meta
       , Core.triggerArgs  = args
       } =
     exactPhase (fromEnum FireTriggers) $
-      atom ("fire_trigger_" ++ name) $
-        do
-          let args' = map triggerArg2UE (reverse args)
-              e0'   = c2aExpr meta e0
-          cond e0'
-          A.action fnCall args'
+      atom ("fire_trigger_" ++ name) $ do
+        let args' = map triggerArg2UE (reverse args)
+            e0'   = c2aExpr meta e0
+        cond e0'
+        A.action fnCall args'
 
       where
 
@@ -199,12 +188,11 @@ fireTriggers params meta
 updateObservers :: Params -> MetaTable -> Core.Spec -> Atom ()
 updateObservers params meta
   Core.Spec
-    { Core.specObservers = observers
-    } =
+    { Core.specObservers = observers }
+  =
   mapM_ updateObserver observers
 
   where
-
   updateObserver :: Core.Observer -> Atom ()
   updateObserver
     Core.Observer
@@ -224,31 +212,26 @@ updateObservers params meta
 updateBuffers :: Params -> MetaTable -> Core.Spec -> Atom ()
 updateBuffers _ meta
   Core.Spec
-    { Core.specStreams = streams
-    } =
+    { Core.specStreams = streams }
+  =
   mapM_ updateBuffer streams
 
   where
 
   updateBuffer :: Core.Stream -> Atom ()
-  updateBuffer
-    Core.Stream
-      { Core.streamId = id
-      } =
-    let
-      Just strmInfo = M.lookup id (streamInfoMap meta)
-    in
-      updateBuffer1 id strmInfo
+  updateBuffer Core.Stream { Core.streamId = id }
+    =
+    let Just strmInfo = M.lookup id (streamInfoMap meta) in
+    updateBuffer1 id strmInfo
 
   updateBuffer1 :: Core.Id -> StreamInfo -> Atom ()
   updateBuffer1 id
     StreamInfo
       { streamInfoQueue      = que
       , streamInfoTempVar    = tmp
-      , streamInfoType       = t
-      } =
+      , streamInfoType       = t   }
+    =
     exactPhase (fromEnum UpdateBuffers) $
-      atom ("update_buffer_s" ++ show id) $
-        do
-          W.AssignInst <- return (W.assignInst t)
-          Q.dropFirstElemAndSnoc (A.value tmp) que
+      atom ("update_buffer_s" ++ show id) $ do
+        W.AssignInst <- return (W.assignInst t)
+        Q.dropFirstElemAndSnoc (A.value tmp) que
