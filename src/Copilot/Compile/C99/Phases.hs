@@ -34,8 +34,8 @@ data Phase
   | SampleExternFuns
   | UpdateStates
   | FireTriggers
-  | UpdateBuffers
   | UpdateObservers
+  | UpdateBuffers
   deriving (Bounded, Eq, Enum, Ord, Show)
 
 numberOfPhases :: Int
@@ -109,7 +109,7 @@ callExternFuns _ meta _ =
     where
     fnCall :: [String] -> String
     fnCall xs = mkTmpExtFunVarName name tag ++ " = " ++ name ++ "("
-      ++ concat (intersperse "," xs) ++ ")"
+      ++ concat (intersperse "," (reverse xs)) ++ ")"
 
 --------------------------------------------------------------------------------
 
@@ -214,11 +214,10 @@ updateObservers params meta
       , Core.observerExprType = t
       } =
     exactPhase (fromEnum UpdateObservers) $
-      atom ("update_observer_" ++ name) $
-        do
-          let e' = c2aExpr meta e
-          W.AssignInst <- return (W.assignInst t)
-          (A.var' (withPrefix (prefix params) name) . c2aType) t <== e'
+      atom ("update_observer_" ++ name) $ do
+        let e' = c2aExpr meta e
+        W.AssignInst <- return (W.assignInst t)
+        (A.var' (withPrefix (prefix params) name) . c2aType) t <== e'
 
 --------------------------------------------------------------------------------
 
