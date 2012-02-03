@@ -11,18 +11,19 @@ module ExtFuns ( extFuns ) where
 import Language.Copilot 
 import qualified Copilot.Compile.C99 as C
 import qualified Copilot.Compile.SBV as S
+--import qualified Copilot.Tools.CBMC as B
 
 --------------------------------------------------------------------------------
 
-nats :: Stream Word16
-nats = [0,1] ++ nats + 1
+doubles :: Stream Word16
+doubles = [0,1] ++ doubles + 1
 
 ---------------------------------------------------------------------------------
 
 -- Function func0 and it's environment for interpreting
 func0 :: Stream Word16
-func0 = externFun "func0" [ arg x, arg nats ]
-          (Just $ cast x + nats)
+func0 = externFun "func0" [ arg x, arg doubles ]
+          (Just $ cast x + doubles)
   where x = externW8 "x" (Just [0..])
 
 ---------------------------------------------------------------------------------
