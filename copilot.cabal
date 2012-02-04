@@ -1,5 +1,5 @@
 name:                copilot
-version:             2.0.6
+version:             2.0.7
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -58,6 +58,7 @@ executable copilot-regression
                   , Examples
                   , Examples2
                   , ExtFuns
+                  , Languages
                   , Local
                   , LTLExamples
                   , PTLTLExamples
