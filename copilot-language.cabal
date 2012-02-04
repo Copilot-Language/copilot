@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-language
-version:             0.3
+version:             0.4
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
 description:         Blah blah blah...
