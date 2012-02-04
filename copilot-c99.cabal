@@ -1,6 +1,6 @@
 cabal-version             : >= 1.10
 name                      : copilot-c99
-version                   : 0.2.3
+version                   : 0.2.4
 synopsis                  : A compiler for Copilot targeting C99.
 description               : This is a back-end from Copilot to the Atom DSL. Please see README.mk for more details.
 license                   : BSD3
