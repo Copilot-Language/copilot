@@ -2,7 +2,18 @@ cabal-version             : >= 1.10
 name                      : copilot-c99
 version                   : 0.2.4
 synopsis                  : A compiler for Copilot targeting C99.
-description               : This is a back-end from Copilot to the Atom DSL. Please see README.mk for more details.
+description               : 
+  This package is a back-end from Copilot to the Atom DSL. 
+  .   
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.  A tutorial, bug
+  reports, and todos are available at
+  <https://github.com/niswegmann/copilot-discussion>.  
+  .  
+  Examples are available at
+  <https://github.com/leepike/Copilot/tree/master/Examples>.
+
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : leepike@galois.com
