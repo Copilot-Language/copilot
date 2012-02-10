@@ -64,7 +64,7 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
-instance (Typed a, Num a) => Num (Stream a) where
+instance (Typed a, Eq a, Num a) => Num (Stream a) where
   (Const x) + (Const y)   = Const (x + y)
   (Const 0) + y           = y
   x + (Const 0)           = x
