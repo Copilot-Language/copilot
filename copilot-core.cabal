@@ -2,9 +2,18 @@ cabal-version:       >=1.10
 name:                copilot-core
 version:             0.2.3
 synopsis:            An intermediate representation for Copilot.
-description:         Intermediate representation for Copilot.
-                     Strictly follows Haskell 2010 except for universal
-                     and existential quantification.
+description:         
+  Intermediate representation for Copilot. 
+  . 
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.  A tutorial, bug
+  reports, and todos are available at
+  <https://github.com/niswegmann/copilot-discussion>.  
+  .  
+  Examples are available at
+  <https://github.com/leepike/Copilot/tree/master/Examples>.
+
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe,
                      Sebastian Niller, Nis Nordby Wegmann
 license:             BSD3
