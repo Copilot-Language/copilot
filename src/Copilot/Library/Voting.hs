@@ -28,14 +28,18 @@ majority :: (P.Eq a, Typed a) => [Stream a] -> Stream a
 majority []     = badUsage "majority: empty list not allowed"
 majority (x:xs) = majority' xs x 1
 
+-- Alternate syntax of local bindings.
 majority' :: (P.Eq a, Typed a)
    => [Stream a] -> Stream a -> Stream Word32 -> Stream a
 majority' []     can _   = can
 majority' (x:xs) can cnt =
-  local (cnt == 0) $ \ zero -> 
-    local (if zero then x else can) $ \ can' ->
-      local (if zero || x == can then cnt+1 else cnt-1) $ \ cnt' ->
-        majority' xs can' cnt'
+  local (cnt == 0) inZero
+  where 
+  inZero zero    = local (if zero then x else can) inCan
+    where       
+    inCan can'   = local (if zero || x == can then cnt+1 else cnt-1) inCnt
+      where 
+      inCnt cnt' = majority' xs can' cnt'
 
 --------------------------------------------------------------------------------
 
