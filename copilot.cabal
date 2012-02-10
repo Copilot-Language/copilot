@@ -10,7 +10,16 @@ maintainer:          Lee Pike <leepike@galois.com>
 category:            Language, Embedded
 homepage:            http://leepike.github.com/Copilot/
 stability:           Experimental
-description:         Documentation is available at the website, and see the included examples.
+description:         
+  This package is the main entry-point for using Copilot.
+  .   
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.  A tutorial, bug
+  reports, and todos are available at
+  <https://github.com/niswegmann/copilot-discussion>.  
+  .  
+  Examples are available at <https://github.com/leepike/Copilot/tree/master/Examples>.
 
 extra-source-files:  README.md
 
