@@ -12,7 +12,7 @@ import Copilot.Language.Prelude
 import Copilot.Library.Utils
 
 -- | Summation.
-sum :: ( Typed a, Num a ) => Int -> Stream a -> Stream a
+sum :: ( Typed a, Num a, Eq a ) => Int -> Stream a -> Stream a
 sum n s = nfoldl1 n (+) s
 
 -- | Maximum value.
@@ -27,7 +27,7 @@ min n s = nfoldl1 n smallest s
 
 -- | Mean value.  @n@ must not overflow
 -- for word size @a@ for streams over which computation is peformed.
-mean :: ( Typed a, Fractional a ) => Int -> Stream a -> Stream a
+mean :: ( Typed a, Eq a, Fractional a ) => Int -> Stream a -> Stream a
 mean n s = ( sum n s ) / ( fromIntegral n )
 
 -- | Mean value over the current set of streams passed in.
