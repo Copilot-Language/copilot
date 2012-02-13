@@ -64,7 +64,7 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
-instance (Typed a, Eq a, Num a) => Num (Stream a) where
+instance (Typed a, P.Eq a, Num a) => Num (Stream a) where
   (Const x) + (Const y)   = Const (x + y)
   (Const 0) + y           = y
   x + (Const 0)           = x
@@ -93,7 +93,7 @@ instance (Typed a, Eq a, Num a) => Num (Stream a) where
 
 -- XXX we may not want to precompute these if they're constants if someone is
 -- relying on certain floating-point behavior.
-instance (Typed a, Fractional a) => Fractional (Stream a) where
+instance (Typed a, P.Eq a, Fractional a) => Fractional (Stream a) where
   (/)                     = Op2 (Core.Fdiv typeOf) 
 
   recip (Const x)         = Const (recip x)
@@ -105,7 +105,7 @@ instance (Typed a, Fractional a) => Fractional (Stream a) where
 
 -- XXX we may not want to precompute these if they're constants if someone is
 -- relying on certain floating-point behavior.
-instance (Typed a, Floating a) => Floating (Stream a) where
+instance (Typed a, Eq a, Floating a) => Floating (Stream a) where
   pi           = Const pi
   exp          = Op1 (Core.Exp typeOf)
   sqrt         = Op1 (Core.Sqrt typeOf)

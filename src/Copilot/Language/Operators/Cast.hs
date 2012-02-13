@@ -23,7 +23,7 @@ class Cast a b where
 
 --------------------------------------------------------------------------------
 
-castBool :: (Num a, Typed a) => Stream Bool -> Stream a
+castBool :: (Eq a, Num a, Typed a) => Stream Bool -> Stream a
 castBool (Const bool) = Const $ if bool then 1 else 0
 castBool x            = Op3 (C.Mux typeOf) x 1 0
 
