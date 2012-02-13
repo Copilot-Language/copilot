@@ -47,6 +47,19 @@ foo = do
   trigger "trigger" true [arg $ x < 3]
   observer "debug_x" x
 
+latch :: Stream Bool -> Stream Bool
+latch x = out
+  where out = if x then not st else st
+        st  = [False] ++ out
+
+latch' :: Stream Bool -> Stream Bool
+latch' x = out
+  where out = x `xor` st
+        st  = [False] ++ out
+
+ext :: Stream Word8
+ext = [1] ++ ext + extern "e0" (Just [2,4..])
+
 -}
 
 flipflop :: Stream Bool -> Stream Bool
@@ -63,7 +76,7 @@ even x = x `mod` 2 == 0
 odd :: (P.Integral a, Typed a) => Stream a -> Stream Bool
 odd = not . even
 
-counter :: (Num a, Typed a) => Stream Bool -> Stream a
+counter :: (Eq a, Num a, Typed a) => Stream Bool -> Stream a
 counter reset = y
   where
   zy = [0] ++ y
