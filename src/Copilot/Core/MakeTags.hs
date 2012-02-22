@@ -39,7 +39,6 @@ mkTagsStrms = mapM mkTagsStrm
     mkTagsStrm Stream
       { streamId         = id
       , streamBuffer     = xs
-      , streamGuard      = g
       , streamExpr       = e
       , streamExprType   = t } =
         do
@@ -47,7 +46,6 @@ mkTagsStrms = mapM mkTagsStrm
           return $ Stream
             { streamId         = id
             , streamBuffer     = xs
-            , streamGuard      = g
             , streamExpr       = e'
             , streamExprType   = t }
 

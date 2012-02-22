@@ -135,7 +135,6 @@ genStream ss
       Stream
         { streamId       = id
         , streamBuffer   = xs
-        , streamGuard    = Const (typeOf :: Type Bool) True
         , streamExpr     = w
         , streamExprType = t }
 
