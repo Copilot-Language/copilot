@@ -140,24 +140,21 @@ updateStates _ meta
       { Core.streamId       = id
       , Core.streamExpr     = e
       , Core.streamExprType = t1
-      , Core.streamGuard    = g
       } 
     = do
     let e' = c2aExpr meta e
         Just strmInfo = M.lookup id (streamInfoMap meta)
-        g' = cond (c2aExpr meta g)
-    updateStreamState1 t1 id e' g' strmInfo
+    updateStreamState1 t1 id e' strmInfo
 
   updateStreamState1
-    :: Core.Type a -> Core.Id -> A.E a -> Atom () -> StreamInfo -> Atom ()
-  updateStreamState1 t1 id e1 g1
+    :: Core.Type a -> Core.Id -> A.E a -> StreamInfo -> Atom ()
+  updateStreamState1 t1 id e1
     StreamInfo
       { streamInfoTempVar = tmp
       , streamInfoType    = t2  }
     =
     exactPhase (fromEnum UpdateStates) $
       atom ("update_state_s" ++ show id) $ do
-        g1
         W.AssignInst <- return (W.assignInst t2)
         Just Refl <- return (t1 =~= t2)
         tmp <== e1 -- coerce (cong p) e1
