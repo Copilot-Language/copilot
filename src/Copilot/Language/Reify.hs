@@ -230,7 +230,6 @@ mkStream refMkId refStreams refMap e0 =
         Core.Stream
           { Core.streamId         = id
           , Core.streamBuffer     = buf
-          , Core.streamGuard      = Core.Const (typeOf :: Type Bool) True
           , Core.streamExpr       = w
           , Core.streamExprType   = typeOf }
       return id
