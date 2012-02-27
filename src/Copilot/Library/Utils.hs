@@ -1,14 +1,18 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+-- | Utility bounded-list functions (e.g., folds, scans, etc.)
+
 module Copilot.Library.Utils
     ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
       nscanl, nscanr, nscanl1, nscanr1,
       case', (!!), cycle ) 
 where
 
-
 import Copilot.Language
 import Copilot.Language.Prelude 
 import qualified Prelude as P
-
 
 -- | functions similar to the Prelude functions on lists
 

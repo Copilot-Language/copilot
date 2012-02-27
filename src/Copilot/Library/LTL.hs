@@ -1,3 +1,7 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
 -- | Bounded Linear Temporal Logic (LTL) operators.  For a bound @n@, a property
 -- @p@ holds if it holds on the next @n@ transitions (between periods).  If
 -- @n == 0@, then the trace includes only the current period.  For example,

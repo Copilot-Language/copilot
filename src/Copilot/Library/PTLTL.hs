@@ -1,3 +1,7 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
 -- | Provides past-time linear-temporal logic (ptLTL operators).
 --
 -- Interface: see Examples/PTLTLExamples.hs.

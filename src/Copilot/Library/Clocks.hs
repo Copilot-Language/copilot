@@ -1,3 +1,7 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
 -- | A library that generates new clocks based on a base period.
 -- Usage, supposing @v@ is a Copilot variable, then
 -- @
@@ -17,7 +21,6 @@
 -- The period must be greater than 0.
 -- The phase must be greater than or equal to 0.
 -- The phase must be less than the period.
-
 
 module Copilot.Library.Clocks
   ( clk, clk1, period, phase ) where

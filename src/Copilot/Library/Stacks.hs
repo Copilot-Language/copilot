@@ -1,12 +1,16 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+-- | Stack machine.
+
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Copilot.Library.Stacks
   ( stack, stack' ) where
 
-
 import Copilot.Language
 import Copilot.Language.Prelude
-
 
 type PushSignal    = Stream Bool
 type PopSignal     = Stream Bool
