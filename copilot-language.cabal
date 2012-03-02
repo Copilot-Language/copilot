@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-language
-version:             0.6
+version:             0.7
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
 description:
@@ -66,10 +66,18 @@ library
     Copilot.Language.Stream
     Copilot.Language.Spec
     System.Mem.StableName.Dynamic
-    System.Mem.StableName.Dynamic.Map
+    System.Mem.StableName.Map
 
   ghc-options:
     -fwarn-tabs
     -auto-all
     -caf-all
     -Wall
+
+    -fpackage-trust
+    -- Trusted packages:
+    -trust base
+    -trust containers
+    -trust array
+
+    
