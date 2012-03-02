@@ -2,7 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Stream construction.
+
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Temporal
   ( (++)

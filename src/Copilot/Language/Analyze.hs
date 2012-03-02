@@ -2,6 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -23,8 +24,8 @@ import Data.List (groupBy)
 import Data.IORef
 import Data.Typeable
 import System.Mem.StableName.Dynamic
-import System.Mem.StableName.Dynamic.Map (Map(..))
-import qualified System.Mem.StableName.Dynamic.Map as M
+import System.Mem.StableName.Map (Map(..))
+import qualified System.Mem.StableName.Map as M
 import Control.Monad (when, foldM_, foldM)
 import Control.Exception (Exception, throw)
 

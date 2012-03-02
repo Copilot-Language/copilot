@@ -2,6 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+-- | Bitwise operators.
+
+{-# LANGUAGE Safe #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Copilot.Language.Operators.BitWise

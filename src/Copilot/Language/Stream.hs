@@ -4,6 +4,7 @@
 
 -- | Abstract syntax for streams and operators.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE Rank2Types #-}

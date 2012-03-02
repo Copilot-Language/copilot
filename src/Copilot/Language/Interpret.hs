@@ -1,8 +1,9 @@
 {- Copyright (c) 2011 National Institute of Aerospace / Galois, Inc. -}
 
-{-# LANGUAGE GADTs, FlexibleInstances #-}
-
 -- | The interpreter.
+
+{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs, FlexibleInstances #-}
 
 module Copilot.Language.Interpret
   ( --Input

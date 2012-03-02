@@ -2,7 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Let expressions.
+
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Local
   ( local

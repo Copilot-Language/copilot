@@ -2,9 +2,10 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 -- | Type-safe casting operators.
+
+{-# LANGUAGE Safe #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Copilot.Language.Operators.Cast 
   ( cast ) where

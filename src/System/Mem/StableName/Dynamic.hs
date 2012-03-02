@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Trustworthy #-}
+
 module System.Mem.StableName.Dynamic
   ( DynStableName(..)
   , hashDynStableName
@@ -9,7 +11,7 @@ module System.Mem.StableName.Dynamic
   ) where
 
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
-import Unsafe.Coerce (unsafeCoerce)
+import Unsafe.Coerce (unsafeCoerce) -- XXX Not safe!
 
 newtype DynStableName = DynStableName (StableName ())
 

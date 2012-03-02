@@ -4,6 +4,8 @@
 
 -- | Constants.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Language.Operators.Constant
   ( constant
   , constB

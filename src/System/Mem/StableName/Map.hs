@@ -2,7 +2,9 @@
 -- Most of this code is taken from 'http://github.com/ekmett/stable-maps'.
 --------------------------------------------------------------------------------
 
-module System.Mem.StableName.Dynamic.Map
+{-# LANGUAGE Safe #-}
+
+module System.Mem.StableName.Map
     ( Map(..)
     , empty
     , null

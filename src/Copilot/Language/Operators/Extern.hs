@@ -2,7 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | External variables, arrays, and functions.
+
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Extern
   ( extern

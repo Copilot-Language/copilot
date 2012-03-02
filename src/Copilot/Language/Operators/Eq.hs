@@ -2,7 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- |
+-- | Equality operator.
+
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Eq
   ( (==)

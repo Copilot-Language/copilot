@@ -5,6 +5,7 @@
 -- | Transforms a Copilot Language specification into a Copilot Core
 -- specification.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 module Copilot.Language.Reify
@@ -12,7 +13,7 @@ module Copilot.Language.Reify
   ) where
 
 import qualified Copilot.Core as Core
-import Copilot.Core (Typed, Type, Id, typeOf, impossible)
+import Copilot.Core (Typed, Id, typeOf, impossible)
 
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
@@ -22,8 +23,8 @@ import Copilot.Language.Stream (Stream (..), Arg (..))
 import Prelude hiding (id)
 import Data.IORef
 import System.Mem.StableName.Dynamic
-import System.Mem.StableName.Dynamic.Map (Map)
-import qualified System.Mem.StableName.Dynamic.Map as M
+import System.Mem.StableName.Map (Map)
+import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM)
 
 --------------------------------------------------------------------------------

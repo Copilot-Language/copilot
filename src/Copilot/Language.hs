@@ -4,6 +4,8 @@
 
 -- | Main Copilot language export file.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Language
   ( module Data.Int
   , module Data.Word

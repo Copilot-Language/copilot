@@ -5,6 +5,8 @@
 -- | Reexports 'Prelude' from package "base" hiding identifiers redefined by
 -- Copilot.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Language.Prelude
   ( module Prelude
   ) where
