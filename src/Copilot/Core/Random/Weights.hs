@@ -2,6 +2,8 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Core.Random.Weights
   ( Depth
   , Weights (..)

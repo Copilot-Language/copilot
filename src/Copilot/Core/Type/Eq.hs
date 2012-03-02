@@ -2,6 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Type.Eq

@@ -2,6 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, Rank2Types #-}
 
 module Copilot.Core.Operators

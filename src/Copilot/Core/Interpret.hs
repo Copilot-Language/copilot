@@ -4,6 +4,8 @@
 
 -- | An interpreter for Copilot specifications.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Core.Interpret
   ( --ExtEnv (..)
     Format (..)

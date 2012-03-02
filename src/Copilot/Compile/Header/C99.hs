@@ -5,6 +5,7 @@
 -- | Generates a C99 header from a copilot-specification. The functionality
 -- provided by the header must be implemented by back-ends targetting C99.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
 
 module Copilot.Compile.Header.C99

@@ -4,6 +4,8 @@
 
 -- | Sets a unique tags for each external array/function call.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Core.MakeTags (makeTags) where
 
 import Copilot.Core.Expr

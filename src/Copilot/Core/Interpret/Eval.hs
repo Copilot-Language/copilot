@@ -4,6 +4,7 @@
 
 -- | A tagless interpreter for Copilot specifications.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
 
 module Copilot.Core.Interpret.Eval

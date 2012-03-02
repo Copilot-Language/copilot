@@ -2,8 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | 
+-- | Typing for Core.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification, GADTs, KindSignatures #-}
 
 module Copilot.Core.Type

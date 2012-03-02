@@ -2,11 +2,12 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
+-- | Let expressions.
+
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
--- |
-
-module Copilot.Core.Spec.Locals
+module Copilot.Core.Locals
   ( Loc (..)
   , locals
   ) where

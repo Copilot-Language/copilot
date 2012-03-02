@@ -4,6 +4,7 @@
 
 -- | Random spec generator.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, ExistentialQuantification #-}
 
 module Copilot.Core.Random

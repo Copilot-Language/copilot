@@ -2,8 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | 
+-- | Initial values for give types.
 
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
 
 module Copilot.Core.Type.Uninitialized

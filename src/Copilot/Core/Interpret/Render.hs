@@ -4,6 +4,8 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Core.Interpret.Render
   ( renderAsTable
   , renderAsCSV

@@ -22,6 +22,8 @@
 -- and the pretty-printer
 -- ("Copilot.Core.PrettyPrint").
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Core
   ( module Copilot.Core.Error
   , module Copilot.Core.Expr
