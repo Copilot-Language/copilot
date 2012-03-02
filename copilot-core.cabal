@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-core
-version:             0.2.3
+version:             0.2.4
 synopsis:            An intermediate representation for Copilot.
 description:         
   Intermediate representation for Copilot. 
@@ -40,7 +40,14 @@ library
     -auto-all
     -caf-all
     -fno-warn-orphans
+
     --enable-library-profiling
+
+    -fpackage-trust    
+    -- Trusted packages
+    -trust base
+    -trust random
+    -trust array
 
   build-depends:
     containers >= 0.4 && < 1,
@@ -64,7 +71,7 @@ library
     Copilot.Core.MakeTags
     Copilot.Core.Operators
     Copilot.Core.Spec
-    Copilot.Core.Spec.Locals
+    Copilot.Core.Locals
     Copilot.Core.Random
     Copilot.Core.Random.Gen
     Copilot.Core.Random.Weights
