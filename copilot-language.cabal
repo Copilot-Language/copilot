@@ -42,31 +42,32 @@ library
     ghc-prim >= 0.2 && < 0.3,
     copilot-core >= 0.1
   exposed-modules:
-    Copilot
-    Copilot.Language
-    Copilot.Language.Error
-    Copilot.Language.Interpret
-    Copilot.Language.Operators.Boolean
-    Copilot.Language.Operators.Cast
-    Copilot.Language.Operators.Constant
-    Copilot.Language.Operators.Eq
-    Copilot.Language.Operators.Extern
-    Copilot.Language.Operators.Local
-    Copilot.Language.Operators.Integral
-    Copilot.Language.Operators.Mux
-    Copilot.Language.Operators.Ord
-    Copilot.Language.Operators.Temporal
-    Copilot.Language.Operators.BitWise
-    Copilot.Language.Prelude
-    Copilot.Language.Reify
+      Copilot
+    , Copilot.Language
+    , Copilot.Language.Error
+    , Copilot.Language.Interpret
+    , Copilot.Language.Operators.Boolean
+    , Copilot.Language.Operators.Cast
+    , Copilot.Language.Operators.Constant
+    , Copilot.Language.Operators.Eq
+    , Copilot.Language.Operators.Extern
+    , Copilot.Language.Operators.Local
+    , Copilot.Language.Operators.Integral
+    , Copilot.Language.Operators.Mux
+    , Copilot.Language.Operators.Ord
+    , Copilot.Language.Operators.Temporal
+    , Copilot.Language.Operators.BitWise
+    , Copilot.Language.Prelude
+    , Copilot.Language.Reify
+
 --    Copilot.Language.Reify.Graph
 
   other-modules:
-    Copilot.Language.Analyze
-    Copilot.Language.Stream
-    Copilot.Language.Spec
-    System.Mem.StableName.Dynamic
-    System.Mem.StableName.Map
+      Copilot.Language.Analyze
+    , Copilot.Language.Stream
+    , Copilot.Language.Spec
+    , System.Mem.StableName.Dynamic
+    , System.Mem.StableName.Map
 
   ghc-options:
     -fwarn-tabs
