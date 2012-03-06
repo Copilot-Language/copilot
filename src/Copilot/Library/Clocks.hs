@@ -28,8 +28,6 @@ module Copilot.Library.Clocks
 import Prelude ( Integral, fromIntegral, ($))
 import qualified Prelude as P
 import Copilot.Language
-import Data.Bool
-import Data.List (replicate)
 
 data ( Integral a ) => Period a = Period a
 data ( Integral a ) => Phase  a = Phase  a

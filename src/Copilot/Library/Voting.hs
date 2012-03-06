@@ -19,7 +19,6 @@ module Copilot.Library.Voting
   ( majority, aMajority ) where
 
 import Copilot.Language
-import Copilot.Language.Prelude
 import qualified Prelude as P
 
 --------------------------------------------------------------------------------

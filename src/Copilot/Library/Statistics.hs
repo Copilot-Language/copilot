@@ -12,7 +12,6 @@ module Copilot.Library.Statistics
     ( max, min, sum, mean, meanNow ) where
 
 import Copilot.Language
-import Copilot.Language.Prelude
 import Copilot.Library.Utils
 
 -- | Summation.

@@ -11,7 +11,6 @@ module Copilot.Library.Utils
 where
 
 import Copilot.Language
-import Copilot.Language.Prelude 
 import qualified Prelude as P
 
 -- | functions similar to the Prelude functions on lists

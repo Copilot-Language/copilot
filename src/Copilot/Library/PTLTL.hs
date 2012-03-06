@@ -17,7 +17,6 @@ module Copilot.Library.PTLTL
 
 import Prelude ( ($) )
 import Copilot.Language
-import Data.Bool hiding ( (&&), (||) )
 
 
 -- | Did @s@ hold in the previous period?

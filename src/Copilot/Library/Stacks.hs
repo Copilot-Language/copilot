@@ -10,7 +10,6 @@ module Copilot.Library.Stacks
   ( stack, stack' ) where
 
 import Copilot.Language
-import Copilot.Language.Prelude
 
 type PushSignal    = Stream Bool
 type PopSignal     = Stream Bool

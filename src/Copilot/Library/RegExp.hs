@@ -1,6 +1,6 @@
-module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
-
 -- | A regular expression librariy.
+
+module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
 
 import Text.ParserCombinators.Parsec
   ( optional, (<|>), string, char, between, GenParser, many, choice, CharParser
