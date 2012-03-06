@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-language
-version:             0.8
+version:             0.9
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
 description:
@@ -30,45 +30,36 @@ source-repository head
 
 library
   default-language: Haskell2010
-
   hs-source-dirs: src
-
-  build-depends:
-    array,
-    base >= 4.0 && < 5,
-    containers >= 0.4 && < 1,
-    data-reify >= 0.6,
-    mtl >= 2.0 && < 3,
-    ghc-prim >= 0.2 && < 0.3,
-    copilot-core >= 0.1
-  exposed-modules:
-      Copilot
-    , Copilot.Language
-    , Copilot.Language.Error
-    , Copilot.Language.Interpret
-    , Copilot.Language.Operators.Boolean
-    , Copilot.Language.Operators.Cast
-    , Copilot.Language.Operators.Constant
-    , Copilot.Language.Operators.Eq
-    , Copilot.Language.Operators.Extern
-    , Copilot.Language.Operators.Local
-    , Copilot.Language.Operators.Integral
-    , Copilot.Language.Operators.Mux
-    , Copilot.Language.Operators.Ord
-    , Copilot.Language.Operators.Temporal
-    , Copilot.Language.Operators.BitWise
-    , Copilot.Language.Prelude
-    , Copilot.Language.Reify
-
---    Copilot.Language.Reify.Graph
-
-  other-modules:
-      Copilot.Language.Analyze
-    , Copilot.Language.Stream
-    , Copilot.Language.Spec
-    , System.Mem.StableName.Dynamic
-    , System.Mem.StableName.Map
-
+  build-depends: array
+               , base >= 4.0 && < 5
+               , containers >= 0.4 && < 1
+               , data-reify >= 0.6
+               , mtl >= 2.0 && < 3
+               , ghc-prim >= 0.2 && < 0.3
+               , copilot-core >= 0.1
+  exposed-modules: Copilot
+                 , Copilot.Language
+                 , Copilot.Language.Operators.BitWise
+                 , Copilot.Language.Operators.Boolean
+                 , Copilot.Language.Operators.Cast
+                 , Copilot.Language.Operators.Constant
+                 , Copilot.Language.Operators.Eq
+                 , Copilot.Language.Operators.Extern
+                 , Copilot.Language.Operators.Integral
+                 , Copilot.Language.Operators.Local
+                 , Copilot.Language.Operators.Mux
+                 , Copilot.Language.Operators.Ord
+                 , Copilot.Language.Operators.Temporal
+                 , Copilot.Language.Prelude
+  other-modules:   Copilot.Language.Analyze
+                 , Copilot.Language.Interpret
+                 , Copilot.Language.Stream
+                 , Copilot.Language.Spec
+                 , System.Mem.StableName.Dynamic
+                 , System.Mem.StableName.Map
+                 , Copilot.Language.Error
+                 , Copilot.Language.Reify
   ghc-options:
     -fwarn-tabs
     -auto-all
