@@ -8,7 +8,8 @@ compilers, and other verification tools.
 Resources
 =========
 Copilot is comprised of a number of sub-projects which are automatically
-installed when you install Copilot from Hackage, as described below:
+installed when you install Copilot from Hackage, as described below.  (These are
+tracked as Git submodules in Copilot.)
 
 * [copilot-language](http://hackage.haskell.org/package/copilot-language) The
   front-end of Copilot defining the user language.
@@ -36,7 +37,7 @@ Optionally, you may which also to install
   that translates to [SBV](http://hackage.haskell.org/package/sbv), using its
   code generator to generate hard real-time C code as well.  The ad
 
-* [copilot-discussion](https://github.com/niswegmann/copilot-discussion)
+* [copilot-discussion](https://github.com/leepike/copilot-discussion)
   Contains a tutorial, todos, and other items regarding the Copilot system.
 
 **Sources** for each package are available on Github as well.  Just go to
