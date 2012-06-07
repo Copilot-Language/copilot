@@ -1,0 +1,21 @@
+[submodule "lib/copilot-c99"]
+	path = lib/copilot-c99
+	url = git@github.com:leepike/copilot-c99.git
+[submodule "lib/copilot-language"]
+	path = lib/copilot-language
+	url = git@github.com:leepike/copilot-language.git
+[submodule "lib/copilot-core"]
+	path = lib/copilot-core
+	url = git@github.com:leepike/copilot-core.git
+[submodule "lib/copilot-libraries"]
+	path = lib/copilot-libraries
+	url = git@github.com:leepike/copilot-libraries.git
+[submodule "lib/copilot-sbv"]
+	path = lib/copilot-sbv
+	url = git@github.com:leepike/copilot-sbv.git
+[submodule "lib/copilot-cbmc"]
+	path = lib/copilot-cbmc
+	url = git@github.com:leepike/copilot-cbmc.git
+[submodule "lib/copilot-discussion"]
+	path = lib/copilot-discussion
+	url = git@github.com:leepike/copilot-discussion.git
