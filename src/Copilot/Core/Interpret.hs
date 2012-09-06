@@ -4,7 +4,7 @@
 
 -- | An interpreter for Copilot specifications.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-} -- Because of Containers
 
 module Copilot.Core.Interpret
   ( --ExtEnv (..)
