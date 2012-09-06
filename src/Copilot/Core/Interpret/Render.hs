@@ -4,7 +4,7 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-} -- Because of Data.Map (Containers)
 
 module Copilot.Core.Interpret.Render
   ( renderAsTable
