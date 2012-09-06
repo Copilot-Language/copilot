@@ -2,7 +2,7 @@
 
 -- | The interpreter.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-} -- Copilot Core uses Data.Map in Containers.
 {-# LANGUAGE GADTs, FlexibleInstances #-}
 
 module Copilot.Language.Interpret
