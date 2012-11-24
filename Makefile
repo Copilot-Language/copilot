@@ -17,9 +17,9 @@ $(DIRS):
 # Get the repos
 .PHONY: get
 get:
-	git clone https://github.com/leepike/copilot-core.git
-	git clone https://github.com/leepike/copilot-c99.git
-	git clone https://github.com/leepike/copilot-sbv.git
-	git clone https://github.com/leepike/copilot-cbmc.git
-	git clone https://github.com/leepike/copilot-language.git
-	git clone https://github.com/leepike/copilot-libraries.git
+	git clone https://github.com/leepike/copilot-core.git ../copilot-core
+	git clone https://github.com/leepike/copilot-c99.git ../copilot-c99
+	git clone https://github.com/leepike/copilot-sbv.git ../copilot-sbv
+	git clone https://github.com/leepike/copilot-cbmc.git ../copilot-cbmc
+	git clone https://github.com/leepike/copilot-language.git ../copilot-language
+	git clone https://github.com/leepike/copilot-libraries.git ../copilot-libraries
