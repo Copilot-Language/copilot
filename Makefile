@@ -14,3 +14,12 @@ $(DIRS):
 	cd ../$@; \
 	$(CABAL) install
 
+# Get the repos
+.PHONY: get
+get:
+	git clone https://github.com/leepike/copilot-core.git
+	git clone https://github.com/leepike/copilot-c99.git
+	git clone https://github.com/leepike/copilot-sbv.git
+	git clone https://github.com/leepike/copilot-cbmc.git
+	git clone https://github.com/leepike/copilot-language.git
+	git clone https://github.com/leepike/copilot-libraries.git
