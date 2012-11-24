@@ -22,7 +22,8 @@ import Data.Bits
 --------------------------------------------------------------------------------
 
 badInst :: a
-badInst = C.impossible "witnesses" "copilot-c99"
+badInst = 
+  error "Fatal cast in the witnesses of Atom in copilot-sbv.  Are you sure that Atom supports the type you are using?  If you you are, or you don't understand the error, email leepike @ gmail . com (remove spaces) or file a bug report on github.com"
 
 --------------------------------------------------------------------------------
 
