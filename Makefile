@@ -4,7 +4,7 @@ DIRS := copilot-core copilot-language copilot-libraries copilot-sbv copilot-c99 
 
 # Can be overridden with cabal-dev
 # use make all CABAL=cabal-dev
-CABAL ?= cabal
+CABAL ?= cabal --user --force-reinstalls --reinstall
 
 .PHONY: all $(DIRS)
 

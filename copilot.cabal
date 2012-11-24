@@ -37,11 +37,11 @@ library
       -caf-all
       -fno-warn-orphans
     build-depends:
-                       base >= 4.0 && <5
+                       base >= 4.0
                      , copilot-core >= 0.2.3
                      , copilot-language >= 0.4
                      , copilot-libraries >= 0.4
-                     , copilot-cbmc
+--                     , copilot-cbmc
     exposed-modules: Language.Copilot
 
 executable copilot-regression
