@@ -2,15 +2,15 @@ cabal-version             : >= 1.10
 name                      : copilot-c99
 version                   : 0.2.5
 synopsis                  : A compiler for Copilot targeting C99.
-description               : 
-  This package is a back-end from Copilot to the Atom DSL. 
-  .   
+description               :
+  This package is a back-end from Copilot to the Atom DSL.
+  .
   Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
   multiple back-end compilers, and other verification tools.  A tutorial, bug
   reports, and todos are available at
-  <https://github.com/niswegmann/copilot-discussion>.  
-  .  
+  <https://github.com/leepike/copilot-discussion>.
+  .
   Examples are available at
   <https://github.com/leepike/Copilot/tree/master/Examples>.
 
@@ -30,7 +30,7 @@ author                    : Lee Pike
 
 source-repository head
     type:       git
-    location:   git://github.com/niswegmann/copilot-c99.git
+    location:   git://github.com/leepike/copilot-c99.git
 
 library
   default-language        : Haskell2010
@@ -63,7 +63,7 @@ library
                           , Copilot.Compile.C99.Phases
                           , Copilot.Compile.C99.PrePostCode
                           , Copilot.Compile.C99.Queue
-                          , Copilot.Compile.C99.Witness                         
+                          , Copilot.Compile.C99.Witness
 
 executable copilot-c99-qc
   default-language        : Haskell2010
