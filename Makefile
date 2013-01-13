@@ -2,17 +2,15 @@
 
 DIRS := copilot-core copilot-language copilot-libraries copilot-sbv copilot-c99 copilot-cbmc Copilot
 
-# Can be overridden with cabal-dev
-# use make all CABAL=cabal-dev
-CABAL ?= cabal --user --force-reinstalls --reinstall
+# We recommend using cabal-dev.  But you can use cabal, if you wish.  Just redefine the variable.
+CABALDEV=cabal-dev install
 
 .PHONY: all $(DIRS)
 
 all: $(DIRS)
 
-$(DIRS): 
-	cd ../$@; \
-	$(CABAL) install
+$(DIRS):
+	$(CABALDEV) ../copilot-core ../copilot-c99 ../copilot-sbv ../copilot-cbmc ../copilot-language ../copilot-libraries ./
 
 # Get the repos
 .PHONY: get
