@@ -1,23 +1,37 @@
 # Build all the relevant packages in order.
 
-DIRS := copilot-core copilot-language copilot-libraries copilot-sbv copilot-c99 copilot-cbmc Copilot
+CORE=copilot-core
+LANG=copilot-language
+LIB=copilot-libraries
+SBV=copilot-sbv
+C99=copilot-c99
+CBMC=copilot-cbmc
+COPILOT=Copilot
 
-# We recommend using cabal-dev.  But you can use cabal, if you wish.  Just redefine the variable.
-CABALDEV=cabal-dev install
+CB=cabal-dev
+D=dist
 
-.PHONY: all $(DIRS)
-
-all: $(DIRS)
-
-$(DIRS):
-	$(CABALDEV) ../copilot-core ../copilot-c99 ../copilot-sbv ../copilot-cbmc ../copilot-language ../copilot-libraries ./
+all:
+	cabal-dev install ../$(CORE) ../$(LANG) ../$(LIB) ../$(SBV) ../$(C99) ../$(CBMC) $(COPILOT)
 
 # Get the repos
 .PHONY: get
 get:
-	git clone https://github.com/leepike/copilot-core.git ../copilot-core
-	git clone https://github.com/leepike/copilot-c99.git ../copilot-c99
-	git clone https://github.com/leepike/copilot-sbv.git ../copilot-sbv
-	git clone https://github.com/leepike/copilot-cbmc.git ../copilot-cbmc
-	git clone https://github.com/leepike/copilot-language.git ../copilot-language
-	git clone https://github.com/leepike/copilot-libraries.git ../copilot-libraries
+	git clone https://github.com/leepike/copilot-core.git ../$(CORE)
+	git clone https://github.com/leepike/copilot-c99.git ../$(C99)
+	git clone https://github.com/leepike/copilot-sbv.git ../$(SBV)
+	git clone https://github.com/leepike/copilot-cbmc.git ../$(CBMC)
+	git clone https://github.com/leepike/copilot-language.git ../$(LANG)
+	git clone https://github.com/leepike/copilot-libraries.git ../$(LIB)
+
+.PHONY: clean
+clean:
+	rm -rf $(CB)
+
+.PHONY: veryclean
+veryclean: clean $(CORE)/$(D) $(LANG)/$(D) $(LIB)/$(D) $(SBV)/$(D) $(C99)/$(D) $(CBMC)/$(D)
+	rm -rf $(D)
+
+.PHONY:
+%/$(D):
+	rm -rf ../$@
