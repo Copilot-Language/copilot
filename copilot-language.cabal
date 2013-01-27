@@ -33,10 +33,10 @@ library
   hs-source-dirs: src
   build-depends: array
                , base >= 4.0
-               , containers >= 0.4 && < 1
+               , containers >= 0.4
+               , mtl >= 2.0
                , data-reify >= 0.6
-               , mtl >= 2.0 && < 3
-               , ghc-prim >= 0.2
+--               , ghc-prim,
                , copilot-core >= 0.1
   exposed-modules: Copilot
                  , Copilot.Language
