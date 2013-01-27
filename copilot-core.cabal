@@ -50,8 +50,8 @@ library
     -trust array
 
   build-depends:
-    containers >= 0.4 && < 1,
     base >= 4.0,
+    containers >= 0.4,
     pretty >= 1.0,
     random > 1.0,
     pretty-ncols >= 0.1,
