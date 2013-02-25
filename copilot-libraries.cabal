@@ -35,7 +35,7 @@ library
 
   build-depends:
     array,
-    base >= 4.0,
+    base >= 4.0 && <= 5.0,
     containers,
     copilot-language,
     parsec >= 2.0,
