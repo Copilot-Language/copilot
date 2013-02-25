@@ -1,6 +1,6 @@
 cabal-version             : >= 1.10
 name                      : copilot-c99
-version                   : 0.2.5
+version                   : 2.1.1
 synopsis                  : A compiler for Copilot targeting C99.
 description               :
   This package is a back-end from Copilot to the Atom DSL.
@@ -39,7 +39,7 @@ library
   ghc-prof-options        : -auto-all -caf-all
 
   build-depends           : atom >= 1.0.10
-                          , base >= 4.3 && < 5
+                          , base >= 4.0
                           , bytestring
                           , bytestring-csv
                           , containers >= 0.4
