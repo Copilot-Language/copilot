@@ -8,6 +8,10 @@ C99=copilot-c99
 CBMC=copilot-cbmc
 COPILOT=Copilot
 
+ALLDIR := $(CORE) $(LANG) $(LIB) $(SBV) $(C99) $(CBMC) $(COPILOT)
+
+DIST := $(patsubst %, dist-%, $(ALLDIR))
+
 CB=cabal-dev
 D=dist
 
@@ -35,3 +39,10 @@ veryclean: clean $(CORE)/$(D) $(LANG)/$(D) $(LIB)/$(D) $(SBV)/$(D) $(C99)/$(D) $
 .PHONY:
 %/$(D):
 	rm -rf ../$@
+
+.PHONY: dist
+dist: $(DIST)
+
+.PHONY: $(DIST)
+$(DIST):
+	cd $(subst dist-,../, $@) && cabal sdist && cabal check
