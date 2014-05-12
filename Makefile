@@ -10,13 +10,16 @@ COPILOT=Copilot
 
 ALLDIR := $(CORE) $(LANG) $(LIB) $(SBV) $(C99) $(CBMC) $(COPILOT)
 
-DIST := $(patsubst %, dist-%, $(ALLDIR))
+DISSTR=dist-
+DIST := $(patsubst %, $(DISSTR)%, $(ALLDIR))
+UPSTR=upload-
+UPLOAD := $(patsubst %, $(UPSTR)%, $(ALLDIR))
 
-CB=cabal-dev
+CB=cabal
 D=dist
 
 all:
-	cabal-dev install ../$(CORE) ../$(LANG) ../$(LIB) ../$(SBV) ../$(C99) ../$(CBMC) $(COPILOT)
+	$(CB) install ../$(CORE) ../$(LANG) ../$(LIB) ../$(SBV) ../$(C99) ../$(CBMC) $(COPILOT)
 
 # Get the repos
 .PHONY: get
@@ -45,4 +48,11 @@ dist: $(DIST)
 
 .PHONY: $(DIST)
 $(DIST):
-	cd $(subst dist-,../, $@) && cabal sdist && cabal check
+	cd $(subst $(DISSTR),../, $@) && cabal sdist && cabal check
+
+.PHONY: upload
+upload: $(UPLOAD)
+
+.PHONY: $(UPLOAD)
+$(UPLOAD):
+	cd $(subst $(UPSTR),../, $@) && cabal upload dist/*.gz
