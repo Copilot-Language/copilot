@@ -7,10 +7,13 @@ import Copilot.Language
 
 spec :: Spec
 spec = do
-  -- check "xnull" (x == 0)
-  check "nxnul" (x /= 0)
+  check "" ((z == 3) ==> (x == 0))
 
   where
     x :: Stream Word64
-    x = [0] ++ x
+    x = [0] ++ y
+    y :: Stream Word64
+    y = [1] ++ x
+    z ::  Stream Word64
+    z = [3, 4] ++ z
 

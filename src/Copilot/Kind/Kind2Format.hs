@@ -43,10 +43,12 @@ shouldIndent _                              = True
 toKind2 :: Spec -> String
 toKind2 = intercalate "\n\n"
           . map (toString shouldIndent id) . trSpec
-          . complete . removeCycles
+    --      . removeDuplicateImports
+          . complete
+          . removeCycles
 
 --------------------------------------------------------------------------------
-
+--
 trSpec :: Spec -> K2Output
 trSpec spec = map trNode (specNodes spec)
               ++ trProps (specProps spec) (specAssertDeps spec)
@@ -107,7 +109,7 @@ trVarDescrTrans v (LVarDescr t def) =
 
 --------------------------------------------------------------------------------
 
--- Returns a list of of pairs '(nodeId, lvars)' where : 
+-- Returns a list of pairs '(nodeId, lvars)' where : 
 -- 'lvars' is a list of the local aliases associated to 'nodeID',
 -- sorted alphabetically by the name of the variable being matched
 

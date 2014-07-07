@@ -5,7 +5,8 @@ module Copilot.Kind.TransSys.Transform
   , mergeNodes
   , linearize
   , removeCycles
-  , complete ) where
+  , complete 
+  , removeDuplicateImports ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.Misc.Type
@@ -127,8 +128,6 @@ removeCycles spec = spec { specNodes = update (specNodes spec) }
         topoSort ns = map (\(Graph.AcyclicSCC n) -> n) $ buildScc id ns
           
 
-        
-
 
 -- | Completes each node of a specification with imported variables such
 -- | that each node contains a copy of all its dependencies
@@ -149,21 +148,124 @@ complete spec = spec { specNodes = specNodes' }
     completeNode :: [Node] -> Node -> [Node]
     completeNode ns n = (n { nodeVars = nodeVars' }) : ns
 
-      where dummyVars = do
+      where addedVars = do
               depId <- nodeDependencies n
               let Just dep = find ((== depId) . nodeId) ns
               (lvar, LVarDescr t _) <- Map.toList (nodeVars dep)
               let gvar = GVar depId lvar              
               guard . not $ gvar `elem` curExtVars
-              return (depId `prefix` lvar, LVarDescr t $ Ext gvar)
+              let alias = findName depId lvar
+              return (alias, LVarDescr t $ Ext gvar)
 
             curExtVars = do
               (_, LVarDescr _ (Ext gvar)) <- Map.toList (nodeVars n)
               return gvar
 
-            nodeVars' = Map.union (nodeVars n) (Map.fromList dummyVars)
+            nodeVars' = Map.union (nodeVars n) (Map.fromList addedVars)
+            
+            findName nId = (nId `prefix`)
+            -- findName nId = head . dropWhile (`isVarOf` n) . iterate (nId `prefix`)
               
 
-          
 --------------------------------------------------------------------------------
+
+isVarOf :: LVar -> Node -> Bool
+isVarOf v n = v `elem` (Map.keys $ nodeVars n)
+
+--------------------------------------------------------------------------------
+
+-- A list of pairs '(nodeId, aliases)' where : 
+-- 'aliases' is a list of (lvar, alias) where 'alias' is the local
+-- alias of the variable 'GVar nodeId lvar'
+-- sorted alphabetically by the name of the variable being matched
+
+type NodeExtDico  =  Map NodeId [(LVar, LVar)]
+type ExtSpec      =  (Spec,  Map NodeId NodeExtDico)
+
+type Renaming     =  [(GVar, GVar)]
+
+
+-- Compute the dictionnary of extern variables
+
+computeExtDico :: Node -> NodeExtDico
+computeExtDico n = 
+  Map.fromList 
+  . map (\l -> (fst . head $ l, map snd l))
+  . groupBy ((==) `on` fst)
+  . sortBy lexicord
+  $ extVars
+  where
+    lexicord x y = (compare `on` fst) x y <> (compare `on` (fst . snd)) x y
+
+    extVars :: [(NodeId, (LVar, LVar))]
+    extVars =  do
+      (alias, LVarDescr _ (Ext (GVar node var))) <- Map.toList (nodeVars n)
+      return (node, (var, alias))
+  
+
+rmNodeDuplicateImports :: Node -> Node
+rmNodeDuplicateImports node = Map.foldr processDep node (computeExtDico node)
+  where 
+    processDep :: [(LVar, LVar)] -> Node -> Node
+    processDep bindings n =
+      let bs = filter ((>= 2) . length) . groupBy ((==) `on` fst) $ bindings
+          redirect ((_, mainAlias) : (map snd -> duplicates)) nvars = 
+            foldr (\alias -> Map.update (\(LVarDescr t _) ->
+                             Just . LVarDescr t . Expr $ VarE t mainAlias)
+                             alias )
+                   nvars duplicates
+                   
+      in n {nodeVars = foldr redirect (nodeVars n) bs}
+
+
+removeDuplicateImports :: Spec -> Spec
+removeDuplicateImports spec = 
+  spec {specNodes = map rmNodeDuplicateImports (specNodes spec)}
+          
+--          
+--      
+--
+--prepare :: Spec -> ExtSpec
+--prepare spec = foldr processNode (spec, Map.empty) $ map nodeId (specNodes spec)
+--  where
+--    
+--    processNode :: NodeId -> ExtSpec -> ExtSpec
+--    processNode nId spec = 
+--      
+--      let nodes = specNodes spec
+--          ([node], otherNodes) = partition ((== nId) . nodeId) nodes
+--          extDico = computeExtDico node
+--          
+--      in undefined
+--
+--      
+
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

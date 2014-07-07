@@ -14,7 +14,7 @@ import qualified Copilot.Kind.TransSys    as TS
 import qualified Copilot.Kind.Kind2Format as K2
 import Copilot.Kind.Naive.Check           as Naive
 
-import Grey
+import Bug
 
 line = replicate 40 '-'
 
@@ -23,14 +23,14 @@ main =  do
   cspec <- reify spec
   -- putStrLn $ prettyPrint cspec
   -- putStrLn line
-  -- putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
+  putStrLn $ TS.prettyPrint . TS.removeCycles . TS.translate $ cspec
   -- putStrLn line 
   -- putStrLn $ K2.toKind2 . TS.translate $ cspec
 
-  b <- Naive.check def cspec
-  putStrLn line
-  print b
-  putStrLn line
-  return ()
+--  b <- Naive.check def cspec
+--  putStrLn line
+--  print b
+--  putStrLn line
+--  return ()
 
 

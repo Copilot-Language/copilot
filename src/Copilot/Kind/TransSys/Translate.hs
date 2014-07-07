@@ -20,7 +20,6 @@ import qualified Data.Map as Map
 --   of the node
 -- * For each external node ext which is accessed, ext.out[.i]
 -- * For each local variable
-
 -- Prefix 'nc' stands for "naming convention"
 -- Unicity of names is guaranted by ...
 

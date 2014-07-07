@@ -10,6 +10,7 @@ import Text.PrettyPrint.HughesPJ
 printConstraint :: Constraint -> String
 printConstraint = render . ppExpr
 
+
 ppExpr :: Expr t -> Doc
 ppExpr (Const Integer v) = text . show $ v
 ppExpr (Const Bool    v) = text . show $ v
