@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.TransSys.Translate ( translate ) where
+module Copilot.Kind.TransSys.Translate ( translate, ncSep ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.Misc.Casted
@@ -10,30 +10,24 @@ import Copilot.Kind.Misc.Utils
 import Control.Monad.State.Lazy
 
 import qualified Copilot.Core as C
-import qualified Data.Map as Map
+import qualified Data.Map     as Map
+import qualified Data.Bimap   as Bimap
 
 --------------------------------------------------------------------------------
 
--- Naming conventions :
--- Each node defines :
--- * Some output variables out, out.1, out.2 ... out.d where d is the depth
---   of the node
--- * For each external node ext which is accessed, ext.out[.i]
--- * For each local variable
--- Prefix 'nc' stands for "naming convention"
--- Unicity of names is guaranted by ...
+ncSep         = "."
+ncMain        = "out"
+ncNode i      = "s" ++ show i
+ncPropNode s  = "p" ++ s
+ncTopNode     = "top"
 
-ncMain = "out"
-ncNode i = "s" ++ show i
-ncPropNode s = "p" ++ s
-
-ncExt :: NodeId -> String -> String
-ncExt n s = n ++ "." ++ s
+ncImported :: NodeId -> String -> String
+ncImported n s = n ++ ncSep ++ s
 
 ncTimeAnnot :: String -> Int -> String
 ncTimeAnnot s d
   | d == 0    = s
-  | otherwise = s ++ "." ++ show d
+  | otherwise = s ++ ncSep ++ show d
 
 --------------------------------------------------------------------------------
 
@@ -47,7 +41,7 @@ translate cspec =
 
   where
 
-    topNodeId = "top"
+    topNodeId = ncTopNode
     
     cprops :: [C.Property]
     cprops = C.specProperties cspec
@@ -80,12 +74,12 @@ mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
 mkTopNode topNodeId dependencies cprops = 
   Node { nodeId = topNodeId
        , nodeDependencies = dependencies
-       , nodeVars = topNodeVars }
+       , nodeVars = varsDescrs
+       , nodeImportedVars = importedVars }
   where
-    topNodeVars =
-      foldr ( \p -> Map.insert (LVar p) $
-                    LVarDescr Bool $ Ext $ mkGVar (ncPropNode p) ncMain )
-      Map.empty (map C.propertyName $ cprops)
+    propsVars = map (LVar . ncPropNode . C.propertyName) $ cprops
+    varsDescrs = Map.fromList [(p, LVarDescr Bool Imported) | p <- propsVars]    
+    importedVars = Bimap.fromList [(p, mkGVar (varName p) ncMain) | p <- propsVars]
     
 
 mkPropNodes :: [C.Property] -> [Node]
@@ -95,6 +89,8 @@ mkPropNodes cprops = map propNode cprops
       (stream $ streamOfProp p) {nodeId = ncPropNode (C.propertyName p)}
 
 
+-- A dummy ID is given to this stream, which is not a problem
+-- because this ID will never be used
 streamOfProp :: C.Property -> C.Stream
 streamOfProp prop =
   C.Stream { C.streamId = 42
@@ -112,49 +108,33 @@ stream (C.Stream { C.streamId
 
   | isCastable streamExprType C.Bool =
     node Bool $ map (extractB . toDyn streamExprType) streamBuffer
-               
   | otherwise = 
     node Integer $ map (extractI . toDyn streamExprType) streamBuffer
   
   where
-
     node :: forall t . Type t -> [t] -> Node
-    node t buf = Node { nodeId, nodeDependencies, nodeVars }
+    node t buf = Node { nodeId, nodeDependencies, nodeVars, nodeImportedVars }
 
       where 
         nodeId = ncNode streamId
         outvar i = LVar (ncMain `ncTimeAnnot` i)
 
-        (e, _dependencies, extNodesLocals) = processExpr t nodeId streamExpr
+        (e, nodeDependencies, extNodesLocals, nodeImportedVars) = 
+          runExprTrans t nodeId streamExpr
 
         outputLocals =
-          
           let from i buff =
                 case buff of
                   [] -> Map.singleton (outvar i) (LVarDescr t $ Expr e)
                   (b : bs) -> Map.insert (outvar i)
                               (LVarDescr t $ Pre b $ outvar (i + 1))
                               $ from (i + 1) bs
-
           in from 0 buf
              
         nodeVars = Map.union extNodesLocals outputLocals
-        nodeDependencies = nub _dependencies
         nodeOutputs = map outvar [0 .. length buf - 1]
            
 --------------------------------------------------------------------------------
-
--- | Parses the expression
--- | Returns : (expr, new dependencies, new local variables)
-
---   Important issues :
---   The dependencies list can contain sone duplicates
---   The recursive occurences of the node output is not well labeled
-
-processExpr :: Type t -> NodeId -> C.Expr a -> (Expr t, [NodeId], Map LVar LVarDescr)
-processExpr t curNode e = (e', _dependencies s, _lvars s)
-  where (e', s) = runState (expr t e) (TransSt Map.empty [] curNode)
-
 
 expr :: forall t t' . Type t -> C.Expr t' -> Trans (Expr t)
 
@@ -167,10 +147,11 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
   let node = ncNode id
   selfRef <- (== node) <$> curNode
   let varName = ncMain `ncTimeAnnot` k
-  let var = LVar $ if selfRef then varName else ncExt node varName
+  let var = LVar $ if selfRef then varName else ncImported node varName
   when (not selfRef) $ do
     newDep node
-    newLocal var $ LVarDescr t $ Ext $ mkGVar node varName
+    newLocal var $ LVarDescr t Imported
+    newImportedVar var (mkGVar node varName)
   return $ VarE t var
 
 
@@ -185,9 +166,7 @@ expr t (C.Local tl _tr id l e)
       newLocal (LVar id) $ LVarDescr tl' $ Expr l'
       expr t e
 
-
 expr t (C.Var _t' id) = return $ VarE t (LVar id)
-
 
 expr Bool (C.Op1 op e) = case op of
   C.Not -> expr Bool e >>= return . Op1 Bool Not
@@ -226,7 +205,8 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   e1'   <- expr t    e1
   e2'   <- expr t    e2
   return $ Ite t cond' e1' e2'
-
+  
+expr _ _ = error "This kind of expression is not handled yet"
 
 
 binop :: Type t -> Type targ -> Op2 targ targ t
@@ -238,7 +218,20 @@ binop t targ op e1 e2 = do
   
 --------------------------------------------------------------------------------
 
+-- | Parses the expression
+-- Returns : (expr, new dependencies, 
+-- new local variables, new imported variables)
+-- There are lots of boilerplate here. Maybe we should use 'lens'
+
+runExprTrans :: Type t -> NodeId -> C.Expr a -> 
+               (Expr t, [NodeId], Map LVar LVarDescr, Bimap LVar GVar )
+               
+runExprTrans t curNode e = (e', nub' (_dependencies s), _lvars s, _importedVars s)
+  where (e', s) = runState (expr t e) (TransSt Map.empty Bimap.empty [] curNode)
+
+
 data TransSt = TransSt { _lvars        :: Map LVar LVarDescr
+                       , _importedVars :: Bimap LVar GVar
                        , _dependencies :: [NodeId]
                        , _curNode      :: NodeId }
                
@@ -246,6 +239,10 @@ type Trans a = State TransSt a
 
 newDep :: NodeId -> Trans ()
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
+
+newImportedVar :: LVar -> GVar -> Trans ()
+newImportedVar l g = modify $ 
+  \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
 
 newLocal :: LVar -> LVarDescr -> Trans ()
 newLocal l d  =  modify $ \s -> s { _lvars = Map.insert l d $ _lvars s }

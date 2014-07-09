@@ -38,6 +38,7 @@ executable kind-tests
                           , process
                           , parsec
                           , data-default
+                          , bimap
 
   default-extensions      : GADTs
                           , MultiParamTypeClasses 

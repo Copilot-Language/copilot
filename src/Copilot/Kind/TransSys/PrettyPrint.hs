@@ -7,6 +7,7 @@ import Copilot.Kind.TransSys.Spec
 import Text.PrettyPrint.HughesPJ
 
 import qualified Data.Map as Map
+import Data.Bimap ((!))
 
 --------------------------------------------------------------------------------
   
@@ -37,14 +38,14 @@ pNode n = header $$ indent body $$ emptyLine
           <+> text "DEPENDS"
           <+> pList (text) (nodeDependencies n)
 
-        body = Map.foldrWithKey (\k -> ($$) . (pLVar k)) empty (nodeVars n)
+        body = Map.foldrWithKey (\k -> ($$) . (pLVar n k)) empty (nodeVars n)
 
 pConst :: Type t -> t -> Doc
 pConst Integer v = text $ show v
 pConst Bool    v = text $ show v
 
-pLVar :: LVar -> LVarDescr -> Doc
-pLVar l (LVarDescr {varType, varDef}) = header $$ indent body
+pLVar :: Node -> LVar -> LVarDescr -> Doc
+pLVar n l (LVarDescr {varType, varDef}) = header $$ indent body
   where header =
           text (varName l)
           <+> text ":"
@@ -56,9 +57,11 @@ pLVar l (LVarDescr {varType, varDef}) = header $$ indent body
             pConst varType val
             <+> text "->" <+> text "pre"
             <+> text (varName var)
-          Ext v ->
-            text "ext"
-            <>  brackets (text (varNode v))
+          Imported ->
+            let v = (nodeImportedVars n) ! l in
+            text "import from"
+            <+> quotes (text (varNode v))
+            <+> text ":" 
             <+> quotes (text (varName v))
           Expr e -> pExpr e
 

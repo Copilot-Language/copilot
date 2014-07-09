@@ -11,7 +11,7 @@ import Copilot.Core.Interpret
 import Copilot.Core.PrettyPrint
 
 import qualified Copilot.Kind.TransSys    as TS
-import qualified Copilot.Kind.Kind2Format as K2
+--import qualified Copilot.Kind.Kind2Format as K2
 import Copilot.Kind.Naive.Check           as Naive
 
 import Bug
@@ -23,7 +23,9 @@ main =  do
   cspec <- reify spec
   -- putStrLn $ prettyPrint cspec
   -- putStrLn line
-  putStrLn $ TS.prettyPrint . TS.removeCycles . TS.translate $ cspec
+  let tsys = TS.removeCycles . TS.translate $ cspec
+  print $ TS.checkInvs tsys
+  putStrLn . TS.prettyPrint $ tsys
   -- putStrLn line 
   -- putStrLn $ K2.toKind2 . TS.translate $ cspec
 
