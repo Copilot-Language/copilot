@@ -24,14 +24,14 @@ intCounter reset = time
 greyTick :: Stream Bool -> Stream Bool
 greyTick reset = a && b
   where
-    a = (not reset) && ([False] ++ b)
+    a = (not reset) && ([False] ++ not b)
     b = (not reset) && ([False] ++ a)
 
 spec :: Spec
 spec = do
-  check  "counterOk"   (r && ic == 0)
+  check  "counterOk"   (r ==> (ic == 0))
   check  "eqCounters"  (it == gt)
-  observer "ok"           (it == gt)
+  observer "ok"        (it == gt)
   observer "int"   it
   observer "grey"  gt
   observer "reset" r

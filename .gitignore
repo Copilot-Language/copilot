@@ -1,3 +1,5 @@
 .dist-buildwrapper
 .externalToolBuilders
 .project
+.kind
+.out

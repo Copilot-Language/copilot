@@ -11,10 +11,10 @@ import Copilot.Core.Interpret
 import Copilot.Core.PrettyPrint
 
 import qualified Copilot.Kind.TransSys    as TS
---import qualified Copilot.Kind.Kind2Format as K2
+import qualified Copilot.Kind.Kind2       as K2
 import Copilot.Kind.Naive.Check           as Naive
 
-import Bug
+import Grey
 
 line = replicate 40 '-'
 
@@ -23,11 +23,13 @@ main =  do
   cspec <- reify spec
   -- putStrLn $ prettyPrint cspec
   -- putStrLn line
-  let tsys = TS.removeCycles . TS.translate $ cspec
-  print $ TS.checkInvs tsys
-  putStrLn . TS.prettyPrint $ tsys
-  -- putStrLn line 
-  -- putStrLn $ K2.toKind2 . TS.translate $ cspec
+  -- putStrLn $ TS.prettyPrint . TS.translate $ cspec
+  --print $ TS.isTopologicallySorted tsys
+  --print $ TS.invariants tsys
+  -- print $ map TS.invariants (TS.specNodes tsys)
+  ---putStrLn . TS.prettyPrint $ tsys
+  -- putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
+  putStrLn $ K2.prettyPrint . K2.toKind2 . TS.translate $ cspec
 
 --  b <- Naive.check def cspec
 --  putStrLn line

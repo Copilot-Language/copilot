@@ -9,7 +9,6 @@ import Copilot.Kind.Misc.Utils
 
 import qualified Data.Map as Map
 
-
 --------------------------------------------------------------------------------
 
 type SSExpr   = SExpr String
@@ -19,8 +18,8 @@ type K2Output = [SSExpr]
 
 -- | The following properties MUST hold for the given transition system :
 -- | * Nodes are sorted by topological order
--- | * Nodes are `completed`, which means that each node imports all the
--- |   variables of its dependencies
+-- | * Nodes are `completed`, which means the dependency graph is transitive
+--     and each node imports all the local variables of its dependencies
 -- | * ---
 
 --------------------------------------------------------------------------------
@@ -36,30 +35,29 @@ andNode = node "and"
 
 -- Defines the indentation policy of the S-Expressions
 shouldIndent :: SSExpr -> Bool
-shouldIndent (Atom _)                       = False
-shouldIndent (List [Atom a, Atom _])        = not $ a `elem` [kwPrime]
-shouldIndent _                              = True
+shouldIndent (Atom _)                   = False
+shouldIndent (List [Atom a, Atom _])    = not $ a `elem` [kwPrime]
+shouldIndent _                          = True
 
 toKind2 :: Spec -> String
 toKind2 = intercalate "\n\n"
           . map (toString shouldIndent id) . trSpec
-    --      . removeDuplicateImports
           . complete
           . removeCycles
 
 --------------------------------------------------------------------------------
---
+
 trSpec :: Spec -> K2Output
 trSpec spec = map trNode (specNodes spec)
               ++ trProps (specProps spec) (specAssertDeps spec)
 
 
-trProps :: Map PropId GVar -> Map PropId [PropId] -> [SSExpr]
+trProps :: Map PropId ExtVar -> Map PropId [PropId] -> [SSExpr]
 trProps props assertDeps = [ node "check-prop" $ [ list $
   map trProp $ Map.keys assertDeps ] ]
   where
     trProp pid =
-      list [atom pid, trLVar $ localPart $ props ! pid]
+      list [atom pid, trLVar $ extVarLocalPart $ props ! pid]
 
 trNode :: Node -> SSExpr
 trNode n = list [ atom "define-pred"
@@ -72,7 +70,7 @@ trNode n = list [ atom "define-pred"
     -- The list of the local variables : ensure this list is
     -- sorted with the same order used by 'sortedlocalAliases'
     
-    vdefs = Map.elems $ Map.mapWithKey vdef (nodeVars n)
+    vdefs = Map.elems $ Map.mapWithKey vdef (nodeLocalVars n)
 
     vdef var (LVarDescr t _) = (list [atom $ varName var, atom $ show t])
 
@@ -83,29 +81,27 @@ trNode n = list [ atom "define-pred"
 
 --------------------------------------------------------------------------------
 
-trLocals :: (LVar -> LVarDescr -> Maybe SSExpr) -> Node -> [SSExpr]
+trLocals :: (Var -> LVarDescr -> Maybe SSExpr) -> Node -> [SSExpr]
 trLocals trVarDescr =
-  catMaybes . Map.elems . Map.mapWithKey trVarDescr . nodeVars
+  catMaybes . Map.elems . Map.mapWithKey trVarDescr . nodeLocalVars
   
 
-trVarDescrInit :: LVar -> LVarDescr -> Maybe SSExpr
+trVarDescrInit :: Var -> LVarDescr -> Maybe SSExpr
 trVarDescrInit v (LVarDescr t def) =
   trDef t def >>= \rhs -> return $ node "=" [trLVar v, rhs]
   where
     trDef :: forall t . Type t -> LVarDef t -> Maybe SSExpr
     trDef t (Pre v _) = return $ trConst t v
     trDef _ (Expr e)  = return $ trExpr False e
-    trDef _ (Ext _)   = Nothing
 
 
-trVarDescrTrans :: LVar -> LVarDescr -> Maybe  SSExpr
+trVarDescrTrans :: Var -> LVarDescr -> Maybe  SSExpr
 trVarDescrTrans v (LVarDescr t def) =
   trDef t def >>= \rhs -> return $ node "=" [trPrimedLVar v, rhs]
   where
     trDef :: forall t . Type t -> LVarDef t -> Maybe SSExpr
     trDef _ (Pre _ v) = return $ trLVar v
     trDef _ (Expr e)  = return $ trExpr True e
-    trDef _ (Ext _)   = Nothing
 
 --------------------------------------------------------------------------------
 
@@ -113,7 +109,7 @@ trVarDescrTrans v (LVarDescr t def) =
 -- 'lvars' is a list of the local aliases associated to 'nodeID',
 -- sorted alphabetically by the name of the variable being matched
 
-sortedlocalAliases :: Node -> [(NodeId, [LVar])]
+sortedlocalAliases :: Node -> [(NodeId, [Var])]
 sortedlocalAliases n =
   map (\l -> (fst3 . head $ l, map thrd3 l))
   . groupBy ((==) `on` fst3)
@@ -122,13 +118,11 @@ sortedlocalAliases n =
   where
     lexicord x y = (compare `on` fst3) x y <> (compare `on` snd3) x y
 
-    extVars :: [(NodeId, LVar, LVar)]
-    extVars =  do
-      (alias, LVarDescr _ (Ext (GVar node var))) <- Map.toList (nodeVars n)
-      return (node, var, alias)
+    extVars :: [(NodeId, Var, Var)]
+    extVars =  []
 
 
-trExtsTrans :: [(NodeId, [LVar])] -> [SSExpr]
+trExtsTrans :: [(NodeId, [Var])] -> [SSExpr]
 trExtsTrans slas = map transPred slas
   where
     transPred (nodeId, vars) =
@@ -137,7 +131,7 @@ trExtsTrans slas = map transPred slas
              ++ map trPrimedLVar vars
 
 
-trExtsInit :: [(NodeId, [LVar])] -> [SSExpr]
+trExtsInit :: [(NodeId, [Var])] -> [SSExpr]
 trExtsInit slas = map initPred slas
   where
     initPred (nodeId, vars) =
@@ -152,10 +146,10 @@ trConst Bool    True  = atom $ "true"
 trConst Bool    False = atom $ "false"
 
 
-trLVar :: LVar -> SSExpr
+trLVar :: Var -> SSExpr
 trLVar = atom . varName
 
-trPrimedLVar :: LVar -> SSExpr
+trPrimedLVar :: Var -> SSExpr
 trPrimedLVar v = list [atom kwPrime, trLVar v]
 
 trExpr :: Bool -> Expr t -> SSExpr

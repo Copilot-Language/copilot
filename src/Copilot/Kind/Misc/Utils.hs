@@ -3,6 +3,7 @@
 module Copilot.Kind.Misc.Utils 
  ( module Data.Maybe
  , module Control.Monad
+ , assert
  , Monoid, (<>), mempty, mconcat
  , (<$>), (<*>), liftA, liftA2
  , nub, partition, groupBy, sortBy, intercalate, find, (\\)
@@ -16,6 +17,8 @@ module Copilot.Kind.Misc.Utils
  ) where
 
 --------------------------------------------------------------------------------
+
+import Control.Exception.Base (assert)
 
 import Data.Maybe
 import Data.Monoid (Monoid, (<>), mempty, mconcat)

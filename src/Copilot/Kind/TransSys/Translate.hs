@@ -56,10 +56,10 @@ translate cspec =
       C.Property (C.Assertion dps) pid _ <- cprops
       return (pid, dps ++ assumptions)
 
-    propBindings :: Map PropId GVar
+    propBindings :: Map PropId ExtVar
     propBindings = Map.fromList $ do
       pid <- map C.propertyName cprops
-      return (pid, mkGVar topNodeId pid)
+      return (pid, mkExtVar topNodeId pid)
     
     modelNodes = map stream $ C.specStreams cspec
     propNodes  = mkPropNodes cprops
@@ -74,12 +74,12 @@ mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
 mkTopNode topNodeId dependencies cprops = 
   Node { nodeId = topNodeId
        , nodeDependencies = dependencies
-       , nodeVars = varsDescrs
+       , nodeLocalVars = Map.empty
        , nodeImportedVars = importedVars }
   where
-    propsVars = map (LVar . ncPropNode . C.propertyName) $ cprops
-    varsDescrs = Map.fromList [(p, LVarDescr Bool Imported) | p <- propsVars]    
-    importedVars = Bimap.fromList [(p, mkGVar (varName p) ncMain) | p <- propsVars]
+    importedVars = Bimap.fromList 
+      [ (Var cp, mkExtVar (ncPropNode cp) ncMain) 
+      | cp <- C.propertyName <$> cprops ]
     
 
 mkPropNodes :: [C.Property] -> [Node]
@@ -113,13 +113,13 @@ stream (C.Stream { C.streamId
   
   where
     node :: forall t . Type t -> [t] -> Node
-    node t buf = Node { nodeId, nodeDependencies, nodeVars, nodeImportedVars }
+    node t buf = Node { nodeId, nodeDependencies, nodeLocalVars, nodeImportedVars }
 
       where 
         nodeId = ncNode streamId
-        outvar i = LVar (ncMain `ncTimeAnnot` i)
+        outvar i = Var (ncMain `ncTimeAnnot` i)
 
-        (e, nodeDependencies, extNodesLocals, nodeImportedVars) = 
+        (e, nodeDependencies, nodeAuxVars, nodeImportedVars) = 
           runExprTrans t nodeId streamExpr
 
         outputLocals =
@@ -131,7 +131,7 @@ stream (C.Stream { C.streamId
                               $ from (i + 1) bs
           in from 0 buf
              
-        nodeVars = Map.union extNodesLocals outputLocals
+        nodeLocalVars = Map.union nodeAuxVars outputLocals
         nodeOutputs = map outvar [0 .. length buf - 1]
            
 --------------------------------------------------------------------------------
@@ -147,11 +147,10 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
   let node = ncNode id
   selfRef <- (== node) <$> curNode
   let varName = ncMain `ncTimeAnnot` k
-  let var = LVar $ if selfRef then varName else ncImported node varName
+  let var = Var $ if selfRef then varName else ncImported node varName
   when (not selfRef) $ do
     newDep node
-    newLocal var $ LVarDescr t Imported
-    newImportedVar var (mkGVar node varName)
+    newImportedVar var (mkExtVar node varName)
   return $ VarE t var
 
 
@@ -163,10 +162,10 @@ expr t (C.Local tl _tr id l e)
     aux :: forall a . Type a -> Trans (Expr t)
     aux tl' = do
       l' <- expr tl' l
-      newLocal (LVar id) $ LVarDescr tl' $ Expr l'
+      newLocal (Var id) $ LVarDescr tl' $ Expr l'
       expr t e
 
-expr t (C.Var _t' id) = return $ VarE t (LVar id)
+expr t (C.Var _t' id) = return $ VarE t (Var id)
 
 expr Bool (C.Op1 op e) = case op of
   C.Not -> expr Bool e >>= return . Op1 Bool Not
@@ -224,14 +223,14 @@ binop t targ op e1 e2 = do
 -- There are lots of boilerplate here. Maybe we should use 'lens'
 
 runExprTrans :: Type t -> NodeId -> C.Expr a -> 
-               (Expr t, [NodeId], Map LVar LVarDescr, Bimap LVar GVar )
+               (Expr t, [NodeId], Map Var LVarDescr, Bimap Var ExtVar )
                
 runExprTrans t curNode e = (e', nub' (_dependencies s), _lvars s, _importedVars s)
   where (e', s) = runState (expr t e) (TransSt Map.empty Bimap.empty [] curNode)
 
 
-data TransSt = TransSt { _lvars        :: Map LVar LVarDescr
-                       , _importedVars :: Bimap LVar GVar
+data TransSt = TransSt { _lvars        :: Map Var LVarDescr
+                       , _importedVars :: Bimap Var ExtVar
                        , _dependencies :: [NodeId]
                        , _curNode      :: NodeId }
                
@@ -240,11 +239,11 @@ type Trans a = State TransSt a
 newDep :: NodeId -> Trans ()
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
 
-newImportedVar :: LVar -> GVar -> Trans ()
+newImportedVar :: Var -> ExtVar -> Trans ()
 newImportedVar l g = modify $ 
   \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
 
-newLocal :: LVar -> LVarDescr -> Trans ()
+newLocal :: Var -> LVarDescr -> Trans ()
 newLocal l d  =  modify $ \s -> s { _lvars = Map.insert l d $ _lvars s }
 
 curNode :: Trans NodeId

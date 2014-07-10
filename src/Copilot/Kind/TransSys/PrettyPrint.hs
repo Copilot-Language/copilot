@@ -6,8 +6,8 @@ import Copilot.Kind.TransSys.Spec
 
 import Text.PrettyPrint.HughesPJ
 
-import qualified Data.Map as Map
-import Data.Bimap ((!))
+import qualified Data.Map   as Map
+import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
   
@@ -19,9 +19,7 @@ prettyPrint = render . pSpec
 
 pSpec :: Spec -> Doc
 pSpec spec = items
-  where items =
-          text "MODEL"
-          $$ indent (foldr (($$) . pNode) empty (specNodes spec))
+  where items = foldr (($$) . pNode) empty (specNodes spec)
 
 pType :: Type t -> Doc
 pType = text . show
@@ -30,22 +28,41 @@ pList :: (t -> Doc) -> [t] -> Doc
 pList f l = brackets (hcat . punctuate (comma <> space) $ map f l)
 
 pNode :: Node -> Doc
-pNode n = header $$ indent body $$ emptyLine
+pNode n = 
+  header $$ imported $$ local $$ emptyLine
+  where 
+    header =
+      text "NODE"
+      <+> quotes (text $ nodeId n) 
+      <+> text "DEPENDS ON"
+      <+> pList (text) (nodeDependencies n)
+      
+    imported
+      | Bimap.null (nodeImportedVars n) = empty
+      | otherwise = text "IMPORTS" $$ ( indent $
+        Map.foldrWithKey (\k -> ($$) . (pIVar k)) 
+        empty (Bimap.toMap $ nodeImportedVars n) )
 
-  where header =
-          text "NODE"
-          <+> quotes (text $ nodeId n) 
-          <+> text "DEPENDS"
-          <+> pList (text) (nodeDependencies n)
+    local
+      | Map.null (nodeLocalVars n) = empty
+      | otherwise = text "DEFINES" $$ ( indent $
+        Map.foldrWithKey (\k -> ($$) . (pLVar k)) 
+        empty (nodeLocalVars n) )
+            
 
-        body = Map.foldrWithKey (\k -> ($$) . (pLVar n k)) empty (nodeVars n)
+        
 
 pConst :: Type t -> t -> Doc
 pConst Integer v = text $ show v
 pConst Bool    v = text $ show v
 
-pLVar :: Node -> LVar -> LVarDescr -> Doc
-pLVar n l (LVarDescr {varType, varDef}) = header $$ indent body
+pIVar :: Var -> ExtVar -> Doc
+pIVar v (ExtVar n v') = 
+  parens (text n <+> text ":" <+> text (varName v'))
+  <+> text "as" <+> quotes (text (varName v))
+
+pLVar :: Var -> LVarDescr -> Doc
+pLVar l (LVarDescr {varType, varDef}) = header $$ indent body
   where header =
           text (varName l)
           <+> text ":"
@@ -57,12 +74,6 @@ pLVar n l (LVarDescr {varType, varDef}) = header $$ indent body
             pConst varType val
             <+> text "->" <+> text "pre"
             <+> text (varName var)
-          Imported ->
-            let v = (nodeImportedVars n) ! l in
-            text "import from"
-            <+> quotes (text (varNode v))
-            <+> text ":" 
-            <+> quotes (text (varName v))
           Expr e -> pExpr e
 
 

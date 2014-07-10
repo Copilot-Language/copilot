@@ -7,7 +7,7 @@ import Copilot.Language
 
 spec :: Spec
 spec = do
-  check "" ((z == 3) ==> (x == 0))
+  check "Ok" ((z == 3) ==> (x == 0))
 
   where
     x :: Stream Word64

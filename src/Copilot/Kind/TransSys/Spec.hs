@@ -9,13 +9,15 @@ module Copilot.Kind.TransSys.Spec
   , PropId
   , NodeId
   , Var (..)
-  , LVar (..)
-  , GVar (..)
+  , ExtVar (..)
   , LVarDef (..)
   , LVarDescr (..)
   , Expr (..)
-  , mkGVar
-  , transformExpr) where
+  , mkExtVar
+  , transformExpr
+  , isTopologicallySorted 
+  , nodeVarsSet
+  , specDependenciesGraph ) where
 
 import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
@@ -45,11 +47,10 @@ import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
 
-
 data Spec = Spec
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
-  , specProps         :: Map PropId GVar
+  , specProps         :: Map PropId ExtVar
   , specAssertDeps    :: Map PropId [PropId] }
 
 type PropId = String
@@ -57,41 +58,35 @@ type PropId = String
 data Node = Node
   { nodeId            :: NodeId
   , nodeDependencies  :: [NodeId]
-  , nodeVars          :: Map LVar LVarDescr 
-  , nodeImportedVars  :: Bimap LVar GVar }
+  , nodeLocalVars     :: Map Var LVarDescr
+  , nodeImportedVars  :: Bimap Var ExtVar }
 
-type NodeId = String
+type NodeId  =  String
 
-class Var v where varName :: v -> String
-
-data LVar = LVar
-  { lvarName   :: String
-  } deriving (Eq, Ord)
-
-data GVar = GVar
-  { varNode   :: NodeId
-  , localPart :: LVar
-  } deriving (Eq, Ord)
+data Var     =  Var {varName :: String}  
+                deriving (Eq, Show, Ord)
+                
+data ExtVar  =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var } 
+                deriving (Eq, Ord)
 
 data LVarDescr = forall t . LVarDescr
   { varType :: Type t
   , varDef  :: LVarDef t }
 
-data LVarDef t = Imported | Pre t LVar | Expr (Expr t)
+data LVarDef t = 
+    Pre t Var      -- The 'Var' argument has to be a local var
+  | Expr (Expr t) 
 
 data Expr t where
   Const  :: Type t -> t -> Expr t
   Ite    :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
   Op1    :: Type t -> Op1 x t -> Expr x -> Expr t
   Op2    :: Type t -> Op2 x y t -> Expr x -> Expr y -> Expr t
-  VarE   :: Type t -> LVar -> Expr t
+  VarE   :: Type t -> Var -> Expr t
 
 --------------------------------------------------------------------------------
 
-instance Var LVar where varName = lvarName
-instance Var GVar where varName = varName . localPart
-
-mkGVar node name = GVar node (LVar name)
+mkExtVar node name = ExtVar node (Var name)
 
 foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> (Expr a) -> m
 foldExpr f expr = f expr <> fargs 
@@ -116,39 +111,29 @@ transformExpr f = tre
 
 --------------------------------------------------------------------------------
 
-nodeLhsLVars :: Node -> Set LVar
-nodeLhsLVars = Set.fromList . Map.keys . nodeVars
-              
-nodeExprs :: Node -> [U Expr]
-nodeExprs n = mapMaybe varDescrExpr (Map.elems $ nodeVars n)
-  where
-    varDescrExpr (LVarDescr _ (Expr e)) = Just $ U e
-    varDescrExpr _                      = Nothing
+nodeVarsSet :: Node -> Set Var
+nodeVarsSet = liftA2 Set.union 
+  (nodeLocalVarsSet)
+  (Map.keysSet . Bimap.toMap  . nodeImportedVars)
+  
+nodeLocalVarsSet :: Node -> Set Var 
+nodeLocalVarsSet = Map.keysSet . nodeLocalVars
     
-        
-nodeRhsLVars :: Node -> Set LVar
-nodeRhsLVars n = 
+nodeRhsVarsSet :: Node -> Set Var
+nodeRhsVarsSet n = 
   let varOcc (VarE _ v) = Set.singleton v
       varOcc _          = Set.empty
       
       descrRhsVars (LVarDescr _ (Expr e))   = foldExpr varOcc e
       descrRhsVars (LVarDescr _ (Pre _ v))  = Set.singleton v
-      descrRhsVars (LVarDescr _ (Imported)) = Set.empty
       
-  in Map.fold (Set.union . descrRhsVars) Set.empty (nodeVars n)
+  in Map.fold (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
+  
+nodeImportedExtVarsSet :: Node -> Set ExtVar
+nodeImportedExtVarsSet = Map.keysSet . Bimap.toMapR . nodeImportedVars
 
-nodeExportedGVars :: Node -> Set GVar
-nodeExportedGVars n = Set.map (GVar (nodeId n)) (nodeLhsLVars n)
-
-nodeImportedGVars :: Node -> Set GVar
-nodeImportedGVars n = Set.fromList $ Bimap.elems (nodeImportedVars n)
-
-nodeNonImportedLVars :: Node -> Set LVar
-nodeNonImportedLVars n = Set.fromList $ 
-  [ v | (v, d) <- Map.toList (nodeVars n), not (isImported d) ]
-
-  where isImported (LVarDescr _ Imported) = True
-        isImported _                      = False
+nodeExportedExtVarsSet :: Node -> Set ExtVar
+nodeExportedExtVarsSet n = Set.map (ExtVar $ nodeId n) (nodeLocalVarsSet n)
 
 --------------------------------------------------------------------------------
 
@@ -156,18 +141,16 @@ instance HasInvariants Node where
 
   invariants n =
     [ prop "The dependencies declaration doesn't lie" $
-      (map varNode . Bimap.elems $ nodeImportedVars n) 
+      (map extVarNode . Bimap.elems $ nodeImportedVars n) 
       `isSublistOf` (nodeDependencies n) 
       
     , prop "All local variables are declared" $
-      nodeRhsLVars n `isSubsetOf` nodeLhsLVars n
+      nodeRhsVarsSet n `isSubsetOf` nodeVarsSet n
       
-    , prop "The imported variables declarations are coherent" $
-      let isImported (LVarDescr _ Imported) = True
-          isImported _ = False
-          imported' = Map.keys $ Map.filter isImported (nodeVars n)
-      in (Bimap.keys $ nodeImportedVars n)
-         `nubEq` imported' 
+    , prop "Never apply 'pre' to an imported var" $
+      let preVars = Set.fromList 
+            [v | (LVarDescr _ (Pre _ v)) <- Map.elems $ nodeLocalVars n]
+      in preVars `isSubsetOf` nodeLocalVarsSet n
     ]
     
 --------------------------------------------------------------------------------
@@ -175,6 +158,10 @@ instance HasInvariants Node where
 specNodesIds :: Spec -> Set NodeId
 specNodesIds s = Set.fromList . map nodeId $ specNodes s
 
+specDependenciesGraph :: Spec -> Map NodeId [NodeId]
+specDependenciesGraph s = 
+  Map.fromList [ (nodeId n, nodeDependencies n) | n <- specNodes s ]
+  
 --------------------------------------------------------------------------------
 
 instance HasInvariants Spec where
@@ -185,18 +172,25 @@ instance HasInvariants Spec where
       && Set.fromList [nId | n <- specNodes s, nId <- nodeDependencies n] 
          `isSubsetOf` specNodesIds s
          
-    , prop "The global vars references are not broken" $
-      mconcat (map nodeImportedGVars $ specNodes s) `isSubsetOf`
-      mconcat (map nodeExportedGVars $ specNodes s)
+    , prop "The imported vars are not broken" $
+      mconcat (map nodeImportedExtVarsSet $ specNodes s) `isSubsetOf`
+      mconcat (map nodeExportedExtVarsSet $ specNodes s)
         
     , prop "The nodes invariants hold" $ all checkInvs (specNodes s)
     ]
 
-topologicallySorted :: Spec -> Bool
-topologicallySorted spec = 
+isTopologicallySorted :: Spec -> Bool
+isTopologicallySorted spec = 
   isJust $ foldM inspect Set.empty (specNodes spec)
   where inspect acc n = do
           guard $ (Set.fromList $ nodeDependencies $ n) `isSubsetOf` acc
           return . Set.insert (nodeId n) $ acc
           
 --------------------------------------------------------------------------------
+
+-- For debugging purposes
+instance Show ExtVar where
+  show (ExtVar n v) = "(" ++ n ++ " : " ++ show v ++ ")"
+  
+ --------------------------------------------------------------------------------
+ 
