@@ -2,9 +2,10 @@
 
 module Copilot.Kind.TransSys.Transform
   ( mergeNodes
-  , linearize
+  , inline
   , removeCycles 
-  , complete ) where
+  , complete 
+  ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.TransSys.Renaming
@@ -12,14 +13,14 @@ import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
 
 import Copilot.Kind.Misc.Utils
-
 import Copilot.Kind.TransSys.Translate (ncSep)
+
+import Data.List (sort)
 
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set
 import qualified Data.Graph as Graph
 import qualified Data.Bimap as Bimap
-
 
 --------------------------------------------------------------------------------
 
@@ -30,14 +31,23 @@ ncNodeIdSep = "-"
 
 --------------------------------------------------------------------------------
 
-mergeNodes :: [NodeId] -> [Node] -> [Node]
-mergeNodes toMergeIds nodes =
-  newNode : map (updateOtherNode newNodeId toMergeIds renamingF) otherNodes
-  
+mergeNodes :: [NodeId] -> Spec -> Spec
+mergeNodes toMergeIds spec = 
+  spec
+    { specNodes = newNode : 
+        map (updateOtherNode newNodeId toMergeIds renamingExtF) otherNodes
+    , specProps = Map.map renamingExtF (specProps spec) }
+      
   where
+    nodes = specNodes spec
     (toMerge, otherNodes) = partition ((`elem` toMergeIds) . nodeId) nodes
     
-    newNodeId = intercalate ncNodeIdSep toMergeIds
+    -- Chosing the new node ID. If the top node is merged,
+    -- its name is kept
+    newNodeId
+      | specTopNodeId spec `elem` toMergeIds = specTopNodeId spec
+      | otherwise = intercalate ncNodeIdSep (sort toMergeIds)
+    
     newNode = Node 
       { nodeId = newNodeId
       , nodeDependencies = dependencies
@@ -59,24 +69,27 @@ mergeNodes toMergeIds nodes =
       
     -- Converting the variables descriptors
     localVars = mergeVarsDescrs toMerge renamingF
+    
+    -- Computing the global renaming function
+    renamingExtF (gv@(ExtVar nId _))
+     | nId `elem` toMergeIds = ExtVar newNodeId (renamingF gv)
+     | otherwise = gv
 
 
 
 
-updateOtherNode :: NodeId -> [NodeId] -> (ExtVar -> Var) -> Node -> Node
-updateOtherNode newNodeId mergedNodesIds newNameF n = n
+updateOtherNode :: NodeId -> [NodeId] -> (ExtVar -> ExtVar) -> Node -> Node
+updateOtherNode newNodeId mergedNodesIds renamingF n = n
   { nodeDependencies = 
       let ds  = nodeDependencies n
           ds' = ds \\ mergedNodesIds
       in if length ds' < length ds then newNodeId : ds' else ds
       
   , nodeImportedVars =
-      Bimap.fromList [ (lv, gRename gv) 
+      Bimap.fromList [ (lv, renamingF gv) 
                      | (lv, gv) <- Bimap.toList $ nodeImportedVars n ]
   }
-  where gRename (gv@(ExtVar nId _))
-          | nId `elem` mergedNodesIds = ExtVar newNodeId (newNameF gv)
-          | otherwise = gv
+
           
           
           
@@ -158,29 +171,26 @@ redirectLocalImports toMerge = do
       
 --------------------------------------------------------------------------------
 
-linearize :: Spec -> Spec
-linearize spec = spec { specNodes = update (specNodes spec) }
-  where update ns = setId "top" <$> mergeNodes (map nodeId ns) ns
-        setId id n = n { nodeId = id }
+inline :: Spec -> Spec
+inline spec = mergeNodes (map nodeId $ specNodes spec) spec
 
 removeCycles :: Spec -> Spec
-removeCycles spec = spec { specNodes = update (specNodes spec) }
-  where update ns =
-          let scc = buildScc nodeId ns
-            
-              mergeComp (Graph.AcyclicSCC _) ns = ns
-              mergeComp (Graph.CyclicSCC ids) ns =
-                mergeNodes ids ns
-            
-          in topoSort $ foldr mergeComp ns scc
-
-        buildScc nrep ns =
-          let depGraph = map (\n -> (nrep n, nodeId n, nodeDependencies n)) ns
-          in Graph.stronglyConnComp depGraph
-
-        topoSort ns = map (\(Graph.AcyclicSCC n) -> n) $ buildScc id ns
+removeCycles spec = 
+  topoSort $ foldr mergeComp spec (buildScc nodeId $ specNodes spec)
+  where
+    
+    mergeComp (Graph.AcyclicSCC _) s = s
+    mergeComp (Graph.CyclicSCC ids) s =
+      mergeNodes ids s
+    
+    buildScc nrep ns =
+     let depGraph = map (\n -> (nrep n, nodeId n, nodeDependencies n)) ns
+     in Graph.stronglyConnComp depGraph
+    
+    topoSort s = s { specNodes = 
+      map (\(Graph.AcyclicSCC n) -> n) $ buildScc id (specNodes s) }
           
-
+--------------------------------------------------------------------------------
 
 -- | Completes each node of a specification with imported variables such
 -- | that each node contains a copy of all its dependencies
@@ -237,102 +247,4 @@ complete spec =
           
           foldM tryImport (nodeImportedVars n) toImportVars
           
-              
-
 --------------------------------------------------------------------------------
---
----- A list of pairs '(nodeId, aliases)' where : 
----- 'aliases' is a list of (lvar, alias) where 'alias' is the local
----- alias of the variable 'ExtVar nodeId lvar'
----- sorted alphabetically by the name of the variable being matched
---
---type NodeExtDico  =  Map NodeId [(Var, Var)]
---type ExtSpec      =  (Spec,  Map NodeId NodeExtDico)
---
---type Renaming     =  [(ExtVar, ExtVar)]
---
---
----- Compute the dictionnary of extern variables
---
---computeExtDico :: Node -> NodeExtDico
---computeExtDico n = 
---  Map.fromList 
---  . map (\l -> (fst . head $ l, map snd l))
---  . groupBy ((==) `on` fst)
---  . sortBy lexicord
---  $ extVars
---  where
---    lexicord x y = (compare `on` fst) x y <> (compare `on` (fst . snd)) x y
---
---    extVars :: [(NodeId, (Var, Var))]
---    extVars =  do
---      (alias, LVarDescr _ (Ext (ExtVar node var))) <- Map.toList (nodeVars n)
---      return (node, (var, alias))
---  
---
---rmNodeDuplicateImports :: Node -> Node
---rmNodeDuplicateImports node = Map.foldr processDep node (computeExtDico node)
---  where 
---    processDep :: [(Var, Var)] -> Node -> Node
---    processDep bindings n =
---      let bs = filter ((>= 2) . length) . groupBy ((==) `on` fst) $ bindings
---          redirect ((_, mainAlias) : (map snd -> duplicates)) nvars = 
---            foldr (\alias -> Map.update (\(LVarDescr t _) ->
---                             Just . LVarDescr t . Expr $ VarE t mainAlias)
---                             alias )
---                   nvars duplicates
---                   
---      in n {nodeVars = foldr redirect (nodeVars n) bs}
---
---
---removeDuplicateImports :: Spec -> Spec
---removeDuplicateImports spec = 
---  spec {specNodes = map rmNodeDuplicateImports (specNodes spec)}
-          
---          
---      
---
---prepare :: Spec -> ExtSpec
---prepare spec = foldr processNode (spec, Map.empty) $ map nodeId (specNodes spec)
---  where
---    
---    processNode :: NodeId -> ExtSpec -> ExtSpec
---    processNode nId spec = 
---      
---      let nodes = specNodes spec
---          ([node], otherNodes) = partition ((== nId) . nodeId) nodes
---          extDico = computeExtDico node
---          
---      in undefined
---
---      
-
---------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

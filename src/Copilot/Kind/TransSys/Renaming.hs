@@ -18,7 +18,6 @@ import qualified Data.Map  as Map
 import qualified Data.Set  as Set
 import qualified Data.List as List
 
-
 --------------------------------------------------------------------------------
 
 newtype Renaming a = Renaming (State RenamingST a) 

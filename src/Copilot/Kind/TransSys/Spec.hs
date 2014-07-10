@@ -15,7 +15,7 @@ module Copilot.Kind.TransSys.Spec
   , Expr (..)
   , mkExtVar
   , transformExpr
-  , isTopologicallySorted 
+  , isTopologicallySorted
   , nodeVarsSet
   , specDependenciesGraph ) where
 

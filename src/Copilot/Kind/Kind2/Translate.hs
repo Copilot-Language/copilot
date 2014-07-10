@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Kind2.Translate where
+module Copilot.Kind.Kind2.Translate 
+  ( toKind2
+  , Style (..)
+  ) where
 
 import Copilot.Kind.TransSys
 import Copilot.Kind.Misc.Utils
@@ -11,8 +14,6 @@ import qualified Data.Bimap as Bimap
 import qualified Copilot.Kind.Kind2.AST as K
 
 import Data.List (sort)
-
-import Debug.Trace
 
 --------------------------------------------------------------------------------
 
@@ -25,11 +26,16 @@ import Debug.Trace
 
 type DepGraph = Map NodeId [NodeId]
 
-toKind2 :: Spec -> K.File
-toKind2 (removeCycles -> spec) = trSpec completedSpec predCallsGraph
-  where predCallsGraph = specDependenciesGraph spec
-        completedSpec  = complete spec
+--------------------------------------------------------------------------------
 
+data Style = Inlined | Modular
+
+toKind2 :: Style -> Spec -> K.File
+toKind2 style spec = trSpec (complete spec') predCallsGraph
+  where predCallsGraph = specDependenciesGraph spec'
+        spec' = case style of
+          Inlined -> inline spec
+          Modular -> removeCycles spec
 
 trSpec :: Spec -> DepGraph -> K.File
 trSpec spec predCallsGraph = K.File preds props 

@@ -62,7 +62,6 @@ ppType Int  = atom "Int"
 ppType Real = atom "Real"
 ppType Bool = atom "Bool"
 
-
 ppTerm :: Term -> SSExpr
 ppTerm (ValueLitteral  c) = atom c
 ppTerm (PrimedStateVar v) = list [atom kwPrime, atom v]
