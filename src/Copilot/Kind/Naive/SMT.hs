@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 
 module Copilot.Kind.Naive.SMT
-  ( startNewSolver
+  ( Solver
+  , startNewSolver
   , assume
   , entailed
   , exit
@@ -19,18 +20,20 @@ import Data.Maybe
 
 --------------------------------------------------------------------------------
 
-data Solver = Solver { inh        :: Handle
-                     , outh       :: Handle
-                     , process    :: ProcessHandle
-                     , debugMode  :: Bool
-                     , solverName :: String }
+data Solver = Solver 
+  { inh        :: Handle
+  , outh       :: Handle
+  , process    :: ProcessHandle
+  , debugMode  :: Bool
+  , solverName :: String }
 
  
 type SSExpr = SExpr String
 
-data SatResult = Sat SSExpr
-               | Unsat
-               | Unknown
+data SatResult 
+  = Sat SSExpr
+  | Unsat
+  | Unknown
 
 --------------------------------------------------------------------------------
 
@@ -173,3 +176,4 @@ _expr (SVal _ f ix) = node f [_ix]
           Var off -> node "+"
                      [atom varN, atom (show off)]
                      
+--------------------------------------------------------------------------------

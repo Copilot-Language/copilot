@@ -55,6 +55,6 @@ executable kind-tests
                           , ViewPatterns
                           , LambdaCase
                           , TemplateHaskell
-  other-modules:            Copilot.Kind.Kind2.Prove
+  other-modules:            Copilot.Kind.Kind2.Prover
 
   

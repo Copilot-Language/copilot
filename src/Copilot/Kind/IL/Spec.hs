@@ -12,6 +12,7 @@ module Copilot.Kind.IL.Spec
   , Expr (..)
   , Spec (..)
   , Constraint
+  , PropId
     
   , typeOf
   , _n_
@@ -22,6 +23,8 @@ module Copilot.Kind.IL.Spec
 
 import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
+
+import Data.Map (Map)
 
 --------------------------------------------------------------------------------
 
@@ -40,15 +43,18 @@ data Expr t where
 
 --------------------------------------------------------------------------------
 
+type PropId = String
+
 type Constraint = Expr Bool
 
 data SeqDescr = forall t . SeqDescr SeqId (Type t)
 
-data Spec = Spec { modelInit   :: [Constraint]
-                 , modelRec    :: [Constraint]
-                 , invariants  :: [Constraint]
-                 , depth       :: Int
-                 , sequences   :: [SeqDescr] }
+data Spec = Spec 
+  { modelInit   :: [Constraint]
+  , modelRec    :: [Constraint]
+  , properties  :: Map PropId Constraint
+  , depth       :: Int
+  , sequences   :: [SeqDescr] }
                    
 --------------------------------------------------------------------------------
 

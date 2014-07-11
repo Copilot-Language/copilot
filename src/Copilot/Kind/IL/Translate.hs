@@ -2,7 +2,6 @@
 
 module Copilot.Kind.IL.Translate ( translate ) where
 
-
 import Copilot.Kind.IL.Spec
 import Copilot.Kind.Misc.Casted
 
@@ -10,6 +9,8 @@ import qualified Copilot.Core as C
 
 import Control.Monad.State.Lazy
 import Text.Printf
+
+import qualified Data.Map as Map
 
 --------------------------------------------------------------------------------
 
@@ -22,10 +23,9 @@ seqId = printf "s%d"
 -- | which is satisfiable iff no trigger can occur
 
 translate :: C.Spec -> Spec
-translate cspec = Spec modelInit modelRec invariants maxDepth seqDescrs
+translate cspec = Spec modelInit modelRec props maxDepth seqDescrs
   where
     streams  = C.specStreams  cspec
-    triggers = C.specTriggers cspec
       
     maxDepth = maximum . (map bufferSize) $ streams
     bufferSize (C.Stream { C.streamBuffer }) = length streamBuffer
@@ -34,7 +34,9 @@ translate cspec = Spec modelInit modelRec invariants maxDepth seqDescrs
 
     modelRec  = map streamRec $ streams
     modelInit = concat . map streamInit $ streams
-    invariants = map (unsafeGuard . C.triggerGuard) $ triggers 
+    props = Map.fromList $ do
+       C.Property {C.propertyName, C.propertyExpr} <- C.specProperties cspec
+       return (propertyName, translateExpr Bool propertyExpr)
 
 
 unsafeGuard :: C.Expr Bool -> Constraint
