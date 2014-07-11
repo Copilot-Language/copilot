@@ -33,19 +33,22 @@ reify :: Spec -> IO Core.Spec
 reify spec =
   do 
     analyze spec
-    let trigs = triggers  $ runSpec spec
-    let obsvs = observers $ runSpec spec
-    refMkId      <- newIORef 0
-    refVisited    <- newIORef M.empty
-    refMap        <- newIORef []
-    coreTriggers  <- mapM (mkTrigger  refMkId refVisited refMap) trigs
-    coreObservers <- mapM (mkObserver refMkId refVisited refMap) obsvs
-    coreStreams   <- readIORef refMap
+    let trigs = triggers   $ runSpec spec
+    let obsvs = observers  $ runSpec spec
+    let props = properties $ runSpec spec
+    refMkId         <- newIORef 0
+    refVisited      <- newIORef M.empty
+    refMap          <- newIORef []
+    coreTriggers    <- mapM (mkTrigger  refMkId refVisited refMap) trigs
+    coreObservers   <- mapM (mkObserver refMkId refVisited refMap) obsvs
+    coreProperties  <- mapM (mkProperty refMkId refVisited refMap) props
+    coreStreams     <- readIORef refMap
     return $
       Core.Spec
-        { Core.specStreams   = reverse coreStreams
-        , Core.specObservers = coreObservers
-        , Core.specTriggers  = coreTriggers }
+        { Core.specStreams    = reverse coreStreams
+        , Core.specObservers  = coreObservers
+        , Core.specTriggers   = coreTriggers
+        , Core.specProperties = coreProperties }
 
 --------------------------------------------------------------------------------
 
@@ -88,6 +91,22 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
   mkTriggerArg (Arg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
+
+--------------------------------------------------------------------------------
+
+{-# INLINE mkProperty #-}
+mkProperty
+  :: IORef Int
+  -> IORef (Map Core.Id)
+  -> IORef [Core.Stream]
+  -> Property
+  -> IO Core.Property
+mkProperty refMkId refStreams refMap (Property name guard) = do
+    w1 <- mkExpr refMkId refStreams refMap guard 
+    return $
+      Core.Property
+        { Core.propertyName  = name
+        , Core.propertyExpr  = w1 }
 
 --------------------------------------------------------------------------------
 

@@ -17,7 +17,7 @@ module Copilot.Language.Analyze
 import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
 import Copilot.Language.Stream (Stream (..), Arg (..))
-import Copilot.Language.Spec
+import Copilot.Language.Spec hiding (check)
 import Copilot.Language.Error (badUsage)
 
 import Data.List (groupBy)

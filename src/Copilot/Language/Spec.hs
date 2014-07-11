@@ -19,6 +19,9 @@ module Copilot.Language.Spec
   , triggers
   , trigger
   , arg
+  , Property (..)
+  , prop
+  , properties
   ) where
 
 import Control.Monad.Writer
@@ -57,16 +60,36 @@ triggers =
       TriggerItem t -> t : ls
       _             -> ls
 
+properties :: [SpecItem] -> [Property]
+properties =
+  foldl' properties' []
+  where
+  properties' ls e =
+    case e of
+      PropertyItem p -> p : ls
+      _              -> ls
+
 --------------------------------------------------------------------------------
 
 data SpecItem
   = ObserverItem Observer
   | TriggerItem  Trigger
+  | PropertyItem Property
 
 --------------------------------------------------------------------------------
 
 data Observer where
   Observer :: Typed a => String -> Stream a -> Observer
+
+--------------------------------------------------------------------------------
+
+data Property where
+  Property :: String -> Stream Bool -> Property
+
+--------------------------------------------------------------------------------
+
+prop :: String -> Stream Bool -> Spec
+prop name e = tell [PropertyItem $ Property name e]
 
 --------------------------------------------------------------------------------
 
