@@ -39,9 +39,7 @@ assume :: PropId -> ProofMonad ()
 assume p = tell [Assume p]
 
 assuming :: [PropId] -> ProofMonad a -> ProofMonad a
-assuming ps m = do
-  (x, actions) <- listen m
-  tell [Local $ map Assume ps ++ actions]
-  return x
+assuming ps m = censor wrap m
+  where wrap actions = [Local $ map Assume ps ++ actions]
 
 --------------------------------------------------------------------------------

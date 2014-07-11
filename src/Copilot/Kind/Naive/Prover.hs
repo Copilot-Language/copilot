@@ -40,11 +40,10 @@ naiveProver options = Prover
   { proverName = "Naive"
   , hasFeature = \case
       GiveCex -> False
-      HandleAssumptions -> False
+      HandleAssumptions -> True
   , startProver = \spec -> return $ ProverST options (translate spec)
   , askProver   = ask
   , closeProver = const $ return ()
-  
   }
 
 --------------------------------------------------------------------------------
@@ -60,8 +59,8 @@ ask
     baseSolver <- SMT.startNewSolver "base" sequences (debugMode opts)
     stepSolver <- SMT.startNewSolver "step" sequences (debugMode opts)
   
-    SMT.assume baseSolver modelInit
-    SMT.assume stepSolver (modelInit ++ modelRec)
+    SMT.assume baseSolver modelInit'
+    SMT.assume stepSolver (modelInit' ++ modelRec')
   
     res <- indStep 0 baseSolver stepSolver
     mapM_ SMT.exit [baseSolver, stepSolver]
@@ -72,13 +71,16 @@ ask
       at = evalAt
       assumptions = selectProps assumptionsIds properties
       toCheck     = selectProps toCheckIds     properties
+      
+      modelInit'  = modelInit ++ map (at $ Fixed 0) assumptions
+      modelRec'   = modelRec  ++ assumptions
   
       indStep k baseSolver stepSolver
         | k > kTimeout opts = return Unknown
         | otherwise = do
   
-          let base' = map (at $ Fixed k) modelRec
-              step' = map (at $ _n_plus (k + 1)) modelRec
+          let base' = map (at $ Fixed k) modelRec'
+              step' = map (at $ _n_plus (k + 1)) modelRec'
                       ++ map (at $ _n_plus k) toCheck
                     
               baseInv  = map (at $ Fixed k) toCheck

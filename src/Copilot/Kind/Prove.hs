@@ -8,7 +8,7 @@ module Copilot.Kind.Prove
 import Copilot.Kind.Prover
 import Copilot.Kind.ProofScheme
 
-import qualified Copilot.Core          as Core
+import qualified Copilot.Core as Core
 
 import Control.Monad
 
@@ -26,10 +26,11 @@ prove
   
     prover <- startProver spec
     processActions prover [] actions
+    putStrLn "Finished."
     closeProver prover
   
     where 
-      processActions _ _ [] = putStrLn "Finished."
+      processActions _ _ [] = return ()
       processActions prover context (action:nextActions) = case action of
         Check propId -> do
           res <- askProver prover context [propId]
@@ -52,7 +53,9 @@ prove
           putStrLn s
           processActions prover context nextActions
         
-        _ -> putStrLn "Not handled yet"  
+        Local localActions -> do
+          processActions prover context localActions
+          processActions prover context nextActions
 
 --------------------------------------------------------------------------------
       

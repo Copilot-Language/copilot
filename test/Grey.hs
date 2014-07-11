@@ -27,6 +27,9 @@ spec = do
   prop     "counterNOk"  (r ==> (ic /= 0))
   prop     "eqCounters"  (it /= gt)
   
+  prop     "vgt1"        (v > 1)
+  prop     "vneq0"       (v /= 0)
+  
   observer "ok"          (it == gt)
   observer "int"         it
   observer "grey"        gt
@@ -38,9 +41,14 @@ spec = do
     gt = greyTick r
     r  = [False, False, True, False, True] ++ r
     
+    v :: Stream Word64
+    v  = [2] ++ (1 + v)
+    
 
 scheme :: ProofScheme
 scheme = proof $ do
   msg "Hello world"
-  check "counterNOk"
-  check "counterOk"
+  (assuming ["vgt1"] $ do
+    check "vgt1"
+    check "vneq0")
+  check "vneq0"
