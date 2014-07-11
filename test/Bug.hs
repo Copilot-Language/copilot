@@ -5,6 +5,7 @@ module Bug where
 import Prelude ()
 import Copilot.Language
 
+
 --
 --intCounter :: Stream Bool -> Stream Word64
 --intCounter reset = time
@@ -22,7 +23,7 @@ spec :: Spec
 spec = do
 --  check "counterOk"    (r ==> (ic == 0))
   --check "eqCounters"   (it == gt)     
-  check "easy" (r ==> not gt)
+  prop "easy" (r ==> not gt)
   where
     --ic = intCounter r
     --it = ic == 2

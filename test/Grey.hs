@@ -1,10 +1,11 @@
 {-# LANGUAGE RebindableSyntax #-}
 
-module Grey where
+module Grey (spec, scheme) where
 
 import Prelude ()
 import Copilot.Language
 
+import Copilot.Kind.ProofScheme
 
 intCounter :: Stream Bool -> Stream Word64
 intCounter reset = time
@@ -19,10 +20,13 @@ greyTick reset = a && b
     a = (not reset) && ([False] ++ not b)
     b = (not reset) && ([False] ++ a)
 
+
 spec :: Spec
 spec = do
-  check    "counterOk"   (r ==> (ic == 0))
-  check    "eqCounters"  (it == gt)
+  prop     "counterOk"   (r ==> (ic == 0))
+  prop     "counterNOk"  (r ==> (ic /= 0))
+  prop     "eqCounters"  (it /= gt)
+  
   observer "ok"          (it == gt)
   observer "int"         it
   observer "grey"        gt
@@ -33,3 +37,10 @@ spec = do
     it = ic == 2
     gt = greyTick r
     r  = [False, False, True, False, True] ++ r
+    
+
+scheme :: ProofScheme
+scheme = proof $ do
+  msg "Hello world"
+  check "counterNOk"
+  check "counterOk"

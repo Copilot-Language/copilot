@@ -11,13 +11,19 @@ import Copilot.Core.PrettyPrint
 
 import qualified Copilot.Kind.TransSys    as TS
 import qualified Copilot.Kind.Kind2       as K2
-import Copilot.Kind.Naive.Check           as Naive
+import Copilot.Kind.ProofScheme
 
 import Grey
+
+--------------------------------------------------------------------------------
 
 line = replicate 40 '-'
 
 main :: IO ()
 main =  do
   cspec <- reify spec
-  putStrLn $ K2.prettyPrint . K2.toKind2 K2.Modular . TS.translate $ cspec
+  K2.prove scheme cspec
+  --putStrLn $ K2.prettyPrint . K2.toKind2 K2.Modular . TS.translate $ cspec
+  return ()
+
+--------------------------------------------------------------------------------

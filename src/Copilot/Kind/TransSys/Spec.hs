@@ -35,23 +35,10 @@ import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
 
--- | A Copilot.Core specification where
--- |   * The Copilot types are abstracted with 'Bool' and 'Integer'
--- |   * Streams are turned into Lustre-like nodes
--- |   * A dependency graph is built for these nodes
--- |   * No more local variables
--- |   * Equations have depth at most 1
-
--- | The following features are not handled :
--- |   * Floating point numbers
-
---------------------------------------------------------------------------------
-
 data Spec = Spec
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
-  , specProps         :: Map PropId ExtVar
-  , specAssertDeps    :: Map PropId [PropId] }
+  , specProps         :: Map PropId ExtVar }
 
 type PropId = String
 

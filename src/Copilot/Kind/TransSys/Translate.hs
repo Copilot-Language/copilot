@@ -36,8 +36,7 @@ translate :: C.Spec -> Spec
 translate cspec =
   Spec { specNodes = [topNode] ++ modelNodes ++ propNodes
        , specTopNodeId = topNodeId
-       , specProps = propBindings
-       , specAssertDeps = assertDeps }
+       , specProps = propBindings }
 
   where
 
@@ -45,16 +44,6 @@ translate cspec =
     
     cprops :: [C.Property]
     cprops = C.specProperties cspec
-
-    assumptions :: [PropId]
-    assumptions = do
-      C.Property C.Assumption pid _ <- cprops
-      return pid
-
-    assertDeps :: Map PropId [PropId]
-    assertDeps = Map.fromList $ do
-      C.Property (C.Assertion dps) pid _ <- cprops
-      return (pid, dps ++ assumptions)
 
     propBindings :: Map PropId ExtVar
     propBindings = Map.fromList $ do

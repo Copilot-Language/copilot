@@ -14,6 +14,7 @@ import qualified Data.Bimap as Bimap
 import qualified Copilot.Kind.Kind2.AST as K
 
 import Data.List (sort)
+import Debug.Trace
 
 --------------------------------------------------------------------------------
 
@@ -30,17 +31,20 @@ type DepGraph = Map NodeId [NodeId]
 
 data Style = Inlined | Modular
 
-toKind2 :: Style -> Spec -> K.File
-toKind2 style spec = trSpec (complete spec') predCallsGraph
+toKind2 :: Style -> [PropId] -> [PropId] -> Spec -> K.File
+toKind2 style assumptions checkedProps spec = 
+  trSpec (complete spec') predCallsGraph assumptions checkedProps
   where predCallsGraph = specDependenciesGraph spec'
         spec' = case style of
           Inlined -> inline spec
           Modular -> removeCycles spec
 
-trSpec :: Spec -> DepGraph -> K.File
-trSpec spec predCallsGraph = K.File preds props 
+trSpec :: Spec -> DepGraph -> [PropId] -> [PropId] -> K.File
+trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
   where preds = map (trNode spec predCallsGraph) (specNodes spec)
-        props = map trProp $ Map.toList (specProps spec)
+        props = map trProp $ 
+          filter ((`elem` checkedProps) . fst) $ 
+          Map.toList (specProps spec)
   
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)

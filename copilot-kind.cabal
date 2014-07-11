@@ -36,9 +36,12 @@ executable kind-tests
                           , copilot-language
                           , pretty
                           , process
+                          , directory
                           , parsec
                           , data-default
                           , bimap
+                          , xml
+                      
 
   default-extensions      : GADTs
                           , MultiParamTypeClasses 
@@ -52,5 +55,6 @@ executable kind-tests
                           , ViewPatterns
                           , LambdaCase
                           , TemplateHaskell
+  other-modules:            Copilot.Kind.Kind2.Prove
 
   
