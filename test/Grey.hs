@@ -48,7 +48,4 @@ spec = do
 scheme :: ProofScheme
 scheme = proof $ do
   msg "Hello world"
-  (assuming ["vgt1"] $ do
-    check "vgt1"
-    check "vneq0")
-  check "vneq0"
+  check "vgt1"
