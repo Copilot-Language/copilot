@@ -16,7 +16,7 @@
 {-# LANGUAGE GADTs, KindSignatures, ScopedTypeVariables #-}
 
 module Copilot.Core.Type.Dynamic
-  ( Dynamic
+  ( Dynamic  (..)
   , DynamicF (..)
   , toDyn
   , fromDyn

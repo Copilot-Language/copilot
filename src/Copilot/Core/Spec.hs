@@ -10,6 +10,7 @@ module Copilot.Core.Spec
   , Observer (..)
   , Trigger (..)
   , Spec (..)
+  , Property (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
@@ -42,12 +43,20 @@ data Trigger = Trigger
 
 --------------------------------------------------------------------------------
 
+-- | A property.
+data Property = Property
+  { propertyName     :: Name
+  , propertyExpr     :: Expr Bool }
+  
+--------------------------------------------------------------------------------
+
 -- | A Copilot specification consists of a list of variables bound to anonymous
 -- streams, a lost of anomymous streams, a list of observers, and a list of
 -- triggers.
 data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
-  , specTriggers     :: [Trigger] }
+  , specTriggers     :: [Trigger]
+  , specProperties   :: [Property] }
 
 --------------------------------------------------------------------------------

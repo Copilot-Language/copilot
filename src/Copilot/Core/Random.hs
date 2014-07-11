@@ -41,9 +41,10 @@ genSpec rnds = do
   triggers    <- 
     runReaderT (mapM (genTrigger ss) (map mkTriggerName [0..numTriggers-1]))
                extVars
-  return Spec { specStreams   = streams
-              , specObservers = []
-              , specTriggers  = triggers }
+  return Spec { specStreams    = streams
+              , specObservers  = []
+              , specTriggers   = triggers
+              , specProperties = [] }
   where
   mkTriggerName :: Int -> Name
   mkTriggerName k = "f" ++ show k

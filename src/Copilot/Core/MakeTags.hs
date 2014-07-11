@@ -25,14 +25,16 @@ makeTags spec = evalState (mkTagsSpec spec) 0
 mkTagsSpec :: Spec -> State Int Spec
 mkTagsSpec
   Spec
-    { specStreams   = strms
-    , specObservers = obsvs
-    , specTriggers  = trigs
+    { specStreams    = strms
+    , specObservers  = obsvs
+    , specTriggers   = trigs
+    , specProperties = props
     } =
-  liftM3 Spec
+  liftM4 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
+    (mkTagsProps props)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -81,6 +83,13 @@ mkTagsTrigs = mapM mkTagsTrig
            { triggerName      = name
            , triggerGuard     = g'
            , triggerArgs      = args' }
+
+mkTagsProps :: [Property] -> State Int [Property]
+mkTagsProps = mapM mkTagsProp
+
+  where mkTagsProp p = do
+          e' <- mkTagsExpr (propertyExpr p)
+          return $ p { propertyExpr = e' }
 
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
