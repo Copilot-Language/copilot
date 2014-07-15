@@ -23,17 +23,17 @@ greyTick reset = a && b
 
 spec :: Spec
 spec = do
-  prop     "counterOk"   (r ==> (ic == 0))
-  prop     "counterNOk"  (r ==> (ic /= 0))
-  prop     "eqCounters"  (it /= gt)
+  prop "counterOk"   (r ==> (ic == 0))
+  prop "counterNOk"  (r ==> (ic /= 0))
+  prop "eqCounters"  (it /= gt)
   
-  prop     "vgt1"        (v > 1)
-  prop     "vneq0"       (v /= 0)
+  prop "vneq0" (v /= 0)
+  prop "vgt1" (v > 1)
   
-  observer "ok"          (it == gt)
-  observer "int"         it
-  observer "grey"        gt
-  observer "reset"       r
+  observer "ok" (it == gt)
+  observer "int" it
+  observer "grey" gt
+  observer "reset" r 
 
   where
     ic = intCounter r
@@ -42,10 +42,13 @@ spec = do
     r  = [False, False, True, False, True] ++ r
     
     v :: Stream Word64
-    v  = [2] ++ (1 + v)
+    v = [3] ++ (1 + v)
     
-
 scheme :: ProofScheme
 scheme = proof $ do
-  msg "Hello world"
-  check "vgt1"
+  msg "Helo world"
+  assuming ["vgt1"] $ do
+    check "vneq0"
+  check "vneq0"
+  
+  

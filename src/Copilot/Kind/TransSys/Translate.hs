@@ -18,8 +18,14 @@ import qualified Data.Bimap   as Bimap
 ncSep         = "."
 ncMain        = "out"
 ncNode i      = "s" ++ show i
-ncPropNode s  = "p" ++ s
+ncPropNode s  = "prop_" ++ s
 ncTopNode     = "top"
+
+ncAnonInput   = "in"
+
+ncExternVarNode name = "ext_" ++ name
+ncExternFunNode name = "fun_" ++ name
+ncExternArrNode name = "arr_" ++ name
 
 ncImported :: NodeId -> String -> String
 ncImported n s = n ++ ncSep ++ s
@@ -171,7 +177,6 @@ expr Bool (C.Op2 op e1 e2) = case op of
   C.Gt _  -> binop Bool Integer Gt  e1 e2
   C.And   -> binop Bool Bool    And e1 e2
   C.Or    -> binop Bool Bool    Or  e1 e2
-
   _       -> error "Not handled operator"
 
   where
@@ -194,7 +199,52 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   e2'   <- expr t    e2
   return $ Ite t cond' e1' e2'
   
-expr _ _ = error "This kind of expression is not handled yet"
+expr t (C.ExternVar _ name _) = do
+  let nodeName = ncExternVarNode name
+  let localAlias = Var ("extvar_" ++ name)
+  newDep nodeName
+  newImportedVar localAlias (ExtVar nodeName (Var ncMain))
+  return $ VarE t localAlias
+  
+expr t (C.ExternFun ta name args _ mtag) = do
+  let inputVars = mapM makeArgLocalAlias (zip [0..] args)
+  error "Not handled"
+  
+  where 
+    nodeName = ncExternFunNode name
+  
+    makeArgLocalAlias :: (Int, C.UExpr) -> Trans Var
+    makeArgLocalAlias (argN, C.UExpr {C.uExprExpr, C.uExprType})
+      | isCastable uExprType C.Bool = aux Bool
+      | otherwise = aux Integer
+      where
+        aux :: forall t. Type t -> Trans Var
+        aux t = do
+          let argvar = Var $ nodeName ++ "_arg_" ++ show argN
+          e <- expr t uExprExpr
+          newLocal argvar (LVarDescr t $ Expr e)
+          return argvar
+          
+          
+
+--expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
+--  let node = ncNode id
+--  selfRef <- (== node) <$> curNode
+--  let varName = ncMain `ncTimeAnnot` k
+--  let var = Var $ if selfRef then varName else ncImported node varName
+--  when (not selfRef) $ do
+--    newDep node
+--    newImportedVar var (mkExtVar node varName)
+--  return $ VarE t var
+
+
+-- ExternVar    :: Type a -> Name -> Maybe [a] -> Expr a 
+--  ExternFun    :: Type a -> Name -> [UExpr] -> Maybe (Expr a) 
+--               -> Maybe Tag -> Expr a
+--  ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
+--               -> Maybe [[b]] -> Maybe Tag -> Expr b 
+  
+--expr _ _ = error "This kind of expression is not handled yet"
 
 
 binop :: Type t -> Type targ -> Op2 targ targ t
@@ -221,7 +271,8 @@ runExprTrans t curNode e = (e', nub' (_dependencies s), _lvars s, _importedVars 
 data TransSt = TransSt { _lvars        :: Map Var LVarDescr
                        , _importedVars :: Bimap Var ExtVar
                        , _dependencies :: [NodeId]
-                       , _curNode      :: NodeId }
+                       , _curNode      :: NodeId
+                       }
                
 type Trans a = State TransSt a
 

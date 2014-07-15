@@ -1,19 +1,72 @@
 ---------------------------------------------------------------------------------
 
-module Copilot.Kind.IL.PrettyPrint (printConstraint) where
+module Copilot.Kind.IL.PrettyPrint (prettyPrint, printConstraint) where
 
 import Copilot.Kind.IL.Spec
 import Text.PrettyPrint.HughesPJ
+import qualified Data.Map as Map
 
 --------------------------------------------------------------------------------
+
+prettyPrint :: Spec -> String
+prettyPrint = render . ppSpec
 
 printConstraint :: Constraint -> String
 printConstraint = render . ppExpr
 
+indent = nest 4
+emptyLine = text ""
+
+ppSpec :: Spec -> Doc
+ppSpec 
+  (Spec 
+  { modelInit
+  , modelRec
+  , properties
+  , depth
+  , sequences
+  , anonFuns }) = 
+  
+     text "DEPTH" <+> colon <+> int depth $$ emptyLine
+  $$ text "SEQUENCES"
+  $$ indent (foldr (($$) . ppSeqDescr) empty sequences) $$ emptyLine
+  $$ text "ANON FUNCTIONS"
+  $$ indent (foldr (($$) . ppAnonFunDescr) empty anonFuns) $$ emptyLine
+  $$  text "MODEL INIT"
+  $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
+  $$ text "MODEL REC"
+  $$ indent (foldr (($$) . ppExpr) empty modelRec) $$ emptyLine
+  $$ text "PROPERTIES"
+  $$ indent (Map.foldrWithKey (\k -> ($$) . (ppProp k)) 
+        empty properties )
+
+
+ppProp :: PropId -> Constraint -> Doc
+ppProp id c = quotes (text id) <+> colon <+> ppExpr c
+
+ppSeqDescr :: SeqDescr -> Doc
+ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
+
+ppAnonFunDescr :: AnonFunDescr -> Doc
+ppAnonFunDescr (AnonFunDescr id ret args) =
+  text id <+> colon 
+  <+> (hsep . punctuate (space <> text "->" <> space) $ map ppUType args)
+  <+> text "->" 
+  <+> ppType ret
+
+ppType :: Type t -> Doc
+ppType = text . show
+
+ppUType :: U Type -> Doc
+ppUType (U t) = ppType t
+
+ppUExpr :: U Expr -> Doc
+ppUExpr (U e) = ppExpr e
 
 ppExpr :: Expr t -> Doc
 ppExpr (Const Integer v) = text . show $ v
 ppExpr (Const Bool    v) = text . show $ v
+ppExpr (Const Real    v) = text . show $ v
 
 ppExpr (Ite _ c e1 e2) =
   text "if" <+> ppExpr c
@@ -27,6 +80,9 @@ ppExpr (Op2 _ op e1 e2) =
 
 ppExpr (SVal _ s i) = text s <> brackets (ppSeqIndex i)
 
+ppExpr (FunApp _ name args) =
+  text name <> parens (hsep . punctuate (comma <> space) $ map ppUExpr args)
+
 ppSeqIndex :: SeqIndex -> Doc
 ppSeqIndex (Var i)
   | i == 0    = text "n"
@@ -35,25 +91,10 @@ ppSeqIndex (Var i)
 
 ppSeqIndex (Fixed i) = integer i
 
-
 ppOp1 :: Op1 a b -> Doc
-ppOp1 op = case op of
-  Neg -> text "-"
-  Not -> text "not"
+ppOp1 = text . show
 
 ppOp2 :: Op2 a b c -> Doc
-ppOp2 op = case op of
-  EqB -> text "="
-  EqI -> text "="
-  Le  -> text "<="
-  Lt  -> text "<"
-  Ge  -> text ">="
-  Gt  -> text ">"
-
-  And -> text "and"
-  Or  -> text "or"
-  Add -> text "+"
-  Mul -> text "*"
-  Sub -> text "-"
+ppOp2 = text . show
 
 --------------------------------------------------------------------------------

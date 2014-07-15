@@ -3,50 +3,79 @@
 module Copilot.Kind.IL.Translate ( translate ) where
 
 import Copilot.Kind.IL.Spec
-import Copilot.Kind.Misc.Casted
+import Copilot.Kind.Misc.Cast
+import Copilot.Kind.Misc.Utils
 
 import qualified Copilot.Core as C
-
-import Control.Monad.State.Lazy
-import Text.Printf
-
+import Copilot.Kind.CoreUtils.Operators
 import qualified Data.Map as Map
+import qualified Data.Set as Set
+
+import Control.Monad.Writer
+import Control.Monad.State
+
+import Data.Char
 
 --------------------------------------------------------------------------------
 
-seqId :: C.Id -> SeqId
-seqId = printf "s%d"
+-- 'nc' stands for **naming conventions**
+
+ncSeq :: C.Id -> SeqId
+ncSeq = printf "s%d"
+
+-- We assume all local variables have distinct names whatever their scopes are
+ncLocal :: C.Name -> SeqId
+ncLocal s = "l" ++ dropWhile (not . isNumber) s
+
+ncExternVar :: C.Name -> SeqId
+ncExternVar n = "ext_" ++ n
+
+ncExternFun :: C.Name -> SeqId
+ncExternFun n = "_" ++ n
+
+ncUnhandledOp :: String -> FunName
+ncUnhandledOp = id
 
 --------------------------------------------------------------------------------
 
 -- | Translates a Copilot specification to an IL specification
--- | which is satisfiable iff no trigger can occur
 
 translate :: C.Spec -> Spec
-translate cspec = Spec modelInit modelRec props maxDepth seqDescrs
+translate cspec@(C.Spec {C.specStreams}) = runTrans $ do 
+
+  let mainSeqs = map seqDescr specStreams
+  let modelInit = concatMap streamInit specStreams
+  
+  mainConstraints <- mapM streamRec specStreams
+  properties <- Map.fromList <$> do
+    forM (C.specProperties cspec) $ 
+      \(C.Property {C.propertyName, C.propertyExpr}) -> do
+        e' <- expr Bool propertyExpr
+        return $ (propertyName, e')
+        
+  localSeqs <- getLocalSeqs
+  localConstraints <- getLocalVarsConstraints
+  anonFuns <- getAnonFuns
+  
+  return $ Spec 
+    { modelInit
+    , modelRec = mainConstraints ++ localConstraints
+    , properties
+    , depth
+    , sequences = mainSeqs ++ localSeqs
+    , anonFuns }
+    
   where
-    streams  = C.specStreams  cspec
       
-    maxDepth = maximum . (map bufferSize) $ streams
-    bufferSize (C.Stream { C.streamBuffer }) = length streamBuffer
+    depth = 
+      let bufferSize (C.Stream { C.streamBuffer }) = length streamBuffer in
+      maximum . (map bufferSize) $ specStreams
 
-    seqDescrs = map seqDescr streams
-
-    modelRec  = map streamRec $ streams
-    modelInit = concat . map streamInit $ streams
-    props = Map.fromList $ do
-       C.Property {C.propertyName, C.propertyExpr} <- C.specProperties cspec
-       return (propertyName, translateExpr Bool propertyExpr)
-
-
-unsafeGuard :: C.Expr Bool -> Constraint
-unsafeGuard e = Op1 Bool Not (translateExpr Bool e)
 
 seqDescr :: C.Stream -> SeqDescr
-seqDescr (C.Stream { C.streamId, C.streamExprType })
-  | isCastable streamExprType C.Bool = SeqDescr id Bool
-  | otherwise = SeqDescr id Integer
-  where id = seqId streamId
+seqDescr (C.Stream { C.streamId, C.streamExprType }) = 
+  casting streamExprType (\t' -> SeqDescr (ncSeq streamId) t')
+
 
 streamInit :: C.Stream -> [Constraint]
 streamInit (C.Stream { C.streamId       = id
@@ -54,92 +83,122 @@ streamInit (C.Stream { C.streamId       = id
                      , C.streamExprType = ty}) = 
 
   zipWith initConstraint [0,1..] b
-  
   where
-
     initConstraint :: Integer -> val -> Constraint
-    initConstraint p v
-      | isCastable ty C.Bool = mk Bool    EqB (extractB $ toDyn ty v)
-      | otherwise            = mk Integer EqI (extractI $ toDyn ty v)
-        
-      where
-      mk :: forall t . Type t -> Op2 t t Bool -> t -> Constraint
-      mk t eqOp c =
-        Op2 Bool eqOp (SVal t (seqId id) (Fixed p)) (Const t c)
-    
-
+    initConstraint p v = casting ty $ \ty' -> 
+      Op2 Bool Eq 
+        (SVal ty' (ncSeq id) (Fixed p)) 
+        (Const ty' $ cast ty' $ toDyn ty v)
+ 
                 
-streamRec :: C.Stream -> Constraint
+streamRec :: C.Stream -> Trans Constraint
 streamRec (C.Stream { C.streamId       = id
                     , C.streamExpr     = e
                     , C.streamBuffer   = b
                     , C.streamExprType = ty})
+                    
+  = let depth = length b in casting ty $ \ty' -> 
+    do
+      e' <- expr ty' e
+      return $ Op2 Bool Eq
+         (SVal ty' (ncSeq id) (_n_plus depth)) e'    
 
-  | isCastable ty C.Bool = mk Bool EqB
-  | otherwise            = mk Integer EqI
-
-  where
-
-    depth = length b
-                                   
-    mk :: forall t . Type t -> Op2 t t Bool -> Constraint
-    mk t eqOp =
-       Op2 Bool eqOp
-       (SVal t (seqId id) (_n_plus depth))
-       (translateExpr t e)
-             
 --------------------------------------------------------------------------------
 
--- | Evaluated at point (_n_ + d)
+expr :: forall t a . Type t -> C.Expr a -> Trans (Expr t)
 
-translateExpr :: Type b -> C.Expr a -> Expr b
-translateExpr Integer (C.Const t v) = Const Integer (extractI $ toDyn t v)
-translateExpr Bool    (C.Const t v) = Const Bool    (extractB $ toDyn t v)
+expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
 
-translateExpr t (C.Drop _ k id) =
-  SVal t (seqId id) (_n_plus k)
-
-translateExpr Bool (C.Op1 C.Not e) =
-  Op1 Bool Not (translateExpr Bool e)
-
-translateExpr Integer (C.Op2 op e1 e2) =
-  Op2 Integer op' (translateExpr Integer e1) (translateExpr Integer e2)
-  where
-    op' = case op of
-      C.Add _ -> Add
-      C.Sub _ -> Sub
-      C.Mul _ -> Mul
-      _       -> error "Not handled operator"
-
-translateExpr Bool (C.Op2 op e1 e2) = case op of
-  C.Eq t -> eqExpr t
-  C.Ne t -> Op1 Bool Not (eqExpr t)
-  C.Le _ -> compExpr Le
-  C.Lt _ -> compExpr Lt
-  C.Ge _ -> compExpr Ge
-  C.Gt _ -> compExpr Gt
-  _      -> Op2 Bool op' (translateExpr Bool e1) (translateExpr Bool e2)
-  
-  where
-
-    eqExpr :: forall t . C.Type t -> Expr Bool
-    eqExpr t
-      | isCastable t C.Bool =
-        Op2 Bool EqB (translateExpr Bool e1) (translateExpr Bool e2)
-      | otherwise =
-        Op2 Bool EqI (translateExpr Integer e1) (translateExpr Integer e2)
-
-    compExpr op =
-      Op2 Bool op (translateExpr Integer e1) (translateExpr Integer e2)
+expr t (C.Drop _ k id) = return $
+  SVal t (ncSeq id) (_n_plus k)
     
-    op' = case op of
-      C.And -> And
-      C.Or  -> Or
-      _     -> error "Not handled operator"
+expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
+  ea' <- expr ta' ea
+  newLocalVar 
+    (SeqDescr (ncLocal name) ta') 
+    (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
+  expr t eb
 
-translateExpr t (C.Op3 (C.Mux _) cond e1 e2) =
-  Ite t (translateExpr Bool cond) (translateExpr t e1 ) (translateExpr t e2)
+expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
 
-translateExpr _ _ = error "Not implemented yet"
+expr t (C.ExternVar ta name _) = casting ta $ \ta' -> do
+  newExternVar (SeqDescr (ncExternVar name) ta')
+  return $ SVal t (ncExternVar name) _n_
+
+expr t (C.ExternFun ta name args _ _) = do
+  newAnonFun descr
+  mapM trArg args >>= return . FunApp t (ncExternFun name)
+  where 
+    trArg (C.UExpr {C.uExprExpr, C.uExprType}) = casting uExprType $ \ta ->
+      U <$> expr ta uExprExpr
+    descr =  
+      let argType (C.UExpr {C.uExprType}) = casting uExprType U
+      in casting ta $ \ta' ->
+        AnonFunDescr (ncExternFun name) ta' (map argType args)
+
+
+-- Arrays and functions are treated the same way
+expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \tb' -> do
+  newAnonFun $ AnonFunDescr (ncExternFun name) tb' [U Integer]
+  ind' <- U <$> expr Integer ind
+  return $ FunApp t (ncExternFun name) [ind']
+  
+  
+expr t (C.Op1 op e) = handleOp1
+  t (op, e) expr notHandled Op1
+  
+  where notHandled (UnhandledOp1 opName ta tb) = do
+          e' <- U <$> expr ta e
+          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tb [U ta]
+          return $ FunApp t (ncUnhandledOp opName) [e']
+
+
+expr t (C.Op2 op e1 e2) = handleOp2
+  t (op, e1, e2) expr notHandled Op2
+  
+  where notHandled (UnhandledOp2 opName ta tb tc) = do
+          e1' <- U <$> expr ta e1
+          e2' <- U <$> expr tb e2
+          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tc [U ta, U tb]
+          return $ FunApp t (ncUnhandledOp opName) [e1', e2']
+
+
+expr t (C.Op3 (C.Mux _) cond e1 e2) = do
+  cond' <- expr Bool cond
+  e1'   <- expr t    e1
+  e2'   <- expr t    e2
+  return $ Ite t cond' e1' e2'
+
+--------------------------------------------------------------------------------
+
+data TransST = TransST
+  { _anonFuns  :: [AnonFunDescr]
+  , _localSeqs :: [SeqDescr]
+  , _localVarsConstraints :: [Constraint] }
+  
+type Trans a = State TransST a
+
+newAnonFun :: AnonFunDescr -> Trans ()
+newAnonFun f = modify $ \st -> st {_anonFuns = f : _anonFuns st}
+
+newExternVar :: SeqDescr -> Trans ()
+newExternVar d = modify $ \st -> st {_localSeqs = d : _localSeqs st}
+
+newLocalVar :: SeqDescr -> Constraint -> Trans ()
+newLocalVar d c = do 
+  modify $ \st -> st {_localSeqs = d : _localSeqs st}
+  modify $ \st -> st {_localVarsConstraints = c : _localVarsConstraints st}
+  
+getAnonFuns :: Trans ([AnonFunDescr])
+getAnonFuns = nubBy' (compare `on` funName) . _anonFuns <$> get
+
+getLocalVarsConstraints :: Trans ([Constraint])
+getLocalVarsConstraints = _localVarsConstraints <$> get
+
+getLocalSeqs :: Trans ([SeqDescr])
+getLocalSeqs = nubBy' (compare `on` seqId) . _localSeqs <$> get
+
+runTrans :: Trans a -> a
+runTrans m = fst $ runState m $ TransST [] [] []
 
 --------------------------------------------------------------------------------

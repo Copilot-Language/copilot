@@ -11,6 +11,7 @@ module Copilot.Kind.Naive.SMT
 
 import Copilot.Kind.IL
 import Copilot.Kind.Misc.SExpr
+import Copilot.Kind.Misc.Error as Err
 
 import System.IO
 import System.Process
@@ -26,7 +27,6 @@ data Solver = Solver
   , process    :: ProcessHandle
   , debugMode  :: Bool
   , solverName :: String }
-
  
 type SSExpr = SExpr String
 
@@ -42,6 +42,7 @@ varN = "n"
 
 smtTy :: Type t -> String
 smtTy Integer = "Int"
+smtTy Real    = "Real"
 smtTy Bool    = "Bool"
 
 debug :: Bool -> Solver -> String -> IO ()
@@ -60,15 +61,17 @@ receive s = do
   debug False s answer
   return answer
     
-startNewSolver :: String -> [SeqDescr] -> Bool -> IO Solver
-startNewSolver name unint dbgMode = do
+startNewSolver :: String -> [SeqDescr] -> [AnonFunDescr] -> Bool -> IO Solver
+startNewSolver name seqs unintFuns dbgMode = do
   (i, o, e, p) <- runInteractiveProcess cmd opts Nothing Nothing
   hClose e
   let s = Solver i o p dbgMode name
   send s (_setLogic logic)
   send s (_declConst Integer varN)
-  forM_ unint $ \(SeqDescr id ty) ->
+  forM_ seqs $ \(SeqDescr id ty) ->
     send s (_declSeq ty id)
+  forM_ unintFuns $ \(AnonFunDescr {funName, funRetType, funArgsTypes}) ->
+    send s (_declFun funName funRetType funArgsTypes)
   return s
 
   where cmd  = "yices-smt2"
@@ -120,6 +123,13 @@ _declConst t id = node "declare-fun" [atom id, unit, atom $ smtTy t]
 _declSeq :: Type a -> String -> SSExpr
 _declSeq t id = node "declare-fun"
                 [atom id, singleton (smtTy Integer), atom $ smtTy t]
+                
+_declFun :: String -> Type t -> [U Type] -> SSExpr
+_declFun name retTy argsTy = 
+  node "declare-fun" 
+    [ atom name
+    , list $ map (\(U t) -> atom $ smtTy t) argsTy
+    , atom (smtTy retTy) ]
 
 _assert :: Constraint -> SSExpr
 _assert c = node "assert" [_expr c]
@@ -138,13 +148,19 @@ _setLogic l = node "set-logic" [atom l]
 
 --------------------------------------------------------------------------------
 
+_uexpr :: U Expr -> SSExpr
+_uexpr (U e) = _expr e
+
 _expr :: Expr t -> SSExpr
 
 _expr (Const Integer v) = atom (show v)
 _expr (Const Bool    b) = atom (if b then "true" else "false")
+_expr (Const Real    v) = atom (show v)
 
 _expr (Ite _ cond e1 e2) = node ("ite")
                              [_expr cond, _expr e1, _expr e2]
+
+_expr (FunApp _ funName args) = node funName $ map _uexpr args
 
 _expr (Op1 _ op e) =
   node smtOp [_expr e]
@@ -153,12 +169,14 @@ _expr (Op1 _ op e) =
       Not -> "not"
       Neg -> "-"
 
+_expr (Op2 t Ne e1 e2) =
+  node "not" [_expr (Op2 t Eq e1 e2)]
+
 _expr (Op2 _ op e1 e2) =
   node smtOp [_expr e1, _expr e2]
   where
     smtOp = case op of
-      EqB  -> "="
-      EqI  -> "="
+      Eq   -> "="
       Le   -> "<="
       Lt   -> "<"
       Ge   -> ">="
@@ -168,6 +186,7 @@ _expr (Op2 _ op e1 e2) =
       Add  -> "+"
       Sub  -> "-"
       Mul  -> "*"
+      Ne   -> Err.impossible "'Ne' should be handled separately" 
 
 _expr (SVal _ f ix) = node f [_ix]
 
@@ -175,5 +194,5 @@ _expr (SVal _ f ix) = node f [_ix]
           Fixed i -> atom (show i)
           Var off -> node "+"
                      [atom varN, atom (show off)]
-                     
+
 --------------------------------------------------------------------------------

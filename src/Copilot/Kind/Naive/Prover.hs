@@ -52,12 +52,12 @@ naiveProver options = Prover
 
 ask :: ProverST -> [PropId] -> [PropId] -> IO Output
 ask 
-  (ProverST opts (Spec {modelInit, modelRec, properties, sequences})) 
+  (ProverST opts (Spec {modelInit, modelRec, properties, sequences, anonFuns})) 
   assumptionsIds
   toCheckIds = do
 
-    baseSolver <- SMT.startNewSolver "base" sequences (debugMode opts)
-    stepSolver <- SMT.startNewSolver "step" sequences (debugMode opts)
+    baseSolver <- SMT.startNewSolver "base" sequences anonFuns (debugMode opts)
+    stepSolver <- SMT.startNewSolver "step" sequences anonFuns (debugMode opts)
   
     SMT.assume baseSolver modelInit'
     SMT.assume stepSolver (modelInit' ++ modelRec')
