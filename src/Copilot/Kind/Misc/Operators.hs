@@ -10,7 +10,6 @@ data Op1 a b where
 
 data Op2 a b c where
   Eq     :: Op2 a    a    Bool
-  Ne     :: Op2 a    a    Bool
   And    :: Op2 Bool Bool Bool
   Or     :: Op2 Bool Bool Bool
   
@@ -33,7 +32,6 @@ instance Show (Op1 a b) where
 instance Show (Op2 a b c) where
   show op = case op of
     Eq  -> "="
-    Ne  -> "<>"
     Le  -> "<="
     Lt  -> "<"
     Ge  -> ">="

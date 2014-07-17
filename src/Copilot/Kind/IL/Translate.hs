@@ -55,7 +55,7 @@ translate cspec@(C.Spec {C.specStreams}) = runTrans $ do
         
   localSeqs <- getLocalSeqs
   localConstraints <- getLocalVarsConstraints
-  anonFuns <- getAnonFuns
+  unintFuns <- getUnintFuns
   
   return $ Spec 
     { modelInit
@@ -63,13 +63,15 @@ translate cspec@(C.Spec {C.specStreams}) = runTrans $ do
     , properties
     , depth
     , sequences = mainSeqs ++ localSeqs
-    , anonFuns }
+    , unintFuns }
     
   where
       
     depth = 
       let bufferSize (C.Stream { C.streamBuffer }) = length streamBuffer in
-      maximum . (map bufferSize) $ specStreams
+        if null specStreams 
+          then 0
+          else maximum . (map bufferSize) $ specStreams
 
 
 seqDescr :: C.Stream -> SeqDescr
@@ -112,6 +114,7 @@ expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
 expr t (C.Drop _ k id) = return $
   SVal t (ncSeq id) (_n_plus k)
     
+    
 expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
   ea' <- expr ta' ea
   newLocalVar 
@@ -119,11 +122,14 @@ expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
     (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
   expr t eb
 
+
 expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
+
 
 expr t (C.ExternVar ta name _) = casting ta $ \ta' -> do
   newExternVar (SeqDescr (ncExternVar name) ta')
   return $ SVal t (ncExternVar name) _n_
+
 
 expr t (C.ExternFun ta name args _ _) = do
   newAnonFun descr
@@ -134,12 +140,12 @@ expr t (C.ExternFun ta name args _ _) = do
     descr =  
       let argType (C.UExpr {C.uExprType}) = casting uExprType U
       in casting ta $ \ta' ->
-        AnonFunDescr (ncExternFun name) ta' (map argType args)
+        UnintFunDescr (ncExternFun name) ta' (map argType args)
 
 
 -- Arrays and functions are treated the same way
 expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \tb' -> do
-  newAnonFun $ AnonFunDescr (ncExternFun name) tb' [U Integer]
+  newAnonFun $ UnintFunDescr (ncExternFun name) tb' [U Integer]
   ind' <- U <$> expr Integer ind
   return $ FunApp t (ncExternFun name) [ind']
   
@@ -149,17 +155,17 @@ expr t (C.Op1 op e) = handleOp1
   
   where notHandled (UnhandledOp1 opName ta tb) = do
           e' <- U <$> expr ta e
-          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tb [U ta]
+          newAnonFun $ UnintFunDescr (ncUnhandledOp opName) tb [U ta]
           return $ FunApp t (ncUnhandledOp opName) [e']
 
 
 expr t (C.Op2 op e1 e2) = handleOp2
-  t (op, e1, e2) expr notHandled Op2
+  t (op, e1, e2) expr notHandled Op2 (Op1 Bool Not)
   
   where notHandled (UnhandledOp2 opName ta tb tc) = do
           e1' <- U <$> expr ta e1
           e2' <- U <$> expr tb e2
-          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tc [U ta, U tb]
+          newAnonFun $ UnintFunDescr (ncUnhandledOp opName) tc [U ta, U tb]
           return $ FunApp t (ncUnhandledOp opName) [e1', e2']
 
 
@@ -172,14 +178,14 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
 --------------------------------------------------------------------------------
 
 data TransST = TransST
-  { _anonFuns  :: [AnonFunDescr]
+  { _unintFuns  :: [UnintFunDescr]
   , _localSeqs :: [SeqDescr]
   , _localVarsConstraints :: [Constraint] }
   
 type Trans a = State TransST a
 
-newAnonFun :: AnonFunDescr -> Trans ()
-newAnonFun f = modify $ \st -> st {_anonFuns = f : _anonFuns st}
+newAnonFun :: UnintFunDescr -> Trans ()
+newAnonFun f = modify $ \st -> st {_unintFuns = f : _unintFuns st}
 
 newExternVar :: SeqDescr -> Trans ()
 newExternVar d = modify $ \st -> st {_localSeqs = d : _localSeqs st}
@@ -189,8 +195,8 @@ newLocalVar d c = do
   modify $ \st -> st {_localSeqs = d : _localSeqs st}
   modify $ \st -> st {_localVarsConstraints = c : _localVarsConstraints st}
   
-getAnonFuns :: Trans ([AnonFunDescr])
-getAnonFuns = nubBy' (compare `on` funName) . _anonFuns <$> get
+getUnintFuns :: Trans ([UnintFunDescr])
+getUnintFuns = nubBy' (compare `on` funName) . _unintFuns <$> get
 
 getLocalVarsConstraints :: Trans ([Constraint])
 getLocalVarsConstraints = _localVarsConstraints <$> get

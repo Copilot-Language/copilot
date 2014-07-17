@@ -8,7 +8,7 @@ import Control.Monad.Writer
 
 type PropId = String
 
-data ProofScheme = ProofScheme [Action] deriving (Show)
+type ProofScheme = Writer [Action] ()
   
 data Action
   = Check   PropId
@@ -21,24 +21,19 @@ data Pragma = PrintMsg String deriving (Show)
 
 --------------------------------------------------------------------------------
 
-type ProofMonad = Writer [Action]
-
-proof :: ProofMonad () -> ProofScheme
-proof = ProofScheme . execWriter
-
-check :: PropId -> ProofMonad ()
+check :: PropId -> ProofScheme
 check p = tell [Check p]
 
-msg :: String -> ProofMonad ()
+msg :: String -> ProofScheme
 msg s = tell [Pragma $ PrintMsg s]
 
-assert :: PropId -> ProofMonad ()
+assert :: PropId -> ProofScheme
 assert p = tell [Check p, Assume p]
 
-assume :: PropId -> ProofMonad ()
+assume :: PropId -> ProofScheme
 assume p = tell [Assume p]
 
-assuming :: [PropId] -> ProofMonad a -> ProofMonad a
+assuming :: [PropId] -> ProofScheme -> ProofScheme
 assuming ps m = censor wrap m
   where wrap actions = [Local $ map Assume ps ++ actions]
 

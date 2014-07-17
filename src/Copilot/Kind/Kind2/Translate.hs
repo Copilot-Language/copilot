@@ -78,6 +78,8 @@ gatherPredStateVars spec node = locals ++ imported
       case (nodeLocalVars (nodesMap ! n)) ! v of
         LVarDescr Integer _ -> K.Int
         LVarDescr Bool    _ -> K.Bool
+        LVarDescr Real    _ -> K.Real
+        
    
     locals = 
       map (\v -> K.StateVarDef (varName v) 
@@ -106,6 +108,7 @@ trPrimedVar v = K.PrimedStateVar (varName v)
 
 trConst :: Type t -> t -> K.Term
 trConst Integer v     = K.ValueLitteral (show v)
+trConst Real    v     = K.ValueLitteral (show v)
 trConst Bool    True  = K.ValueLitteral "true"
 trConst Bool    False = K.ValueLitteral "false"
 

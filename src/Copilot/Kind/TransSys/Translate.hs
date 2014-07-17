@@ -3,8 +3,10 @@
 module Copilot.Kind.TransSys.Translate ( translate, ncSep ) where
 
 import Copilot.Kind.TransSys.Spec
-import Copilot.Kind.Misc.Casted
+import Copilot.Kind.Misc.Cast
 import Copilot.Kind.Misc.Type
+import Copilot.Kind.CoreUtils.Operators
+
 
 import Copilot.Kind.Misc.Utils
 import Control.Monad.State.Lazy
@@ -20,7 +22,6 @@ ncMain        = "out"
 ncNode i      = "s" ++ show i
 ncPropNode s  = "prop_" ++ s
 ncTopNode     = "top"
-
 ncAnonInput   = "in"
 
 ncExternVarNode name = "ext_" ++ name
@@ -36,7 +37,6 @@ ncTimeAnnot s d
   | otherwise = s ++ ncSep ++ show d
 
 --------------------------------------------------------------------------------
-
 
 translate :: C.Spec -> Spec
 translate cspec =
@@ -101,42 +101,33 @@ stream (C.Stream { C.streamId
                  , C.streamExpr
                  , C.streamExprType })
 
-  | isCastable streamExprType C.Bool =
-    node Bool $ map (extractB . toDyn streamExprType) streamBuffer
-  | otherwise = 
-    node Integer $ map (extractI . toDyn streamExprType) streamBuffer
+  = casting streamExprType $ \t ->
   
-  where
-    node :: forall t . Type t -> [t] -> Node
-    node t buf = Node { nodeId, nodeDependencies, nodeLocalVars, nodeImportedVars }
-
-      where 
-        nodeId = ncNode streamId
+    let nodeId = ncNode streamId
         outvar i = Var (ncMain `ncTimeAnnot` i)
-
+    
         (e, nodeDependencies, nodeAuxVars, nodeImportedVars) = 
-          runExprTrans t nodeId streamExpr
-
+           runExprTrans t nodeId streamExpr
+        buf = map (cast t . toDyn streamExprType) streamBuffer
+        
         outputLocals =
-          let from i buff =
-                case buff of
-                  [] -> Map.singleton (outvar i) (LVarDescr t $ Expr e)
-                  (b : bs) -> Map.insert (outvar i)
-                              (LVarDescr t $ Pre b $ outvar (i + 1))
-                              $ from (i + 1) bs
+          let from i [] = Map.singleton (outvar i) (LVarDescr t $ Expr e)
+              from i (b : bs) = 
+                 Map.insert (outvar i)
+                 (LVarDescr t $ Pre b $ outvar (i + 1))
+                 $ from (i + 1) bs
           in from 0 buf
-             
+        
         nodeLocalVars = Map.union nodeAuxVars outputLocals
         nodeOutputs = map outvar [0 .. length buf - 1]
-           
+        
+    in Node { nodeId, nodeDependencies, nodeLocalVars, nodeImportedVars }
+
 --------------------------------------------------------------------------------
 
 expr :: forall t t' . Type t -> C.Expr t' -> Trans (Expr t)
 
-expr t (C.Const t' v) = case t of
-  Integer -> return $ Const Integer (extractI $ toDyn t' v)
-  Bool    -> return $ Const Bool    (extractB $ toDyn t' v)
-
+expr t (C.Const t' v) = return $ Const t (cast t $ toDyn t' v)
 
 expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
   let node = ncNode id
@@ -149,49 +140,12 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
   return $ VarE t var
 
 
-expr t (C.Local tl _tr id l e)
-  | isCastable tl C.Bool = aux Bool
-  | otherwise            = aux Integer
-    
-  where
-    aux :: forall a . Type a -> Trans (Expr t)
-    aux tl' = do
-      l' <- expr tl' l
-      newLocal (Var id) $ LVarDescr tl' $ Expr l'
-      expr t e
+expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
+  l' <- expr tl' l
+  newLocal (Var id) $ LVarDescr tl' $ Expr l'
+  expr t e
 
 expr t (C.Var _t' id) = return $ VarE t (Var id)
-
-expr Bool (C.Op1 op e) = case op of
-  C.Not -> expr Bool e >>= return . Op1 Bool Not
-  _     -> error "Not handled operator"
-  
-  
-expr Bool (C.Op2 op e1 e2) = case op of
-  C.Eq t  -> eqExpr t
-  C.Ne t  -> eqExpr t >>= return . Op1 Bool Not
-  
-  C.Le _  -> binop Bool Integer Le  e1 e2
-  C.Lt _  -> binop Bool Integer Lt  e1 e2
-  C.Ge _  -> binop Bool Integer Ge  e1 e2
-  C.Gt _  -> binop Bool Integer Gt  e1 e2
-  C.And   -> binop Bool Bool    And e1 e2
-  C.Or    -> binop Bool Bool    Or  e1 e2
-  _       -> error "Not handled operator"
-
-  where
-    eqExpr :: forall t . C.Type t -> Trans (Expr Bool)
-    eqExpr t
-      | isCastable t C.Bool = binop Bool Bool    EqB e1 e2
-      | otherwise           = binop Bool Integer EqI e1 e2
-
-    
-expr Integer (C.Op2 op e1 e2) = case op of
-  C.Add _ -> binop Integer Integer Add e1 e2
-  C.Sub _ -> binop Integer Integer Sub e1 e2
-  C.Mul _ -> binop Integer Integer Mul e1 e2
-  _       -> error "Not handled operator"
-
 
 expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   cond' <- expr Bool cond
@@ -206,6 +160,25 @@ expr t (C.ExternVar _ name _) = do
   newImportedVar localAlias (ExtVar nodeName (Var ncMain))
   return $ VarE t localAlias
   
+expr t (C.Op1 op e) = handleOp1
+  t (op, e) expr notHandled Op1
+  
+  where notHandled (UnhandledOp1 opName ta tb) = do
+          error "not handled"
+          -- e' <- U <$> expr ta e
+          --newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tb [U ta]
+          --return $ FunApp t (ncUnhandledOp opName) [e']
+
+expr t (C.Op2 op e1 e2) = handleOp2
+  t (op, e1, e2) expr notHandled Op2 (Op1 Bool Not)
+  
+  where notHandled (UnhandledOp2 opName ta tb tc) = do
+          error "not handled"
+--          e1' <- U <$> expr ta e1
+--          e2' <- U <$> expr tb e2
+--          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tc [U ta, U tb]
+--          return $ FunApp t (ncUnhandledOp opName) [e1', e2']
+  
 expr t (C.ExternFun ta name args _ mtag) = do
   let inputVars = mapM makeArgLocalAlias (zip [0..] args)
   error "Not handled"
@@ -214,16 +187,12 @@ expr t (C.ExternFun ta name args _ mtag) = do
     nodeName = ncExternFunNode name
   
     makeArgLocalAlias :: (Int, C.UExpr) -> Trans Var
-    makeArgLocalAlias (argN, C.UExpr {C.uExprExpr, C.uExprType})
-      | isCastable uExprType C.Bool = aux Bool
-      | otherwise = aux Integer
-      where
-        aux :: forall t. Type t -> Trans Var
-        aux t = do
-          let argvar = Var $ nodeName ++ "_arg_" ++ show argN
-          e <- expr t uExprExpr
-          newLocal argvar (LVarDescr t $ Expr e)
-          return argvar
+    makeArgLocalAlias (argN, C.UExpr {C.uExprExpr, C.uExprType}) =
+      casting uExprType $ \ta -> do
+        let argvar = Var $ nodeName ++ "_arg_" ++ show argN
+        e <- expr ta uExprExpr
+        newLocal argvar (LVarDescr ta $ Expr e)
+        return argvar
           
           
 
@@ -246,14 +215,6 @@ expr t (C.ExternFun ta name args _ mtag) = do
   
 --expr _ _ = error "This kind of expression is not handled yet"
 
-
-binop :: Type t -> Type targ -> Op2 targ targ t
-         -> C.Expr a -> C.Expr b -> Trans (Expr t)
-binop t targ op e1 e2 = do
-  lhs <- expr targ e1
-  rhs <- expr targ e2
-  return $ Op2 t op lhs rhs
-  
 --------------------------------------------------------------------------------
 
 -- | Parses the expression
@@ -264,15 +225,16 @@ binop t targ op e1 e2 = do
 runExprTrans :: Type t -> NodeId -> C.Expr a -> 
                (Expr t, [NodeId], Map Var LVarDescr, Bimap Var ExtVar )
                
-runExprTrans t curNode e = (e', nub' (_dependencies s), _lvars s, _importedVars s)
+runExprTrans t curNode e = 
+  (e', nub' (_dependencies s), _lvars s, _importedVars s)
   where (e', s) = runState (expr t e) (TransSt Map.empty Bimap.empty [] curNode)
 
 
-data TransSt = TransSt { _lvars        :: Map Var LVarDescr
-                       , _importedVars :: Bimap Var ExtVar
-                       , _dependencies :: [NodeId]
-                       , _curNode      :: NodeId
-                       }
+data TransSt = TransSt 
+  { _lvars        :: Map Var LVarDescr
+  , _importedVars :: Bimap Var ExtVar
+  , _dependencies :: [NodeId]
+  , _curNode      :: NodeId }
                
 type Trans a = State TransSt a
 

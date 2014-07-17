@@ -1,0 +1,33 @@
+cabal-version             : >= 1.10
+name                      : copilot-kind-examples
+description:
+
+  Some tools to prove properties on Copilot programs with k-induction model
+  checking.
+  
+version                   : 0.1
+license                   : BSD3
+maintainer                : jonathan.laurent@ens.fr
+stability                 : Experimental
+category                  : Language, Embedded
+build-type                : Simple
+extra-source-files        : README.md
+
+author                    : Jonathan Laurent
+
+executable copilot-kind-example
+  default-language        : Haskell2010
+  main-is                 : Driver.hs
+
+  ghc-options             : -Wall -fwarn-tabs 
+                            -fno-warn-name-shadowing
+                            -fno-warn-unused-binds
+                            -fno-warn-unused-imports
+                            -fno-warn-missing-signatures
+
+  build-depends           : base >= 4.3
+                          , copilot
+                          , copilot-kind
+
+
+  

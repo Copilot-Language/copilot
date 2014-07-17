@@ -5,6 +5,7 @@ module Copilot.Kind.Misc.Error
   , impossible
   , impossible_
   , notHandled 
+  , fatal
   ) where
 
 --------------------------------------------------------------------------------
@@ -23,5 +24,8 @@ impossible_ = error $ errorHeader ++ "Unexpected internal error"
 
 notHandled :: String -> a
 notHandled s = error $ errorHeader ++ "Not handled : " ++ s
+
+fatal :: String -> a
+fatal = error
 
 --------------------------------------------------------------------------------

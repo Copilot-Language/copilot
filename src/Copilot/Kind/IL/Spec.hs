@@ -10,7 +10,7 @@ module Copilot.Kind.IL.Spec
   , SeqIndex (..)
   , SeqDescr (..)
   , FunName
-  , AnonFunDescr (..)
+  , UnintFunDescr (..)
   , Expr (..)
   , Spec (..)
   , Constraint
@@ -47,7 +47,7 @@ data Expr t where
 --------------------------------------------------------------------------------
 
 type FunName = String
-data AnonFunDescr = forall t . AnonFunDescr
+data UnintFunDescr = forall t . UnintFunDescr
   { funName      :: FunName
   , funRetType   :: Type t 
   , funArgsTypes :: [U Type] }
@@ -68,7 +68,7 @@ data Spec = Spec
   , properties  :: Map PropId Constraint
   , depth       :: Int
   , sequences   :: [SeqDescr]
-  , anonFuns    :: [AnonFunDescr] }
+  , unintFuns   :: [UnintFunDescr] }
                    
 --------------------------------------------------------------------------------
 

@@ -1,11 +1,9 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Naive 
-  ( module Copilot.Kind.Naive.Prover
-  , module Copilot.Kind.Naive.SMT  
+module Copilot.Kind.Light 
+  ( module Copilot.Kind.Light.Prover
   ) where
 
-import Copilot.Kind.Naive.Prover
-import Copilot.Kind.Naive.SMT
+import Copilot.Kind.Light.Prover
 
 --------------------------------------------------------------------------------

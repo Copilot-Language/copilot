@@ -108,10 +108,11 @@ handleOp2 ::
   (forall t t'. Type t -> C.Expr t' -> m (expr t)) ->
   (UnhandledOp2 -> m (expr resT)) ->
   (forall t a b . Type t -> Op2 a b t -> expr a -> expr b -> expr t) ->
+  (expr Bool -> expr Bool) ->
   m (expr resT)
 
 
-handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp = case op of 
+handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of 
 
   C.And        -> boolConnector And
   C.Or         -> boolConnector Or
@@ -133,8 +134,8 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp = case op of
   C.Logb ta   -> notHandled ta "logb"
   
   -- Equality operators.
-  C.Eq ta     -> eqOp ta Eq
-  C.Ne ta     -> eqOp ta Ne
+  C.Eq ta     -> eqOp ta
+  C.Ne ta     -> neqOp ta
   
   -- Relational operators.
   C.Le ta     -> numComp ta Le
@@ -165,11 +166,18 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp = case op of
      e2' <- handleExpr Bool e2
      return $ boolOp op e1' e2'
     
-    eqOp :: C.Type cta -> (forall a . Op2 a a Bool) -> m (expr resT)
-    eqOp ta op = casting ta $ \ta' -> do
+    eqOp :: C.Type cta -> m (expr resT)
+    eqOp ta = casting ta $ \ta' -> do
       e1' <-  handleExpr ta' e1
       e2' <-  handleExpr ta' e2
-      return $ boolOp op e1' e2'
+      return $ boolOp Eq e1' e2'
+      
+    neqOp ::  C.Type cta -> m (expr resT)
+    neqOp ta = case resT of
+      Bool -> do 
+        e <- eqOp ta
+        return $ notOp e
+      _ -> Err.impossible typeErrMsg
       
     numOp :: (forall num . (Num num) => Op2 num num num) -> m (expr resT)
     numOp op = case resT of

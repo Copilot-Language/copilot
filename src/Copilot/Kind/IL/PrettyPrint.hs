@@ -25,13 +25,13 @@ ppSpec
   , properties
   , depth
   , sequences
-  , anonFuns }) = 
+  , unintFuns }) = 
   
      text "DEPTH" <+> colon <+> int depth $$ emptyLine
   $$ text "SEQUENCES"
   $$ indent (foldr (($$) . ppSeqDescr) empty sequences) $$ emptyLine
   $$ text "ANON FUNCTIONS"
-  $$ indent (foldr (($$) . ppAnonFunDescr) empty anonFuns) $$ emptyLine
+  $$ indent (foldr (($$) . ppUnintFunDescr) empty unintFuns) $$ emptyLine
   $$  text "MODEL INIT"
   $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
   $$ text "MODEL REC"
@@ -47,8 +47,8 @@ ppProp id c = quotes (text id) <+> colon <+> ppExpr c
 ppSeqDescr :: SeqDescr -> Doc
 ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
 
-ppAnonFunDescr :: AnonFunDescr -> Doc
-ppAnonFunDescr (AnonFunDescr id ret args) =
+ppUnintFunDescr :: UnintFunDescr -> Doc
+ppUnintFunDescr (UnintFunDescr id ret args) =
   text id <+> colon 
   <+> (hsep . punctuate (space <> text "->" <> space) $ map ppUType args)
   <+> text "->" 

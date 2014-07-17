@@ -33,7 +33,7 @@ foldCSpecExprs :: forall m . (Monoid m) =>
 
 foldCSpecExprs f spec = 
   mconcat $ 
-    map streamExpr (specStreams spec) 
+    map streamExpr (specStreams spec)
     ++ map observerExpr (specObservers spec)
     ++ map triggerExpr (specTriggers spec)
     ++ map propertyExpr (specProperties spec)

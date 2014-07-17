@@ -54,7 +54,9 @@ pNode n =
 
 pConst :: Type t -> t -> Doc
 pConst Integer v = text $ show v
+pConst Real    v = text $ show v
 pConst Bool    v = text $ show v
+
 
 pIVar :: Var -> ExtVar -> Doc
 pIVar v (ExtVar n v') = 

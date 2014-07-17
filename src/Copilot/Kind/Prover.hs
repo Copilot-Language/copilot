@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Prover 
-  ( Cex (..)
-  , Error
-  , Output (..)
+module Copilot.Kind.Prover
+  ( Cex     (..)
+  , Output  (..)
+  , Status  (..)
   , Feature (..)
-  , Prover (..)
+  , Prover  (..)
   , combine
   ) where
 
@@ -19,13 +19,15 @@ import Control.Applicative (liftA2, liftA)
 
 data Cex = Cex
 
-type Error = String
+type Infos = [String]
 
-data Output 
+data Output = Output Status Infos
+
+data Status
   = Valid
   | Invalid (Maybe Cex)
   | Unknown
-  | Error Error
+  | Error
   
 data Feature = GiveCex | HandleAssumptions
   
@@ -33,7 +35,7 @@ data Prover = forall r . Prover
   { proverName     :: String
   , hasFeature     :: Feature -> Bool
   , startProver    :: Core.Spec -> IO r
-  , askProver      :: r -> [PropId] -> [PropId] -> IO Output 
+  , askProver      :: r -> [PropId] -> PropId -> IO Output 
   , closeProver    :: r -> IO ()
   }
 
@@ -65,7 +67,7 @@ combine
       return (proverL, proverR)
       
   , askProver = \(stL, stR) assumptions toCheck ->
-      liftA2 combineOutputs 
+      liftA2 (combineOutputs proverNameL proverNameR)
         (askProverL stL assumptions toCheck)
         (askProverR stR assumptions toCheck)
       
@@ -74,16 +76,33 @@ combine
       closeProverR stR
   }
   
-combineOutputs :: Output -> Output -> Output
-combineOutputs (Error s) _               = Error ("LEFT:" ++ s)
-combineOutputs  _ (Error s)              = Error ("RIGHT:" ++ s)
-combineOutputs Valid Valid               = Valid
-combineOutputs Valid (Invalid _)         = Error "The two provers don't agree"
-combineOutputs Valid Unknown             = Valid
-combineOutputs (Invalid (Just cex)) _    = (Invalid $ Just cex)
-combineOutputs (Invalid _) (Invalid _)   = Invalid Nothing
-combineOutputs (Invalid Nothing) Unknown = Invalid Nothing
-combineOutputs Unknown Unknown           = Unknown
-combineOutputs o1 o2                     = combineOutputs o2 o1
   
+combineOutputs nameL nameR (Output stL msgL) (Output stR msgR) =
+  (Output (combineSt stL stR) infos)
+
+  where 
+    combineSt Error _                   = Error
+    combineSt  _ Error                  = Error
+    combineSt Valid Valid               = Valid
+    combineSt Valid (Invalid _)         = Error
+    combineSt Valid Unknown             = Valid
+    combineSt (Invalid (Just cex)) _    = (Invalid $ Just cex)
+    combineSt (Invalid _) (Invalid _)   = Invalid Nothing
+    combineSt (Invalid Nothing) Unknown = Invalid Nothing
+    combineSt Unknown Unknown           = Unknown
+    combineSt o1 o2                     = combineSt o2 o1
+    
+    prefixMsg = case (stL, stR) of
+      (Valid, (Invalid _)) -> ["The two provers don't agree"]
+      _ -> []
+      
+    decoName s = "<" ++ s ++ ">" 
+    
+    infos = 
+      prefixMsg 
+      ++ [decoName nameL] 
+      ++ msgL 
+      ++ [decoName nameR] 
+      ++ msgR
+
 --------------------------------------------------------------------------------

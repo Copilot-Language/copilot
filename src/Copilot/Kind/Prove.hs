@@ -1,8 +1,7 @@
 --------------------------------------------------------------------------------
 
 module Copilot.Kind.Prove 
-  ( module Copilot.Kind.ProofScheme
-  , prove 
+  ( prove 
   ) where
 
 import Copilot.Kind.Prover
@@ -11,6 +10,9 @@ import Copilot.Kind.ProofScheme
 import qualified Copilot.Core as Core
 
 import Control.Monad
+import Control.Monad.Writer
+
+import Data.List (intercalate)
 
 --------------------------------------------------------------------------------
 
@@ -21,7 +23,7 @@ prove
           , startProver
           , askProver
           , closeProver } )
-  (ProofScheme actions) 
+  (execWriter -> actions) 
   spec = do
   
     prover <- startProver spec
@@ -33,11 +35,11 @@ prove
       processActions _ _ [] = return ()
       processActions prover context (action:nextActions) = case action of
         Check propId -> do
-          res <- askProver prover context [propId]
-          case res of
+          (Output status infos) <- askProver prover context propId
+          case status of
             Valid     -> putStrLn $ propId ++ " : valid"
             Invalid _ -> putStrLn $ propId ++ " : invalid"
-            Error s   -> putStrLn $ propId ++ " : error ++ (" ++ s ++ ")"
+            Error     -> putStrLn $ propId ++ " : error ++ (" ++ (intercalate " | " infos) ++ ")"
             Unknown   -> putStrLn $ propId ++ " : unknown"
           processActions prover context nextActions
           
