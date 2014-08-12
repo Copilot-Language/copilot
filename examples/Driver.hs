@@ -4,23 +4,23 @@
 
 module Main (main) where
 
-import Language.Copilot
+import Language.Copilot as CP
 import Copilot.Kind
 import Copilot.Kind.Light
---import Copilot.Kind.Kind2
+import Copilot.Kind.Kind2
 
 import qualified Copilot.Kind.IL        as IL
 import qualified Copilot.Kind.Light     as Light
 
 import qualified Copilot.Kind.TransSys  as TS
 
-import Incr
+import BoyerMoore
 
 --------------------------------------------------------------------------------
 
 line = replicate 40 '-'
 
-prover = lightProver def {debugMode = True, kTimeout = 20}
+prover = lightProver def {debugMode = True, kTimeout = 100}
 --prover = kind2Prover def
 --prover = naiveProver def `combine` kind2Prover def {bmcMax = 20}
 --prover = kind2Prover (def {bmcMax = 20})
@@ -29,7 +29,8 @@ prover = lightProver def {debugMode = True, kTimeout = 20}
 main :: IO ()
 main =  do
   cspec <- reify spec
-  interpret 5 spec
+  CP.prettyPrint spec
+  interpret 10 spec
   putStrLn $ IL.prettyPrint $ IL.translate cspec
   putStrLn line
   prove prover scheme cspec

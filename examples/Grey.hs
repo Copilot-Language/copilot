@@ -3,17 +3,14 @@
 module Grey (spec, scheme) where
 
 import Prelude ()
-import Copilot.Language
-
+import Language.Copilot
 import Copilot.Kind
 
 intCounter :: Stream Bool -> Stream Word64
 intCounter reset = time
   where 
-    time = 
-      if reset 
-      then 0 
-      else [0] ++ if time == 3 then 0 else time + 1
+    time = if reset then 0
+           else [0] ++ if time == 3 then 0 else time + 1
 
 
 greyTick :: Stream Bool -> Stream Bool

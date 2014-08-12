@@ -39,7 +39,7 @@ data ProverST = ProverST
     
 lightProver :: Options -> Prover
 lightProver options = Prover
-  { proverName = "Naive"
+  { proverName = "Light"
   , hasFeature = \case
       GiveCex -> False
       HandleAssumptions -> True

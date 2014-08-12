@@ -40,7 +40,7 @@ library
                           , xml
 
   default-extensions      : GADTs
-                          , MultiParamTypeClasses 
+                          , MultiParamTypeClasses
                           , RankNTypes
                           , KindSignatures
                           , FlexibleInstances

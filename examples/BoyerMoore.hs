@@ -1,13 +1,13 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax, ScopedTypeVariables #-}
 
 module BoyerMoore (spec, scheme) where
 
 import Prelude ()
 import Control.Monad (forM_)
 
-import Copilot.Language hiding (length)
+import Language.Copilot hiding (length)
 import Copilot.Kind
 import Copilot.Kind.Lib (arbitraryCstW8)
 
@@ -19,8 +19,8 @@ import qualified Data.List as L
 length :: [a] -> Stream Word8
 length l = constant (fromInteger $ L.genericLength l)
 
---------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
 majorityVote :: forall a . (Typed a, Eq a) => [Stream a] -> Stream a
 majorityVote [] = error "empty list"
 majorityVote (x : xs) = aux x 1 xs

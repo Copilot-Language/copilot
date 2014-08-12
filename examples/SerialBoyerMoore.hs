@@ -4,8 +4,8 @@
 module SerialBoyerMoore (spec, scheme) where
 
 import Prelude ()
-import Copilot.Language
-import Copilot.Kind.ProofScheme
+import Language.Copilot hiding (majority)
+import Copilot.Kind
 import Copilot.Kind.Lib (forAllCst, existsCst)
 
 --------------------------------------------------------------------------------
