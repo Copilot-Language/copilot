@@ -14,14 +14,14 @@ import qualified Copilot.Kind.Light     as Light
 
 import qualified Copilot.Kind.TransSys  as TS
 
-import BoyerMoore
+import Grey
 
 --------------------------------------------------------------------------------
 
 line = replicate 40 '-'
 
-prover = lightProver def {debugMode = True, kTimeout = 100}
---prover = kind2Prover def
+--prover = lightProver def {debugMode = True, kTimeout = 100}
+prover = kind2Prover def
 --prover = naiveProver def `combine` kind2Prover def {bmcMax = 20}
 --prover = kind2Prover (def {bmcMax = 20})
 
@@ -33,7 +33,8 @@ main =  do
   interpret 10 spec
   putStrLn $ IL.prettyPrint $ IL.translate cspec
   putStrLn line
-  prove prover scheme cspec
+  putStrLn $ TS.prettyPrint . TS.translate $ cspec
+  --prove prover scheme cspec
   --putStrLn $ K2.prettyPrint . K2.toKind2 K2.Inlined [] [] . TS.translate $ cspec
   --putStrLn $ TS.prettyPrint . TS.translate $ cspec
   return ()

@@ -12,9 +12,9 @@ import Copilot.Kind.Misc.Error as Err
 --------------------------------------------------------------------------------
 
 -- | Some high level utilities to translate a Copilot operator in a standard way
--- | The unhandled operators are monomorphic, and thei names are labeled so that
--- | each name corresponds to a unique uninterpreted function with a monomorphic
--- | type
+-- | The unhandled operators are monomorphic, and their names are labeled so
+-- | that each name corresponds to a unique uninterpreted function with a 
+-- | monomorphic type
 
 data UnhandledOp1 = forall a b . 
   UnhandledOp1 String (Type a) (Type b)

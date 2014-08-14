@@ -29,6 +29,7 @@ spec = do
     it = ic == 2
     gt = greyTick r
     r  = externB "reset" Nothing
+    --r = [True, False] ++ r
     
 scheme :: ProofScheme
 scheme = do

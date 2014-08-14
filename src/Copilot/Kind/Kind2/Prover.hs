@@ -27,7 +27,7 @@ import qualified Copilot.Core          as Core
 
 --------------------------------------------------------------------------------
 
-data Options = Options 
+data Options = Options
   { bmcMax :: Int }
 
 instance Default Options where

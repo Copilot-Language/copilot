@@ -19,7 +19,6 @@ import Data.Char
 --------------------------------------------------------------------------------
 
 -- 'nc' stands for **naming conventions**
-
 ncSeq :: C.Id -> SeqId
 ncSeq = printf "s%d"
 

@@ -7,7 +7,6 @@ import Copilot.Kind.Misc.Cast
 import Copilot.Kind.Misc.Type
 import Copilot.Kind.CoreUtils.Operators
 
-
 import Copilot.Kind.Misc.Utils
 import Control.Monad.State.Lazy
 
@@ -20,13 +19,13 @@ import qualified Data.Bimap   as Bimap
 ncSep         = "."
 ncMain        = "out"
 ncNode i      = "s" ++ show i
-ncPropNode s  = "prop_" ++ s
+ncPropNode s  = "prop-" ++ s
 ncTopNode     = "top"
 ncAnonInput   = "in"
 
-ncExternVarNode name = "ext_" ++ name
-ncExternFunNode name = "fun_" ++ name
-ncExternArrNode name = "arr_" ++ name
+ncExternVarNode name = "ext-" ++ name
+ncExternFunNode name = "fun-" ++ name
+ncExternArrNode name = "arr-" ++ name
 
 ncImported :: NodeId -> String -> String
 ncImported n s = n ++ ncSep ++ s
@@ -155,7 +154,7 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   
 expr t (C.ExternVar _ name _) = do
   let nodeName = ncExternVarNode name
-  let localAlias = Var ("extvar_" ++ name)
+  let localAlias = Var nodeName
   newDep nodeName
   newImportedVar localAlias (ExtVar nodeName (Var ncMain))
   return $ VarE t localAlias
@@ -194,26 +193,9 @@ expr t (C.ExternFun ta name args _ mtag) = do
         newLocal argvar (LVarDescr ta $ Expr e)
         return argvar
           
-          
-
---expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
---  let node = ncNode id
---  selfRef <- (== node) <$> curNode
---  let varName = ncMain `ncTimeAnnot` k
---  let var = Var $ if selfRef then varName else ncImported node varName
---  when (not selfRef) $ do
---    newDep node
---    newImportedVar var (mkExtVar node varName)
---  return $ VarE t var
+--------------------------------------------------------------------------------
 
 
--- ExternVar    :: Type a -> Name -> Maybe [a] -> Expr a 
---  ExternFun    :: Type a -> Name -> [UExpr] -> Maybe (Expr a) 
---               -> Maybe Tag -> Expr a
---  ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
---               -> Maybe [[b]] -> Maybe Tag -> Expr b 
-  
---expr _ _ = error "This kind of expression is not handled yet"
 
 --------------------------------------------------------------------------------
 

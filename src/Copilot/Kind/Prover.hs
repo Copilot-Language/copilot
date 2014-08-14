@@ -41,7 +41,6 @@ data Prover = forall r . Prover
 
 --------------------------------------------------------------------------------
 
--- Thank you GHC for compiling this
 combine :: Prover -> Prover -> Prover
 combine 
   (Prover { proverName  = proverNameL 

@@ -21,7 +21,9 @@ instance EqualType Type where
   _       =~= _        = Nothing
   
 --------------------------------------------------------------------------------
-  
+
+-- For instance, 'U Expr' is the type of an expression of unknown type 
+
 data U f = forall t . U (f t)
 
 --------------------------------------------------------------------------------
