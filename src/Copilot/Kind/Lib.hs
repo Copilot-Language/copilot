@@ -1,43 +1,51 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax, ScopedTypeVariables #-}
 
 module Copilot.Kind.Lib
-  ( noInlining
-  , conj
+  ( conj
   , disj
   , forAllCst
   , existsCst
-  , arbitraryCstW8
+  , arbitrary
+  , arbitraryCst
   ) where
-
 
 import Prelude ()
 import Copilot.Language
+import Copilot.Core.Type
+import Copilot.Core.Type.Uninitialized
 
 --------------------------------------------------------------------------------
 
-noInlining :: (Typed a) => Stream a -> Stream a
-noInlining = flip local id
-
 conj :: [Stream Bool] -> Stream Bool
-conj cs = foldl (&&) true cs
+conj = foldl (&&) true
 
 disj :: [Stream Bool] -> Stream Bool
-disj cs = foldl (||) false cs
+disj = foldl (||) false
 
-forAllCst :: [Word8] -> (Stream Word8 -> Stream Bool) -> Stream Bool
+forAllCst ::(Typed a) => [a] -> (Stream a -> Stream Bool) -> Stream Bool
 forAllCst l f = conj $ map (f . constant) l
 
-existsCst :: [Word8] -> (Stream Word8 -> Stream Bool) -> Stream Bool
+existsCst :: (Typed a) => [a] -> (Stream a -> Stream Bool) -> Stream Bool
 existsCst l f = disj $ map (f . constant) l
 
--- A dirty hack to build a constant stream of unknown value
-arbitraryCstW8 :: String -> Stream Word8
-arbitraryCstW8 s = a
-  where t = [0] ++ (1 + t)
-        i = externW8 s Nothing
-        a = if t == 0 then i else [0] ++ t
-        
+-- Arbitrary streams are built using the "extern" construct
+-- A cleaner solution should be implemented
+
+arbitrary :: (Typed a) => String -> Stream a
+arbitrary s = extern s Nothing
+
+-- A (very) dirty hack to build a constant stream of unknown value
+
+arbitraryCst :: forall a . (Typed a) => String -> Stream a
+arbitraryCst s = c
+  where 
+    t :: Stream Word8
+    t = [0] ++ (1 + t)
+    i :: Stream a
+    i = extern s Nothing
+    c = if t == 0 then i else [uninitialized (typeOf :: Type a)] ++ c
+    
 --------------------------------------------------------------------------------
         

@@ -39,7 +39,7 @@ getFreshName :: [Var] -> Renaming Var
 getFreshName vs = do
   usedNames <- _reservedNames <$> Renaming get
   let varAppend (Var s) = Var $ s ++ "_"
-      applicants = List.iterate varAppend (head vs)
+      applicants = vs ++ List.iterate varAppend (head vs)
       v = case dropWhile (`member` usedNames) applicants of
             v:_ -> v
             [] -> error "No more names available"

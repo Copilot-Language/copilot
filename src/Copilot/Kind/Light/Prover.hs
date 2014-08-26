@@ -30,7 +30,7 @@ data Options = Options
 instance Default Options where
   def = Options 
     { kTimeout  = 100
-    , debugMode = True 
+    , debugMode = False 
     , onlyBmc   = False }
     
 data ProverST = ProverST
@@ -62,7 +62,7 @@ ask
     stepSolver <- SMT.startNewSolver "step" sequences unintFuns (debugMode opts)
   
     SMT.assume baseSolver modelInit'
-    SMT.assume stepSolver (modelInit' ++ modelRec')
+    SMT.assume stepSolver modelRec'
   
     res <- indStep 0 baseSolver stepSolver
     mapM_ SMT.exit [baseSolver, stepSolver]

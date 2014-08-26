@@ -26,7 +26,7 @@ prettyPrint ast =
 -- Defines the indentation policy of the S-Expressions
 shouldIndent :: SSExpr -> Bool
 shouldIndent (Atom _)                   = False
-shouldIndent (List [Atom a, Atom _])    = not $ a `elem` [kwPrime]
+shouldIndent (List [Atom a, Atom _])    = a `notElem` [kwPrime]
 shouldIndent _                          = True
 
 --------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ ppFile (File preds props) = map ppPredDef preds ++ ppProps props
 
 
 ppProps :: [Prop] -> [SSExpr]
-ppProps ps = [ node "check-prop" $ [ list $ map ppProp ps ] ]
+ppProps ps = [ node "check-prop" [ list $ map ppProp ps ] ]
 
 
 ppProp :: Prop -> SSExpr

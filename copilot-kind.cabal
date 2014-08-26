@@ -38,6 +38,7 @@ library
                           , data-default
                           , bimap
                           , xml
+                          , random
 
   default-extensions      : GADTs
                           , MultiParamTypeClasses

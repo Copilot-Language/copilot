@@ -8,7 +8,7 @@ import Copilot.Kind
 
 spec :: Spec
 spec = do
-  prop "gt1"  (x > 1)
+  prop "gt1" (x > 1)
   prop "neq0" (x /= 0)
 
   where

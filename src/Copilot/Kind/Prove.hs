@@ -39,8 +39,10 @@ prove
           case status of
             Valid     -> putStrLn $ propId ++ " : valid"
             Invalid _ -> putStrLn $ propId ++ " : invalid"
-            Error     -> putStrLn $ propId ++ " : error ++ (" ++ (intercalate " | " infos) ++ ")"
-            Unknown   -> putStrLn $ propId ++ " : unknown"
+            Error     -> putStrLn $ propId ++ " : error ++ (" 
+                                           ++ (intercalate " | " infos) ++ ")"
+            Unknown   -> putStrLn $ propId ++ " : unknown" 
+                                           ++ " (" ++ intercalate ", " infos ++ ")"
           processActions prover context nextActions
           
         Assume propId -> do

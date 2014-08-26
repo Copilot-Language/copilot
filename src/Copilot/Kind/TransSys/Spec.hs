@@ -17,7 +17,8 @@ module Copilot.Kind.TransSys.Spec
   , transformExpr
   , isTopologicallySorted
   , nodeVarsSet
-  , specDependenciesGraph ) where
+  , specDependenciesGraph 
+  , specTopNode ) where
 
 import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
@@ -29,6 +30,7 @@ import Data.Bimap (Bimap)
 import Copilot.Kind.Misc.Utils
 import Data.Set (isSubsetOf, member)
 
+import qualified Data.List  as List
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set
 import qualified Data.Bimap as Bimap
@@ -46,7 +48,8 @@ data Node = Node
   { nodeId            :: NodeId
   , nodeDependencies  :: [NodeId]
   , nodeLocalVars     :: Map Var LVarDescr
-  , nodeImportedVars  :: Bimap Var ExtVar }
+  , nodeImportedVars  :: Bimap Var ExtVar 
+  , nodeConstrs       :: [Expr Bool] }
 
 type NodeId  =  String
 
@@ -60,9 +63,10 @@ data LVarDescr = forall t . LVarDescr
   { varType :: Type t
   , varDef  :: LVarDef t }
 
-data LVarDef t = 
+data LVarDef t =
     Pre t Var      -- The 'Var' argument has to be a local var
-  | Expr (Expr t) 
+  | Expr (Expr t)
+  | Constrs [Expr Bool]
 
 data Expr t where
   Const  :: Type t -> t -> Expr t
@@ -75,7 +79,7 @@ data Expr t where
 
 mkExtVar node name = ExtVar node (Var name)
 
-foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> (Expr a) -> m
+foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> Expr a -> m
 foldExpr f expr = f expr <> fargs 
   where
     fargs = case expr of 
@@ -111,8 +115,10 @@ nodeRhsVarsSet n =
   let varOcc (VarE _ v) = Set.singleton v
       varOcc _          = Set.empty
       
-      descrRhsVars (LVarDescr _ (Expr e))   = foldExpr varOcc e
-      descrRhsVars (LVarDescr _ (Pre _ v))  = Set.singleton v
+      descrRhsVars (LVarDescr _ (Expr e))      = foldExpr varOcc e
+      descrRhsVars (LVarDescr _ (Pre _ v))     = Set.singleton v
+      descrRhsVars (LVarDescr _ (Constrs cs))  = 
+        mconcat (map (foldExpr varOcc) cs)
       
   in Map.fold (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
   
@@ -149,6 +155,12 @@ specDependenciesGraph :: Spec -> Map NodeId [NodeId]
 specDependenciesGraph s = 
   Map.fromList [ (nodeId n, nodeDependencies n) | n <- specNodes s ]
   
+  
+specTopNode :: Spec -> Node
+specTopNode spec = fromJust $ List.find 
+  ((== specTopNodeId spec) . nodeId) 
+  (specNodes spec)
+
 --------------------------------------------------------------------------------
 
 instance HasInvariants Spec where

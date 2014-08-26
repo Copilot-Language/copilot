@@ -2,11 +2,9 @@
 
 module Copilot.Kind.Kind2.Output (parseOutput) where
 
-import Text.XML.Light hiding (findChild)
-
-import Copilot.Kind.Prover as P
-
-import Data.Maybe (fromJust)
+import Text.XML.Light       hiding (findChild)
+import Copilot.Kind.Prover  as P
+import Data.Maybe           (fromJust)
 
 import qualified Copilot.Kind.Misc.Error as Err
 
@@ -40,8 +38,8 @@ parseOutput prop xml = fromJust $ do
         answTag : _ -> 
           case onlyText (elContent answTag) of
             answ : _ -> cdData answ
-            _ -> err $ "Invalid 'Answer' attribute"
-        _ -> err $ "Attribute 'Answer' not found"
+            _ -> err "Invalid 'Answer' attribute"
+        _ -> err "Attribute 'Answer' not found"
     
     err :: forall a . String -> a      
     err msg = Err.fatal $

@@ -1,6 +1,4 @@
 --------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 module Main (main) where
 
@@ -11,32 +9,32 @@ import Copilot.Kind.Kind2
 
 import qualified Copilot.Kind.IL        as IL
 import qualified Copilot.Kind.Light     as Light
+import qualified Copilot.Kind.Kind2     as K2
 
 import qualified Copilot.Kind.TransSys  as TS
 
-import Grey
+import SerialBoyerMoore
 
 --------------------------------------------------------------------------------
 
-line = replicate 40 '-'
+line = replicate 79 '-'
 
---prover = lightProver def {debugMode = True, kTimeout = 100}
-prover = kind2Prover def
---prover = naiveProver def `combine` kind2Prover def {bmcMax = 20}
---prover = kind2Prover (def {bmcMax = 20})
-
+--prover = kind2Prover def
+--prover = lightProver def {onlyBmc = True, kTimeout = 5}
+--prover = lightProver def { debugMode = True }
+prover =
+  lightProver def {onlyBmc = True, kTimeout = 5} 
+  `combine` kind2Prover def
 
 main :: IO ()
 main =  do
   cspec <- reify spec
-  CP.prettyPrint spec
-  interpret 10 spec
-  putStrLn $ IL.prettyPrint $ IL.translate cspec
-  putStrLn line
-  putStrLn $ TS.prettyPrint . TS.translate $ cspec
-  --prove prover scheme cspec
-  --putStrLn $ K2.prettyPrint . K2.toKind2 K2.Inlined [] [] . TS.translate $ cspec
+  --putStrLn $ IL.prettyPrint $ IL.translate cspec
+  --putStrLn line
   --putStrLn $ TS.prettyPrint . TS.translate $ cspec
+  --putStrLn line
+  --putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
+  prove prover scheme cspec
   return ()
 
 --------------------------------------------------------------------------------

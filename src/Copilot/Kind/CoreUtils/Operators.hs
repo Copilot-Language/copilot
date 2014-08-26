@@ -2,6 +2,13 @@
 
 module Copilot.Kind.CoreUtils.Operators where
 
+-- | Some high level utilities to translate a Copilot operator in a standard way
+-- | The unhandled operators are monomorphic, and their names are labeled so
+-- | that each name corresponds to a unique uninterpreted function with a 
+-- | monomorphic type.
+-- | For instance, C.Abs becomes "abs" or "fabs" depending on 
+-- | the type of its argument
+
 import qualified Copilot.Core as C
 import Copilot.Kind.Misc.Cast
 import Copilot.Kind.Misc.Type
@@ -10,11 +17,6 @@ import Copilot.Kind.Misc.Operators
 import Copilot.Kind.Misc.Error as Err
 
 --------------------------------------------------------------------------------
-
--- | Some high level utilities to translate a Copilot operator in a standard way
--- | The unhandled operators are monomorphic, and their names are labeled so
--- | that each name corresponds to a unique uninterpreted function with a 
--- | monomorphic type
 
 data UnhandledOp1 = forall a b . 
   UnhandledOp1 String (Type a) (Type b)

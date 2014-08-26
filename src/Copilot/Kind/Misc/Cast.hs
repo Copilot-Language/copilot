@@ -8,6 +8,8 @@ module Copilot.Kind.Misc.Cast
   , casting
   ) where
 
+--------------------------------------------------------------------------------
+
 import Copilot.Core as C
 import Copilot.Core.Type.Equality
 import Copilot.Core.Type.Dynamic

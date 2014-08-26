@@ -28,8 +28,7 @@ spec = do
     ic = intCounter r
     it = ic == 2
     gt = greyTick r
-    r  = externB "reset" Nothing
-    --r = [True, False] ++ r
+    r  = extern "reset" Nothing
     
 scheme :: ProofScheme
 scheme = do

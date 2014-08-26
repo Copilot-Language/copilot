@@ -36,7 +36,7 @@ data Prover = forall r . Prover
   , hasFeature     :: Feature -> Bool
   , startProver    :: Core.Spec -> IO r
   , askProver      :: r -> [PropId] -> PropId -> IO Output 
-  , closeProver    :: r -> IO ()
+  , closeProver    :: r -> IO () 
   }
 
 --------------------------------------------------------------------------------

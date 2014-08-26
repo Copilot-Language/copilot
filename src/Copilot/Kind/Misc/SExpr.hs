@@ -21,7 +21,7 @@ node a l     = List (Atom a : l)    -- (s ss)
 
 --------------------------------------------------------------------------------
 
--- A straightforward representation
+-- A straightforward string representation
 
 instance Show (SExpr String) where
   show = PP.render . show'

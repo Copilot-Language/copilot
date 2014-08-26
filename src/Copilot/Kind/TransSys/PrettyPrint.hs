@@ -18,9 +18,15 @@ prettyPrint :: Spec -> String
 prettyPrint = render . pSpec
 
 pSpec :: Spec -> Doc
-pSpec spec = items
-  where items = foldr (($$) . pNode) empty (specNodes spec)
-
+pSpec spec = items $$ props
+  where 
+    items = foldr (($$) . pNode) empty (specNodes spec)
+    props = text "PROPS" $$ 
+      Map.foldrWithKey (\k -> ($$) . (pProp k)) 
+        empty (specProps spec)
+    
+pProp pId extvar = quotes (text pId) <+> text "is" <+> pExtVar extvar
+    
 pType :: Type t -> Doc
 pType = text . show
 
@@ -29,7 +35,7 @@ pList f l = brackets (hcat . punctuate (comma <> space) $ map f l)
 
 pNode :: Node -> Doc
 pNode n = 
-  header $$ imported $$ local $$ emptyLine
+  header $$ imported $$ local $$ constrs $$ emptyLine
   where 
     header =
       text "NODE"
@@ -49,6 +55,10 @@ pNode n =
         Map.foldrWithKey (\k -> ($$) . (pLVar k)) 
         empty (nodeLocalVars n) )
             
+    constrs = case nodeConstrs n of
+      [] -> empty
+      l  -> text "WITH CONSTRAINTS" $$ 
+            foldr (($$) . pExpr) empty l
 
         
 
@@ -58,9 +68,12 @@ pConst Real    v = text $ show v
 pConst Bool    v = text $ show v
 
 
+pExtVar :: ExtVar -> Doc
+pExtVar (ExtVar n v) = parens (text n <+> text ":" <+> text (varName v))
+
 pIVar :: Var -> ExtVar -> Doc
-pIVar v (ExtVar n v') = 
-  parens (text n <+> text ":" <+> text (varName v'))
+pIVar v ev = 
+  pExtVar ev
   <+> text "as" <+> quotes (text (varName v))
 
 pLVar :: Var -> LVarDescr -> Doc
@@ -77,6 +90,11 @@ pLVar l (LVarDescr {varType, varDef}) = header $$ indent body
             <+> text "->" <+> text "pre"
             <+> text (varName var)
           Expr e -> pExpr e
+          
+          Constrs cs -> 
+            text "{" 
+            <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs) 
+            <+> text "}" 
 
 
 pExpr :: Expr t -> Doc

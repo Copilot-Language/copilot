@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.TransSys.Translate ( translate, ncSep ) where
+module Copilot.Kind.TransSys.Translate ( translate ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.Misc.Cast
@@ -10,11 +10,16 @@ import Copilot.Kind.CoreUtils.Operators
 import Copilot.Kind.Misc.Utils
 import Control.Monad.State.Lazy
 
+import Data.Char (isNumber)
+
 import qualified Copilot.Core as C
 import qualified Data.Map     as Map
 import qualified Data.Bimap   as Bimap
 
 --------------------------------------------------------------------------------
+
+-- Naming conventions
+-- These are important in order to avoid name conflicts
 
 ncSep         = "."
 ncMain        = "out"
@@ -22,6 +27,7 @@ ncNode i      = "s" ++ show i
 ncPropNode s  = "prop-" ++ s
 ncTopNode     = "top"
 ncAnonInput   = "in"
+ncLocal s     = "l" ++ dropWhile (not . isNumber) s
 
 ncExternVarNode name = "ext-" ++ name
 ncExternFunNode name = "fun-" ++ name
@@ -38,8 +44,9 @@ ncTimeAnnot s d
 --------------------------------------------------------------------------------
 
 translate :: C.Spec -> Spec
-translate cspec =
-  Spec { specNodes = [topNode] ++ modelNodes ++ propNodes
+translate cspec = 
+
+  Spec { specNodes = [topNode] ++ modelNodes ++ propNodes ++ extVarNodes
        , specTopNodeId = topNodeId
        , specProps = propBindings }
 
@@ -54,34 +61,44 @@ translate cspec =
     propBindings = Map.fromList $ do
       pid <- map C.propertyName cprops
       return (pid, mkExtVar topNodeId pid)
-    
-    modelNodes = map stream $ C.specStreams cspec
-    propNodes  = mkPropNodes cprops
-    topNode    = mkTopNode
-                 topNodeId (map nodeId propNodes) cprops
 
-   
+    ((modelNodes, propNodes), extvarNodesNames) = runTrans $
+      liftM2 (,) (mapM stream (C.specStreams cspec)) (mkPropNodes cprops)
+       
+    topNode = mkTopNode topNodeId (map nodeId propNodes) cprops
+    extVarNodes = map mkExtVarNode extvarNodesNames
+
 --------------------------------------------------------------------------------
 
 
 mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
-mkTopNode topNodeId dependencies cprops = 
+mkTopNode topNodeId dependencies cprops =
   Node { nodeId = topNodeId
        , nodeDependencies = dependencies
        , nodeLocalVars = Map.empty
-       , nodeImportedVars = importedVars }
+       , nodeImportedVars = importedVars 
+       , nodeConstrs = []}
   where
     importedVars = Bimap.fromList 
       [ (Var cp, mkExtVar (ncPropNode cp) ncMain) 
       | cp <- C.propertyName <$> cprops ]
+      
+
+
+mkExtVarNode (name, U t) =
+  Node { nodeId = name
+       , nodeDependencies = []
+       , nodeLocalVars = Map.singleton (Var ncMain) (LVarDescr t $ Constrs [])
+       , nodeImportedVars = Bimap.empty 
+       , nodeConstrs = []}
     
 
-mkPropNodes :: [C.Property] -> [Node]
-mkPropNodes cprops = map propNode cprops
+mkPropNodes :: [C.Property] -> Trans [Node]
+mkPropNodes cprops = mapM propNode cprops
   where
-    propNode p =
-      (stream $ streamOfProp p) {nodeId = ncPropNode (C.propertyName p)}
-
+    propNode p = do 
+      s <- stream (streamOfProp p)
+      return $ s {nodeId = ncPropNode (C.propertyName p)}
 
 -- A dummy ID is given to this stream, which is not a problem
 -- because this ID will never be used
@@ -94,33 +111,35 @@ streamOfProp prop =
 
 --------------------------------------------------------------------------------
 
-stream :: C.Stream -> Node
+stream :: C.Stream -> Trans Node
 stream (C.Stream { C.streamId
                  , C.streamBuffer
                  , C.streamExpr
                  , C.streamExprType })
 
-  = casting streamExprType $ \t ->
+  = casting streamExprType $ \t -> do
   
     let nodeId = ncNode streamId
         outvar i = Var (ncMain `ncTimeAnnot` i)
-    
-        (e, nodeDependencies, nodeAuxVars, nodeImportedVars) = 
-           runExprTrans t nodeId streamExpr
         buf = map (cast t . toDyn streamExprType) streamBuffer
         
-        outputLocals =
+          
+    (e, nodeAuxVars, nodeImportedVars, nodeDependencies) <- 
+      runExprTrans t nodeId streamExpr
+  
+    let outputLocals =
           let from i [] = Map.singleton (outvar i) (LVarDescr t $ Expr e)
               from i (b : bs) = 
                  Map.insert (outvar i)
                  (LVarDescr t $ Pre b $ outvar (i + 1))
                  $ from (i + 1) bs
           in from 0 buf
-        
         nodeLocalVars = Map.union nodeAuxVars outputLocals
         nodeOutputs = map outvar [0 .. length buf - 1]
         
-    in Node { nodeId, nodeDependencies, nodeLocalVars, nodeImportedVars }
+    return Node 
+      { nodeId, nodeDependencies, nodeLocalVars
+      , nodeImportedVars, nodeConstrs = [] }
 
 --------------------------------------------------------------------------------
 
@@ -141,10 +160,10 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
 
 expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
   l' <- expr tl' l
-  newLocal (Var id) $ LVarDescr tl' $ Expr l'
+  newLocal (Var $ ncLocal id) $ LVarDescr tl' $ Expr l'
   expr t e
 
-expr t (C.Var _t' id) = return $ VarE t (Var id)
+expr t (C.Var _t' id) = return $ VarE t (Var $ ncLocal id)
 
 expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   cond' <- expr Bool cond
@@ -155,82 +174,109 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
 expr t (C.ExternVar _ name _) = do
   let nodeName = ncExternVarNode name
   let localAlias = Var nodeName
+  newExtVarNode nodeName (U t)
   newDep nodeName
   newImportedVar localAlias (ExtVar nodeName (Var ncMain))
   return $ VarE t localAlias
   
+
+-- TODO : Use uninterpreted functions to handle
+-- * Unhandled operators 
+-- * Extern functions
+-- * Extern arrays
+-- For now, the result of these operations is a new unconstrained variable
+
 expr t (C.Op1 op e) = handleOp1
   t (op, e) expr notHandled Op1
-  
-  where notHandled (UnhandledOp1 opName ta tb) = do
-          error "not handled"
-          -- e' <- U <$> expr ta e
-          --newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tb [U ta]
-          --return $ FunApp t (ncUnhandledOp opName) [e']
+  where 
+    notHandled (UnhandledOp1 _opName _ta _tb) = 
+      newUnconstrainedVar t
 
 expr t (C.Op2 op e1 e2) = handleOp2
   t (op, e1, e2) expr notHandled Op2 (Op1 Bool Not)
-  
-  where notHandled (UnhandledOp2 opName ta tb tc) = do
-          error "not handled"
---          e1' <- U <$> expr ta e1
---          e2' <- U <$> expr tb e2
---          newAnonFun $ AnonFunDescr (ncUnhandledOp opName) tc [U ta, U tb]
---          return $ FunApp t (ncUnhandledOp opName) [e1', e2']
-  
-expr t (C.ExternFun ta name args _ mtag) = do
-  let inputVars = mapM makeArgLocalAlias (zip [0..] args)
-  error "Not handled"
-  
   where 
-    nodeName = ncExternFunNode name
+    notHandled (UnhandledOp2 _opName _ta _tb _tc) = 
+      newUnconstrainedVar t
   
-    makeArgLocalAlias :: (Int, C.UExpr) -> Trans Var
-    makeArgLocalAlias (argN, C.UExpr {C.uExprExpr, C.uExprType}) =
-      casting uExprType $ \ta -> do
-        let argvar = Var $ nodeName ++ "_arg_" ++ show argN
-        e <- expr ta uExprExpr
-        newLocal argvar (LVarDescr ta $ Expr e)
-        return argvar
-          
+expr t (C.ExternFun _ta _name _args _ _mtag) = newUnconstrainedVar t
+
+expr t (C.ExternArray _ _tb _name _ _ind _ _) = newUnconstrainedVar t
+
+newUnconstrainedVar :: Type t -> Trans (Expr t)
+newUnconstrainedVar t = do
+  newNode <- getFreshNodeName
+  newLocal (Var newNode) $ LVarDescr t $ Constrs []
+  newDep newNode
+  return $ VarE t (Var newNode)
+  
 --------------------------------------------------------------------------------
 
+runTrans :: Trans a -> (a, [(NodeId, U Type)])
+runTrans mx = 
+  (x, nubBy' (compare `on` fst) $ _extVarsNodes st)
+  where
+    (x, st) = runState mx initState
+    initState = TransSt
+      { _lvars        = Map.empty
+      , _importedVars = Bimap.empty
+      , _dependencies = []
+      , _extVarsNodes = []
+      , _curNode      = ""
+      , _nextUid      = 0 }
 
-
---------------------------------------------------------------------------------
-
--- | Parses the expression
--- Returns : (expr, new dependencies, 
--- new local variables, new imported variables)
--- There are lots of boilerplate here. Maybe we should use 'lens'
-
-runExprTrans :: Type t -> NodeId -> C.Expr a -> 
-               (Expr t, [NodeId], Map Var LVarDescr, Bimap Var ExtVar )
+runExprTrans :: 
+  Type t -> NodeId -> C.Expr a -> 
+  Trans (Expr t, Map Var LVarDescr, Bimap Var ExtVar, [NodeId])
                
-runExprTrans t curNode e = 
-  (e', nub' (_dependencies s), _lvars s, _importedVars s)
-  where (e', s) = runState (expr t e) (TransSt Map.empty Bimap.empty [] curNode)
+runExprTrans t curNode e = do
+  modify $ \st -> st { _curNode = curNode }
+  modify $ \st -> st { _nextUid = 0 }
+  e' <- expr t e
+  (lvs, ivs, dps) <- popLocalInfos
+  return (e', lvs, ivs, dps)
 
-
-data TransSt = TransSt 
+data TransSt = TransSt
   { _lvars        :: Map Var LVarDescr
   , _importedVars :: Bimap Var ExtVar
   , _dependencies :: [NodeId]
-  , _curNode      :: NodeId }
+  , _extVarsNodes :: [(NodeId, U Type)]
+  , _curNode      :: NodeId 
+  , _nextUid      :: Int }
                
 type Trans a = State TransSt a
 
-newDep :: NodeId -> Trans ()
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
 
-newImportedVar :: Var -> ExtVar -> Trans ()
-newImportedVar l g = modify $ 
-  \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
+popLocalInfos :: State TransSt (Map Var LVarDescr, Bimap Var ExtVar, [NodeId])
+popLocalInfos = do
+  lvs <- _lvars <$> get
+  ivs <- _importedVars <$> get
+  dps <- _dependencies <$> get
+  modify $ \st -> st 
+    { _lvars = Map.empty
+    , _importedVars = Bimap.empty
+    , _dependencies = [] }
+  return (lvs, ivs, nub' dps)
 
-newLocal :: Var -> LVarDescr -> Trans ()
+
+getUid :: Trans Int
+getUid = do
+  uid <- _nextUid <$> get
+  modify $ \st -> st { _nextUid = uid + 1 }
+  return uid
+  
+getFreshNodeName :: Trans NodeId
+getFreshNodeName =
+  getUid >>= return . ("_" ++) . show
+
+newImportedVar l g = modify $
+  \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
+  
 newLocal l d  =  modify $ \s -> s { _lvars = Map.insert l d $ _lvars s }
 
-curNode :: Trans NodeId
-curNode =  _curNode <$> get
+curNode = _curNode <$> get
+
+newExtVarNode id t = 
+  modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }
 
 --------------------------------------------------------------------------------

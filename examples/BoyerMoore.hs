@@ -9,7 +9,7 @@ import Control.Monad (forM_)
 
 import Language.Copilot hiding (length)
 import Copilot.Kind
-import Copilot.Kind.Lib (arbitraryCstW8)
+import Copilot.Kind.Lib (arbitraryCst)
 
 import qualified Prelude   as P
 import qualified Data.List as L
@@ -19,8 +19,8 @@ import qualified Data.List as L
 length :: [a] -> Stream Word8
 length l = constant (fromInteger $ L.genericLength l)
 
-
 --------------------------------------------------------------------------------
+
 majorityVote :: forall a . (Typed a, Eq a) => [Stream a] -> Stream a
 majorityVote [] = error "empty list"
 majorityVote (x : xs) = aux x 1 xs
@@ -51,7 +51,7 @@ spec = do
     observer ((P.++) "s" (show k)) s
   observer "maj" maj
   
-  prop "OK" (okWith (arbitraryCstW8 "n") ss maj)
+  prop "OK" (okWith (arbitraryCst "n") ss maj)
   prop "i1" (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
   prop "r1" (maj == 1)
 

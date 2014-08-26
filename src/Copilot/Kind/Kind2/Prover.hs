@@ -15,9 +15,15 @@ import Copilot.Kind.Kind2.Output
 import Copilot.Kind.Kind2.PrettyPrint
 import Copilot.Kind.Kind2.Translate
 
+
+-- It seems [IO.openTempFile] doesn't work on Mac OSX
+import System.IO hiding (openTempFile)
+import Copilot.Kind.Misc.Utils (openTempFile)
+
+
 import Data.List (intercalate)
 import System.Process
-import System.IO
+
 import Control.Monad (void)
 import System.Directory
 import Data.Default
@@ -42,7 +48,7 @@ kind2Prover opts = Prover
   { proverName =  "Kind2"
   , hasFeature = \case
       GiveCex -> False
-      HandleAssumptions -> False
+      HandleAssumptions -> True
   , startProver  = \spec -> return $ ProverST opts (TS.translate spec)
   , askProver    = askKind2
   , closeProver  = const $ return () }
@@ -59,7 +65,7 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
 
   let kind2Input = prettyPrint . toKind2 Modular assumptions [toCheck] $ spec
 
-  (tempName, tempHandle) <- openTempFile "." "out.kind"
+  (tempName, tempHandle) <- openTempFile "." "out" "kind"
   hPutStr tempHandle kind2Input
   hClose tempHandle
   
@@ -74,6 +80,14 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
   return $ parseOutput toCheck output
   
 --------------------------------------------------------------------------------
+
+
+
+   
+
+--------------------------------------------------------------------------------
+
+
       
 
 
