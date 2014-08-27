@@ -31,6 +31,14 @@ data Status
   
 data Feature = GiveCex | HandleAssumptions
   
+  
+{- Each prover has to provide the following five functions.
+   The most important is `askProver`, which takes 3 arguments :
+   *  The prover descriptor
+   *  A list of properties names which are assumptions
+   *  A property name which has to be deduced from these assumptions
+-}
+
 data Prover = forall r . Prover 
   { proverName     :: String
   , hasFeature     :: Feature -> Bool

@@ -16,10 +16,11 @@ import qualified Copilot.Kind.Kind2.AST as K
 
 --------------------------------------------------------------------------------
 
--- | The following properties MUST hold for the given transition system :
--- * Nodes are sorted by topological order
--- * Nodes are `completed`, which means the dependency graph is transitive
---   and each node imports all the local variables of its dependencies
+{- The following properties MUST hold for the given transition system :
+   * Nodes are sorted by topological order
+   * Nodes are `completed`, which means the dependency graph is transitive
+     and each node imports all the local variables of its dependencies
+-}
 
 --------------------------------------------------------------------------------
 
@@ -83,12 +84,13 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
 
 --------------------------------------------------------------------------------
 
--- The ordering really matters here because the variables
--- have to be given in this order in a pred call
--- Our convention :
--- * First the local variables, sorted by alphabetical order
--- * Then the imported variables, by alphabetical order on
---   the father node then by alphabetical order on the variable name
+{- The ordering really matters here because the variables
+   have to be given in this order in a pred call
+   Our convention :
+   * First the local variables, sorted by alphabetical order
+   * Then the imported variables, by alphabetical order on
+     the father node then by alphabetical order on the variable name
+-}
 
 gatherPredStateVars :: Spec -> Node -> [K.StateVarDef]
 gatherPredStateVars spec node = locals ++ imported

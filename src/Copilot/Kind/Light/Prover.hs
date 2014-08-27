@@ -23,10 +23,19 @@ import Data.Map (Map)
 --------------------------------------------------------------------------------
 
 data Options = Options 
-  { kTimeout  :: Integer
+  { -- The maximum number of steps of the k-induction algorithm the prover runs 
+    -- before giving up.
+    kTimeout  :: Integer
+    
+    -- If `onlyBmc` is set to `True`, the prover will only search for 
+    -- counterexamples and won't try to prove the properties discharged to it.
   , onlyBmc   :: Bool
+  
+    -- If `debugMode` is set to `True`, the SMTLib queries produced by the 
+    -- prover are displayed in the standard output.
   , debugMode :: Bool } 
                
+
 instance Default Options where
   def = Options 
     { kTimeout  = 100

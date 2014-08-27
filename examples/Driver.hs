@@ -13,11 +13,13 @@ import qualified Copilot.Kind.Kind2     as K2
 
 import qualified Copilot.Kind.TransSys  as TS
 
+--------------------------------------------------------------------------------
+
+-- Load here the example file you want to run :
+
 import SerialBoyerMoore
 
 --------------------------------------------------------------------------------
-
-line = replicate 79 '-'
 
 --prover = kind2Prover def
 --prover = lightProver def {onlyBmc = True, kTimeout = 5}
@@ -35,6 +37,7 @@ main =  do
   --putStrLn line
   --putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
   prove prover scheme cspec
-  return ()
+  
+  where line = replicate 79 '-'
 
 --------------------------------------------------------------------------------
