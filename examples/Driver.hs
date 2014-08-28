@@ -25,7 +25,7 @@ import Fib
 --prover = lightProver def {onlyBmc = True, kTimeout = 5}
 --prover = lightProver def { debugMode = True }
 prover =
-  lightProver def {onlyBmc = True, kTimeout = 5} 
+  lightProver def {debugMode = True} 
   `combine` kind2Prover def
 
 main :: IO ()

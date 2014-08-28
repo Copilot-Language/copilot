@@ -10,8 +10,8 @@ module Copilot.Kind.TransSys.Spec
   , NodeId
   , Var (..)
   , ExtVar (..)
-  , LVarDef (..)
-  , LVarDescr (..)
+  , VarDef (..)
+  , VarDescr (..)
   , Expr (..)
   , mkExtVar
   , transformExpr
@@ -37,21 +37,22 @@ import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
 
+type NodeId = String
+type PropId = String
+
 data Spec = Spec
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
   , specProps         :: Map PropId ExtVar }
 
-type PropId = String
 
 data Node = Node
   { nodeId            :: NodeId
   , nodeDependencies  :: [NodeId]
-  , nodeLocalVars     :: Map Var LVarDescr
+  , nodeLocalVars     :: Map Var VarDescr
   , nodeImportedVars  :: Bimap Var ExtVar 
   , nodeConstrs       :: [Expr Bool] }
 
-type NodeId  =  String
 
 data Var     =  Var {varName :: String}  
                 deriving (Eq, Show, Ord)
@@ -59,12 +60,12 @@ data Var     =  Var {varName :: String}
 data ExtVar  =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var } 
                 deriving (Eq, Ord)
 
-data LVarDescr = forall t . LVarDescr
+data VarDescr = forall t . VarDescr
   { varType :: Type t
-  , varDef  :: LVarDef t }
+  , varDef  :: VarDef t }
 
-data LVarDef t =
-    Pre t Var      -- The 'Var' argument has to be a local var
+data VarDef t =
+    Pre t Var
   | Expr (Expr t)
   | Constrs [Expr Bool]
 
@@ -115,9 +116,9 @@ nodeRhsVarsSet n =
   let varOcc (VarE _ v) = Set.singleton v
       varOcc _          = Set.empty
       
-      descrRhsVars (LVarDescr _ (Expr e))      = foldExpr varOcc e
-      descrRhsVars (LVarDescr _ (Pre _ v))     = Set.singleton v
-      descrRhsVars (LVarDescr _ (Constrs cs))  = 
+      descrRhsVars (VarDescr _ (Expr e))      = foldExpr varOcc e
+      descrRhsVars (VarDescr _ (Pre _ v))     = Set.singleton v
+      descrRhsVars (VarDescr _ (Constrs cs))  = 
         mconcat (map (foldExpr varOcc) cs)
       
   in Map.fold (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
@@ -142,7 +143,7 @@ instance HasInvariants Node where
       
     , prop "Never apply 'pre' to an imported var" $
       let preVars = Set.fromList 
-            [v | (LVarDescr _ (Pre _ v)) <- Map.elems $ nodeLocalVars n]
+            [v | (VarDescr _ (Pre _ v)) <- Map.elems $ nodeLocalVars n]
       in preVars `isSubsetOf` nodeLocalVarsSet n
     ]
     

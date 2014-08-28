@@ -76,8 +76,8 @@ pIVar v ev =
   pExtVar ev
   <+> text "as" <+> quotes (text (varName v))
 
-pLVar :: Var -> LVarDescr -> Doc
-pLVar l (LVarDescr {varType, varDef}) = header $$ indent body
+pLVar :: Var -> VarDescr -> Doc
+pLVar l (VarDescr {varType, varDef}) = header $$ indent body
   where header =
           text (varName l)
           <+> text ":"

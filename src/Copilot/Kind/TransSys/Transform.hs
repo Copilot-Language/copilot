@@ -102,17 +102,17 @@ updateExpr nId renamingF = transformExpr aux
     aux e = e
 
 
-mergeVarsDescrs :: [Node] -> (ExtVar -> Var) -> Map Var LVarDescr
+mergeVarsDescrs :: [Node] -> (ExtVar -> Var) -> Map Var VarDescr
 mergeVarsDescrs toMerge renamingF = Map.fromList $ do
   n <- toMerge
   let nId = nodeId n
-  (v, LVarDescr t def) <- Map.toList $ nodeLocalVars n
+  (v, VarDescr t def) <- Map.toList $ nodeLocalVars n
   let d' = case def of
-       Pre val v' -> LVarDescr t $ 
+       Pre val v' -> VarDescr t $ 
          Pre val $ renamingF (ExtVar nId v')
-       Expr e -> LVarDescr t $ 
+       Expr e -> VarDescr t $ 
          Expr $ updateExpr nId renamingF e
-       Constrs cs -> LVarDescr t $ 
+       Constrs cs -> VarDescr t $ 
          Constrs $ map (updateExpr nId renamingF) cs
   
   return (renamingF $ ExtVar nId v, d')    
@@ -180,7 +180,7 @@ redirectLocalImports toMerge = do
 --------------------------------------------------------------------------------
 
 inline :: Spec -> Spec
-inline spec = mergeNodes (map nodeId $ specNodes spec) spec
+inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
 
 removeCycles :: Spec -> Spec
 removeCycles spec = 

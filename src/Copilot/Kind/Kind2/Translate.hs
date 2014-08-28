@@ -99,9 +99,9 @@ gatherPredStateVars spec node = locals ++ imported
     extVarType :: ExtVar -> K.Type
     extVarType (ExtVar n v) = 
       case (nodeLocalVars (nodesMap ! n)) ! v of
-        LVarDescr Integer _ -> K.Int
-        LVarDescr Bool    _ -> K.Bool
-        LVarDescr Real    _ -> K.Real
+        VarDescr Integer _ -> K.Int
+        VarDescr Bool    _ -> K.Bool
+        VarDescr Real    _ -> K.Real
         
     locals = 
       map (\v -> K.StateVarDef (varName v) 
@@ -140,7 +140,7 @@ initLocals :: Node -> [K.Term]
 initLocals node = 
   concatMap f (Map.toList $ nodeLocalVars node)
   where 
-    f (v, LVarDescr t def) = 
+    f (v, VarDescr t def) = 
       case def of
         Pre     c _ -> [mkEquality (trVar v) (trConst t c)]
         Expr    e   -> [mkEquality (trVar v) (trExpr False e)]
@@ -151,7 +151,7 @@ transLocals :: Node -> [K.Term]
 transLocals node = 
   concatMap f (Map.toList $ nodeLocalVars node)
   where 
-   f (v, LVarDescr _ def) = 
+   f (v, VarDescr _ def) = 
       case def of
         Pre _ v' -> [mkEquality (trPrimedVar v) (trVar v')]
         Expr e   -> [mkEquality (trPrimedVar v) (trExpr True e)]

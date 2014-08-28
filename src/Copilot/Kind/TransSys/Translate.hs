@@ -88,7 +88,7 @@ mkTopNode topNodeId dependencies cprops =
 mkExtVarNode (name, U t) =
   Node { nodeId = name
        , nodeDependencies = []
-       , nodeLocalVars = Map.singleton (Var ncMain) (LVarDescr t $ Constrs [])
+       , nodeLocalVars = Map.singleton (Var ncMain) (VarDescr t $ Constrs [])
        , nodeImportedVars = Bimap.empty 
        , nodeConstrs = []}
     
@@ -128,10 +128,10 @@ stream (C.Stream { C.streamId
       runExprTrans t nodeId streamExpr
   
     let outputLocals =
-          let from i [] = Map.singleton (outvar i) (LVarDescr t $ Expr e)
+          let from i [] = Map.singleton (outvar i) (VarDescr t $ Expr e)
               from i (b : bs) = 
                  Map.insert (outvar i)
-                 (LVarDescr t $ Pre b $ outvar (i + 1))
+                 (VarDescr t $ Pre b $ outvar (i + 1))
                  $ from (i + 1) bs
           in from 0 buf
         nodeLocalVars = Map.union nodeAuxVars outputLocals
@@ -160,7 +160,7 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
 
 expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
   l' <- expr tl' l
-  newLocal (Var $ ncLocal id) $ LVarDescr tl' $ Expr l'
+  newLocal (Var $ ncLocal id) $ VarDescr tl' $ Expr l'
   expr t e
 
 expr t (C.Var _t' id) = return $ VarE t (Var $ ncLocal id)
@@ -205,7 +205,7 @@ expr t (C.ExternArray _ _tb _name _ _ind _ _) = newUnconstrainedVar t
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
   newNode <- getFreshNodeName
-  newLocal (Var newNode) $ LVarDescr t $ Constrs []
+  newLocal (Var newNode) $ VarDescr t $ Constrs []
   newDep newNode
   return $ VarE t (Var newNode)
   
@@ -226,7 +226,7 @@ runTrans mx =
 
 runExprTrans :: 
   Type t -> NodeId -> C.Expr a -> 
-  Trans (Expr t, Map Var LVarDescr, Bimap Var ExtVar, [NodeId])
+  Trans (Expr t, Map Var VarDescr, Bimap Var ExtVar, [NodeId])
                
 runExprTrans t curNode e = do
   modify $ \st -> st { _curNode = curNode }
@@ -236,7 +236,7 @@ runExprTrans t curNode e = do
   return (e', lvs, ivs, dps)
 
 data TransSt = TransSt
-  { _lvars        :: Map Var LVarDescr
+  { _lvars        :: Map Var VarDescr
   , _importedVars :: Bimap Var ExtVar
   , _dependencies :: [NodeId]
   , _extVarsNodes :: [(NodeId, U Type)]
@@ -247,7 +247,7 @@ type Trans a = State TransSt a
 
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
 
-popLocalInfos :: State TransSt (Map Var LVarDescr, Bimap Var ExtVar, [NodeId])
+popLocalInfos :: State TransSt (Map Var VarDescr, Bimap Var ExtVar, [NodeId])
 popLocalInfos = do
   lvs <- _lvars <$> get
   ivs <- _importedVars <$> get
