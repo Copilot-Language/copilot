@@ -26,19 +26,20 @@ data UnhandledOp2 = forall a b c .
 
 handleOp1 :: 
   -- 'm' is the monad in which the computation is made
-  -- 'resT' the desires return type
+  -- 'resT' is the desired return type of the expression being translated
   forall m expr _a _b resT. (Monad m) =>
-  -- Desired return type
+  -- The desired return type
   (Type resT) ->
-  -- Input Op Expr
+  -- The unary operator encountered and its argument
   (C.Op1 _a _b, C.Expr _a) ->
-  -- Monadic function to translate an expression
+  -- The monadic function to translate an expression 
+  -- (for recursive calls to be mmadess)
   (forall t t'. Type t -> C.Expr t' -> m (expr t)) ->
-  -- To deal with a not handled operator
+  -- A function to deal with a operators not handled by copilot-kind
   (UnhandledOp1 -> m (expr resT)) ->
   -- The Op1 constructor of the 'expr' type
   (forall t a . Type t -> Op1 a t -> expr a -> expr t) ->
-  -- The final function
+ 
   m (expr resT)
   
 

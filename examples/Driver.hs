@@ -17,7 +17,7 @@ import qualified Copilot.Kind.TransSys  as TS
 
 -- Load here the example file you want to run :
 
-import SerialBoyerMoore
+import Fib
 
 --------------------------------------------------------------------------------
 
@@ -31,11 +31,11 @@ prover =
 main :: IO ()
 main =  do
   cspec <- reify spec
-  --putStrLn $ IL.prettyPrint $ IL.translate cspec
-  --putStrLn line
-  --putStrLn $ TS.prettyPrint . TS.translate $ cspec
-  --putStrLn line
-  --putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
+  putStrLn $ IL.prettyPrint $ IL.translate cspec
+  putStrLn line
+  putStrLn $ TS.prettyPrint . TS.translate $ cspec
+  putStrLn line
+  putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
   prove prover scheme cspec
   
   where line = replicate 79 '-'
