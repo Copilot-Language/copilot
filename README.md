@@ -213,7 +213,7 @@ These examples include :
 
 ### An introduction to SMT-based model checking
 
-An introduction to the model-checking techniques used by *copilot-kind* can be found in the `talk` folder of this repository. It consists in a self sufficient set of slides. You can find some additional readings in the *References* section.
+An introduction to the model-checking techniques used by *copilot-kind* can be found in the `doc` folder of this repository. It consists in a self sufficient set of slides. You can find some additional readings in the *References* section.
 
 ### Architecture of copilot-kind
 
@@ -610,7 +610,7 @@ However, the current code offers some nice transformation tools (node merging, `
 
 ## References
 
-1. *An insight into An insight into SMT-based model checking techniques for formal software verification of synchronous dataflow programs*, talk, Jonathan Laurent  (see the `talk` folder of this repository)
+1. *An insight into An insight into SMT-based model checking techniques for formal software verification of synchronous dataflow programs*, talk, Jonathan Laurent  (see the `doc` folder of this repository)
 2. *Scaling up the formal verification of Lustre programs with SMT-based techniques*, G. Hagen, C. Tinelli
 3. *SMT-based Unbounded Model Checking with IC3 and Approximate Quantifier Elimination*, C. Sticksel, C. Tinelli
 
