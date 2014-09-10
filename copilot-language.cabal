@@ -32,11 +32,11 @@ library
   default-language: Haskell2010
   hs-source-dirs: src
   build-depends: array
-               , base >= 4.0 && <= 5.0
+               , base >= 4.0
                , containers >= 0.4
-               , mtl >= 2.0
                , data-reify >= 0.6
---               , ghc-prim,
+               , mtl >= 2.0 && < 3
+               , ghc-prim >= 0.2
                , copilot-core >= 0.1
   exposed-modules: Copilot
                  , Copilot.Language
