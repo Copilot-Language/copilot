@@ -3,6 +3,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Compile.C99.Test.Driver
   ( driver
@@ -229,7 +230,7 @@ ppUType :: UType -> Doc
 ppUType UType { uTypeType = t } = text $ typeSpec' t
 
   where
-
+  typeSpec' :: Type t -> String
   typeSpec' Bool   = "bool"
   typeSpec' Int8   = "int8_t"
   typeSpec' Int16  = "int16_t"

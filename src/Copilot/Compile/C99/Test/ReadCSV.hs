@@ -9,40 +9,44 @@ import Copilot.Core.Error (impossible)
 import Copilot.Compile.C99.Test.Iteration (Iteration (..))
 
 import Prelude as P
-import Data.ByteString (ByteString)
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.Vector as V
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
-import Text.CSV.ByteString
+import Data.Csv
 
 parseError :: a
 parseError = impossible "CSV parsing" "copilot-c99"
 
 iterationsFromCSV :: ByteString -> [Iteration]
-iterationsFromCSV = iterationsFromCSV' . handleMaybe . parseCSV
+iterationsFromCSV bs =
+  case decode NoHeader bs of
+    Left _   -> parseError
+    Right v  -> iterationsFromCSV' v
 
-handleMaybe :: Maybe a -> a
-handleMaybe (Just x) = x
-handleMaybe Nothing  = parseError
-
-iterationsFromCSV' :: CSV -> [Iteration]
-iterationsFromCSV' = map Iteration . go M.empty
-
+iterationsFromCSV' :: Csv -> [Iteration]
+iterationsFromCSV' c = map Iteration (go M.empty c)
   where
-  go m []             = [m]
-  go m (x:xs)
-    | nextIteration x = m : go M.empty xs
-    | otherwise =
-        let
-          m' = M.insert (triggerName x) (triggerOutputs x) m
-        in
-          go m' xs
+  go :: M.Map String [Output] -> Csv -> [M.Map String [Output]]
+  go m v
+    | V.null v
+    = [m]
+    | nextIteration (V.head v)
+    = m : go M.empty (V.tail v)
+    | otherwise
+    = let x  = V.head v in
+      let m' = M.insert (triggerName x) (triggerOutputs x) m in
+      go m' (V.tail v)
 
-nextIteration :: Record -> Bool
-nextIteration [x] = B.unpack x == "#"
-nextIteration _   = False
+nextIteration :: V.Vector Field -> Bool
+nextIteration v
+  | V.length v == 1
+  = B.unpack (V.head v) == "#"
+  | otherwise
+  = False
 
 triggerName :: Record -> String
-triggerName = B.unpack . head
+triggerName = B.unpack . V.head
 
 triggerOutputs :: Record -> [Output]
-triggerOutputs = fmap B.unpack . tail
+triggerOutputs = V.toList . fmap B.unpack . V.tail

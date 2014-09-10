@@ -18,10 +18,10 @@ import Copilot.Compile.C99.Test.ReadCSV (iterationsFromCSV)
 import Copilot.Core.Type.Show (ShowType(..))
 import Copilot.Core.Type.Read (readWithType)
 
-import Data.ByteString (ByteString)
+import Data.ByteString.Lazy (ByteString)
 import qualified Data.Map as M
 import Data.List (foldl')
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Text.IO as TIO
 import System.Directory (removeDirectoryRecursive)
 import System.Process (system, readProcess)

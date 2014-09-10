@@ -41,7 +41,8 @@ library
   build-depends           : atom >= 1.0.10
                           , base >= 4.3
                           , bytestring
-                          , bytestring-csv
+                          , cassava
+                          , vector
                           , containers >= 0.4
                           , copilot-core >= 0.2.4
                           , directory >= 1.1
@@ -74,7 +75,8 @@ executable copilot-c99-qc
   build-depends           : atom >= 1.0.9
                           , base >= 4.3
                           , bytestring
-                          , bytestring-csv
+                          , cassava
+                          , vector
                           , containers >= 0.4
                           , copilot-core
                           , directory >= 1.1
