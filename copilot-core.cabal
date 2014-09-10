@@ -48,10 +48,12 @@ library
     -trust base
     -trust random
     -trust array
+    -trust dlist
+    -trust containers
 
   build-depends:
-    base >= 4.0 && <= 5.0,
     containers >= 0.4,
+    base >= 4.0,
     pretty >= 1.0,
     random > 1.0,
     pretty-ncols >= 0.1,

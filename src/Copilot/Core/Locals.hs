@@ -4,7 +4,7 @@
 
 -- | Let expressions.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Copilot.Core.Locals
