@@ -4,7 +4,7 @@
 
 -- | Constants.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Language.Operators.Constant
   ( constant

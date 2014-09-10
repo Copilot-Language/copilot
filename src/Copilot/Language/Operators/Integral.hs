@@ -4,7 +4,7 @@
 
 -- | Integral class operators.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Language.Operators.Integral
   ( div

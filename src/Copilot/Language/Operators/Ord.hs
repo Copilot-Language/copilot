@@ -4,7 +4,7 @@
 
 -- | Comparison operators.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Language.Operators.Ord
   ( (<=)

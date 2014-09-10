@@ -4,7 +4,7 @@
 
 -- | Bitwise operators.
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Copilot.Language.Operators.BitWise
