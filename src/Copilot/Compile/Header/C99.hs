@@ -7,6 +7,7 @@
 
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Compile.Header.C99
   ( genC99Header
@@ -171,6 +172,7 @@ typeSpec :: UType -> String
 typeSpec UType { uTypeType = t } = typeSpec' t
 
   where
+  typeSpec' :: Type t -> String
   typeSpec' Bool = "bool"
   typeSpec' Int8   = "int8_t"
   typeSpec' Int16  = "int16_t"

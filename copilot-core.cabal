@@ -15,7 +15,7 @@ description:
   <https://github.com/leepike/Copilot/tree/master/Examples>.
 
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe,
-                     Sebastian Niller, Nis Nordby Wegmann
+                     Sebastian Niller, Nis Nordbyop Wegmann
 license:             BSD3
 license-file:        LICENSE
 maintainer:          leepike@gmail.com
@@ -43,13 +43,13 @@ library
 
     --enable-library-profiling
 
-    -fpackage-trust
-    -- Trusted packages
-    -trust base
-    -trust random
-    -trust array
-    -trust dlist
-    -trust containers
+    -- -fpackage-trust
+    -- -- Trusted packages
+    -- -trust base
+    -- -trust random
+    -- -trust array
+    -- -trust dlist
+    -- -trust containers
 
   build-depends:
     containers >= 0.4,
