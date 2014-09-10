@@ -26,7 +26,6 @@ module Copilot.Library.LTL
   ( next, eventually, always, until, release ) where
 
 import Copilot.Language
-import Copilot.Language.Prelude
 import Copilot.Library.Utils
 
 

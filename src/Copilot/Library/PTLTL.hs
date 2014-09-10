@@ -11,13 +11,13 @@
 --   operator stream
 -- @
 
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Copilot.Library.PTLTL
     ( since, alwaysBeen, eventuallyPrev, previous ) where
 
-
 import Prelude ( ($) )
 import Copilot.Language
-
 
 -- | Did @s@ hold in the previous period?
 previous :: Stream Bool -> Stream Bool

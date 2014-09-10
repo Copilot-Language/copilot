@@ -22,6 +22,8 @@
 -- The phase must be greater than or equal to 0.
 -- The phase must be less than the period.
 
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Copilot.Library.Clocks
   ( clk, clk1, period, phase ) where
 
