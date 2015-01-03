@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/leepike/Copilot.svg?branch=master)](https://travis-ci.org/leepike/Copilot)
+
 Copilot: a stream DSL
 ====================================
 Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
