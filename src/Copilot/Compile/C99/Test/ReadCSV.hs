@@ -9,7 +9,6 @@ import Copilot.Core.Error (impossible)
 import Copilot.Compile.C99.Test.Iteration (Iteration (..))
 
 import Prelude as P
-import Data.ByteString.Lazy (ByteString)
 import qualified Data.Vector as V
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
@@ -18,7 +17,7 @@ import Text.CSV as C
 parseError :: a
 parseError = impossible "CSV parsing" "copilot-c99"
 
-iterationsFromCSV :: ByteString -> [Iteration]
+iterationsFromCSV :: B.ByteString -> [Iteration]
 iterationsFromCSV bs =
   case C.parseCSV "csvParseErrors" (B.unpack bs) of
     Left  err -> error (show err)
