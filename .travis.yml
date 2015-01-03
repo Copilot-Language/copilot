@@ -1,9 +1,12 @@
 language: haskell
 
 before_install:
+  - git submodule init
+  - git submodule update
+
 install:
-script:
   - make test
+script:
 ghc:
   - 7.6.3
   - 7.8.3
