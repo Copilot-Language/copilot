@@ -58,6 +58,7 @@ Installation
 ============
 
 * From Hackage:
+
   The Copilot library is cabalized. Assuming you have cabal and the GHC compiler
   installed (the [Haskell Platform](http://hackage.haskell.org/platform/) is the
   easiest way to obtain these), it should merely be a matter of running
@@ -69,9 +70,9 @@ Installation
 
 * From GitHub:
 
-      git clone https://github.com/leepike/Copilot.git
-      git submodule update --init
-      make test
+           git clone https://github.com/leepike/Copilot.git
+           git submodule update --init
+           make test
 
 Once the installation is done, you can run the executable `XXX` which will
 execute the regression test suite for sbv on your machine.
