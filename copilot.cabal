@@ -1,5 +1,5 @@
 name:                copilot
-version:             2.1.1
+version:             2.1.2
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -37,10 +37,14 @@ library
       -caf-all
       -fno-warn-orphans
     build-depends:
-                       base >= 4.0 && <= 5.0
-                     , copilot-core >= 0.2.3
-                     , copilot-language >= 0.4
-                     , copilot-libraries >= 0.4
+                       base >= 4.0
+                     , copilot-core >= 2.1.2
+                     , copilot-language >= 2.1.2
+                     , copilot-libraries >= 2.1.1
+                     , copilot-sbv >= 0.6
+                     , copilot-cbmc >= 2.1.2
+                     , copilot-c99 >= 2.1.2
+
 --                     , copilot-cbmc
     exposed-modules: Language.Copilot
 
@@ -51,12 +55,12 @@ executable copilot-regression
   main-is                 : Test.hs
   build-depends:
                      base >= 4.0
-                   , copilot-core
-                   , copilot-language
-                   , copilot-libraries
+                   , copilot-core >= 2.1.2
+                   , copilot-language >= 2.1.2
+                   , copilot-libraries >= 2.1.1
                    , copilot-sbv >= 0.6
-                   , copilot-cbmc
-                   , copilot-c99 >= 0.2
+                   , copilot-cbmc >= 2.1.2
+                   , copilot-c99 >= 2.1.2
                    , directory >= 1.1
                    , random
   other-modules:    AddMult

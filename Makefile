@@ -1,47 +1,44 @@
-# Build all the relevant packages in order.
+PACKAGE= \
+  copilot-core \
+  copilot-language \
+  copilot-libraries \
+  copilot-sbv \
+  copilot-c99 \
+  copilot-cbmc
 
-CORE=copilot-core
-LANG=copilot-language
-LIB=copilot-libraries
-SBV=copilot-sbv
-C99=copilot-c99
-CBMC=copilot-cbmc
-COPILOT=Copilot
+PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
-ALLDIR := $(CORE) $(LANG) $(LIB) $(SBV) $(C99) $(CBMC) $(COPILOT)
+default:
+	build
+
+cabal.sandbox.config:
+	cabal sandbox init
+
+.PHONY: build
+build: cabal.sandbox.config
+	cabal sandbox add-source $(PACKAGEDIR)
+	cabal install --dependencies-only $(PACKAGEDIR)
+
+# Note: can't do a `cabal run` since there's no cabal file at the top level.
+
+.PHONY: test
+test: build
+	cabal run copilot-regression
+	cabal run copilot-c99-qc
+
+.PHONY: veryclean
+veryclean:
+	-rm -rf cabal.sandbox.config
+	-rm -rf .cabal-sandbox
+	-rm -rf dist
+
+################################################################################
+# Uploading to Hackage
 
 DISSTR=dist-
 DIST := $(patsubst %, $(DISSTR)%, $(ALLDIR))
 UPSTR=upload-
 UPLOAD := $(patsubst %, $(UPSTR)%, $(ALLDIR))
-
-CB=cabal
-D=dist
-
-all:
-	$(CB) install ../$(CORE) ../$(LANG) ../$(LIB) ../$(SBV) ../$(C99) ../$(CBMC) $(COPILOT)
-
-# Get the repos
-.PHONY: get
-get:
-	git clone https://github.com/leepike/copilot-core.git ../$(CORE)
-	git clone https://github.com/leepike/copilot-c99.git ../$(C99)
-	git clone https://github.com/leepike/copilot-sbv.git ../$(SBV)
-	git clone https://github.com/leepike/copilot-cbmc.git ../$(CBMC)
-	git clone https://github.com/leepike/copilot-language.git ../$(LANG)
-	git clone https://github.com/leepike/copilot-libraries.git ../$(LIB)
-
-.PHONY: clean
-clean:
-	rm -rf $(CB)
-
-.PHONY: veryclean
-veryclean: clean $(CORE)/$(D) $(LANG)/$(D) $(LIB)/$(D) $(SBV)/$(D) $(C99)/$(D) $(CBMC)/$(D)
-	rm -rf $(D)
-
-.PHONY:
-%/$(D):
-	rm -rf ../$@
 
 .PHONY: dist
 dist: $(DIST)

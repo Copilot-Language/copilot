@@ -1,0 +1,12 @@
+language: haskell
+
+before_install:
+install:
+script:
+  - make test
+ghc:
+  - 7.6.3
+  - 7.8.3
+notifications:
+  email:
+    - leepike@galois.com
