@@ -227,21 +227,19 @@ ppArgs args
 --------------------------------------------------------------------------------
 
 ppUType :: UType -> Doc
-ppUType UType { uTypeType = t } = text $ typeSpec' t
-
-  where
-  typeSpec' :: Type t -> String
-  typeSpec' Bool   = "bool"
-  typeSpec' Int8   = "int8_t"
-  typeSpec' Int16  = "int16_t"
-  typeSpec' Int32  = "int32_t"
-  typeSpec' Int64  = "int64_t"
-  typeSpec' Word8  = "uint8_t"
-  typeSpec' Word16 = "uint16_t"
-  typeSpec' Word32 = "uint32_t"
-  typeSpec' Word64 = "uint64_t"
-  typeSpec' Float  = "float"
-  typeSpec' Double = "double"
+ppUType UType { uTypeType = t }
+  = text $ case t of
+      Bool   -> "bool"
+      Int8   -> "int8_t"
+      Int16  -> "int16_t"
+      Int32  -> "int32_t"
+      Int64  -> "int64_t"
+      Word8  -> "uint8_t"
+      Word16 -> "uint16_t"
+      Word32 -> "uint32_t"
+      Word64 -> "uint64_t"
+      Float  -> "float"
+      Double -> "double"
 
 --------------------------------------------------------------------------------
 

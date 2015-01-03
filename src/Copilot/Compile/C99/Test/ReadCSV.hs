@@ -13,40 +13,36 @@ import Data.ByteString.Lazy (ByteString)
 import qualified Data.Vector as V
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
-import Data.Csv
+import Text.CSV as C
 
 parseError :: a
 parseError = impossible "CSV parsing" "copilot-c99"
 
 iterationsFromCSV :: ByteString -> [Iteration]
 iterationsFromCSV bs =
-  case decode NoHeader bs of
-    Left _   -> parseError
-    Right v  -> iterationsFromCSV' v
+  case C.parseCSV "csvParseErrors" (B.unpack bs) of
+    Left  err -> error (show err)
+    Right res -> iterationsFromCSV' res
 
-iterationsFromCSV' :: Csv -> [Iteration]
-iterationsFromCSV' c = map Iteration (go M.empty c)
+iterationsFromCSV' :: C.CSV -> [Iteration]
+iterationsFromCSV' = map Iteration . go M.empty
   where
-  go :: M.Map String [Output] -> Csv -> [M.Map String [Output]]
-  go m v
-    | V.null v
-    = [m]
-    | nextIteration (V.head v)
-    = m : go M.empty (V.tail v)
-    | otherwise
-    = let x  = V.head v in
-      let m' = M.insert (triggerName x) (triggerOutputs x) m in
-      go m' (V.tail v)
+  go m []             = [m]
+  go m (x:xs)
+    | nextIteration x = m : go M.empty xs
+    | otherwise =
+        let
+          m' = M.insert (triggerName x) (triggerOutputs x) m
+        in
+          go m' xs
 
-nextIteration :: V.Vector Field -> Bool
-nextIteration v
-  | V.length v == 1
-  = B.unpack (V.head v) == "#"
-  | otherwise
-  = False
+nextIteration :: Record -> Bool
+nextIteration [x] = x == "#"
+nextIteration _   = False
 
 triggerName :: Record -> String
-triggerName = B.unpack . V.head
+triggerName = head
 
 triggerOutputs :: Record -> [Output]
-triggerOutputs = V.toList . fmap B.unpack . V.tail
+triggerOutputs = tail
+
