@@ -39,7 +39,7 @@ library
   ghc-prof-options        : -auto-all -caf-all
 
   build-depends           : atom >= 1.0.10
-                          , base >= 4.3 && base < 5
+                          , base >= 4.3 && < 5
                           , bytestring
                           , containers >= 0.4
                           , copilot-core
