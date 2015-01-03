@@ -50,6 +50,7 @@ library
                           , random >= 1.0
                           , text >= 0.6
                           , QuickCheck >= 2.4
+                          , vector
 
   exposed-modules         : Copilot.Compile.C99.Test.CheckSpec
                           , Copilot.Compile.C99.Test.Driver
@@ -83,6 +84,7 @@ executable copilot-c99-qc
                           , random >= 1.0
                           , text >= 0.6
                           , QuickCheck >= 2.4
+                          , vector
 
   other-modules           : Copilot.Compile.C99
                           , Copilot.Compile.C99.C2A
