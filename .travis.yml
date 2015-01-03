@@ -3,7 +3,6 @@ language: haskell
 before_install:
   - git submodule init
   - git submodule update
-
 install:
   - make test
 script:
