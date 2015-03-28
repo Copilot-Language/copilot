@@ -1,8 +1,9 @@
---------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
-
--- | Basic bounded statistics.  In the following, a bound @n@ is given stating
+-- | 
+-- Module: Statistics
+-- Description: Basic bounded statistics
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Basic bounded statistics.  In the following, a bound @n@ is given stating
 -- the number of periods over which to compute the statistic (@n == 1@ computes
 -- it only over the current period).
 

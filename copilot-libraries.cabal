@@ -1,8 +1,7 @@
 cabal-version:       >=1.10
 name:                copilot-libraries
 version:             2.1.1
-synopsis:            A Haskell-embedded DSL for monitoring hard real-time
-                     distributed systems.
+synopsis:            Libraries for the Copilot language.
 description:
   Libraries for the Copilot language.
   .
@@ -19,6 +18,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
                      Nis Nordby Wegmann
+homepage:            https://github.com/leepike/copilot-libraries
 maintainer:          leepike@gmail.com
 stability:           Experimental
 category:            Language, Embedded

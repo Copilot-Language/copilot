@@ -1,8 +1,7 @@
---------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
-
--- | Main import module for the front-end lanugage.
+-- | 
+-- Module: Libraries
+-- Description: Main import module for libraries
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
 
 module Copilot.Library.Libraries (
     module Copilot.Library.Clocks
