@@ -1,4 +1,12 @@
--- | A regular expression librariy.
+-- | 
+-- Module: RegExp
+-- Description: Regular expression library
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- A regular expression library.
+--
+-- For examples, see @Examples/RegExpExamples.hs@ in the
+-- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
 
 module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
 

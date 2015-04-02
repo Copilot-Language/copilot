@@ -1,12 +1,16 @@
---------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
-
--- | Provides past-time linear-temporal logic (ptLTL operators).
+-- | 
+-- Module: PTLTL
+-- Description: Past-Time Linear-Temporal Logic
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
 --
--- Interface: see Examples/PTLTLExamples.hs.
+-- Provides past-time linear-temporal logic (ptLTL operators).
+--
+-- /Interface:/ See @Examples/PTLTLExamples.hs@ in the
+-- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
+--
 -- You can embed a ptLTL specification within a Copilot specification using
 -- the form:
+--
 -- @
 --   operator stream
 -- @
@@ -16,7 +20,7 @@
 module Copilot.Library.PTLTL
     ( since, alwaysBeen, eventuallyPrev, previous ) where
 
-import Prelude ( ($) )
+import Prelude ()
 import Copilot.Language
 
 -- | Did @s@ hold in the previous period?

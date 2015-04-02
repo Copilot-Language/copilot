@@ -1,19 +1,23 @@
---------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
-
--- | Utility bounded-list functions (e.g., folds, scans, etc.)
+-- | 
+-- Module: Utils
+-- Description: Utility bounded-list functions (e.g., folds, scans, etc.)
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Utility bounded-list functions (e.g., folds, scans, etc.)
 
 module Copilot.Library.Utils
-    ( take, tails, nfoldl, nfoldl1, nfoldr, nfoldr1,
-      nscanl, nscanr, nscanl1, nscanr1,
-      case', (!!), cycle ) 
+       ( -- * Functions similar to the Prelude functions on lists
+         take, tails, cycle,
+         -- ** Folds
+         nfoldl, nfoldl1, nfoldr, nfoldr1,
+         -- ** Scans
+         nscanl, nscanr, nscanl1, nscanr1,
+         -- ** Indexing
+         case', (!!)) 
 where
 
 import Copilot.Language
 import qualified Prelude as P
-
--- | functions similar to the Prelude functions on lists
 
 tails :: ( Typed a )
          => Stream a -> [ Stream a ]
@@ -23,9 +27,6 @@ tails s = [ drop x s | x <- [ 0 .. ] ]
 take :: ( Integral a, Typed b )
         => a -> Stream b -> [ Stream b ]
 take n s = P.take ( fromIntegral n ) $ tails s
-
-
--- Folds
 
 nfoldl :: ( Typed a, Typed b )
           => Int -> ( Stream a -> Stream b -> Stream a )
@@ -46,9 +47,6 @@ nfoldr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
                   ->   Stream a -> Stream a
 nfoldr1 n f s = foldr1 f $ take n s
-
-
--- Scans
 
 nscanl :: ( Typed a, Typed b )
           => Int -> ( Stream a -> Stream b -> Stream a )
@@ -71,8 +69,8 @@ nscanr1 :: ( Typed a )
 nscanr1 n f s = scanr1 f $ take n s
 
 
--- Case-like function, the index of the first predicate that is true
--- in the predicate list selects the stream result, if no predicate
+-- | Case-like function: The index of the first predicate that is true
+-- in the predicate list selects the stream result. If no predicate
 -- is true, the last element is chosen (default element)
 case' :: ( Typed a )
          => [ Stream Bool ] -> [ Stream a ] -> Stream a
@@ -86,7 +84,8 @@ case' predicates alternatives =
   in case'' predicates alternatives
 
 
--- | Index.  WARNING: very expensive!  Consider using this only for very short lists.
+-- | Index.  WARNING: Very expensive!  Consider using this only for very short
+-- lists.
 (!!) :: ( Typed a, Integral a )
         => [ Stream a ] -> Stream a -> Stream a
 ls !! n = let indices      = map
