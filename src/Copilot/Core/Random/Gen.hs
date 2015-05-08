@@ -23,6 +23,8 @@ import Copilot.Core.Random.Weights
 import Copilot.Core.Error
 import Copilot.Core.Type
 
+import Control.Applicative
+import Control.Monad
 import System.Random (StdGen, Random, random, randomR, split)
 
 --------------------------------------------------------------------------------
@@ -33,6 +35,10 @@ newtype Gen a = MkGen { runGen :: Depth -> Weights -> StdGen -> a }
 
 instance Functor Gen where
   fmap f (MkGen h) = MkGen (\ d ws r -> f (h d ws r))
+
+instance Applicative Gen where
+  pure = return
+  (<*>) = ap
 
 instance Monad Gen where
   return x = MkGen (\ _ _ _ -> x)
