@@ -68,8 +68,8 @@ library
 
     -fpackage-trust
     -- Trusted packages:
-    -trust base
-    -trust containers
-    -trust array
+    -trust=base
+    -trust=containers
+    -trust=array
 
 
