@@ -8,6 +8,8 @@
 -- For examples, see @Examples/RegExpExamples.hs@ in the
 -- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
 
+{-# LANGUAGE FlexibleContexts #-}
+
 module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
 
 import Text.ParserCombinators.Parsec
