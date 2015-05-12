@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- | 
 -- Module: RegExp
 -- Description: Regular expression library
