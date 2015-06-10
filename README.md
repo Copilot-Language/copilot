@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/leepike/Copilot.svg?branch=master)](https://travis-ci.org/leepike/Copilot)
+[![Build Status](https://travis-ci.org/Copilot-Language/Copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/Copilot)
 
 Copilot: a stream DSL
 ====================================
