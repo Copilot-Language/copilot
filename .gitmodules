@@ -1,21 +1,21 @@
 [submodule "lib/copilot-c99"]
 	path = lib/copilot-c99
-	url = https://github.com/leepike/copilot-c99.git
+	url = https://github.com/Copilot-Language/copilot-c99.git
 [submodule "lib/copilot-language"]
 	path = lib/copilot-language
-	url = https://github.com/leepike/copilot-language.git
+	url = https://github.com/Copilot-Language/copilot-language.git
 [submodule "lib/copilot-core"]
 	path = lib/copilot-core
-	url = https://github.com/leepike/copilot-core.git
+	url = https://github.com/Copilot-Language/copilot-core.git
 [submodule "lib/copilot-libraries"]
 	path = lib/copilot-libraries
-	url = https://github.com/leepike/copilot-libraries.git
+	url = https://github.com/Copilot-Language/copilot-libraries.git
 [submodule "lib/copilot-sbv"]
 	path = lib/copilot-sbv
-	url = https://github.com/leepike/copilot-sbv.git
+	url = https://github.com/Copilot-Language/copilot-sbv.git
 [submodule "lib/copilot-cbmc"]
 	path = lib/copilot-cbmc
-	url = https://github.com/leepike/copilot-cbmc.git
+	url = https://github.com/Copilot-Language/copilot-cbmc.git
 [submodule "lib/copilot-discussion"]
 	path = lib/copilot-discussion
-	url = https://github.com/leepike/copilot-discussion.git
+	url = https://github.com/Copilot-Language/copilot-discussion.git
