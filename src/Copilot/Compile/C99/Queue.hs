@@ -30,7 +30,7 @@ dropFirstElemAndSnoc x
     } =
   do
     (buf ! value p) <== x
-    p <== mux (value p + 1 >=. fromIntegral sz) 0 (value p + 1)
+    p <== (value p + 1) `mod_` fromIntegral sz
 
 lookahead :: Expr a => Int -> Queue a -> E a
 lookahead i
