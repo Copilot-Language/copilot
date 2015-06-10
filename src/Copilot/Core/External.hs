@@ -7,8 +7,8 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.External
-  ( ExtVar (..), ExtArray (..), ExtFun (..)
-  , externVars, externArrays, externFuns
+  ( ExtVar (..), ExtArray (..), ExtFun (..), ExtStruct (..)
+  , externVars, externArrays, externFuns, externStructs
   ) where
 
 import Copilot.Core.Expr
@@ -37,6 +37,10 @@ data ExtFun = forall a . ExtFun
   , externFunType      :: Type a
   , externFunArgs      :: [UExpr]
   , externFunTag       :: Maybe Tag }
+
+data ExtStruct = ExtStruct
+  { externStructName  :: Name
+  , externStructArgs  :: [UExpr] }
 
 --------------------------------------------------------------------------------
 
@@ -108,6 +112,25 @@ externFunsExpr e0 = case e0 of
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
                                  externFunsExpr e2 `append`
                                  externFunsExpr e3
+
+--------------------------------------------------------------------------------
+
+externStructs :: Spec -> [ExtStruct]
+externStructs = toList . all externStructsExpr
+
+externStructsExpr :: Expr a -> DList ExtStruct
+externStructsExpr e0 = case e0 of
+  Const _ _                       -> empty
+  Drop  _ _ _                     -> empty
+  Local _ _ _ _ _                 -> empty
+  Var   _ _                       -> empty
+  ExternVar   _ _ _               -> empty
+  ExternArray _ _ _ _ _ _ _       -> empty
+  ExternFun   _ _ _ _ _           -> empty
+  ExternStruct 
+  Op1
+  Op2
+  Op3
 
 --------------------------------------------------------------------------------
 
