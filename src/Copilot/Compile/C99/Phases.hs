@@ -65,7 +65,7 @@ sampleExternVars _ meta _ =
   sampleExternVar :: (Core.Name, ExternInfo) -> Atom ()
   sampleExternVar (name, ExternInfo v t) =
     exactPhase (fromEnum SampleExternVars) $
-      atom ("sample_var_" ++ name) $ do
+      atom ("sample_vartt_" ++ name) $ do
         W.AssignInst <- return $ W.assignInst t
         v <== A.value (A.var' name (c2aType t))
 
