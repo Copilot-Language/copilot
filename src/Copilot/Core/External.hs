@@ -40,7 +40,8 @@ data ExtFun = forall a . ExtFun
 
 data ExtStruct = ExtStruct
   { externStructName  :: Name
-  , externStructArgs  :: [Expr] }
+  , externStructArgs  :: [Expr]
+  , externStructTag   :: Tag }
 
 --------------------------------------------------------------------------------
 
@@ -60,7 +61,7 @@ externVarsExpr e0 = case e0 of
   ExternVar t name _        -> singleton (ExtVar name (UType t))
   ExternArray _ _ _ _ e _ _ -> externVarsExpr e
   ExternFun _ _ ues _ _     -> concat (map externVarsUExpr ues)
-  ExternStruct _ _          -> empty
+  ExternStruct _ _ _        -> empty
   Op1 _ e                   -> externVarsExpr e
   Op2 _ e1 e2               -> externVarsExpr e1 `append` externVarsExpr e2
   Op3 _ e1 e2 e3            -> externVarsExpr e1 `append`
@@ -85,7 +86,7 @@ externArraysExpr e0 = case e0 of
   ExternArray t1 t2  name 
               size idx _ tag      -> singleton (ExtArray name t2 idx t1 size tag)
   ExternFun _ _ ues _ _           -> concat (map externArraysUExpr ues)
-  ExternStruct _ _                -> empty
+  ExternStruct _ _ _              -> empty
   Op1 _ e                         -> externArraysExpr e
   Op2 _ e1 e2                     -> externArraysExpr e1 `append` externArraysExpr e2
   Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
@@ -109,7 +110,7 @@ externFunsExpr e0 = case e0 of
   ExternVar _ _ _             -> empty
   ExternArray _ _ _ _ idx _ _ -> externFunsExpr idx
   ExternFun t name ues _ tag  -> singleton (ExtFun name t ues tag)
-  ExternStruct _ _            -> empty
+  ExternStruct _ _ _          -> empty
   Op1 _ e                     -> externFunsExpr e
   Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
@@ -130,7 +131,8 @@ externStructsExpr e0 = case e0 of
   ExternVar   _ _ _               -> empty
   ExternArray _ _ _ _ _ _ _       -> empty
   ExternFun   _ _ _ _ _           -> empty
-  ExternStruct name es           -> concat (map externStructsExpr es)
+  ExternStruct name es tag        -> singleton (ExtStruct name
+                                      (concat . map externStructsExpr es) tag)
                       -- all expressions in a struct are typed
   Op1   _ _                       -> empty
   Op2   _ _ _                     -> empty

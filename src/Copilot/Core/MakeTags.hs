@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Sets a unique tags for each external array/function call.
+-- | Sets a unique tags for each external array/function/struct call.
 
 {-# LANGUAGE Safe #-}
 
@@ -111,6 +111,9 @@ mkTagsExpr e0 = case e0 of
               size idx e _       -> do idx' <- mkTagsExpr idx
                                        k <- next
                                        return $ ExternArray t1 t2 name size idx' e (Just k)
+  ExternStruct name args _       -> do args' <- mapM mkTagsExpr args
+                                       k <- next
+                                       return $ ExternStruct name args' (Just k)
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)
