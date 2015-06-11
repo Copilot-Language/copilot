@@ -49,6 +49,10 @@ c99Header prefix spec = render $ vcat $
   , text ""
   , ppTriggerPrototypes prefix (specTriggers spec)
   , text ""
+  , text "/* External structs (must be defined by user): */"
+  , text ""
+  , ppExternalStructs (externStructs spec)
+  , text ""
   , text "/* External variables (must be defined by user): */"
   , text ""
   , ppExternalVariables (externVars spec)
@@ -174,7 +178,7 @@ ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
     eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2} =
       name1 == name2
 
-ppExternalStruct :: ExtFun -> Doc
+ppExternalStruct :: ExtStruct -> Doc
 ppExternalStruct
   ExtStruct
   { externStructName  = name
@@ -186,9 +190,13 @@ ppExternalStruct
     ppStructArgs = vcat . intersperse (text ";") . map ppStructArg
 
     ppStructArg :: Expr -> Doc
-    ppStructArg expr = text
-      ( case expr of
-          Const t x -> )
+    ppStructArg UExpr { uExprType = t1; uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
+      text ( case e1 of
+          Var _ name -> name
+          ExternVar _ name _ -> name
+          ExternFun _ name _ _ _ -> name
+          ExternStruct name _ _ -> name
+          _ -> empty)
 
 --------------------------------------------------------------------------------
 

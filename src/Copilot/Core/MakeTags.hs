@@ -111,7 +111,7 @@ mkTagsExpr e0 = case e0 of
               size idx e _       -> do idx' <- mkTagsExpr idx
                                        k <- next
                                        return $ ExternArray t1 t2 name size idx' e (Just k)
-  ExternStruct name args _       -> do args' <- mapM mkTagsExpr args
+  ExternStruct name args _       -> do args' <- mapM mkTagsUExpr args
                                        k <- next
                                        return $ ExternStruct name args' (Just k)
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)

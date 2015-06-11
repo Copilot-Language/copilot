@@ -145,6 +145,7 @@ externStructsUExpr UExpr { uExprExpr = e } =
     ExternArray _ _ _ _ _ _ _ -> externArraysExpr e
     ExternFun _ _ _ _ _       -> externFunsExpr e
     ExternStruct _ _ _        -> externStructsExpr e
+    _                         -> empty
 
 --------------------------------------------------------------------------------
 
