@@ -40,7 +40,7 @@ data ExtFun = forall a . ExtFun
 
 data ExtStruct = ExtStruct
   { externStructName  :: Name
-  , externStructArgs  :: [Expr]
+  , externStructArgs  :: [UExpr]
   , externStructTag   :: Tag }
 
 --------------------------------------------------------------------------------
@@ -131,12 +131,20 @@ externStructsExpr e0 = case e0 of
   ExternVar   _ _ _               -> empty
   ExternArray _ _ _ _ _ _ _       -> empty
   ExternFun   _ _ _ _ _           -> empty
-  ExternStruct name es tag        -> singleton (ExtStruct name
-                                      (concat . map externStructsExpr es) tag)
+  ExternStruct name ues tag       -> singleton (ExtStruct name ues tag)
+                                      concat . map externStructsUExpr ues
                       -- all expressions in a struct are typed
   Op1   _ _                       -> empty
   Op2   _ _ _                     -> empty
   Op3   _ _ _ _                   -> empty
+
+externStructsUExpr :: UExpr -> DList ExtStruct
+externStructsUExpr UExpr { uExprExpr = e } =
+  case e of
+    ExternVar _ _ _           -> externVarsExpr e
+    ExternArray _ _ _ _ _ _ _ -> externArraysExpr e
+    ExternFun _ _ _ _ _       -> externFunsExpr e
+    ExternStruct _ _ _        -> externStructsExpr e
 
 --------------------------------------------------------------------------------
 

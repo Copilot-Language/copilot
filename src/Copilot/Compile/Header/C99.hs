@@ -168,6 +168,30 @@ ppExternalFunction
 
 --------------------------------------------------------------------------------
 
+ppExternalStructs :: [ExtStruct] -> Doc
+ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
+  where
+    eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2} =
+      name1 == name2
+
+ppExternalStruct :: ExtFun -> Doc
+ppExternalStruct
+  ExtStruct
+  { externStructName  = name
+  , exterStructArgs   = args } =
+      text "struct" <+> text name <> text "{" <> ppStructArgs args <> text "};"
+
+  where
+    ppStructArgs :: [Expr] -> Doc
+    ppStructArgs = vcat . intersperse (text ";") . map ppStructArg
+
+    ppStructArg :: Expr -> Doc
+    ppStructArg expr = text
+      ( case expr of
+          Const t x -> )
+
+--------------------------------------------------------------------------------
+
 typeSpec :: UType -> String
 typeSpec UType { uTypeType = t }
   = case t of

@@ -79,7 +79,7 @@ locsExpr e0 = case e0 of
   ExternVar _ _ _            -> empty
   ExternFun _ _ _ _ _        -> empty
   ExternArray _ _  _ _ _ _ _ -> empty
-  ExternStruct _ _           -> empty
+  ExternStruct _ _ _         -> empty
   Op1 _ e                    -> locsExpr e
   Op2 _ e1 e2                -> locsExpr e1 `append` locsExpr e2
   Op3 _ e1 e2 e3             -> locsExpr e1 `append` locsExpr e2

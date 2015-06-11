@@ -38,7 +38,7 @@ ppExpr e0 = case e0 of
   ExternArray _ _ name 
               _ idx _ _      -> text "extern" <+> doubleQuotes (text name <> lbrack 
                                   <> ppExpr idx <> rbrack)
-  ExternStruct name args     -> text "struct" <+> doubleQuotes (text name <> lbrack
+  ExternStruct name args _   -> text "struct" <+> doubleQuotes (text name <> lbrack
                                   <> hcat (punctuate (comma <> space) (map ppExpr args))
                                   <> rbrack)
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
