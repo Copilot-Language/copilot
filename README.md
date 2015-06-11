@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot-kind.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-kind)
+
 # Copilot Kind
 
 Highly automated proof techniques are a necessary step for the widespread adoption of formal methods in the software industry. Moreover, it could provide a partial answer to one of its main issue which is scalability.

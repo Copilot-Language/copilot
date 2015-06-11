@@ -1,0 +1,4 @@
+language: haskell
+ghc:
+  - 7.6.3
+  - 7.8.3
