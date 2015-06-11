@@ -2,20 +2,18 @@
 
 module Copilot.Kind.IL.Spec
   ( module Copilot.Kind.Misc.Type
-  , module Copilot.Kind.Misc.Operators           
+  , module Copilot.Kind.Misc.Operators
   , Type (..)
   , Op1  (..)
   , Op2  (..)
   , SeqId
   , SeqIndex (..)
   , SeqDescr (..)
-  , FunName
-  , UnintFunDescr (..)
+  , VarDescr (..)
   , Expr (..)
   , Spec (..)
   , Constraint
   , PropId
-    
   , typeOf
   , _n_
   , _n_plus
@@ -27,6 +25,7 @@ import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
 
 import Data.Map (Map)
+import Data.Function (on)
 
 --------------------------------------------------------------------------------
 
@@ -42,15 +41,20 @@ data Expr t where
   Op1    :: Type t -> Op1 x t -> Expr x -> Expr t
   Op2    :: Type t -> Op2 x y t -> Expr x -> Expr y -> Expr t
   SVal   :: Type t -> SeqId -> SeqIndex -> Expr t
-  FunApp :: Type t -> FunName -> [U Expr] -> Expr t
+  FunApp :: Type t -> String -> [U Expr] -> Expr t
 
 --------------------------------------------------------------------------------
 
-type FunName = String
-data UnintFunDescr = forall t . UnintFunDescr
-  { funName      :: FunName
-  , funRetType   :: Type t 
-  , funArgsTypes :: [U Type] }
+data VarDescr = forall t . VarDescr
+  { varName :: String
+  , varType :: Type t
+  }
+
+instance Eq VarDescr where
+  (==) = (==) `on` varName
+
+instance Ord VarDescr where
+  compare = compare `on` varName
 
 --------------------------------------------------------------------------------
 
@@ -58,18 +62,17 @@ type PropId = String
 
 type Constraint = Expr Bool
 
-data SeqDescr = forall t . SeqDescr 
+data SeqDescr = forall t . SeqDescr
   { seqId    :: SeqId
   , seqType  :: Type t }
-  
-data Spec = Spec 
+
+data Spec = Spec
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
-  , depth       :: Int
   , sequences   :: [SeqDescr]
-  , unintFuns   :: [UnintFunDescr] }
-                   
+  , vars        :: [VarDescr] }
+
 --------------------------------------------------------------------------------
 
 typeOf :: Expr a -> Type a
@@ -80,7 +83,7 @@ typeOf e = case e of
   Op2    t _ _ _   -> t
   SVal   t _ _     -> t
   FunApp t _ _     -> t
-  
+
 _n_ :: SeqIndex
 _n_ = Var 0
 

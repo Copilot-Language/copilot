@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Misc.Type       
+module Copilot.Kind.Misc.Type
   ( Type (..)
   , U (..)
   ) where
@@ -19,10 +19,10 @@ instance EqualType Type where
   Integer =~= Integer  = Just Refl
   Real    =~= Real     = Just Refl
   _       =~= _        = Nothing
-  
+
 --------------------------------------------------------------------------------
 
--- For instance, 'U Expr' is the type of an expression of unknown type 
+-- For instance, 'U Expr' is the type of an expression of unknown type
 
 data U f = forall t . U (f t)
 

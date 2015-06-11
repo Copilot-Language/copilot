@@ -18,26 +18,24 @@ indent = nest 4
 emptyLine = text ""
 
 ppSpec :: Spec -> Doc
-ppSpec 
-  (Spec 
+ppSpec
+  (Spec
   { modelInit
   , modelRec
   , properties
-  , depth
   , sequences
-  , unintFuns }) = 
-  
-     text "DEPTH" <+> colon <+> int depth $$ emptyLine
-  $$ text "SEQUENCES"
+  , vars }) =
+
+     text "SEQUENCES"
   $$ indent (foldr (($$) . ppSeqDescr) empty sequences) $$ emptyLine
-  $$ text "ANON FUNCTIONS"
-  $$ indent (foldr (($$) . ppUnintFunDescr) empty unintFuns) $$ emptyLine
+  $$ text "VARIABLES"
+  $$ indent (foldr (($$) . ppVarDescr) empty vars) $$ emptyLine
   $$  text "MODEL INIT"
   $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
   $$ text "MODEL REC"
   $$ indent (foldr (($$) . ppExpr) empty modelRec) $$ emptyLine
   $$ text "PROPERTIES"
-  $$ indent (Map.foldrWithKey (\k -> ($$) . (ppProp k)) 
+  $$ indent (Map.foldrWithKey (\k -> ($$) . (ppProp k))
         empty properties )
 
 
@@ -47,11 +45,12 @@ ppProp id c = quotes (text id) <+> colon <+> ppExpr c
 ppSeqDescr :: SeqDescr -> Doc
 ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
 
-ppUnintFunDescr :: UnintFunDescr -> Doc
-ppUnintFunDescr (UnintFunDescr id ret args) =
-  text id <+> colon 
-  <+> (hsep . punctuate (space <> text "->" <> space) $ map ppUType args)
-  <+> text "->" 
+ppVarDescr :: VarDescr -> Doc
+ppVarDescr (VarDescr id ret) =
+  text id
+  <+> colon
+  <+> text "()"
+  <+> text "->"
   <+> ppType ret
 
 ppType :: Type t -> Doc

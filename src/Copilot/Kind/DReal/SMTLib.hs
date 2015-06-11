@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Light.SMTLib where
+module Copilot.Kind.DReal.SMTLib where
 
 import Copilot.Kind.IL
 import Copilot.Kind.Misc.SExpr

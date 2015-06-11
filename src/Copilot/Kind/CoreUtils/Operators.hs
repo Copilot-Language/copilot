@@ -6,8 +6,6 @@ module Copilot.Kind.CoreUtils.Operators where
 -- | The unhandled operators are monomorphic, and their names are labeled so
 -- | that each name corresponds to a unique uninterpreted function with a 
 -- | monomorphic type.
--- | For instance, C.Abs becomes "abs" or "fabs" depending on 
--- | the type of its argument
 
 import qualified Copilot.Core as C
 import Copilot.Kind.Misc.Cast
@@ -48,8 +46,8 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.Not      -> boolOp Not (handleExpr Bool e)
   
   -- Numeric operators
-  C.Abs ta   -> notHandled ta tagReal "abs"
-  C.Sign ta  -> notHandled ta tagReal "sign"
+  C.Abs ta   -> notHandled ta noTag "abs"
+  C.Sign ta  -> notHandled ta noTag "sign"
   
   -- Fractional operators
   C.Recip ta -> notHandled ta noTag "recip"
@@ -130,10 +128,10 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
   C.Div ta    -> notHandled ta "div"
   
   -- Fractional operators.
-  C.Fdiv ta   -> notHandled ta "fdiv"
+  C.Fdiv ta   -> notHandled ta "/"
   
   -- Floating operators.
-  C.Pow ta    -> notHandled ta "pow"
+  C.Pow ta    -> notHandled ta "^"
   C.Logb ta   -> notHandled ta "logb"
   
   -- Equality operators.

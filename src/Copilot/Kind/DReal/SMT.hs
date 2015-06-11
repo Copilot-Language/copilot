@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Light.SMT
+module Copilot.Kind.DReal.SMT
   ( Solver
   , startNewSolver
   , assume
@@ -20,18 +20,18 @@ import Control.Monad
 import Control.Applicative ((<$>))
 import Data.Maybe
 
-import qualified Copilot.Kind.Light.SMTLib as SMT
+import qualified Copilot.Kind.DReal.SMTLib as SMT
 
 --------------------------------------------------------------------------------
 
-data Solver = Solver 
+data Solver = Solver
   { inh        :: Handle
   , outh       :: Handle
   , process    :: ProcessHandle
   , debugMode  :: Bool
   , solverName :: String }
- 
-data SatResult 
+
+data SatResult
   = Sat
   | Unsat
   | Unknown
@@ -41,14 +41,14 @@ data SatResult
 debug :: Bool -> Solver -> String -> IO ()
 debug printName s str = when (debugMode s) $ do
   putStrLn $ (if printName then "<" ++ solverName s ++ ">  " else "") ++ str
-  
+
 
 send :: Solver -> SMT.Term -> IO ()
 send s t = do
   hPutStr (inh s) (show t ++ "\n")
   debug True s (show t)
   hFlush (inh s)
-  
+
 
 receive :: Solver -> IO String
 receive s = do
@@ -57,7 +57,7 @@ receive s = do
   return answer
 
 --------------------------------------------------------------------------------
-  
+
 startNewSolver :: String -> [SeqDescr] -> [VarDescr] -> Bool -> IO Solver
 startNewSolver name seqs vars dbgMode = do
   (i, o, e, p) <- runInteractiveProcess cmd opts Nothing Nothing
@@ -65,18 +65,16 @@ startNewSolver name seqs vars dbgMode = do
   let s = Solver i o p dbgMode name
   send s (SMT.setLogic logic)
   return s
+  where cmd  = "dReal"
+        opts = []
+        logic = "QF_NRA"
 
-  where cmd  = "yices-smt2"
-        opts = ["--incremental"]
-        logic = "QF_UFLIA"
-  
-  
 exit :: Solver -> IO ()
 exit s = do
   hClose (inh s)
   hClose (outh s)
   terminateProcess (process s)
-  
+
 --------------------------------------------------------------------------------
 
 assume :: Solver -> [Constraint] -> IO ()
@@ -84,18 +82,20 @@ assume s cs = forM_ cs (send s . SMT.assert)
 
 entailed :: Solver -> [Constraint] -> IO SatResult
 entailed s cs = do
-  send s SMT.push
-  assume s $
-    [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
+  --send s SMT.push
+  case cs of
+      [] -> assume s [Const Bool True]
+      _ -> assume s $ [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
   send s SMT.checkSat
+  hClose (inh s)
 
   res <- receive s >>= \case
     "sat"     -> return Sat
     "unsat"   -> return Unsat
     "unknown" -> return Unknown
-    s         -> Err.fatal $ "Unknown Yices output : '" ++ s ++ "'"
+    s         -> Err.fatal $ "Unknown dReal output : '" ++ s ++ "'"
 
-  send s SMT.pop
+  --send s SMT.pop
   return res
 
 declVars :: Solver -> [VarDescr] -> IO ()
