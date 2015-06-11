@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Light 
+module Copilot.Kind.Light
   ( module Copilot.Kind.Light.Prover
   ) where
 

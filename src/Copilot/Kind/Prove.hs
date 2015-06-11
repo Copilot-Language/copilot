@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Prove 
-  ( prove 
+module Copilot.Kind.Prove
+  ( prove
   ) where
 
 import Copilot.Kind.Prover
@@ -17,21 +17,21 @@ import Data.List (intercalate)
 --------------------------------------------------------------------------------
 
 prove :: Prover -> ProofScheme -> Core.Spec -> IO ()
-prove 
+prove
   (Prover { proverName
           , hasFeature
           , startProver
           , askProver
           , closeProver } )
-  (execWriter -> actions) 
+  (execWriter -> actions)
   spec = do
-  
+
     prover <- startProver spec
     processActions prover [] actions
     putStrLn "Finished."
     closeProver prover
-  
-    where 
+
+    where
       processActions _ _ [] = return ()
       processActions prover context (action:nextActions) = case action of
         Check propId -> do
@@ -39,27 +39,26 @@ prove
           case status of
             Valid     -> putStrLn $ propId ++ " : valid"
             Invalid _ -> putStrLn $ propId ++ " : invalid"
-            Error     -> putStrLn $ propId ++ " : error ++ (" 
-                                           ++ (intercalate " | " infos) ++ ")"
-            Unknown   -> putStrLn $ propId ++ " : unknown" 
+            Error     -> putStrLn $ propId ++ " : error ++ ("
+                                           ++ intercalate " | " infos ++ ")"
+            Unknown   -> putStrLn $ propId ++ " : unknown"
                                            ++ " (" ++ intercalate ", " infos ++ ")"
           processActions prover context nextActions
-          
+
         Assume propId -> do
-          when (not $ hasFeature HandleAssumptions) $ do
-            putStrLn $ "'" ++ proverName 
+          unless (hasFeature HandleAssumptions) $ do
+            putStrLn $ "'" ++ proverName
                      ++ "' doesn't implement assumptions handling"
             processActions prover context nextActions
-          
+
           processActions prover (propId : context) nextActions
-        
+
         Pragma (PrintMsg s) -> do
           putStrLn s
           processActions prover context nextActions
-        
+
         Local localActions -> do
           processActions prover context localActions
           processActions prover context nextActions
 
 --------------------------------------------------------------------------------
-      

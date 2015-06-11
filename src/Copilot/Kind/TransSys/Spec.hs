@@ -17,7 +17,7 @@ module Copilot.Kind.TransSys.Spec
   , transformExpr
   , isTopologicallySorted
   , nodeVarsSet
-  , specDependenciesGraph 
+  , specDependenciesGraph
   , specTopNode ) where
 
 import Copilot.Kind.Misc.Type
@@ -50,14 +50,14 @@ data Node = Node
   { nodeId            :: NodeId
   , nodeDependencies  :: [NodeId]
   , nodeLocalVars     :: Map Var VarDescr
-  , nodeImportedVars  :: Bimap Var ExtVar 
+  , nodeImportedVars  :: Bimap Var ExtVar
   , nodeConstrs       :: [Expr Bool] }
 
 
-data Var     =  Var {varName :: String}  
+data Var     =  Var {varName :: String}
                 deriving (Eq, Show, Ord)
-                
-data ExtVar  =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var } 
+
+data ExtVar  =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var }
                 deriving (Eq, Ord)
 
 data VarDescr = forall t . VarDescr
@@ -81,15 +81,15 @@ data Expr t where
 mkExtVar node name = ExtVar node (Var name)
 
 foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> Expr a -> m
-foldExpr f expr = f expr <> fargs 
+foldExpr f expr = f expr <> fargs
   where
-    fargs = case expr of 
+    fargs = case expr of
       (Ite _ c e1 e2)  -> foldExpr f c <> foldExpr f e1 <> foldExpr f e2
       (Op1 _ _ e)      -> foldExpr f e
       (Op2 _ _ e1 e2)  -> foldExpr f e1 <> foldExpr f e2
       _                -> mempty
-      
-foldUExpr :: (Monoid m) => (forall t . Expr t -> m) -> (U Expr) -> m
+
+foldUExpr :: (Monoid m) => (forall t . Expr t -> m) -> U Expr -> m
 foldUExpr f (U e) = foldExpr f e
 
 transformExpr :: (forall a . Expr a -> Expr a) -> Expr t -> Expr t
@@ -104,25 +104,25 @@ transformExpr f = tre
 --------------------------------------------------------------------------------
 
 nodeVarsSet :: Node -> Set Var
-nodeVarsSet = liftA2 Set.union 
-  (nodeLocalVarsSet)
+nodeVarsSet = liftA2 Set.union
+  nodeLocalVarsSet
   (Map.keysSet . Bimap.toMap  . nodeImportedVars)
-  
-nodeLocalVarsSet :: Node -> Set Var 
+
+nodeLocalVarsSet :: Node -> Set Var
 nodeLocalVarsSet = Map.keysSet . nodeLocalVars
-    
+
 nodeRhsVarsSet :: Node -> Set Var
-nodeRhsVarsSet n = 
+nodeRhsVarsSet n =
   let varOcc (VarE _ v) = Set.singleton v
       varOcc _          = Set.empty
-      
+
       descrRhsVars (VarDescr _ (Expr e))      = foldExpr varOcc e
       descrRhsVars (VarDescr _ (Pre _ v))     = Set.singleton v
-      descrRhsVars (VarDescr _ (Constrs cs))  = 
+      descrRhsVars (VarDescr _ (Constrs cs))  =
         mconcat (map (foldExpr varOcc) cs)
-      
+
   in Map.fold (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
-  
+
 nodeImportedExtVarsSet :: Node -> Set ExtVar
 nodeImportedExtVarsSet = Map.keysSet . Bimap.toMapR . nodeImportedVars
 
@@ -135,62 +135,60 @@ instance HasInvariants Node where
 
   invariants n =
     [ prop "The dependencies declaration doesn't lie" $
-      (map extVarNode . Bimap.elems $ nodeImportedVars n) 
-      `isSublistOf` (nodeDependencies n) 
-      
+      (map extVarNode . Bimap.elems $ nodeImportedVars n)
+      `isSublistOf` nodeDependencies n
+
     , prop "All local variables are declared" $
       nodeRhsVarsSet n `isSubsetOf` nodeVarsSet n
-      
+
     , prop "Never apply 'pre' to an imported var" $
-      let preVars = Set.fromList 
+      let preVars = Set.fromList
             [v | (VarDescr _ (Pre _ v)) <- Map.elems $ nodeLocalVars n]
       in preVars `isSubsetOf` nodeLocalVarsSet n
     ]
-    
+
 --------------------------------------------------------------------------------
 
 specNodesIds :: Spec -> Set NodeId
 specNodesIds s = Set.fromList . map nodeId $ specNodes s
 
 specDependenciesGraph :: Spec -> Map NodeId [NodeId]
-specDependenciesGraph s = 
+specDependenciesGraph s =
   Map.fromList [ (nodeId n, nodeDependencies n) | n <- specNodes s ]
-  
-  
+
 specTopNode :: Spec -> Node
-specTopNode spec = fromJust $ List.find 
-  ((== specTopNodeId spec) . nodeId) 
+specTopNode spec = fromJust $ List.find
+  ((== specTopNodeId spec) . nodeId)
   (specNodes spec)
 
 --------------------------------------------------------------------------------
 
 instance HasInvariants Spec where
-  
-  invariants s = 
+
+  invariants s =
     [ prop "All mentioned nodes are declared" $
       specTopNodeId s `member` specNodesIds s
-      && Set.fromList [nId | n <- specNodes s, nId <- nodeDependencies n] 
+      && Set.fromList [nId | n <- specNodes s, nId <- nodeDependencies n]
          `isSubsetOf` specNodesIds s
-         
+
     , prop "The imported vars are not broken" $
       mconcat (map nodeImportedExtVarsSet $ specNodes s) `isSubsetOf`
       mconcat (map nodeExportedExtVarsSet $ specNodes s)
-        
+
     , prop "The nodes invariants hold" $ all checkInvs (specNodes s)
     ]
 
 isTopologicallySorted :: Spec -> Bool
-isTopologicallySorted spec = 
+isTopologicallySorted spec =
   isJust $ foldM inspect Set.empty (specNodes spec)
   where inspect acc n = do
-          guard $ (Set.fromList $ nodeDependencies $ n) `isSubsetOf` acc
+          guard $ Set.fromList (nodeDependencies n) `isSubsetOf` acc
           return . Set.insert (nodeId n) $ acc
-          
+
 --------------------------------------------------------------------------------
 
 -- For debugging purposes
 instance Show ExtVar where
   show (ExtVar n v) = "(" ++ n ++ " : " ++ show v ++ ")"
-  
+
 --------------------------------------------------------------------------------
- 

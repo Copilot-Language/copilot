@@ -13,12 +13,12 @@ indent = nest 4
 emptyLine = text ""
 
 ppSpec :: Spec -> Doc
-ppSpec 
+ppSpec
   ( Spec
   { specStreams
   , specProperties
   , specObservers }) =
-  
+
      text "STREAMS" $$ emptyLine
   $$ ppMap ppStream specStreams
   $$ text "PROPERTIES"
@@ -26,18 +26,18 @@ ppSpec
   $$ text "OBSERVERS"
   $$ ppMap ppObserver specObservers
   where
-    ppMap f m = 
+    ppMap f m =
       indent (foldr (($$) . f) empty (Map.toList m))
 
 
 ppStream :: (StreamId, Stream) -> Doc
 ppStream (id, Stream {streamBuffer, streamType, streamExpr}) =
-  parens (ppType streamType) <+> text id <+> text "=" 
-  <+> (brackets . hsep . punctuate (comma <> space)) 
+  parens (ppType streamType) <+> text id <+> text "="
+  <+> (brackets . hsep . punctuate (comma <> space))
         (map (ppExpr . Const streamType) streamBuffer)
   <+> text "++"
   <+> ppExpr streamExpr
-  
+
 ppExpr :: Expr a -> Doc
 ppExpr (Const Integer v) = text . show $ v
 ppExpr (Const Bool    v) = text . show $ v
@@ -52,13 +52,13 @@ ppExpr (Ite _ c e1 e2) =
   text "if" <+> ppExpr c
   <+> text "then" <+> ppExpr e1
   <+> text "else" <+> ppExpr e2
-  
+
 ppExpr (Drop _ 0 id) = text id
 ppExpr (Drop _ k id) = text "drop" <+> int k <+> text id
-  
+
 ppExpr (Unint _ id []) = text "'" <+> text id
-ppExpr (Unint _ id args) = 
-  text "'" <+> text id 
+ppExpr (Unint _ id args) =
+  text "'" <+> text id
   <> parens (hsep . punctuate (comma <> space) $ map ppUExpr args)
 
 ppType :: Type a -> Doc
@@ -77,4 +77,4 @@ ppProperty :: (PropId, StreamId) -> Doc
 ppProperty (id, s) = text id <+> colon <+> text s
 
 ppObserver :: (ObserverId, StreamId) -> Doc
-ppObserver (id, s) = text id <+> colon <+> text s 
+ppObserver (id, s) = text id <+> colon <+> text s

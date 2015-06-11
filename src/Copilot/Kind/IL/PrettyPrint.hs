@@ -23,21 +23,15 @@ ppSpec
   { modelInit
   , modelRec
   , properties
-  , sequences
-  , vars }) =
+  }) =
 
-     text "SEQUENCES"
-  $$ indent (foldr (($$) . ppSeqDescr) empty sequences) $$ emptyLine
-  $$ text "VARIABLES"
-  $$ indent (foldr (($$) . ppVarDescr) empty vars) $$ emptyLine
-  $$  text "MODEL INIT"
+     text "MODEL INIT"
   $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
   $$ text "MODEL REC"
   $$ indent (foldr (($$) . ppExpr) empty modelRec) $$ emptyLine
   $$ text "PROPERTIES"
-  $$ indent (Map.foldrWithKey (\k -> ($$) . (ppProp k))
+  $$ indent (Map.foldrWithKey (\k -> ($$) . ppProp k)
         empty properties )
-
 
 ppProp :: PropId -> Constraint -> Doc
 ppProp id c = quotes (text id) <+> colon <+> ppExpr c
@@ -75,7 +69,7 @@ ppExpr (Ite _ c e1 e2) =
 ppExpr (Op1 _ op e) = ppOp1 op <+> ppExpr e
 
 ppExpr (Op2 _ op e1 e2) =
-  (ppExpr e1) <+> ppOp2 op <+> (ppExpr e2)
+  ppExpr e1 <+> ppOp2 op <+> ppExpr e2
 
 ppExpr (SVal _ s i) = text s <> brackets (ppSeqIndex i)
 

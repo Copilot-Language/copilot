@@ -12,7 +12,7 @@ data Op2 a b c where
   Eq     :: Op2 a    a    Bool
   And    :: Op2 Bool Bool Bool
   Or     :: Op2 Bool Bool Bool
-  
+
   Le     :: (Num t) => Op2 t t Bool
   Lt     :: (Num t) => Op2 t t Bool
   Ge     :: (Num t) => Op2 t t Bool

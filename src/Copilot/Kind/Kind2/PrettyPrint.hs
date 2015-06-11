@@ -17,10 +17,10 @@ kwPrime = "prime"
 --------------------------------------------------------------------------------
 
 prettyPrint :: File -> String
-prettyPrint ast = 
-  intercalate "\n\n" 
-  . map (SExpr.toString shouldIndent id) 
-  . ppFile 
+prettyPrint ast =
+  intercalate "\n\n"
+  . map (SExpr.toString shouldIndent id)
+  . ppFile
   $ ast
 
 -- Defines the indentation policy of the S-Expressions
@@ -34,29 +34,24 @@ shouldIndent _                          = True
 ppFile :: File -> [SSExpr]
 ppFile (File preds props) = map ppPredDef preds ++ ppProps props
 
-
 ppProps :: [Prop] -> [SSExpr]
 ppProps ps = [ node "check-prop" [ list $ map ppProp ps ] ]
-
 
 ppProp :: Prop -> SSExpr
 ppProp (Prop n t) = list [atom n, ppTerm t]
 
-
 ppPredDef :: PredDef -> SSExpr
-ppPredDef pd = 
+ppPredDef pd =
   list [ atom "define-pred"
        , atom (predId pd)
        , list . map ppStateVarDef . predStateVars $ pd
        , node "init"  [ppTerm $ predInit  pd]
        , node "trans" [ppTerm $ predTrans pd] ]
-       
-       
+
 ppStateVarDef :: StateVarDef -> SSExpr
-ppStateVarDef svd = 
+ppStateVarDef svd =
   list [atom (varId svd), ppType (varType svd)]
-  
-  
+
 ppType :: Type -> SSExpr
 ppType Int  = atom "Int"
 ppType Real = atom "Real"
@@ -71,5 +66,5 @@ ppTerm (PredApp p t args) = node (p ++ "." ++ ext) $ map ppTerm args
   where ext = case t of
          Init -> "init"
          Trans -> "trans"
-    
---------------------------------------------------------------------------------    
+
+--------------------------------------------------------------------------------

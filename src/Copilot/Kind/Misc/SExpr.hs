@@ -55,13 +55,13 @@ parser :: GenParser Char st (SExpr String)
 parser =
   choice [try unitP, nodeP, leafP]
 
-  where symbol     = oneOf "!#$%&|*+-/:<=>?@^_~."        
+  where symbol     = oneOf "!#$%&|*+-/:<=>?@^_~."
         lonelyStr  = many1 (alphaNum <|> symbol)
 
         unitP      = string "()" >> return unit
 
         leafP      = atom <$> lonelyStr
-          
+
         nodeP      = do void $ char '('
                         spaces
                         st <- sepBy parser spaces

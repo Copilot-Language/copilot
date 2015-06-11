@@ -1,16 +1,9 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind
-  ( module Copilot.Kind.Prover 
-  , module Copilot.Kind.Prove
-  , module Copilot.Kind.ProofScheme
-  --, module Copilot.Kind.Lib
-  ) where
-  
-  
-import Copilot.Kind.ProofScheme
-import Copilot.Kind.Prove
-import Copilot.Kind.Prover
--- import Copilot.Kind.Lib
+module Copilot.Kind (module X) where
+
+import Copilot.Kind.ProofScheme as X
+import Copilot.Kind.Prove as X
+import Copilot.Kind.Prover as X
 
 --------------------------------------------------------------------------------

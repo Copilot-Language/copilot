@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.TransSys.Renaming 
+module Copilot.Kind.TransSys.Renaming
   ( Renaming
   , addReservedName
   , rename
@@ -13,6 +13,7 @@ import Copilot.Kind.Misc.Utils
 import Copilot.Kind.TransSys.Spec
 
 import Control.Monad.State.Lazy
+import Control.Applicative
 
 import qualified Data.Map  as Map
 import qualified Data.Set  as Set
@@ -20,8 +21,8 @@ import qualified Data.List as List
 
 --------------------------------------------------------------------------------
 
-newtype Renaming a = Renaming (State RenamingST a) 
-                     deriving (Monad, Functor)
+newtype Renaming a = Renaming (State RenamingST a)
+                     deriving (Applicative, Monad, Functor)
 
 data RenamingST = RenamingST
   { _reservedNames :: Set Var
@@ -30,8 +31,8 @@ data RenamingST = RenamingST
 --------------------------------------------------------------------------------
 
 addReservedName :: Var -> Renaming ()
-addReservedName v = 
-  Renaming $ modify $ \st -> 
+addReservedName v =
+  Renaming $ modify $ \st ->
     st {_reservedNames = Set.insert v (_reservedNames st)}
 
 
@@ -44,29 +45,25 @@ getFreshName vs = do
             v:_ -> v
             [] -> error "No more names available"
   addReservedName v
-  return v 
+  return v
 
 rename :: NodeId -> Var -> Var -> Renaming ()
-rename n v v' = 
+rename n v v' =
   Renaming $ modify $ \st ->
     st {_renaming = Map.insert (ExtVar n v) v' (_renaming st)}
 
 getRenamingF :: Renaming (ExtVar -> Var)
 getRenamingF = do
   mapping <- _renaming <$> Renaming get
-  return $ \extv -> case Map.lookup extv mapping of
-    Just v' -> v'
-    Nothing -> extVarLocalPart extv
-  
+  return $ \extv -> fromMaybe (extVarLocalPart extv) (Map.lookup extv mapping)
 
 runRenaming :: Renaming a -> (a, ExtVar -> Var)
-runRenaming m = 
-  fst $ runState st' (RenamingST Set.empty Map.empty)
+runRenaming m =
+  evalState st' (RenamingST Set.empty Map.empty)
   where
-    Renaming (st') = do
+    Renaming st' = do
       r <- m
       f <- getRenamingF
       return (r, f)
-  
-           
+
 --------------------------------------------------------------------------------

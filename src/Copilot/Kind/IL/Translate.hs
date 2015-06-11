@@ -46,28 +46,23 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
   let modelInit = concatMap streamInit specStreams
 
   mainConstraints <- mapM streamRec specStreams
-  properties <- Map.fromList <$> do
-    forM specProperties $
+  properties <- Map.fromList <$>
+    (forM specProperties $
       \(C.Property {C.propertyName, C.propertyExpr}) -> do
         e' <- expr Bool propertyExpr
-        return $ (propertyName, e')
+        return (propertyName, e'))
 
-  localSeqs <- getLocalSeqs
   localConstraints <- getLocalVarsConstraints
 
-  return $ Spec
+  return Spec
     { modelInit
     , modelRec = mainConstraints ++ localConstraints
     , properties
-    , sequences = mainSeqs ++ localSeqs
-    , vars = getVars $
-      modelInit ++ mainConstraints ++ localConstraints ++ Map.elems properties
     }
 
 seqDescr :: C.Stream -> SeqDescr
 seqDescr (C.Stream { C.streamId, C.streamExprType }) =
-  casting streamExprType (\t' -> SeqDescr (ncSeq streamId) t')
-
+  casting streamExprType $ SeqDescr $ ncSeq streamId
 
 streamInit :: C.Stream -> [Constraint]
 streamInit (C.Stream { C.streamId       = id
@@ -99,8 +94,7 @@ expr :: forall t a . Type t -> C.Expr a -> Trans (Expr t)
 
 expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
 
-expr t (C.Drop _ k id) = do
-  return $ SVal t (ncSeq id) (_n_plus k)
+expr t (C.Drop _ k id) = return $ SVal t (ncSeq id) (_n_plus k)
 
 expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
   ea' <- expr ta' ea
@@ -109,14 +103,13 @@ expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
     (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
   expr t eb
 
-expr t (C.Var _ name) = do
-  return $ SVal t (ncLocal name) _n_
+expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
 
 expr t (C.ExternVar ta name _) = casting ta $ \ta' -> do
   newExternVar (SeqDescr (ncExternVar name) ta')
   return $ SVal t (ncExternVar name) _n_
 
-expr t (C.ExternFun ta name args _ _) = do
+expr t (C.ExternFun _ name args _ _) = do
   args' <- mapM trArg args
   return $ FunApp t (ncExternFun name) args'
   where
@@ -124,17 +117,17 @@ expr t (C.ExternFun ta name args _ _) = do
       U <$> expr ta uExprExpr
 
 -- Arrays and functions are treated the same way
-expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \tb' -> do
+expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \_ -> do
   ind' <- U <$> expr Integer ind
   return $ FunApp t (ncExternFun name) [ind']
 
 expr t (C.Op1 op e) = handleOp1 t (op, e) expr notHandled Op1
-  where notHandled (UnhandledOp1 opName ta tb) = do
+  where notHandled (UnhandledOp1 opName ta _) = do
           e' <- U <$> expr ta e
           return $ FunApp t (ncUnhandledOp opName) [e']
 
 expr t (C.Op2 op e1 e2) = handleOp2 t (op, e1, e2) expr notHandled Op2 (Op1 Bool Not)
-  where notHandled (UnhandledOp2 opName ta tb tc) = do
+  where notHandled (UnhandledOp2 opName ta tb _) = do
           e1' <- U <$> expr ta e1
           e2' <- U <$> expr tb e2
           return $ FunApp t (ncUnhandledOp opName) [e1', e2']
@@ -148,11 +141,11 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
 --------------------------------------------------------------------------------
 
 mkVarName :: String -> [U Expr] -> String
-mkVarName name args = name ++ "_" ++ (concat $ map argToString args)
+mkVarName name args = name ++ "_" ++ concatMap argToString args
 
 argToString :: U Expr -> String
 argToString (U (Const Integer x)) = show x
-argToString (U (Op2 _ Add e1 e2)) = (argToString $ U e1) ++ (argToString $ U e2)
+argToString (U (Op2 _ Add e1 e2)) = argToString (U e1) ++ argToString (U e2)
 argToString (U _) = error "what"
 
 data TransST = TransST
@@ -171,7 +164,7 @@ newLocalVar d c = do
   modify $ \st -> st {_localVarsConstraints = c : _localVarsConstraints st}
 
 getVars :: [Constraint] -> [VarDescr]
-getVars = nubBy' (compare `on` varName) . concat . (map getExprVars)
+getVars = nubBy' (compare `on` varName) . concatMap getExprVars
 
 getExprVars :: Expr a -> [VarDescr]
 getExprVars (Const _ _) = []
@@ -180,18 +173,15 @@ getExprVars (Op1 _ _ e) = getExprVars e
 getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
 getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t]
 getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t]
-getExprVars (FunApp _ _ args) = concat $ map getUExprVars args
+getExprVars (FunApp _ _ args) = concatMap getUExprVars args
 
 getUExprVars :: U Expr -> [VarDescr]
 getUExprVars (U e) = getExprVars e
 
-getLocalVarsConstraints :: Trans ([Constraint])
+getLocalVarsConstraints :: Trans [Constraint]
 getLocalVarsConstraints = _localVarsConstraints <$> get
 
-getLocalSeqs :: Trans ([SeqDescr])
-getLocalSeqs = nubBy' (compare `on` seqId) . _localSeqs <$> get
-
 runTrans :: Trans a -> a
-runTrans m = fst $ runState m $ TransST [] []
+runTrans m = evalState m $ TransST [] []
 
 --------------------------------------------------------------------------------

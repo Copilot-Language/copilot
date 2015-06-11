@@ -39,16 +39,14 @@ data SatResult
 --------------------------------------------------------------------------------
 
 debug :: Bool -> Solver -> String -> IO ()
-debug printName s str = when (debugMode s) $ do
+debug printName s str = when (debugMode s) $
   putStrLn $ (if printName then "<" ++ solverName s ++ ">  " else "") ++ str
-
 
 send :: Solver -> SMT.Term -> IO ()
 send s t = do
   hPutStr (inh s) (show t ++ "\n")
   debug True s (show t)
   hFlush (inh s)
-
 
 receive :: Solver -> IO String
 receive s = do
@@ -58,8 +56,8 @@ receive s = do
 
 --------------------------------------------------------------------------------
 
-startNewSolver :: String -> [SeqDescr] -> [VarDescr] -> Bool -> IO Solver
-startNewSolver name seqs vars dbgMode = do
+startNewSolver :: String -> Bool -> IO Solver
+startNewSolver name dbgMode = do
   (i, o, e, p) <- runInteractiveProcess cmd opts Nothing Nothing
   hClose e
   let s = Solver i o p dbgMode name
@@ -85,22 +83,20 @@ entailed s cs = do
   --send s SMT.push
   case cs of
       [] -> assume s [Const Bool True]
-      _ -> assume s $ [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
+      _ -> assume s [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
   send s SMT.checkSat
   hClose (inh s)
 
-  res <- receive s >>= \case
+  receive s >>= \case
     "sat"     -> return Sat
     "unsat"   -> return Unsat
     "unknown" -> return Unknown
     s         -> Err.fatal $ "Unknown dReal output : '" ++ s ++ "'"
 
   --send s SMT.pop
-  return res
 
 declVars :: Solver -> [VarDescr] -> IO ()
 declVars s vars = forM_ vars $
   \(VarDescr {varName, varType}) -> send s (SMT.declFun varName varType)
 
 --------------------------------------------------------------------------------
-

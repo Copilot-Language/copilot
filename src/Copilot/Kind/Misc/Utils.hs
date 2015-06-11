@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Misc.Utils 
+module Copilot.Kind.Misc.Utils
  ( module Data.Maybe
  , module Control.Monad
  , printf
@@ -12,11 +12,11 @@ module Copilot.Kind.Misc.Utils
  , (!)
  , Map, Bimap
  , Set, isSubsetOf, member
- 
+
  -- Some personnal functions
  , fst3, snd3, thrd3
  , isSublistOf, nub', nubBy', nubEq, findM
- 
+
  , openTempFile
  ) where
 
@@ -28,7 +28,7 @@ import Data.Maybe
 import Data.Monoid (Monoid, (<>), mempty, mconcat)
 
 import Data.Function (on)
-import Data.List (nub, partition, groupBy, sortBy, 
+import Data.List (nub, partition, groupBy, sortBy,
                   intercalate, find, (\\), group, sort)
 
 import Control.Applicative ((<$>), (<*>), liftA, liftA2)
@@ -70,28 +70,28 @@ findM _ [] = return Nothing
 findM p (x:xs) = do
   b <- p x
   if b then return (Just x) else findM p xs
-  
+
 --------------------------------------------------------------------------------
 
 openTempFile :: String -> String -> String -> IO (String, Handle)
 openTempFile loc baseName extension = do
 
-  path   <- freshPath 
+  path   <- freshPath
   handle <- openFile path WriteMode
   return (path, handle)
-    
+
   where
-  
+
     freshPath :: IO FilePath
     freshPath = do
       path   <- pathFromSuff <$> randSuff
       exists <- doesFileExist path
       if exists then freshPath else return path
-  
+
     randSuff :: IO String
     randSuff = replicateM 4 $ randomRIO ('0', '9')
-    
+
     pathFromSuff :: String -> FilePath
     pathFromSuff suf = loc ++ "/" ++ baseName ++ suf ++ "." ++ extension
-    
+
 --------------------------------------------------------------------------------

@@ -58,7 +58,7 @@ dRealProver options = Prover
   , hasFeature = \case
       GiveCex -> False
       HandleAssumptions -> True
-  , startProver = \spec -> return $ ProverST options (translate spec)
+  , startProver = return . ProverST options . translate
   , askProver   = ask
   , closeProver = const $ return ()
   }
@@ -69,12 +69,12 @@ dRealProver options = Prover
 
 ask :: ProverST -> [PropId] -> PropId -> IO Output
 ask
-  (ProverST opts (Spec {modelInit, modelRec, properties, sequences, vars}))
+  (ProverST opts (Spec {modelInit, modelRec, properties}))
   assumptionsIds
   toCheckId = do
 
-    baseSolver <- SMT.startNewSolver "base" sequences vars (baseDebug opts)
-    stepSolver <- SMT.startNewSolver "step" sequences vars (stepDebug opts)
+    baseSolver <- SMT.startNewSolver "base" vars (baseDebug opts)
+    stepSolver <- SMT.startNewSolver "step" vars (stepDebug opts)
 
     let initBaseVars = fromList $ getVars modelInit'
     SMT.declVars baseSolver $ elems initBaseVars
@@ -110,19 +110,19 @@ ask
               nextInv  = map (at $ _n_plus (k + 1)) toCheck
 
           let baseVarsItr = fromList $ getVars base' ++ getVars baseInv
-              baseVars'   = baseVars `union` (fromList $ getVars base' ++ getVars baseInv)
+              baseVars'   = baseVars `union` fromList (getVars base' ++ getVars baseInv)
           SMT.declVars baseSolver $ elems $ baseVarsItr \\ baseVars
           SMT.assume baseSolver base'
 
           let stepVarsItr = fromList $ getVars step' ++ getVars nextInv
-              stepVars'   = stepVars `union` (fromList $ getVars step' ++ getVars nextInv)
+              stepVars'   = stepVars `union` fromList (getVars step' ++ getVars nextInv)
           SMT.declVars stepSolver $ elems $ stepVarsItr \\ stepVars
           SMT.assume stepSolver step'
 
           SMT.entailed baseSolver baseInv >>= \case
             SMT.Sat     -> return $ Output (Invalid Nothing) []
             SMT.Unknown -> return $ Output Unknown ["undecidable"]
-            SMT.Unsat   -> do
+            SMT.Unsat   ->
               if onlyBmc opts
                 then indStep (k + 1) baseSolver stepSolver baseVars' stepVars'
                 else

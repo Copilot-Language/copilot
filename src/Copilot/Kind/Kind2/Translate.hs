@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Kind2.Translate 
+module Copilot.Kind.Kind2.Translate
   ( toKind2
   , Style (..)
   ) where
@@ -31,8 +31,8 @@ type DepGraph = Map NodeId [NodeId]
 data Style = Inlined | Modular
 
 toKind2 :: Style -> [PropId] -> [PropId] -> Spec -> K.File
-toKind2 style assumptions checkedProps spec = 
-  addAssumptions spec assumptions 
+toKind2 style assumptions checkedProps spec =
+  addAssumptions spec assumptions
   $ trSpec (complete spec') predCallsGraph assumptions checkedProps
   where predCallsGraph = specDependenciesGraph spec'
         spec' = case style of
@@ -43,9 +43,9 @@ trSpec :: Spec -> DepGraph -> [PropId] -> [PropId] -> K.File
 trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
   where preds = map (trNode spec predCallsGraph) (specNodes spec)
         props = map trProp $
-          filter ((`elem` checkedProps) . fst) $ 
+          filter ((`elem` checkedProps) . fst) $
           Map.toList (specProps spec)
-  
+
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)
 
@@ -58,7 +58,7 @@ trNode spec predCallsGraph node =
     predInit  = mkConj $ initLocals  node
                          ++ map (trExpr False) (nodeConstrs node)
                          ++ predCalls True spec predCallsGraph node
-    predTrans = mkConj $ transLocals node 
+    predTrans = mkConj $ transLocals node
                          ++ map (trExpr True) (nodeConstrs node)
                          ++ predCalls False spec predCallsGraph node
 
@@ -70,16 +70,16 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
     changeTail f (reverse -> l) = case l of
       []     -> error "impossible"
       x : xs -> reverse $ f x : xs
-        
+
     aux pred =
       let init'  = mkConj ( K.predInit  pred : map K.StateVar vars )
           trans' = mkConj ( K.predTrans pred : map K.PrimedStateVar vars )
       in pred { K.predInit = init', K.predTrans = trans' }
-      
+
     vars =
       let bindings   = nodeImportedVars (specTopNode spec)
           toExtVar a = fromJust $ Map.lookup a (specProps spec)
-          toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) $ v
+          toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
       in map (varName . toTopVar . toExtVar) assumptions
 
 --------------------------------------------------------------------------------
@@ -97,19 +97,19 @@ gatherPredStateVars spec node = locals ++ imported
   where
     nodesMap = Map.fromList [(nodeId n, n) | n <- specNodes spec]
     extVarType :: ExtVar -> K.Type
-    extVarType (ExtVar n v) = 
-      case (nodeLocalVars (nodesMap ! n)) ! v of
+    extVarType (ExtVar n v) =
+      case nodeLocalVars (nodesMap ! n) ! v of
         VarDescr Integer _ -> K.Int
         VarDescr Bool    _ -> K.Bool
         VarDescr Real    _ -> K.Real
-        
-    locals = 
-      map (\v -> K.StateVarDef (varName v) 
+
+    locals =
+      map (\v -> K.StateVarDef (varName v)
               (extVarType $ ExtVar (nodeId node) v) [])
          . sort . Map.keys $ nodeLocalVars node
-         
+
     imported =
-      map (\(v, ev) -> K.StateVarDef (varName v) (extVarType ev) []) 
+      map (\(v, ev) -> K.StateVarDef (varName v) (extVarType ev) [])
       . sortBy (compare `on` snd) . Bimap.toList $ nodeImportedVars node
 
 --------------------------------------------------------------------------------
@@ -137,27 +137,26 @@ trConst Bool    False = K.ValueLitteral "false"
 --------------------------------------------------------------------------------
 
 initLocals :: Node -> [K.Term]
-initLocals node = 
+initLocals node =
   concatMap f (Map.toList $ nodeLocalVars node)
-  where 
-    f (v, VarDescr t def) = 
+  where
+    f (v, VarDescr t def) =
       case def of
         Pre     c _ -> [mkEquality (trVar v) (trConst t c)]
         Expr    e   -> [mkEquality (trVar v) (trExpr False e)]
         Constrs cs  -> map (trExpr False) cs
-  
+
 
 transLocals :: Node -> [K.Term]
-transLocals node = 
+transLocals node =
   concatMap f (Map.toList $ nodeLocalVars node)
-  where 
-   f (v, VarDescr _ def) = 
+  where
+   f (v, VarDescr _ def) =
       case def of
         Pre _ v' -> [mkEquality (trPrimedVar v) (trVar v')]
         Expr e   -> [mkEquality (trPrimedVar v) (trExpr True e)]
         Constrs cs  -> map (trExpr True) cs
-        
-       
+
 predCalls :: Bool -> Spec -> DepGraph -> Node -> [K.Term]
 predCalls isInitCall spec predCallsGraph node =
   map mkCall toCall
@@ -165,33 +164,32 @@ predCalls isInitCall spec predCallsGraph node =
     nid = nodeId node
     toCall = predCallsGraph ! nid
     nodesMap = Map.fromList [(nodeId n, n) | n <- specNodes spec]
-    
+
     nodeLocals n =
       map (ExtVar n) . sort . Map.keys
       . nodeLocalVars $ (nodesMap ! n)
-    
+
     mkCall callee
       | isInitCall =
           K.PredApp callee K.Init (argsSeq trVar)
-      | otherwise  = 
+      | otherwise  =
           K.PredApp callee K.Trans (argsSeq trVar ++ argsSeq trPrimedVar)
       where
-            
+
         calleeLocals = nodeLocals callee
         calleeImported =
-          concat . map nodeLocals . sort
-          . nodeDependencies $ nodesMap ! callee
-          
+          (concatMap nodeLocals . sort . nodeDependencies) $ nodesMap ! callee
+
         localAlias trVarF ev =
           case Bimap.lookupR ev $ nodeImportedVars node of
-            Nothing -> error $ 
-              "This spec is not complete : " 
+            Nothing -> error $
+              "This spec is not complete : "
               ++ show ev ++ " should be imported in " ++ nid
             Just v -> trVarF v
-         
+
         argsSeq trVarF =
-          map (localAlias trVarF) (calleeLocals ++ calleeImported)             
-      
+          map (localAlias trVarF) (calleeLocals ++ calleeImported)
+
 --------------------------------------------------------------------------------
 
 trExpr :: Bool -> Expr t -> K.Term

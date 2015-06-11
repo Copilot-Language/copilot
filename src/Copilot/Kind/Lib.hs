@@ -40,12 +40,11 @@ arbitrary s = extern s Nothing
 
 arbitraryCst :: forall a . (Typed a) => String -> Stream a
 arbitraryCst s = c
-  where 
+  where
     t :: Stream Word8
     t = [0] ++ (1 + t)
     i :: Stream a
     i = extern s Nothing
     c = if t == 0 then i else [uninitialized (typeOf :: Type a)] ++ c
-    
+
 --------------------------------------------------------------------------------
-        

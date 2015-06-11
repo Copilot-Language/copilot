@@ -25,8 +25,7 @@ declConst :: Type a -> String -> Term
 declConst t id = node "declare-fun" [atom id, unit, atom $ smtTy t]
 
 declFun :: String -> Type t -> Term
-declFun name retTy = 
-  node "declare-fun" [atom name, unit, atom (smtTy retTy)]
+declFun name retTy = node "declare-fun" [atom name, unit, atom (smtTy retTy)]
 
 assert :: Constraint -> Term
 assert c = node "assert" [expr c]
@@ -54,8 +53,7 @@ expr (Const Integer v) = atom (show v)
 expr (Const Bool    b) = atom (if b then "true" else "false")
 expr (Const Real    v) = atom (show v)
 
-expr (Ite _ cond e1 e2) = node ("ite")
-                             [expr cond, expr e1, expr e2]
+expr (Ite _ cond e1 e2) = node "ite" [expr cond, expr e1, expr e2]
 
 expr (FunApp _ funName args) = node funName $ map uexpr args
 
@@ -81,12 +79,8 @@ expr (Op2 _ op e1 e2) =
       Sub  -> "-"
       Mul  -> "*"
 
--- TODO(chathhorn): why is this special stream thing even part of the IR?
 expr (SVal _ f ix) = case ix of
       Fixed i -> atom $ f ++ "_" ++ show i
       Var off -> atom $ f ++ "_n" ++ show off
-      --Fixed i -> atom (show i)
-      -- Var off -> node "+"
-      --            [atom varN, atom (show off)]
 
 --------------------------------------------------------------------------------

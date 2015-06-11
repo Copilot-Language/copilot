@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.Misc.Error 
+module Copilot.Kind.Misc.Error
   ( badUse
   , impossible
   , impossible_
-  , notHandled 
+  , notHandled
   , fatal
   ) where
 

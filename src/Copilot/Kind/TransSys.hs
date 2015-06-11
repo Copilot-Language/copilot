@@ -1,15 +1,10 @@
 --------------------------------------------------------------------------------
 
-module Copilot.Kind.TransSys
-  ( module Copilot.Kind.TransSys.Spec
-  , module Copilot.Kind.TransSys.PrettyPrint
-  , module Copilot.Kind.TransSys.Translate
-  , module Copilot.Kind.TransSys.Transform
-  ) where
+module Copilot.Kind.TransSys (module X) where
 
-import Copilot.Kind.TransSys.Spec
-import Copilot.Kind.TransSys.PrettyPrint
-import Copilot.Kind.TransSys.Translate
-import Copilot.Kind.TransSys.Transform
+import Copilot.Kind.TransSys.Spec as X
+import Copilot.Kind.TransSys.PrettyPrint as X
+import Copilot.Kind.TransSys.Translate as X
+import Copilot.Kind.TransSys.Transform as X
 
 --------------------------------------------------------------------------------

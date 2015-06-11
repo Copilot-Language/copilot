@@ -48,16 +48,15 @@ casting t f = case castedType t of
   K.U K.Bool    -> f K.Bool
   K.U K.Integer -> f K.Integer
   K.U K.Real    -> f K.Real
-  
+
 --------------------------------------------------------------------------------
 
 class Casted b where
   _cast :: Dyn -> Maybe b
 
 instance Casted Integer where
-
   _cast (Dynamic v tv)
-    | Just Refl <- tv =~= Int8    = Just $ toInteger v 
+    | Just Refl <- tv =~= Int8    = Just $ toInteger v
     | Just Refl <- tv =~= Int16   = Just $ toInteger v
     | Just Refl <- tv =~= Int32   = Just $ toInteger v
     | Just Refl <- tv =~= Int64   = Just $ toInteger v
@@ -66,16 +65,14 @@ instance Casted Integer where
     | Just Refl <- tv =~= Word32  = Just $ toInteger v
     | Just Refl <- tv =~= Word64  = Just $ toInteger v
     | otherwise                   = Nothing
- 
-instance Casted Bool where
 
+instance Casted Bool where
   _cast (Dynamic v tv)
     | Just Refl <- tv =~= Bool  = Just v
     | otherwise                 = Nothing
 
 instance Casted Double where
-
-  _cast (Dynamic v tv) 
+  _cast (Dynamic v tv)
     | Just Refl <- tv =~= Float  = Just $ float2Double v
     | Just Refl <- tv =~= Double = Just v
     | otherwise = Nothing

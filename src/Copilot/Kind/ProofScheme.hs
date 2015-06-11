@@ -9,14 +9,14 @@ import Control.Monad.Writer
 type PropId = String
 
 type ProofScheme = Writer [Action] ()
-  
+
 data Action
   = Check   PropId
   | Assume  PropId
   | Local   [Action]
   | Pragma  Pragma
   deriving (Show)
-  
+
 data Pragma = PrintMsg String deriving (Show)
 
 --------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ assume :: PropId -> ProofScheme
 assume p = tell [Assume p]
 
 assuming :: [PropId] -> ProofScheme -> ProofScheme
-assuming ps m = censor wrap m
+assuming ps = censor wrap
   where wrap actions = [Local $ map Assume ps ++ actions]
 
 --------------------------------------------------------------------------------

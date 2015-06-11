@@ -64,14 +64,14 @@ type Constraint = Expr Bool
 
 data SeqDescr = forall t . SeqDescr
   { seqId    :: SeqId
-  , seqType  :: Type t }
+  , seqType  :: Type t
+  }
 
 data Spec = Spec
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
-  , sequences   :: [SeqDescr]
-  , vars        :: [VarDescr] }
+  }
 
 --------------------------------------------------------------------------------
 
