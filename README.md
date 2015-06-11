@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot-c99.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-c99)
+
 Overview
 ========
 This package is a Copilot back-end that targets Atom
