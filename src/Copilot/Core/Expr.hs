@@ -15,7 +15,7 @@ module Copilot.Core.Expr
   ) where
 
 import Copilot.Core.Operators (Op1, Op2, Op3)
-import Copilot.Core.Type (Type)
+import Copilot.Core.Type (Type, Struct)
 import Data.Word (Word16)
 
 --------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ data Expr a where
                -> Maybe Tag -> Expr a
   ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
                -> Maybe [[b]] -> Maybe Tag -> Expr b 
-  ExternStruct :: Name -> [UExpr] -> Tag -> Expr [UExpr]
+  ExternStruct :: Type a -> Name -> [UExpr] -> Tag -> Expr a
   Op1          :: Op1 a b -> Expr a -> Expr b 
   Op2          :: Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d

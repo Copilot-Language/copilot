@@ -35,6 +35,7 @@ eqWit t =
     Word64 -> EqWit
     Float  -> EqWit
     Double -> EqWit
+    Struct -> EqWit
 
 --------------------------------------------------------------------------------
 

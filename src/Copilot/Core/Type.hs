@@ -12,6 +12,7 @@ module Copilot.Core.Type
   , Typed (..)
   , UType (..)
   , SimpleType(..)
+  , Struct(..)
   ) where
 
 import Data.Int
@@ -30,6 +31,7 @@ data Type :: * -> * where
   Word64  :: Type Word64
   Float   :: Type Float
   Double  :: Type Double
+  Struct  :: Type Struct
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -43,6 +45,7 @@ instance EqualType Type where
   (=~=) Word64 Word64 = Just Refl
   (=~=) Float  Float  = Just Refl
   (=~=) Double Double = Just Refl
+  (=~=) Struct Struct = Just Refl
   (=~=) _ _ = Nothing
 
 --------------------------------------------------------------------------------
@@ -58,6 +61,7 @@ data SimpleType = SBool
                 | SWord64
                 | SFloat 
                 | SDouble
+                | SStruct
   deriving Eq
 
 --------------------------------------------------------------------------------
@@ -101,10 +105,18 @@ instance Typed Float  where
 instance Typed Double where 
   typeOf       = Double
   simpleType _ = SDouble
+instance Typed Struct where
+  typeOf       = Struct
+  simpleType _ = SStruct
 
 --------------------------------------------------------------------------------
 
 -- | A untyped type (no phantom type).
 data UType = forall a . UType { uTypeType :: Type a }
+
+--------------------------------------------------------------------------------
+
+-- | A definition of Structs, to add them into the type system
+data Struct = Defined | Undefined deriving Show
 
 --------------------------------------------------------------------------------

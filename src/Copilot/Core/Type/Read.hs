@@ -34,6 +34,7 @@ readWit t =
     Word64 -> ReadWit
     Float  -> ReadWit
     Double -> ReadWit
+    Struct -> ReadWit
 
 --------------------------------------------------------------------------------
 
