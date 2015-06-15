@@ -55,7 +55,7 @@ instance Show AnalyzeException where
     "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
   show NestedArray            = badUsage $  
     "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
-  show TooMuchRecussion       = badUsage $ 
+  show TooMuchRecursion       = badUsage $ 
     "You have exceeded the limit of " ++ show maxRecursion ++ " recursive calls in a stream definition.  Likely, you have accidently defined a circular stream, such as 'x = x'.  Another possibility is you have defined a a polymorphic function with type constraints that references other streams.  For example,\n\n  nats :: (Typed a, Num a) => Stream a\n  nats = [0] ++ nats + 1\n\nis not allowed.  Make the definition monomorphic, or add a level of indirection, like \n\n  nats :: (Typed a, Num a) => Stream a\n  nats = n\n    where n = [0] ++ nats + 1\n\nFinally, you may have intended to generate a very large expression.  You can try shrinking the expression by using local variables.  It all else fails, you can increase the maximum size of ecursive calls by modifying 'maxRecursion' in copilot-language."
   show (DifferentTypes name) = badUsage $  
     "The external symbol " ++ name ++ " has been declared to have two different types!"
