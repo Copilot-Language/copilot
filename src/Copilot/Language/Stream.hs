@@ -34,6 +34,7 @@ data Stream :: * -> * where
               => String -> [Arg] -> Maybe (Stream a) -> Stream a
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
+  --Struct      :: String -> [Arg] -> Stream [Arg]
   Local       :: (Typed a, Typed b) 
               => Stream a -> (Stream a -> Stream b) -> Stream b
   Var         :: Typed a 

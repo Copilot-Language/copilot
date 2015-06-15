@@ -38,7 +38,7 @@ data AnalyzeException
   | DropMaxViolation
   | NestedExternFun
   | NestedArray
-  | TooMuchRecussion
+  | TooMuchRecursion
   | DifferentTypes String
   | Redeclared String
   | BadNumberOfArgs String
@@ -110,7 +110,7 @@ data SeenExtern = NoExtern
 analyzeExpr :: IORef Env -> Stream a -> IO ()
 analyzeExpr refStreams s = do
   b <- mapCheck refStreams
-  when b (throw TooMuchRecussion)
+  when b (throw TooMuchRecursion)
   go NoExtern M.empty s
 
   where
@@ -291,7 +291,7 @@ specExts refStreams spec = do
 collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
 collectExts refStreams stream_ env_ = do
   b <- mapCheck refStreams
-  when b (throw TooMuchRecussion)
+  when b (throw TooMuchRecursion)
   go M.empty env_ stream_
 
   where
