@@ -194,39 +194,45 @@ analyzeDrop _ _                            = throw DropAppliedToNonAppend
 -- typed arguments.
 --------------------------------------------------------------------------------
 
--- An environment to store external variables, arrays, and functions, so that we
+-- An environment to store external variables, arrays, functions and structs, so that we
 -- can check types in the expression---e.g., if we declare the same external to
 -- have two different types.
 data ExternEnv = ExternEnv
   { externVarEnv  :: [(String, C.SimpleType)]
   , externArrEnv  :: [(String, C.SimpleType)]
   , externFunEnv  :: [(String, C.SimpleType)] 
-  , externFunArgs :: [(String, [C.SimpleType])] 
+  , externFunArgs :: [(String, [C.SimpleType])]
+  , externStructArgs :: [(String, [C.SimpleType])]
   }
 
 --------------------------------------------------------------------------------
 
--- Make sure external variables, functions, and arrays are correctly typed.
+-- Make sure external variables, functions, arrays, and structs are correctly typed.
 
 analyzeExts :: ExternEnv -> IO ()
 analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
                       , externFunEnv  = funs 
-                      , externFunArgs = args }
+                      , externFunArgs = args
+                      , externStructArgs = struct_args }
     = do
     -- symbol names redeclared?
     findDups vars arrs
     findDups vars funs
+    findDups vars struct_args
     findDups arrs funs
+    findDups arrs struct_args
+    findDups funs struct_args
     -- conflicting types?
     conflictingTypes vars
     conflictingTypes arrs
     conflictingTypes funs
     -- symbol names given different number of args and right types?
     funcArgCheck args
+    funcArgCheck struct_args
   
   where
-  findDups :: [(String, C.SimpleType)] -> [(String, C.SimpleType)] -> IO ()
+  findDups :: [(String, a)] -> [(String, a)] -> IO ()
   findDups ls0 ls1 = mapM_ (\(name,_) -> dup name) ls0
     where
     dup nm = mapM_ ( \(name',_) -> if name' == nm 
