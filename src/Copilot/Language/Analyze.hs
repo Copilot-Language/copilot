@@ -232,7 +232,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
     funcArgCheck struct_args
   
   where
-  findDups :: [(String, a)] -> [(String, a)] -> IO ()
+  findDups :: [(String, a)] -> [(String, b)] -> IO ()
   findDups ls0 ls1 = mapM_ (\(name,_) -> dup name) ls0
     where
     dup nm = mapM_ ( \(name',_) -> if name' == nm 
@@ -280,7 +280,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 specExts :: IORef Env -> Spec -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
-           (ExternEnv [] [] [] []) 
+           (ExternEnv [] [] [] [] []) 
            (triggers $ runSpec spec)
   foldM observerExts env (observers $ runSpec spec) 
 
