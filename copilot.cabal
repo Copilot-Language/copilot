@@ -61,7 +61,7 @@ executable copilot-regression
                    , copilot-sbv >= 0.6
                    , copilot-cbmc >= 2.1.2
                    , copilot-c99 >= 2.1.2
-                   , directory >= 1.1
+                   , directory >= 1.2.1
                    , random
   other-modules:    AddMult
                   , Array
