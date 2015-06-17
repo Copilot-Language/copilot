@@ -182,21 +182,22 @@ ppExternalStruct :: ExtStruct -> Doc
 ppExternalStruct
   ExtStruct
   { externStructName  = name
-  , exterStructArgs   = args } =
+  , externStructArgs   = args
+  , externStructTag   = tag } =
       text "struct" <+> text name <> text "{" <> ppStructArgs args <> text "};"
 
   where
-    ppStructArgs :: [Expr] -> Doc
-    ppStructArgs = vcat . intersperse (text ";") . map ppStructArg
+    ppStructArgs :: [SExpr] -> Doc
+    ppStructArgs = vcat . intersperse (text ";") . map ppStructArg . map (\SExpr { uexpr = u0 } -> u0)
 
-    ppStructArg :: Expr -> Doc
-    ppStructArg UExpr { uExprType = t1; uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
+    ppStructArg :: UExpr -> Doc
+    ppStructArg UExpr { uExprType = t1, uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
       text ( case e1 of
           Var _ name -> name
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
-          ExternStruct name _ _ -> name
-          _ -> empty)
+          ExternStruct _ name _ _ _ -> name
+          _ -> "")
 
 --------------------------------------------------------------------------------
 

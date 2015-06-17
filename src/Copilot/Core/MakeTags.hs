@@ -97,6 +97,12 @@ mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
     e' <- mkTagsExpr e
     return $ UExpr { uExprExpr = e', uExprType = t }
 
+mkTagsSExpr :: SExpr -> State Int SExpr
+mkTagsSExpr SExpr { sname = n, uexpr = u } =
+  do
+    u' <- mkTagsUExpr u
+    return $ SExpr { sname = n, uexpr = u' }
+
 mkTagsExpr :: Expr a -> State Int (Expr a)
 mkTagsExpr e0 = case e0 of
   Const t x                      -> return $ Const t x
@@ -111,9 +117,9 @@ mkTagsExpr e0 = case e0 of
               size idx e _       -> do idx' <- mkTagsExpr idx
                                        k <- next
                                        return $ ExternArray t1 t2 name size idx' e (Just k)
-  ExternStruct t name args _     -> do args' <- mapM mkTagsUExpr args
-                                       k <- next
-                                       return $ ExternStruct name args' (Just k)
+  ExternStruct t name sargs expr _ -> do args' <- mapM mkTagsSExpr sargs
+                                         k <- next
+                                         return $ ExternStruct t name args' expr (Just k)
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)

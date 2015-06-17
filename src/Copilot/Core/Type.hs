@@ -117,6 +117,6 @@ data UType = forall a . UType { uTypeType :: Type a }
 --------------------------------------------------------------------------------
 
 -- | A definition of Structs, to add them into the type system
-data Struct = Defined | Undefined deriving Show
+data Struct = Defined | Undefined deriving (Show, Read, Eq)
 
 --------------------------------------------------------------------------------
