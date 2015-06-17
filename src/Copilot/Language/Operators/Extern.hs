@@ -59,7 +59,8 @@ externArray = ExternArray
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
 
-externStruct :: Typed a => String -> [Arg] -> Stream a
+externStruct :: Typed a => String -> [StructArg] -> Maybe [a] -> Stream [StructArg]
+externStruct = ExternStruct
 
 --------------------------------------------------------------------------------
 
