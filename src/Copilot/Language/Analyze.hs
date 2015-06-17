@@ -16,7 +16,7 @@ module Copilot.Language.Analyze
 
 import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
-import Copilot.Language.Stream (Stream (..), Arg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..), StructArg (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
 
@@ -345,10 +345,10 @@ collectExts refStreams stream_ env_ = do
         env' <- case me of
                   Nothing -> return env
                   Just e -> go nodes env e
-        env'' <- foldM (\env'' (StructArg arg_) -> go nodes env'' arg_.arg')
+        env'' <- foldM (\env'' (StructArg { arg' = arg_ }) -> go nodes env'' arg_)
                   env' sargs
-        let argTypes = map (\(StructArg arg_) -> getSimpleType arg_.arg') sargs
-        let struct = (name, SStruct)
+        let argTypes = map (\(StructArg { arg' = arg_ }) -> getSimpleType arg_) sargs
+        let struct = (name, C.SStruct)
         return env'' { externStructEnv = struct : externStructEnv env''
                      , externStructArgs = (name, argTypes) : externStructArgs env'' }
 
