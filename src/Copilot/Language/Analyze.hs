@@ -202,7 +202,8 @@ data ExternEnv = ExternEnv
   , externArrEnv  :: [(String, C.SimpleType)]
   , externFunEnv  :: [(String, C.SimpleType)] 
   , externFunArgs :: [(String, [C.SimpleType])]
-  , externStructArgs :: [(String, [C.SimpleType])]
+  , externStructEnv  :: [(String, C.SimpleType)]
+  , externStructArgs :: [(String, [(String, C.SimpleType)])]
   }
 
 --------------------------------------------------------------------------------
@@ -214,22 +215,27 @@ analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
                       , externFunEnv  = funs 
                       , externFunArgs = args
+                      , externStructEnv  = structs
                       , externStructArgs = struct_args }
     = do
     -- symbol names redeclared?
     findDups vars arrs
     findDups vars funs
-    findDups vars struct_args
+    --findDups vars struct_args
+    findDups vars structs
     findDups arrs funs
-    findDups arrs struct_args
-    findDups funs struct_args
+    --findDups arrs struct_args
+    findDups arrs structs
+    --findDups funs struct_args
+    findDups funs structs
     -- conflicting types?
     conflictingTypes vars
     conflictingTypes arrs
     conflictingTypes funs
     -- symbol names given different number of args and right types?
     funcArgCheck args
-    funcArgCheck struct_args
+    --funcArgCheck struct_args
+    structArgCheck struct_args
   
   where
   findDups :: [(String, a)] -> [(String, b)] -> IO ()
@@ -266,6 +272,9 @@ analyzeExts ExternEnv { externVarEnv  = vars
                else throw (BadFunctionArgType name)
         else throw (BadNumberOfArgs name) 
 
+  structArgCheck :: [(String, [(String, C.SimpleType)])] -> IO ()
+  structArgCheck ls = let args = map snd ls in findDups args args
+
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
 
@@ -280,7 +289,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 specExts :: IORef Env -> Spec -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
-           (ExternEnv [] [] [] [] []) 
+           (ExternEnv [] [] [] [] [] []) 
            (triggers $ runSpec spec)
   foldM observerExts env (observers $ runSpec spec) 
 
@@ -331,6 +340,17 @@ collectExts refStreams stream_ env_ = do
         env' <- go nodes env idx
         let arr = ( name, getSimpleType stream )
         return env' { externArrEnv = arr : externArrEnv env' }
+
+      ExternStruct name sargs me -> do
+        env' <- case me of
+                  Nothing -> return env
+                  Just e -> go nodes env e
+        env'' <- foldM (\env'' (StructArg arg_) -> go nodes env'' arg_.arg')
+                  env' sargs
+        let argTypes = map (\(StructArg arg_) -> getSimpleType arg_.arg') sargs
+        let struct = (name, SStruct)
+        return env'' { externStructEnv = struct : externStructEnv env''
+                     , externStructArgs = (name, argTypes) : externStructArgs env'' }
 
       Local e _              -> go nodes env e 
       Var _                  -> return env
