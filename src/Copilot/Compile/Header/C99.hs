@@ -70,7 +70,7 @@ c99Header prefix spec = render $ vcat $
 
 ppHeaders :: Doc
 ppHeaders = unlines
-  [ "#include <stdint.h>"
+  [ "#include <stdint.h>
   , "#include <stdbool.h>"
   ]
 
@@ -186,7 +186,7 @@ typeSpec UType { uTypeType = t }
 --------------------------------------------------------------------------------
 
 ppStep :: String -> Doc
-ppStep prefix = text "void" <+> text (prefix ++ "step") <> text "();"
+ppStep prefix = text "void" <+> text (prefix ++ "step") <> text "(void);"
 
 --------------------------------------------------------------------------------
 
