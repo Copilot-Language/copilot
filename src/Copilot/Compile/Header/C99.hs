@@ -70,7 +70,7 @@ c99Header prefix spec = render $ vcat $
 
 ppHeaders :: Doc
 ppHeaders = unlines
-  [ "#include <stdint.h>
+  [ "#include <stdint.h>"
   , "#include <stdbool.h>"
   ]
 
