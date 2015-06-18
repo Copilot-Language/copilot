@@ -273,7 +273,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
         else throw (BadNumberOfArgs name) 
 
   structArgCheck :: [(String, [(String, C.SimpleType)])] -> IO ()
-  structArgCheck ls = let args = map snd ls in findDups args args
+  structArgCheck ls = foldr (\arg' io -> findDups arg' arg') (return ()) $ map snd ls
 
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
@@ -345,9 +345,9 @@ collectExts refStreams stream_ env_ = do
         env' <- case me of
                   Nothing -> return env
                   Just e -> go nodes env e
-        env'' <- foldM (\env'' (StructArg { arg' = arg_ }) -> go nodes env'' arg_)
+        env'' <- foldM (\env'' (StructArg { arg' = Arg arg_ }) -> go nodes env'' arg_)
                   env' sargs
-        let argTypes = map (\(StructArg { arg' = arg_ }) -> getSimpleType arg_) sargs
+        let argTypes = map (\(StructArg { name = n, arg' = Arg arg_ }) -> (n, getSimpleType arg_)) sargs
         let struct = (name, C.SStruct)
         return env'' { externStructEnv = struct : externStructEnv env''
                      , externStructArgs = (name, argTypes) : externStructArgs env'' }
