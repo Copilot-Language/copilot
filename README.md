@@ -87,6 +87,8 @@ copilot-cbmc depends on the C model-checker, CBMC.
 use CBMC to prove that two back-ends generating C generate semantically
 equivalent C, to help detect bugs in C back-ends.
 
+For compiling it with CompCert, you need to install it, with its Standard C library (more at http://compcert.inria.fr/ ).
+
 Copyright, License
 ==================
 Copilot is distributed with the BSD3 license. The license file contains the
