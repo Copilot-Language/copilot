@@ -9,6 +9,7 @@
 
 module Copilot.Core.PrettyPrint
   ( prettyPrint
+  , ppExpr
   ) where
 
 import Copilot.Core

@@ -219,7 +219,7 @@ typeSpec UType { uTypeType = t }
 --------------------------------------------------------------------------------
 
 ppStep :: String -> Doc
-ppStep prefix = text "void" <+> text (prefix ++ "step") <> text "();"
+ppStep prefix = text "void" <+> text (prefix ++ "step") <> text "(void);"
 
 --------------------------------------------------------------------------------
 

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot-core.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-core)
+
 Overview
 ========
 [copilot-core](http://hackage.haskell.org/package/copilot-core) The core
