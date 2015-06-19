@@ -36,7 +36,7 @@ data Stream :: * -> * where
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
   ExternStruct:: Typed a
-              => String -> [StructArg] -> Maybe (Stream a) -> Stream [StructArg]
+              => String -> [StructArg] -> Maybe (Stream a) -> Stream a
   Local       :: (Typed a, Typed b) 
               => Stream a -> (Stream a -> Stream b) -> Stream b
   Var         :: Typed a 
@@ -53,7 +53,7 @@ data Stream :: * -> * where
 data Arg where
   Arg :: Typed a => Stream a -> Arg
 
-data StructArg = StructArg { name :: String, arg' :: Arg }
+data StructArg = StructArg { name_ :: String, arg' :: Arg }
 
 --------------------------------------------------------------------------------
 

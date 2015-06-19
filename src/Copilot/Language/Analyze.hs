@@ -104,6 +104,7 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 data SeenExtern = NoExtern
                 | SeenFun
                 | SeenArr
+                -- | SeenStruct
 
 --------------------------------------------------------------------------------
 
@@ -139,6 +140,17 @@ analyzeExpr refStreams s = do
                                  NoExtern -> go SeenArr nodes' idx
                                  SeenFun  -> throw NestedExternFun
                                  SeenArr  -> throw NestedArray
+      {-ExternStruct _ sargs me ->
+        checkInterp >> checkArgs
+        where
+          checkInterp = case me of
+                          Nothing -> return ()
+                          Just e -> go seenExt nodes' e
+          checkArgs = case seenExt of
+                        NoExtern
+                        SeenFun
+                        SeenArr
+                        SeenExtern-}
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -273,7 +285,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
         else throw (BadNumberOfArgs name) 
 
   structArgCheck :: [(String, [(String, C.SimpleType)])] -> IO ()
-  structArgCheck ls = foldr (\arg' io -> findDups arg' arg') (return ()) $ map snd ls
+  structArgCheck ls = foldr (\sarg' _ -> findDups sarg' sarg') (return ()) $ map snd ls
 
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
@@ -347,7 +359,7 @@ collectExts refStreams stream_ env_ = do
                   Just e -> go nodes env e
         env'' <- foldM (\env'' (StructArg { arg' = Arg arg_ }) -> go nodes env'' arg_)
                   env' sargs
-        let argTypes = map (\(StructArg { name = n, arg' = Arg arg_ }) -> (n, getSimpleType arg_)) sargs
+        let argTypes = map (\(StructArg { name_ = n, arg' = Arg arg_ }) -> (n, getSimpleType arg_)) sargs
         let struct = (name, C.SStruct)
         return env'' { externStructEnv = struct : externStructEnv env''
                      , externStructArgs = (name, argTypes) : externStructArgs env'' }

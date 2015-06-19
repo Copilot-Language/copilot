@@ -216,13 +216,9 @@ mkExpr refMkId refStreams refMap = go
       return $ Core.UExpr typeOf w
 
   mkStructArg :: StructArg -> IO Core.SExpr
-  mkStructArg (StructArg se) = do
-      e <- sArgToArg se
-      w <- mkExpr refMkId refStreams refMap e
-      return $ Core.SExpr se.name $ typeOf w
-
-  sArgToArg :: StructArg -> Arg
-  sArgToArg se = let StructArg {name = n, arg' = a'} = se in a'
+  mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
+      w <- mkExpr refMkId refStreams refMap a
+      return $ Core.SExpr n $ Core.UExpr typeOf w
 
 --------------------------------------------------------------------------------
 
