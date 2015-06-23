@@ -38,7 +38,7 @@ x `mod` y = Op2 (Core.Mod typeOf) x y
 (^) :: (Typed a, Typed b, P.Num a, B.Bits a, P.Integral b) 
     => Stream a -> Stream b -> Stream a
 (Const 0) ^ (Const 0)  = Const 1
-(Const 0) ^ _          = Const 0
+(Const 0) ^ x          = Op3 (Core.Mux typeOf) (Op2 (Core.Eq typeOf) x 0) (1) (0)
 (Const 1) ^ _          = Const 1
 (Const x) ^ (Const y)  = Const (x P.^ y)
 (Const 2) ^ y          = (Const 1) .<<. y
