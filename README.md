@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot-language.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-language)
+
 Overview
 ========
 [copilot-language](http://hackage.haskell.org/package/copilot-language) The

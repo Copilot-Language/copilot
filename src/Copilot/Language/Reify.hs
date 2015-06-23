@@ -18,7 +18,7 @@ import Copilot.Core (Typed, Id, typeOf, impossible)
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
-import Copilot.Language.Stream (Stream (..), Arg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..), StructArg (..))
 
 import Prelude hiding (id)
 import Data.IORef
@@ -180,6 +180,15 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
+      ExternStruct cs sargs interpExpr -> do
+          args' <- mapM mkStructArg sargs
+          w <- case interpExpr of
+                 Nothing -> return Nothing
+                 Just e -> liftM Just (go e)
+          return $ Core.ExternStruct typeOf cs args' w Nothing
+
+      ------------------------------------------------------
+
       Op1 op e -> do
           w <- go e
           return $ Core.Op1 op w
@@ -205,6 +214,11 @@ mkExpr refMkId refStreams refMap = go
   mkFunArg (Arg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
+
+  mkStructArg :: StructArg -> IO Core.SExpr
+  mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
+      w <- mkExpr refMkId refStreams refMap a
+      return $ Core.SExpr n $ Core.UExpr typeOf w
 
 --------------------------------------------------------------------------------
 

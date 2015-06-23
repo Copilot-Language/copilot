@@ -12,6 +12,7 @@
 module Copilot.Language.Stream
   ( Stream (..) 
   , Arg (..) 
+  , StructArg (..)
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -34,7 +35,8 @@ data Stream :: * -> * where
               => String -> [Arg] -> Maybe (Stream a) -> Stream a
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
-  --Struct      :: String -> [Arg] -> Stream [Arg]
+  ExternStruct:: Typed a
+              => String -> [StructArg] -> Maybe (Stream a) -> Stream a
   Local       :: (Typed a, Typed b) 
               => Stream a -> (Stream a -> Stream b) -> Stream b
   Var         :: Typed a 
@@ -50,6 +52,8 @@ data Stream :: * -> * where
 
 data Arg where
   Arg :: Typed a => Stream a -> Arg
+
+data StructArg = StructArg { name_ :: String, arg' :: Arg }
 
 --------------------------------------------------------------------------------
 
