@@ -32,8 +32,8 @@ module Copilot.Language.Operators.Extern
   , externArrayI64
   , externArrayF
   , externArrayD
-  , funArg -- * Deprecated.
   , externStruct
+  , funArg -- * Deprecated.
   ) where
 
 import Copilot.Core (Typed)

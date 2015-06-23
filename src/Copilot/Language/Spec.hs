@@ -19,6 +19,7 @@ module Copilot.Language.Spec
   , triggers
   , trigger
   , arg
+  , structarg
   , Property (..)
   , prop
   , properties
@@ -114,6 +115,6 @@ arg = Arg
 --------------------------------------------------------------------------------
 
 structarg :: String -> Arg -> StructArg
-structarg = StructArg
+structarg n a = StructArg { name_ = n, arg' = a }
 
 --------------------------------------------------------------------------------
