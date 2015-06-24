@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes #-}
+
 module Copilot.Kind.TransSys.Transform
   ( mergeNodes
   , inline
@@ -32,7 +34,7 @@ ncNodeIdSep = "-"
 
 --------------------------------------------------------------------------------
 
-mergeNodes :: [NodeId] -> Spec -> Spec
+mergeNodes :: [NodeId] -> TransSys -> TransSys
 mergeNodes toMergeIds spec =
   spec
     { specNodes = newNode :
@@ -175,10 +177,10 @@ redirectLocalImports toMerge = do
 
 --------------------------------------------------------------------------------
 
-inline :: Spec -> Spec
+inline :: TransSys -> TransSys
 inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
 
-removeCycles :: Spec -> Spec
+removeCycles :: TransSys -> TransSys
 removeCycles spec =
   topoSort $ foldr mergeComp spec (buildScc nodeId $ specNodes spec)
   where
@@ -201,7 +203,7 @@ removeCycles spec =
 -- | order.
 -- | The top nodes should have all the other nodes as its dependencies
 
-complete :: Spec -> Spec
+complete :: TransSys -> TransSys
 complete spec =
   assert (isTopologicallySorted spec)
   $ spec { specNodes = specNodes' }

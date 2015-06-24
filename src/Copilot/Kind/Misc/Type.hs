@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification, GADTs #-}
+
 module Copilot.Kind.Misc.Type
   ( Type (..)
   , U (..)

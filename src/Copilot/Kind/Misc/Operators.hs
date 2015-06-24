@@ -1,12 +1,14 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Kind.Misc.Operators where
 
 --------------------------------------------------------------------------------
 
 data Op1 a b where
   Not    :: Op1 Bool Bool
-  Neg    :: (Num t) => Op1 t t
+  Neg    :: Op1 t t
 
 data Op2 a b c where
   Eq     :: Op2 a    a    Bool

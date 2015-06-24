@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Kind.Light.SMTLib where
 
 import Copilot.Kind.IL
@@ -25,7 +27,8 @@ declConst :: Type a -> String -> Term
 declConst t id = node "declare-fun" [atom id, unit, atom $ smtTy t]
 
 declFun :: String -> Type t -> Term
-declFun name retTy = node "declare-fun" [atom name, unit, atom (smtTy retTy)]
+declFun name retTy =
+  node "declare-fun" [atom name, unit, atom (smtTy retTy)]
 
 assert :: Constraint -> Term
 assert c = node "assert" [expr c]

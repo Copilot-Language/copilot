@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE NamedFieldPuns, GADTs #-}
+
 module Copilot.Kind.TransSys.PrettyPrint ( prettyPrint ) where
 
 import Copilot.Kind.TransSys.Spec
@@ -14,10 +16,10 @@ import qualified Data.Bimap as Bimap
 indent     = nest 4
 emptyLine  = text ""
 
-prettyPrint :: Spec -> String
+prettyPrint :: TransSys -> String
 prettyPrint = render . pSpec
 
-pSpec :: Spec -> Doc
+pSpec :: TransSys -> Doc
 pSpec spec = items $$ props
   where
     items = foldr (($$) . pNode) empty (specNodes spec)

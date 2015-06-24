@@ -7,7 +7,7 @@ module Copilot.Kind.Cnub.Spec
   , Expr      (..)
   , Stream    (..)
   , UnintFun  (..)
-  , Spec      (..)
+  , Cnub      (..)
 
   , StreamId
   , UnintId
@@ -48,7 +48,7 @@ data UnintFun = forall a . UnintFun
   { unintType :: Type a
   , unintArgs :: [U Type] }
 
-data Spec = Spec
+data Cnub = Cnub
   { specStreams    :: Map StreamId Stream
   , specProperties :: Map PropId StreamId
   , specObservers  :: Map ObserverId StreamId

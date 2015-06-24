@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE LambdaCase #-}
+
 module Copilot.Kind.Kind2.Prover
   ( module Data.Default
   , module Copilot.Kind.ProofScheme
@@ -39,7 +41,7 @@ instance Default Options where
 
 data ProverST = ProverST
   { options  :: Options
-  , transSys :: TS.Spec }
+  , transSys :: TS.TransSys }
 
 kind2Prover :: Options -> Prover
 kind2Prover opts = Prover
@@ -72,7 +74,7 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
 
   (_, output, _) <- readProcessWithExitCode kind2Prog kind2Options ""
 
-  --putStrLn kind2Input
+  putStrLn kind2Input
 
   removeFile tempName
   return $ parseOutput toCheck output

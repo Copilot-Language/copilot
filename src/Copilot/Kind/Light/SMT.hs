@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE LambdaCase, NamedFieldPuns #-}
+
 module Copilot.Kind.Light.SMT
   ( Solver
   , startNewSolver
@@ -25,11 +27,13 @@ import qualified Copilot.Kind.Light.SMTLib as SMT
 --------------------------------------------------------------------------------
 
 data Solver = Solver
-  { inh        :: Handle
-  , outh       :: Handle
-  , process    :: ProcessHandle
-  , debugMode  :: Bool
-  , solverName :: String }
+  { inh         :: Handle
+  , outh        :: Handle
+  , process     :: ProcessHandle
+  , debugMode   :: Bool
+  , incremental :: Bool
+  , solverName  :: String
+  }
 
 data SatResult
   = Sat
@@ -56,16 +60,13 @@ receive s = do
 
 --------------------------------------------------------------------------------
 
-startNewSolver :: String -> Bool -> IO Solver
-startNewSolver name dbgMode = do
+startNewSolver :: String -> Bool -> Bool -> String -> [String] -> String -> IO Solver
+startNewSolver name dbgMode inc cmd opts logic = do
   (i, o, e, p) <- runInteractiveProcess cmd opts Nothing Nothing
   hClose e
-  let s = Solver i o p dbgMode name
-  send s (SMT.setLogic logic)
+  let s = Solver i o p dbgMode inc name
+  send s $ SMT.setLogic logic
   return s
-  where cmd  = "yices-smt2"
-        opts = ["--incremental"]
-        logic = "QF_UFLIA"
 
 exit :: Solver -> IO ()
 exit s = do
@@ -80,9 +81,12 @@ assume s cs = forM_ cs (send s . SMT.assert)
 
 entailed :: Solver -> [Constraint] -> IO SatResult
 entailed s cs = do
-  send s SMT.push
-  assume s [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
+  when (incremental s) $ send s SMT.push
+  case cs of
+      [] -> assume s [Const Bool True]
+      _ -> assume s [foldl (Op2 Bool Or) (Const Bool False) (map (Op1 Bool Not) cs)]
   send s SMT.checkSat
+  unless (incremental s) $ hClose (inh s)
 
   res <- receive s >>= \case
     "sat"     -> return Sat
@@ -90,7 +94,7 @@ entailed s cs = do
     "unknown" -> return Unknown
     s         -> Err.fatal $ "Unknown Yices output : '" ++ s ++ "'"
 
-  send s SMT.pop
+  when (incremental s) $ send s SMT.pop
   return res
 
 declVars :: Solver -> [VarDescr] -> IO ()

@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes #-}
+
 module Copilot.Kind.Kind2.Output (parseOutput) where
 
 import Text.XML.Light       hiding (findChild)

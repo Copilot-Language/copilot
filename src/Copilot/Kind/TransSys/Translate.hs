@@ -1,5 +1,8 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes, NamedFieldPuns, ViewPatterns,
+             ScopedTypeVariables, GADTs #-}
+
 module Copilot.Kind.TransSys.Translate ( translate ) where
 
 import Copilot.Kind.TransSys.Spec
@@ -43,10 +46,10 @@ ncTimeAnnot s d
 
 --------------------------------------------------------------------------------
 
-translate :: C.Spec -> Spec
+translate :: C.Spec -> TransSys
 translate cspec =
 
-  Spec { specNodes = [topNode] ++ modelNodes ++ propNodes ++ extVarNodes
+  TransSys { specNodes = [topNode] ++ modelNodes ++ propNodes ++ extVarNodes
        , specTopNodeId = topNodeId
        , specProps = propBindings }
 
@@ -142,7 +145,7 @@ stream (C.Stream { C.streamId
 
 --------------------------------------------------------------------------------
 
-expr :: forall t t' . Type t -> C.Expr t' -> Trans (Expr t)
+expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
 expr t (C.Const t' v) = return $ Const t (cast t $ toDyn t' v)
 

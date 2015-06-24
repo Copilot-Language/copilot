@@ -1,9 +1,12 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE LambdaCase, NamedFieldPuns #-}
+
 module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
   , lightProver
+  , yices, dReal
   ) where
 
 import Copilot.Kind.IL.Translate
@@ -33,19 +36,28 @@ data Options = Options
     -- counterexamples and won't try to prove the properties discharged to it.
   , onlyBmc   :: Bool
 
-    -- If `debugMode` is set to `True`, the SMTLib queries produced by the
-    -- prover are displayed in the standard output.
-  , debugMode :: Bool }
+    -- If `*Debug` is set to `True`, the SMTLib queries produced by the prover
+    -- are displayed in the standard output.
+  , baseDebug :: Bool
+  , stepDebug :: Bool
+
+    -- yices or dReal
+  , backend :: Backend
+  }
 
 instance Default Options where
   def = Options
     { kTimeout  = 100
-    , debugMode = False
-    , onlyBmc   = False }
+    , onlyBmc   = False
+    , baseDebug = False
+    , stepDebug = False
+    , backend   = yices
+    }
 
 data ProverST = ProverST
   { options  :: Options
-  , spec     :: Spec }
+  , spec     :: IL
+  }
 
 lightProver :: Options -> Prover
 lightProver options = Prover
@@ -58,24 +70,50 @@ lightProver options = Prover
   , closeProver = const $ return ()
   }
 
---------------------------------------------------------------------------------
+data Backend = Backend
+  { cmd :: String
+  , cmdOpts :: [String]
+  , logic :: String
+  , incremental :: Bool
+  }
+
+yices = Backend
+  { cmd = "yices-smt2"
+  , cmdOpts = ["--incremental"]
+  , logic = "QF_UFLIA"
+  , incremental = True
+  }
+
+dReal = Backend
+  { cmd = "dReal"
+  , cmdOpts = []
+  , logic = "QF_NRA"
+  , incremental = False
+  }
+
+-------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
 ask :: ProverST -> [PropId] -> PropId -> IO Output
 ask
-  (ProverST opts (Spec {modelInit, modelRec, properties}))
+  (ProverST opts (IL {modelInit, modelRec, properties}))
   assumptionsIds
   toCheckId = do
 
-    baseSolver <- SMT.startNewSolver "base" $ debugMode opts
-    stepSolver <- SMT.startNewSolver "step" $ debugMode opts
+    let startSolver name dbg = SMT.startNewSolver name dbg
+          (incremental $ backend opts) (cmd $ backend opts)
+          (cmdOpts $ backend opts) (logic $ backend opts)
 
-    let initBaseVars = fromList $ getVars modelInit'
+    baseSolver <- startSolver "base" (baseDebug opts)
+    stepSolver <- startSolver "step" (stepDebug opts)
+
+    let initBaseVars = fromList $ getVars modelInit
+        initStepVars = fromList $ getVars modelRec'
+
     SMT.declVars baseSolver $ elems initBaseVars
-    SMT.assume baseSolver modelInit'
+    SMT.assume baseSolver modelInit
 
-    let initStepVars = fromList $ getVars modelRec'
     SMT.declVars stepSolver $ elems initStepVars
     SMT.assume stepSolver modelRec'
 
@@ -87,7 +125,6 @@ ask
       assumptions = selectProps assumptionsIds properties
       toCheck     = selectProps [toCheckId]    properties
 
-      modelInit'  = modelInit ++ map (at $ Fixed 0) assumptions
       modelRec'   = modelRec  ++ assumptions
 
       indStep k baseSolver stepSolver baseVars stepVars
@@ -103,13 +140,15 @@ ask
               baseInv  = map (at $ Fixed k) toCheck
               nextInv  = map (at $ _n_plus (k + 1)) toCheck
 
-          let baseVarsItr = fromList $ getVars base' ++ getVars baseInv
-              baseVars'   = baseVars `union` fromList (getVars base' ++ getVars baseInv)
+              baseVarsItr = fromList $ getVars base' ++ getVars baseInv
+              baseVars'   = baseVars `union` baseVarsItr
+
+              stepVarsItr = fromList $ getVars step' ++ getVars nextInv
+              stepVars'   = stepVars `union` stepVarsItr
+
           SMT.declVars baseSolver $ elems $ baseVarsItr \\ baseVars
           SMT.assume baseSolver base'
 
-          let stepVarsItr = fromList $ getVars step' ++ getVars nextInv
-              stepVars'   = stepVars `union` fromList (getVars step' ++ getVars nextInv)
           SMT.declVars stepSolver $ elems $ stepVarsItr \\ stepVars
           SMT.assume stepSolver step'
 

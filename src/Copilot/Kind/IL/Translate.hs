@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes, NamedFieldPuns, ScopedTypeVariables, GADTs #-}
+
 module Copilot.Kind.IL.Translate ( translate, getVars ) where
 
 import Copilot.Kind.IL.Spec
@@ -39,7 +41,7 @@ ncUnhandledOp = id
 
 -- | Translates a Copilot specification to an IL specification
 
-translate :: C.Spec -> Spec
+translate :: C.Spec -> IL
 translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
 
   let mainSeqs = map seqDescr specStreams
@@ -54,7 +56,7 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
 
   localConstraints <- getLocalVarsConstraints
 
-  return Spec
+  return IL
     { modelInit
     , modelRec = mainConstraints ++ localConstraints
     , properties
@@ -90,7 +92,15 @@ streamRec (C.Stream { C.streamId       = id
 
 --------------------------------------------------------------------------------
 
-expr :: forall t a . Type t -> C.Expr a -> Trans (Expr t)
+expr :: Type t -> C.Expr a -> Trans (Expr t)
+
+-- TODO(chathhorn): clean up
+expr t (C.Const ct@C.Double v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t (Neg) (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Float v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t (Neg) (Const t (cast t $ toDyn ct (-v)))
 
 expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
 

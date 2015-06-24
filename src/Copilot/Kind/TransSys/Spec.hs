@@ -1,10 +1,12 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification, GADTs, RankNTypes #-}
+
 module Copilot.Kind.TransSys.Spec
   ( module Copilot.Kind.Misc.Operators
   , module Copilot.Kind.Misc.Type
   , module Copilot.Kind.Misc.Invariants
-  , Spec (..)
+  , TransSys (..)
   , Node (..)
   , PropId
   , NodeId
@@ -40,7 +42,7 @@ import qualified Data.Bimap as Bimap
 type NodeId = String
 type PropId = String
 
-data Spec = Spec
+data TransSys = TransSys
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
   , specProps         :: Map PropId ExtVar }
@@ -149,21 +151,21 @@ instance HasInvariants Node where
 
 --------------------------------------------------------------------------------
 
-specNodesIds :: Spec -> Set NodeId
+specNodesIds :: TransSys -> Set NodeId
 specNodesIds s = Set.fromList . map nodeId $ specNodes s
 
-specDependenciesGraph :: Spec -> Map NodeId [NodeId]
+specDependenciesGraph :: TransSys -> Map NodeId [NodeId]
 specDependenciesGraph s =
   Map.fromList [ (nodeId n, nodeDependencies n) | n <- specNodes s ]
 
-specTopNode :: Spec -> Node
+specTopNode :: TransSys -> Node
 specTopNode spec = fromJust $ List.find
   ((== specTopNodeId spec) . nodeId)
   (specNodes spec)
 
 --------------------------------------------------------------------------------
 
-instance HasInvariants Spec where
+instance HasInvariants TransSys where
 
   invariants s =
     [ prop "All mentioned nodes are declared" $
@@ -178,7 +180,7 @@ instance HasInvariants Spec where
     , prop "The nodes invariants hold" $ all checkInvs (specNodes s)
     ]
 
-isTopologicallySorted :: Spec -> Bool
+isTopologicallySorted :: TransSys -> Bool
 isTopologicallySorted spec =
   isJust $ foldM inspect Set.empty (specNodes spec)
   where inspect acc n = do

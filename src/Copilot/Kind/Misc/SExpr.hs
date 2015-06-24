@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances #-}
+
 module Copilot.Kind.Misc.SExpr where
 
 import Text.ParserCombinators.Parsec

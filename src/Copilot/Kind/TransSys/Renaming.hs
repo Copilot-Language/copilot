@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Copilot.Kind.TransSys.Renaming
   ( Renaming
   , addReservedName

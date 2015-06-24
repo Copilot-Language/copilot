@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification #-}
+
 module Copilot.Kind.Prover
   ( Cex     (..)
   , Output  (..)

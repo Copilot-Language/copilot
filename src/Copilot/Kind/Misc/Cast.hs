@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+
 module Copilot.Kind.Misc.Cast
   ( Dyn
   , toDyn

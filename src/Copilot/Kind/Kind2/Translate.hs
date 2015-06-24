@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes, ViewPatterns, NamedFieldPuns, GADTs #-}
+
 module Copilot.Kind.Kind2.Translate
   ( toKind2
   , Style (..)
@@ -30,7 +32,7 @@ type DepGraph = Map NodeId [NodeId]
 
 data Style = Inlined | Modular
 
-toKind2 :: Style -> [PropId] -> [PropId] -> Spec -> K.File
+toKind2 :: Style -> [PropId] -> [PropId] -> TransSys -> K.File
 toKind2 style assumptions checkedProps spec =
   addAssumptions spec assumptions
   $ trSpec (complete spec') predCallsGraph assumptions checkedProps
@@ -39,7 +41,7 @@ toKind2 style assumptions checkedProps spec =
           Inlined -> inline spec
           Modular -> removeCycles spec
 
-trSpec :: Spec -> DepGraph -> [PropId] -> [PropId] -> K.File
+trSpec :: TransSys -> DepGraph -> [PropId] -> [PropId] -> K.File
 trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
   where preds = map (trNode spec predCallsGraph) (specNodes spec)
         props = map trProp $
@@ -49,7 +51,7 @@ trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)
 
-trNode :: Spec -> DepGraph -> Node -> K.PredDef
+trNode :: TransSys -> DepGraph -> Node -> K.PredDef
 trNode spec predCallsGraph node =
   K.PredDef { K.predId, K.predStateVars, K.predInit, K.predTrans }
   where
@@ -63,7 +65,7 @@ trNode spec predCallsGraph node =
                          ++ predCalls False spec predCallsGraph node
 
 
-addAssumptions :: Spec -> [PropId] -> K.File -> K.File
+addAssumptions :: TransSys -> [PropId] -> K.File -> K.File
 addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
   K.File (changeTail aux filePreds) fileProps
   where
@@ -92,7 +94,7 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
      the father node then by alphabetical order on the variable name
 -}
 
-gatherPredStateVars :: Spec -> Node -> [K.StateVarDef]
+gatherPredStateVars :: TransSys -> Node -> [K.StateVarDef]
 gatherPredStateVars spec node = locals ++ imported
   where
     nodesMap = Map.fromList [(nodeId n, n) | n <- specNodes spec]
@@ -157,7 +159,7 @@ transLocals node =
         Expr e   -> [mkEquality (trPrimedVar v) (trExpr True e)]
         Constrs cs  -> map (trExpr True) cs
 
-predCalls :: Bool -> Spec -> DepGraph -> Node -> [K.Term]
+predCalls :: Bool -> TransSys -> DepGraph -> Node -> [K.Term]
 predCalls isInitCall spec predCallsGraph node =
   map mkCall toCall
   where

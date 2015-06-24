@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE NamedFieldPuns, ViewPatterns #-}
+
 module Copilot.Kind.Prove
   ( prove
   ) where

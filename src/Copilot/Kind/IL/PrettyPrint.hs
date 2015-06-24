@@ -1,5 +1,7 @@
 ---------------------------------------------------------------------------------
 
+{-# LANGUAGE NamedFieldPuns, GADTs #-}
+
 module Copilot.Kind.IL.PrettyPrint (prettyPrint, printConstraint) where
 
 import Copilot.Kind.IL.Spec
@@ -8,7 +10,7 @@ import qualified Data.Map as Map
 
 --------------------------------------------------------------------------------
 
-prettyPrint :: Spec -> String
+prettyPrint :: IL -> String
 prettyPrint = render . ppSpec
 
 printConstraint :: Constraint -> String
@@ -17,14 +19,8 @@ printConstraint = render . ppExpr
 indent = nest 4
 emptyLine = text ""
 
-ppSpec :: Spec -> Doc
-ppSpec
-  (Spec
-  { modelInit
-  , modelRec
-  , properties
-  }) =
-
+ppSpec :: IL -> Doc
+ppSpec (IL { modelInit , modelRec , properties }) =
      text "MODEL INIT"
   $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
   $$ text "MODEL REC"

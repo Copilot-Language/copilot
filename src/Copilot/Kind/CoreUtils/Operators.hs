@@ -1,5 +1,8 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification, LambdaCase,
+             ScopedTypeVariables, RankNTypes, GADTs #-}
+
 module Copilot.Kind.CoreUtils.Operators where
 
 -- | Some high level utilities to translate a Copilot operator in a standard way

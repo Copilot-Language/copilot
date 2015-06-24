@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE ExistentialQuantification, GADTs #-}
+
 module Copilot.Kind.IL.Spec
   ( module Copilot.Kind.Misc.Type
   , module Copilot.Kind.Misc.Operators
@@ -11,7 +13,7 @@ module Copilot.Kind.IL.Spec
   , SeqDescr (..)
   , VarDescr (..)
   , Expr (..)
-  , Spec (..)
+  , IL (..)
   , Constraint
   , PropId
   , typeOf
@@ -67,7 +69,7 @@ data SeqDescr = forall t . SeqDescr
   , seqType  :: Type t
   }
 
-data Spec = Spec
+data IL = IL
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
