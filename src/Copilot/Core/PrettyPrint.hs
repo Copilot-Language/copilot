@@ -161,12 +161,24 @@ ppObserver
 
 --------------------------------------------------------------------------------
 
+ppProperty :: Property -> Doc
+ppProperty
+  Property
+    { propertyName     = name
+    , propertyExpr     = e }
+  =   text "property \"" <> text name <> text "\""
+  <+> text "="
+  <+> ppExpr e
+
+--------------------------------------------------------------------------------
+
 ppSpec :: Spec -> Doc
-ppSpec spec = cs $$ ds $$ es
+ppSpec spec = cs $$ ds $$ es $$ fs
   where
     cs = foldr (($$) . ppStream)   empty (specStreams   spec)
     ds = foldr (($$) . ppTrigger)  empty (specTriggers  spec)
     es = foldr (($$) . ppObserver) empty (specObservers spec)
+    fs = foldr (($$) . ppProperty) empty (specProperties spec)
 
 --------------------------------------------------------------------------------
 
