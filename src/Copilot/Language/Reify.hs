@@ -26,7 +26,7 @@ import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Map (Map)
 import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM)
-
+import Debug.Trace
 --------------------------------------------------------------------------------
 
 reify :: Spec -> IO Core.Spec
@@ -36,19 +36,22 @@ reify spec =
     let trigs = triggers   $ runSpec spec
     let obsvs = observers  $ runSpec spec
     let props = properties $ runSpec spec
+    let strs  = structs    $ runSpec spec
     refMkId         <- newIORef 0
     refVisited      <- newIORef M.empty
     refMap          <- newIORef []
     coreTriggers    <- mapM (mkTrigger  refMkId refVisited refMap) trigs
     coreObservers   <- mapM (mkObserver refMkId refVisited refMap) obsvs
     coreProperties  <- mapM (mkProperty refMkId refVisited refMap) props
+    coreStructs     <- mapM (mkStruct   refMkId refVisited refMap) strs
     coreStreams     <- readIORef refMap
     return $
       Core.Spec
         { Core.specStreams    = reverse coreStreams
         , Core.specObservers  = coreObservers
         , Core.specTriggers   = coreTriggers
-        , Core.specProperties = coreProperties }
+        , Core.specProperties = coreProperties
+        , Core.specStructs    = coreStructs }
 
 --------------------------------------------------------------------------------
 
@@ -161,7 +164,7 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      Extern cs mXs -> return $ Core.ExternVar typeOf cs mXs
+      Extern cs mXs -> trace (show cs) $ return $ Core.ExternVar typeOf cs mXs
 
       ------------------------------------------------------
 
@@ -180,7 +183,7 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      ExternStruct cs sargs interpExpr -> do
+      ExternStruct cs sargs interpExpr -> trace (show cs) $ do
           args' <- mapM mkStructArg sargs
           w <- case interpExpr of
                  Nothing -> return Nothing
@@ -219,6 +222,22 @@ mkExpr refMkId refStreams refMap = go
   mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
       w <- mkExpr refMkId refStreams refMap a
       return $ Core.SExpr n $ Core.UExpr typeOf w
+
+--------------------------------------------------------------------------------
+
+{-# INLINE mkStruct #-}
+mkStruct
+  :: IORef Int
+  -> IORef (Map Core.Id)
+  -> IORef [Core.Stream]
+  -> StructData
+  -> IO Core.StructData
+mkStruct refMkId refStreams refMap (StructData name e) = trace (show name) $ do
+  w <- mkExpr refMkId refStreams refMap e
+  return $
+    Core.StructData
+      { Core.structName     = name
+      , Core.structExpr     = w }
 
 --------------------------------------------------------------------------------
 

@@ -19,7 +19,10 @@ module Copilot.Language.Spec
   , triggers
   , trigger
   , arg
+  , StructData (..)
   , structarg
+  , struct
+  , structs
   , Property (..)
   , prop
   , properties
@@ -28,7 +31,7 @@ module Copilot.Language.Spec
 import Control.Monad.Writer
 import Data.List (foldl')
 
-import Copilot.Core (Typed)
+import Copilot.Core (Typed, Struct)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 
@@ -70,12 +73,22 @@ properties =
       PropertyItem p -> p : ls
       _              -> ls
 
+structs :: [SpecItem] -> [StructData]
+structs =
+  foldl' structs' []
+  where
+  structs' ls e =
+    case e of
+      StructItem s -> s : ls
+      _            -> ls
+
 --------------------------------------------------------------------------------
 
 data SpecItem
   = ObserverItem Observer
   | TriggerItem  Trigger
   | PropertyItem Property
+  | StructItem StructData
 
 --------------------------------------------------------------------------------
 
@@ -116,5 +129,15 @@ arg = Arg
 
 structarg :: String -> Arg -> StructArg
 structarg n a = StructArg { name_ = n, arg' = a }
+
+--------------------------------------------------------------------------------
+
+data StructData where
+  StructData :: Typed a => Core.Name -> Stream a -> StructData
+
+--------------------------------------------------------------------------------
+
+struct :: Typed a => String -> Stream a -> Spec
+struct name e = tell [StructItem $ StructData name e]
 
 --------------------------------------------------------------------------------
