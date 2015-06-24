@@ -29,12 +29,14 @@ mkTagsSpec
     , specObservers  = obsvs
     , specTriggers   = trigs
     , specProperties = props
+    , specStructs    = strs
     } =
-  liftM4 Spec
+  liftM5 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
     (mkTagsProps props)
+    (mkTagsStrs  strs)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -90,6 +92,19 @@ mkTagsProps = mapM mkTagsProp
   where mkTagsProp p = do
           e' <- mkTagsExpr (propertyExpr p)
           return $ p { propertyExpr = e' }
+
+mkTagsStrs  :: [StructData] -> State Int [StructData]
+mkTagsStrs  = mapM mkTagsStr
+
+  where
+    mkTagsStr StructData
+      { structName = name
+      , structExpr = e } =
+        do
+          e' <- mkTagsExpr e
+          return $ StructData
+            { structName = name
+            , structExpr = e' }
 
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
