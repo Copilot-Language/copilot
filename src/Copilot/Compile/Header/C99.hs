@@ -51,7 +51,7 @@ c99Header prefix spec = render $ vcat $
   , text ""
   , text "/* External structs (must be defined by user): */"
   , text ""
-  , ppExternalStructs (externStructs spec)
+  , ppStructs (specStructs spec)
   , text ""
   , text "/* External variables (must be defined by user): */"
   , text ""
@@ -172,6 +172,31 @@ ppExternalFunction
 
 --------------------------------------------------------------------------------
 
+ppStructs :: [StructData] -> Doc
+ppStructs = vcat . map ppStruct .nubBy eq
+  where
+    eq StructData { structName = name1 } StructData { structName = name2 } = name1 == name2
+
+ppStruct :: StructData -> Doc
+ppStruct
+  StructData
+  { structName = name
+  , structArgs = sargs } =
+    hang (hang (text "struct" <+> text name <+> text "{") 1 (nest 1 (ppStructArgs sargs))) 1 (text "};")
+
+  where
+    ppStructArgs :: [SExpr] -> Doc
+    ppStructArgs = vcat . map ppStructArg . map (\SExpr { uexpr = u0 } -> u0)
+
+    ppStructArg :: UExpr -> Doc
+    ppStructArg UExpr { uExprType = t1, uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
+      text ( case e1 of
+          Var _ name -> name
+          ExternVar _ name _ -> name
+          ExternFun _ name _ _ _ -> name
+          ExternStruct _ name _ _ _ -> name
+          _ -> "") <> text ";"
+
 ppExternalStructs :: [ExtStruct] -> Doc
 ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
   where
@@ -182,7 +207,7 @@ ppExternalStruct :: ExtStruct -> Doc
 ppExternalStruct
   ExtStruct
   { externStructName  = name
-  , externStructArgs   = args
+  , externStructArgs  = args
   , externStructTag   = tag } =
       text "struct" <+> text name <> text "{" <> ppStructArgs args <> text "};"
 
