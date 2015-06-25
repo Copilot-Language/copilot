@@ -153,7 +153,8 @@ all :: (forall a . Expr a -> DList b) -> Spec -> DList b
 all f spec =
   concat (fmap (allStream) (specStreams   spec)) `append`
   concat (fmap allTrigger  (specTriggers  spec)) `append`
-  concat (fmap allObserver (specObservers spec))
+  concat (fmap allObserver (specObservers spec)) `append`
+  concat (fmap allStruct   (specStructs   spec))
 
   where
   
@@ -168,5 +169,11 @@ all f spec =
   allUExpr
     (UExpr _ e1) = f e1
 
+  allSExpr
+    (SExpr _ (u)) = allUExpr u
+
   allObserver
     Observer { observerExpr = e } = f e
+
+  allStruct
+    StructData { structArgs = sargs } = concat (fmap allSExpr sargs)

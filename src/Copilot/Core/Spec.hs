@@ -54,7 +54,7 @@ data Property = Property
 -- | A struct.
 data StructData = forall a . StructData
   { structName      :: Name
-  , structExpr      :: Expr a }
+  , structArgs      :: [SExpr] }
 
 --------------------------------------------------------------------------------
 

@@ -99,12 +99,12 @@ mkTagsStrs  = mapM mkTagsStr
   where
     mkTagsStr StructData
       { structName = name
-      , structExpr = e } =
+      , structArgs = sargs } =
         do
-          e' <- mkTagsExpr e
+          sargs' <- mapM mkTagsSExpr sargs
           return $ StructData
             { structName = name
-            , structExpr = e' }
+            , structArgs = sargs' }
 
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
