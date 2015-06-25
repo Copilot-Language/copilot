@@ -232,12 +232,16 @@ mkStruct
   -> IORef [Core.Stream]
   -> StructData
   -> IO Core.StructData
-mkStruct refMkId refStreams refMap (StructData name e) = trace (show name) $ do
-  w <- mkExpr refMkId refStreams refMap e
+mkStruct refMkId refStreams refMap (StructData name sargs) = trace (show name) $ do
+  args' <- mapM mkStructArg sargs
   return $
     Core.StructData
       { Core.structName     = name
-      , Core.structExpr     = w }
+      , Core.structArgs     = args' }
+    where
+      mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
+        w <- mkExpr refMkId refStreams refMap a
+        return $ Core.SExpr n $ Core.UExpr typeOf w
 
 --------------------------------------------------------------------------------
 

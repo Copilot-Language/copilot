@@ -30,6 +30,7 @@ module Copilot.Language
   , trigger
   , arg
   , structarg
+  , struct
   , prop
   , prettyPrint
   ) where
@@ -54,7 +55,7 @@ import Copilot.Language.Operators.BitWise
 import Copilot.Language.Reify
 import Copilot.Language.Prelude
 import Copilot.Language.Spec
-  (Spec, trigger, arg, structarg, observer, prop)
+  (Spec, trigger, arg, structarg, struct, observer, prop)
 import Copilot.Language.Stream (Stream)
 
 --------------------------------------------------------------------------------

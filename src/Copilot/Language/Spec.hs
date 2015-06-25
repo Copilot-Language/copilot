@@ -31,7 +31,8 @@ module Copilot.Language.Spec
 import Control.Monad.Writer
 import Data.List (foldl')
 
-import Copilot.Core (Typed, Struct)
+--import Copilot.Core (Typed, Struct)
+import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 
@@ -133,11 +134,11 @@ structarg n a = StructArg { name_ = n, arg' = a }
 --------------------------------------------------------------------------------
 
 data StructData where
-  StructData :: Typed a => Core.Name -> Stream a -> StructData
+  StructData :: Core.Name -> [StructArg] -> StructData
 
 --------------------------------------------------------------------------------
 
-struct :: Typed a => String -> Stream a -> Spec
-struct name e = tell [StructItem $ StructData name e]
+struct :: String -> [StructArg] -> Spec
+struct name sargs = tell [StructItem $ StructData name sargs]
 
 --------------------------------------------------------------------------------
