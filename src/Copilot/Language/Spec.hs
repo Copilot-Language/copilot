@@ -23,13 +23,15 @@ module Copilot.Language.Spec
   , structarg
   , struct
   , structs
+  , (#)
   , Property (..)
   , prop
   , properties
   ) where
 
 import Control.Monad.Writer
-import Data.List (foldl')
+import Data.List (foldl', find)
+import Data.Maybe (fromMaybe)
 
 --import Copilot.Core (Typed, Struct)
 import Copilot.Core (Typed)
@@ -140,5 +142,22 @@ data StructData where
 
 struct :: String -> [StructArg] -> Spec
 struct name sargs = tell [StructItem $ StructData name sargs]
+
+--------------------------------------------------------------------------------
+
+-- | Struct operator.
+
+-- Look up the given struct x, and return field y (which should be a stream?)
+(#) :: Typed a => Core.StructData -> String -> Stream a
+(Core.StructData {Core.structName = x, Core.structArgs = y})#z = getField x z
+  where
+    getField struct_nm field_nm =
+      let test = find (\(Core.StructData name _) -> name == struct_nm) structs in
+      case test of
+        Nothing -> error "No struct named \"" ++ struct_nm ++ "\" in the spec"
+        Just element ->
+          fromMaybe (find (\(Core.SExpr name _) -> name == field_nm) (element Core.structArgs))
+            (error "No field by the name of \"" ++ field_nm ++ "\"") element
+(Core.StructData l m)#n = Op2 (Core.GetField Core.typeOf) l n
 
 --------------------------------------------------------------------------------
