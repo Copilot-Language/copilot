@@ -102,12 +102,16 @@ externFunsExpr e0 = case e0 of
   Var _ _                     -> empty
   ExternVar _ _ _             -> empty
   ExternArray _ _ _ _ idx _ _ -> externFunsExpr idx
-  ExternFun t name ues _ tag  -> singleton (ExtFun name t ues tag)
+  ExternFun t name ues _ tag  -> concat $ singleton (ExtFun name t ues tag) : (map externFunsUExpr ues)
   Op1 _ e                     -> externFunsExpr e
   Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
                                  externFunsExpr e2 `append`
                                  externFunsExpr e3
+
+externFunsUExpr :: UExpr -> DList ExtFun
+externFunsUExpr UExpr { uExprExpr = e } = externFunsExpr e
+
 
 --------------------------------------------------------------------------------
 
