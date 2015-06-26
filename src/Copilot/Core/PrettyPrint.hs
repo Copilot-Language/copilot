@@ -30,14 +30,13 @@ ppExpr e0 = case e0 of
   Const t x                  -> text (showWithType Haskell t x)
   Drop _ 0 id                -> strmName id
   Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
-  ExternVar _ name _         -> text "extern" <+> doubleQuotes (text name)
+  ExternVar _ name _         -> text "Ext_" <> (text name)
   ExternFun _ name args _ _  -> 
-    text "externFun" <+> (doubleQuotes 
-      (text name)) <+> lparen <> 
+    text "Extf_" <> (text name) <> lparen <> 
          (hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
   ExternArray _ _ name 
-              _ idx _ _      -> text "externArray" <+> (doubleQuotes (text name)) <+> lbrack 
+              _ idx _ _      -> text "Exta_" <> (text name) <> lbrack 
                                   <> ppExpr idx <> rbrack
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
                                           <+> ppExpr e1 $$ text "in" <+> ppExpr e2
