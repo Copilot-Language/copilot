@@ -32,13 +32,13 @@ ppExpr e0 = case e0 of
   Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
   ExternVar _ name _         -> text "extern" <+> doubleQuotes (text name)
   ExternFun _ name args _ _  -> 
-    text "extern" <+> doubleQuotes 
-      (text name <> lparen <> 
-         hcat (punctuate (comma <> space) (map ppUExpr args))
+    text "externFun" <+> (doubleQuotes 
+      (text name)) <+> lparen <> 
+         (hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
   ExternArray _ _ name 
-              _ idx _ _      -> text "extern" <+> doubleQuotes (text name <> lbrack 
-                                  <> ppExpr idx <> rbrack)
+              _ idx _ _      -> text "externArray" <+> (doubleQuotes (text name)) <+> lbrack 
+                                  <> ppExpr idx <> rbrack
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
                                           <+> ppExpr e1 $$ text "in" <+> ppExpr e2
   Var _ name                 -> text "var" <+> doubleQuotes (text name)
