@@ -44,6 +44,7 @@ ppExpr e0 = case e0 of
   Op1 op e                   -> ppOp1 op (ppExpr e)
   Op2 op e1 e2               -> ppOp2 op (ppExpr e1) (ppExpr e2)
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+  Label s e                  -> text "label "<>doubleQuotes (text s) <+> (ppExpr e)
 
 ppUExpr :: UExpr -> Doc
 ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
