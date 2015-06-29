@@ -44,6 +44,7 @@ data Stream :: * -> * where
               => Core.Op2 a b c -> Stream a -> Stream b -> Stream c
   Op3         :: (Typed a, Typed b, Typed c, Typed d)
               => Core.Op3 a b c d -> Stream a -> Stream b -> Stream c -> Stream d
+  Label       :: Typed a => String -> Stream a -> Stream a
 
 --------------------------------------------------------------------------------
 

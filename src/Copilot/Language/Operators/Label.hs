@@ -16,6 +16,6 @@ import Copilot.Language.Stream (Stream (..))
 --------------------------------------------------------------------------------
 
 label :: (Typed a) => String -> Stream a -> Stream a
-label s e = Op2 (Core.Label typeOf) s e
+label = Label
 
 --------------------------------------------------------------------------------
