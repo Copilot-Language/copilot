@@ -18,6 +18,7 @@ cabal.sandbox.config:
 build: cabal.sandbox.config
 	cabal sandbox add-source $(PACKAGEDIR)
 	cabal install $(PACKAGEDIR)
+	cabal install --dependencies-only
 
 # Note: can't do a `cabal run` since there's no cabal file at the top level.
 
