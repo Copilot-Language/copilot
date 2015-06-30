@@ -23,7 +23,7 @@ module Copilot.Language.Spec
   , structarg
   , struct
   , structs
-  , (#)
+
   , Property (..)
   , prop
   , properties
@@ -144,7 +144,7 @@ struct :: String -> [StructArg] -> Spec
 struct name sargs = tell [StructItem $ StructData name sargs]
 
 --------------------------------------------------------------------------------
-
+{-
 -- | Struct operator.
 
 -- Look up the given struct x, and return field y (which should be a stream?)
@@ -158,6 +158,6 @@ struct name sargs = tell [StructItem $ StructData name sargs]
         Just element ->
           fromMaybe (find (\(Core.SExpr name _) -> name == field_nm) (element Core.structArgs))
             (error "No field by the name of \"" ++ field_nm ++ "\"") element
-(Core.StructData l m)#n = Op2 (Core.GetField Core.typeOf) l n
-
+--(Core.StructData l m)#n = Op2 (Core.GetField Core.typeOf) (Core.StructData l m) n
+-}
 --------------------------------------------------------------------------------
