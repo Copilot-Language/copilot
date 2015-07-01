@@ -11,7 +11,6 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
-  , StructData (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr, SExpr)
@@ -50,12 +49,12 @@ data Property = Property
   , propertyExpr     :: Expr Bool }
   
 --------------------------------------------------------------------------------
-
+{-
 -- | A struct.
-data StructData = forall a . StructData
+data StructData = {-forall a .-} StructData
   { structName      :: Name
   , structArgs      :: [SExpr] }
-
+-}
 --------------------------------------------------------------------------------
 
 -- | A Copilot specification consists of a list of variables bound to anonymous
@@ -65,7 +64,7 @@ data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
-  , specProperties   :: [Property]
-  , specStructs      :: [StructData] }
+  , specProperties   :: [Property] }
+--  , specStructs      :: [StructData] }
 
 --------------------------------------------------------------------------------

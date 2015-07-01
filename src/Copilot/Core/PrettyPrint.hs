@@ -39,7 +39,7 @@ ppExpr e0 = case e0 of
   ExternArray _ _ name 
               _ idx _ _      -> text "extern" <+> doubleQuotes (text name <> lbrack 
                                   <> ppExpr idx <> rbrack)
-  ExternStruct _ name args _ _ -> text "struct" <+> doubleQuotes (text name <> lbrace
+  ExternStruct _ name args _ -> text "struct" <+> doubleQuotes (text name <> lbrace
                                     <> vcat (punctuate (semi <> space) (map ppUExpr $
                                     map (\SExpr { uexpr = u0 } -> u0) args))
                                     <> rbrace)
@@ -100,6 +100,7 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
+  GetField _ _ -> ppInfix "."
 
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
@@ -166,11 +167,12 @@ ppObserver
 --------------------------------------------------------------------------------
 
 ppSpec :: Spec -> Doc
-ppSpec spec = cs $$ ds $$ es
+ppSpec spec = cs $$ ds $$ es -- $$ fs
   where
     cs = foldr (($$) . ppStream)   empty (specStreams   spec)
     ds = foldr (($$) . ppTrigger)  empty (specTriggers  spec)
     es = foldr (($$) . ppObserver) empty (specObservers spec)
+    --fs = foldr (($$) . ppStruct)   empty (specStructs   spec)
 
 --------------------------------------------------------------------------------
 

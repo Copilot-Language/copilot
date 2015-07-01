@@ -51,7 +51,7 @@ c99Header prefix spec = render $ vcat $
   , text ""
   , text "/* External structs (must be defined by user): */"
   , text ""
-  , ppStructs (specStructs spec)
+  , ppExternalStructs ({-specStructs-}externStructs spec)
   , text ""
   , text "/* External variables (must be defined by user): */"
   , text ""
@@ -172,7 +172,7 @@ ppExternalFunction
 
 --------------------------------------------------------------------------------
 
-ppStructs :: [StructData] -> Doc
+{-ppStructs :: [StructData] -> Doc
 ppStructs = vcat . map ppStruct .nubBy eq
   where
     eq StructData { structName = name1 } StructData { structName = name2 } = name1 == name2
@@ -195,12 +195,12 @@ ppStruct
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
           ExternStruct _ name _ _ _ -> name
-          _ -> "") <> text ";"
+          _ -> "") <> text ";"-}
 
 ppExternalStructs :: [ExtStruct] -> Doc
 ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
   where
-    eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2} =
+    eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2 } =
       name1 == name2
 
 ppExternalStruct :: ExtStruct -> Doc
@@ -209,11 +209,12 @@ ppExternalStruct
   { externStructName  = name
   , externStructArgs  = args
   , externStructTag   = tag } =
-      text "struct" <+> text name <> text "{" <> ppStructArgs args <> text "};"
+      --text "struct" <+> text name <> text "{" <> ppStructArgs args <> text "};"
+      hang (hang (text "struct" <+> text name <+> text "{") 1 (nest 1 (ppStructArgs args))) 1 (text "};")
 
   where
     ppStructArgs :: [SExpr] -> Doc
-    ppStructArgs = vcat . intersperse (text ";") . map ppStructArg . map (\SExpr { uexpr = u0 } -> u0)
+    ppStructArgs = vcat . map ppStructArg . map (\SExpr { uexpr = u0 } -> u0)
 
     ppStructArg :: UExpr -> Doc
     ppStructArg UExpr { uExprType = t1, uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
@@ -221,8 +222,8 @@ ppExternalStruct
           Var _ name -> name
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
-          ExternStruct _ name _ _ _ -> name
-          _ -> "")
+          ExternStruct _ name _ _ -> name
+          _ -> "") <> text ";"
 
 --------------------------------------------------------------------------------
 
