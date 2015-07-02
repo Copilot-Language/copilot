@@ -51,7 +51,7 @@ c99Header prefix spec = render $ vcat $
   , text ""
   , text "/* External structs (must be defined by user): */"
   , text ""
-  , ppExternalStructs ({-specStructs-}externStructs spec)
+  , ppStructs (specStructs{-externStructs-} spec)
   , text ""
   , text "/* External variables (must be defined by user): */"
   , text ""
@@ -172,7 +172,7 @@ ppExternalFunction
 
 --------------------------------------------------------------------------------
 
-{-ppStructs :: [StructData] -> Doc
+ppStructs :: [StructData] -> Doc
 ppStructs = vcat . map ppStruct .nubBy eq
   where
     eq StructData { structName = name1 } StructData { structName = name2 } = name1 == name2
@@ -181,8 +181,11 @@ ppStruct :: StructData -> Doc
 ppStruct
   StructData
   { structName = name
-  , structArgs = sargs } =
-    hang (hang (text "struct" <+> text name <+> text "{") 1 (nest 1 (ppStructArgs sargs))) 1 (text "};")
+  , structInst = inst } =
+    case inst of
+      ExternStruct _ _ sargs _ ->
+        hang (hang (text "struct" <+> text name <+> text "{") 1 (nest 1 (ppStructArgs sargs))) 1 (text "};")
+      _                        -> error "Struct is not of type Struct"
 
   where
     ppStructArgs :: [SExpr] -> Doc
@@ -194,10 +197,10 @@ ppStruct
           Var _ name -> name
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
-          ExternStruct _ name _ _ _ -> name
-          _ -> "") <> text ";"-}
+          ExternStruct _ name _ _ -> name
+          _ -> "") <> text ";"
 
-ppExternalStructs :: [ExtStruct] -> Doc
+{-ppExternalStructs :: [ExtStruct] -> Doc
 ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
   where
     eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2 } =
@@ -223,7 +226,7 @@ ppExternalStruct
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
           ExternStruct _ name _ _ -> name
-          _ -> "") <> text ";"
+          _ -> "") <> text ";"-}
 
 --------------------------------------------------------------------------------
 

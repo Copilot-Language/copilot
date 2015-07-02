@@ -11,6 +11,7 @@ module Copilot.Core.MakeTags (makeTags) where
 import Copilot.Core.Expr
 import Copilot.Core.Spec
 import Control.Monad.State
+import Data.Maybe(fromJust)
 import Prelude hiding (id)
 
 next :: State Int Int
@@ -29,14 +30,14 @@ mkTagsSpec
     , specObservers  = obsvs
     , specTriggers   = trigs
     , specProperties = props
---    , specStructs    = strs
+    , specStructs    = strs
     } =
-  liftM4 Spec
+  liftM5 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
     (mkTagsProps props)
---    (mkTagsStrs  strs)
+    (mkTagsStrs  strs)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -93,18 +94,21 @@ mkTagsProps = mapM mkTagsProp
           e' <- mkTagsExpr (propertyExpr p)
           return $ p { propertyExpr = e' }
 
-{-mkTagsStrs  :: [StructData] -> State Int [StructData]
-mkTagsStrs  = mapM mkTagsStr
+mkTagsStrs  :: [StructData] -> State Int [StructData]
+mkTagsStrs  = mapM $ fromJust . mkTagsStr
 
   where
+    mkTagsStr :: StructData -> Maybe (State Int StructData)
     mkTagsStr StructData
       { structName = name
-      , structArgs = sargs } =
-        do
-          sargs' <- mapM mkTagsSExpr sargs
-          return $ StructData
-            { structName = name
-            , structArgs = sargs' }-}
+      , structInst = inst } =
+        case inst of
+          ExternStruct x y sargs z -> Just $ do
+            sargs' <- mapM mkTagsSExpr sargs
+            return $ StructData
+              { structName = name
+              , structInst = ExternStruct x y sargs' z }
+          _                        -> Nothing
 
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
