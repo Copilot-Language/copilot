@@ -73,6 +73,7 @@ data IL = IL
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
+  , depth       :: Int
   }
 
 --------------------------------------------------------------------------------
@@ -89,13 +90,13 @@ typeOf e = case e of
 _n_ :: SeqIndex
 _n_ = Var 0
 
-_n_plus :: (Integral i) => i -> SeqIndex
+_n_plus :: (Integral a) => a -> SeqIndex
 _n_plus d = Var (toInteger d)
 
-iconst :: (Integral i) => i -> Expr Integer
+iconst :: (Integral a) => a -> Expr Integer
 iconst n = Const Integer (toInteger n)
 
-evalAt :: SeqIndex -> Expr t -> Expr t
+evalAt :: SeqIndex -> Expr a -> Expr a
 evalAt _ (Const t e) = Const t e
 evalAt i (Op1 t op e) = Op1 t op (evalAt i e)
 evalAt i (Op2 t op e1 e2) = Op2 t op (evalAt i e1) (evalAt i e2)

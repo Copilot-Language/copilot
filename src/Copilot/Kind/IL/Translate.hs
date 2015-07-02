@@ -60,6 +60,8 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
     { modelInit
     , modelRec = mainConstraints ++ localConstraints
     , properties
+    , depth = maximum $
+      [0] ++ map (\(C.Stream { C.streamBuffer }) -> length streamBuffer) specStreams
     }
 
 seqDescr :: C.Stream -> SeqDescr

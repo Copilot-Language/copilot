@@ -27,7 +27,7 @@ data Output = Output Status Infos
 
 data Status
   = Valid
-  | Invalid (Maybe Cex)
+  | Invalid
   | Unknown
   | Error
 
@@ -44,7 +44,7 @@ data Prover = forall r . Prover
   { proverName     :: String
   , hasFeature     :: Feature -> Bool
   , startProver    :: Core.Spec -> IO r
-  , askProver      :: r -> [PropId] -> PropId -> IO Output
+  , askProver      :: r -> [PropId] -> [PropId] -> IO Output
   , closeProver    :: r -> IO ()
   }
 
@@ -88,19 +88,22 @@ combineOutputs nameL nameR (Output stL msgL) (Output stR msgR) =
   Output (combineSt stL stR) infos
 
   where
-    combineSt Error _                   = Error
-    combineSt  _ Error                  = Error
-    combineSt Valid Valid               = Valid
-    combineSt Valid (Invalid _)         = Error
-    combineSt Valid Unknown             = Valid
-    combineSt (Invalid (Just cex)) _    = Invalid $ Just cex
-    combineSt (Invalid _) (Invalid _)   = Invalid Nothing
-    combineSt (Invalid Nothing) Unknown = Invalid Nothing
-    combineSt Unknown Unknown           = Unknown
-    combineSt o1 o2                     = combineSt o2 o1
+    combineSt Error _         = Error
+    combineSt  _ Error        = Error
+
+    combineSt Valid Invalid   = Error
+    combineSt Invalid Valid   = Error
+
+    combineSt Invalid _       = Invalid
+    combineSt _ Invalid       = Invalid
+
+    combineSt Valid _         = Valid
+    combineSt _ Valid         = Valid
+
+    combineSt Unknown Unknown = Unknown
 
     prefixMsg = case (stL, stR) of
-      (Valid, Invalid _) -> ["The two provers don't agree"]
+      (Valid, Invalid) -> ["The two provers don't agree"]
       _ -> []
 
     decoName s = "<" ++ s ++ ">"

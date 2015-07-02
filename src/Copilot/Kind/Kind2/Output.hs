@@ -19,7 +19,7 @@ parseOutput prop xml = fromJust $ do
   root <- parseXMLDoc xml
   case findAnswer . findPropTag $ root of
     "valid"   -> return (Output Valid   [])
-    "invalid" -> return (Output (Invalid Nothing) [])
+    "invalid" -> return (Output Invalid [])
     s         -> err $ "Unrecognized status : " ++ s
 
   where

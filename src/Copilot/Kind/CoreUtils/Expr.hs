@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes, ScopedTypeVariables, NamedFieldPuns #-}
+
 --------------------------------------------------------------------------------
 
 module Copilot.Kind.CoreUtils.Expr where

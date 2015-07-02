@@ -60,8 +60,8 @@ kind2BaseOptions = ["--input-format", "native", "-xml"]
 
 --------------------------------------------------------------------------------
 
-askKind2 :: ProverST -> [PropId] -> PropId -> IO Output
-askKind2 (ProverST opts spec) assumptions toCheck = do
+askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
+askKind2 (ProverST opts spec) assumptions [toCheck] = do
 
   let kind2Input = prettyPrint . toKind2 Modular assumptions [toCheck] $ spec
 

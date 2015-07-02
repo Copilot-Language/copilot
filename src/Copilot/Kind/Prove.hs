@@ -37,14 +37,16 @@ prove
       processActions _ _ [] = return ()
       processActions prover context (action:nextActions) = case action of
         Check propId -> do
-          (Output status infos) <- askProver prover context propId
+          (Output status infos) <- askProver prover context [propId]
           case status of
-            Valid     -> putStrLn $ propId ++ " : valid"
-            Invalid _ -> putStrLn $ propId ++ " : invalid"
-            Error     -> putStrLn $ propId ++ " : error ++ ("
-                                           ++ intercalate " | " infos ++ ")"
-            Unknown   -> putStrLn $ propId ++ " : unknown"
-                                           ++ " (" ++ intercalate ", " infos ++ ")"
+            Valid     -> putStrLn $ propId ++ ": valid "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Invalid   -> putStrLn $ propId ++ ": invalid "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Error     -> putStrLn $ propId ++ ": error "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Unknown   -> putStrLn $ propId ++ ": unknown "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
           processActions prover context nextActions
 
         Assume propId -> do

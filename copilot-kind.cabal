@@ -39,19 +39,8 @@ library
                           , bimap
                           , xml
                           , random
-
-  default-extensions      : GADTs
-                          , MultiParamTypeClasses
-                          , RankNTypes
-                          , KindSignatures
-                          , FlexibleInstances
-                          , DoAndIfThenElse
-                          , GeneralizedNewtypeDeriving
-                          , NamedFieldPuns
-                          , ScopedTypeVariables
-                          , ViewPatterns
-                          , LambdaCase
-                          , TemplateHaskell
+                          , free
+                          , transformers
                           
   exposed-modules         : Copilot.Kind
                           , Copilot.Kind.Lib
