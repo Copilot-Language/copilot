@@ -22,7 +22,7 @@ module Copilot.Language.Spec
   , StructData (..)
   , structarg
   , structs
-
+  , struct
   , Property (..)
   , prop
   , properties
@@ -139,8 +139,8 @@ data StructData where
 
 --------------------------------------------------------------------------------
 
---struct :: String -> [StructArg] -> Spec
---struct name sargs = tell [StructItem $ StructData name (ExternStruct _ _ sargs _)]
+struct :: String -> [StructArg] -> Spec
+struct name sargs = tell [StructItem $ StructData name sargs]
 
 --------------------------------------------------------------------------------
 {-
