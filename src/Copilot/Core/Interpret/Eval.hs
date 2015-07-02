@@ -188,7 +188,7 @@ evalExpr_ k e0 locs strms = case e0 of
     let ev3 = evalExpr_ k e3 locs strms in 
     let op3 = evalOp3 op                in
     ev1 `seq` ev2 `seq` ev3 `seq` op3 `seq` op3 ev1 ev2 ev3
-  Label s e1                           -> 
+  Label t s e1                         -> 
     let ev1 = evalExpr_ k e1 locs strms in
     ev1
 

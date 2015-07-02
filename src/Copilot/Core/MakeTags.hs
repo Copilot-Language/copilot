@@ -114,4 +114,4 @@ mkTagsExpr e0 = case e0 of
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)
-  Label s e                      -> liftM  (Label s) (mkTagsExpr e)
+  Label t s e                    -> liftM  (Label t s) (mkTagsExpr e)

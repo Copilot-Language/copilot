@@ -53,7 +53,7 @@ data Expr a where
   Op1          :: Op1 a b -> Expr a -> Expr b 
   Op2          :: Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d
-  Label        :: String -> Expr a -> Expr a
+  Label        :: Type a -> String -> Expr a -> Expr a
 
 --------------------------------------------------------------------------------
 
