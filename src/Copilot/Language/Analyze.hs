@@ -227,19 +227,19 @@ analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
                       , externFunEnv  = funs 
                       , externFunArgs = args
-                      , externStructEnv  = structs
+                      , externStructEnv  = datastructs
                       , externStructArgs = struct_args }
     = do
     -- symbol names redeclared?
     findDups vars arrs
     findDups vars funs
     --findDups vars struct_args
-    findDups vars structs
+    findDups vars datastructs
     findDups arrs funs
     --findDups arrs struct_args
-    findDups arrs structs
+    findDups arrs datastructs
     --findDups funs struct_args
-    findDups funs structs
+    findDups funs datastructs
     -- conflicting types?
     conflictingTypes vars
     conflictingTypes arrs

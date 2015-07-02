@@ -21,7 +21,6 @@ module Copilot.Language.Spec
   , arg
   , StructData (..)
   , structarg
-  , struct
   , structs
 
   , Property (..)
@@ -30,8 +29,8 @@ module Copilot.Language.Spec
   ) where
 
 import Control.Monad.Writer
-import Data.List (foldl', find)
-import Data.Maybe (fromMaybe)
+import Data.List (foldl')
+--import Data.Maybe (fromMaybe)
 
 --import Copilot.Core (Typed, Struct)
 import Copilot.Core (Typed)
@@ -140,8 +139,8 @@ data StructData where
 
 --------------------------------------------------------------------------------
 
-struct :: String -> [StructArg] -> Spec
-struct name sargs = tell [StructItem $ StructData name sargs]
+--struct :: String -> [StructArg] -> Spec
+--struct name sargs = tell [StructItem $ StructData name (ExternStruct _ _ sargs _)]
 
 --------------------------------------------------------------------------------
 {-
