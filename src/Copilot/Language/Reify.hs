@@ -159,7 +159,7 @@ mkExpr refMkId refStreams refMap = go
 
       Label s e -> do
           w <- go e
-          return $ Core.Label s w
+          return $ Core.Label typeOf s w
 
       ------------------------------------------------------
 
