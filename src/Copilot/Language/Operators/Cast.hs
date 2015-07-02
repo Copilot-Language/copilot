@@ -7,8 +7,8 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Copilot.Language.Operators.Cast 
-  ( cast ) where
+module Copilot.Language.Operators.Cast
+  ( cast, unsafeCast ) where
 
 import qualified Copilot.Core.Operators as C
 import Copilot.Core.Type
@@ -21,6 +21,9 @@ import Data.Word
 
 class Cast a b where
   cast :: (Typed a, Typed b) => Stream a -> Stream b
+
+class UnsafeCast a b where
+  unsafeCast :: (Typed a, Typed b) => Stream a -> Stream b
 
 --------------------------------------------------------------------------------
 
@@ -136,4 +139,93 @@ instance Cast Int64 Int64 where
   cast = castIntegral
 
 --------------------------------------------------------------------------------
+-- | Unsafe downcasting to smaller sizes
+--------------------------------------------------------------------------------
 
+instance UnsafeCast Word64 Word32 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word64 Word16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word64 Word8 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word32 Word16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word32 Word8 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word16 Word8 where
+  unsafeCast = castIntegral
+
+instance UnsafeCast Int64 Int32 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int64 Int16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int64 Int8 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int32 Int16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int32 Int8 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int16 Int8 where
+  unsafeCast = castIntegral
+
+--------------------------------------------------------------------------------
+-- | Unsafe unsigned and signed promotion to floating point values
+--------------------------------------------------------------------------------
+
+instance UnsafeCast Int64 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Int32 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Int16 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Int8 Float where
+  unsafeCast = castIntegral
+
+instance UnsafeCast Int64 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Int32 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Int16 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Int8 Double where
+  unsafeCast = castIntegral
+
+instance UnsafeCast Word64 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Word32 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Word16 Float where
+  unsafeCast = castIntegral
+instance UnsafeCast Word8 Float where
+  unsafeCast = castIntegral
+
+instance UnsafeCast Word64 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Word32 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Word16 Double where
+  unsafeCast = castIntegral
+instance UnsafeCast Word8 Double where
+  unsafeCast = castIntegral
+
+--------------------------------------------------------------------------------
+-- | Signed to unsigned and vice versa
+--------------------------------------------------------------------------------
+
+instance UnsafeCast Word64 Int64 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word32 Int32 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word16 Int16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Word8 Int8 where
+  unsafeCast = castIntegral
+
+instance UnsafeCast Int64 Word64 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int32 Word32 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int16 Word16 where
+  unsafeCast = castIntegral
+instance UnsafeCast Int8 Word8 where
+  unsafeCast = castIntegral
