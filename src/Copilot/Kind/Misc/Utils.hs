@@ -14,8 +14,7 @@ module Copilot.Kind.Misc.Utils
  , Set, isSubsetOf, member
 
  -- Some personnal functions
- , fst3, snd3, thrd3
- , isSublistOf, nub', nubBy', nubEq, findM
+ , isSublistOf, nub', nubBy', nubEq
 
  , openTempFile
  ) where
@@ -48,10 +47,6 @@ import System.Directory
 
 --------------------------------------------------------------------------------
 
-fst3  (a, _, _) = a
-snd3  (_, b, _) = b
-thrd3 (_, _, c) = c
-
 isSublistOf :: Ord a => [a] -> [a] -> Bool
 isSublistOf = Set.isSubsetOf `on` Set.fromList
 
@@ -64,12 +59,6 @@ nub' = map head . group . sort
 
 nubBy' :: (a -> a -> Ordering) -> [a] -> [a]
 nubBy' f = map head . groupBy (\x y -> f x y == EQ) . sortBy f
-
-findM :: (Monad m) => (a -> m Bool) -> [a] -> m (Maybe a)
-findM _ [] = return Nothing
-findM p (x:xs) = do
-  b <- p x
-  if b then return (Just x) else findM p xs
 
 --------------------------------------------------------------------------------
 

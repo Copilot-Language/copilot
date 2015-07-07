@@ -1,84 +1,110 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, LambdaCase #-}
 
-module Copilot.Kind.MetiTarski.TPTP where
+module Copilot.Kind.Light.TPTP (Tptp, interpretTptp) where
 
+import Copilot.Kind.Light.Backend
 import Copilot.Kind.IL
-import Copilot.Kind.Misc.SExpr
-import Copilot.Kind.Misc.Error as Err
 
 import Control.Monad
 import Control.Applicative ((<$>))
 import Data.Maybe
+import Data.List
 
 --------------------------------------------------------------------------------
 
-data TPTPStmt = Ax TPTPExpr | Conj TPTPExpr
+data Tptp = Ax TptpExpr | Null
 
-data TPTPExpr = Infix TPTPExpr String TPTPExpr
-              | Atom String | Fun String [String]
+data TptpExpr = Bin TptpExpr String TptpExpr | Un String TptpExpr
+              | Atom String | Fun String [TptpExpr]
 
-type Term = SExpr String
+instance Show Tptp where
+  show (Ax expr) = "fof(formula, axiom, " ++ show expr ++ ")."
+  show Null      = ""
 
-smtTy :: Type t -> String
-smtTy Integer = "Int"
-smtTy Real    = "Real"
-smtTy Bool    = "Bool"
-
---------------------------------------------------------------------------------
-
-axiom :: Constraint -> TPTPStmt
-axiom c = node "assert" [expr c]
-
-conjecture :: Constraint -> TPTPStmt
-conjecture c = node "assert" [expr c]
-
-checkSat :: Term
-checkSat = singleton "check-sat"
-
-setLogic :: String -> Term
-setLogic l = node "set-logic" [atom l]
+instance Show TptpExpr where
+  show (Bin expr1 op expr2) = "(" ++ show expr1 ++ op ++ show expr2 ++ ")"
+  show (Un op expr) = "(" ++ op ++ show expr ++ ")"
+  show (Atom atom) = atom
+  show (Fun name args) = name ++ "(" ++ intercalate ", " (map show args) ++ ")"
 
 --------------------------------------------------------------------------------
 
-uexpr :: U Expr -> Term
+instance SmtFormat Tptp where
+  push = Null
+  pop = Null
+  checkSat = Null
+  setLogic = const Null
+  declFun = const $ const Null
+  assert c = Ax $ expr c
+
+interpretTptp :: String -> Maybe SatResult
+interpretTptp str
+  | "SZS status Unsatisfiable" `isPrefixOf` str = Just Unsat
+  | "SZS status"               `isPrefixOf` str = Just Unknown
+  | otherwise                                   = Nothing
+
+--------------------------------------------------------------------------------
+
+uexpr :: U Expr -> TptpExpr
 uexpr (U e) = expr e
 
-expr :: Expr t -> Term
+expr :: Expr t -> TptpExpr
 
-expr (Const Integer v) = atom (show v)
-expr (Const Bool    b) = atom (if b then "true" else "false")
-expr (Const Real    v) = atom (show v)
+expr (Const Integer v) = Atom $ show v
+expr (Const Bool b) = Atom $ if b then "true" else "false"
+expr (Const Real v) = Atom $ show v
 
-expr (Ite _ cond e1 e2) = node "ite" [expr cond, expr e1, expr e2]
+expr (Ite _ cond expr1 expr2) = Bin (Bin (expr cond) "=>" (expr expr1))
+  "&" (Bin (Un "~" (expr cond)) "=>" (expr expr2))
 
-expr (FunApp _ funName args) = node funName $ map uexpr args
+expr (FunApp _ funName args) = Fun funName $ map uexpr args
 
-expr (Op1 _ op e) =
-  node smtOp [expr e]
-  where
-    smtOp = case op of
-      Not -> "not"
-      Neg -> "-"
+expr (Op1 _ Not e) = Un (showOp1 Not) $ expr e
+expr (Op1 _ Neg e) = Un (showOp1 Neg) $ expr e
+expr (Op1 _ op e) = Fun (showOp1 op) [expr e]
 
-expr (Op2 _ op e1 e2) =
-  node smtOp [expr e1, expr e2]
-  where
-    smtOp = case op of
-      Eq   -> "="
-      Le   -> "<="
-      Lt   -> "<"
-      Ge   -> ">="
-      Gt   -> ">"
-      And  -> "and"
-      Or   -> "or"
-      Add  -> "+"
-      Sub  -> "-"
-      Mul  -> "*"
+expr (Op2 _ op expr1 expr2) = Bin (expr expr1) (showOp2 op) (expr expr2)
 
 expr (SVal _ f ix) = case ix of
-      Fixed i -> atom $ f ++ "_" ++ show i
-      Var off -> atom $ f ++ "_n" ++ show off
+      Fixed i -> Atom $ f ++ "_" ++ show i
+      Var off -> Atom $ f ++ "_n" ++ show off
+
+showOp1 :: Op1 a b -> String
+showOp1 = \case
+  Not   -> "~"
+  Neg   -> "-"
+  Abs   -> "abs"
+  Exp   -> "exp"
+  Sqrt  -> "sqrt"
+  Log   -> "log"
+  Sin   -> "sin"
+  Tan   -> "tan"
+  Cos   -> "cos"
+  Asin  -> "arcsin"
+  Atan  -> "arctan"
+  Acos  -> "arccos"
+  Sinh  -> "sinh"
+  Tanh  -> "tanh"
+  Cosh  -> "cosh"
+  Asinh -> "arcsinh"
+  Atanh -> "arctanh"
+  Acosh -> "arccosh"
+
+showOp2 :: Op2 a b c -> String
+showOp2 = \case
+  Eq    -> "="
+  Le    -> "<="
+  Lt    -> "<"
+  Ge    -> ">="
+  Gt    -> ">"
+  And   -> "&"
+  Or    -> "|"
+  Add   -> "+"
+  Sub   -> "-"
+  Mul   -> "*"
+  FDiv  -> "/"
+  Pow   -> "^"
 
 --------------------------------------------------------------------------------

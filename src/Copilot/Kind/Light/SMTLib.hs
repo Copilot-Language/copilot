@@ -1,8 +1,10 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, FlexibleInstances #-}
 
-module Copilot.Kind.Light.SMTLib where
+module Copilot.Kind.Light.SMTLib (SmtLib, interpretSmtLib) where
+
+import Copilot.Kind.Light.Backend
 
 import Copilot.Kind.IL
 import Copilot.Kind.Misc.SExpr
@@ -14,7 +16,10 @@ import Data.Maybe
 
 --------------------------------------------------------------------------------
 
-type Term = SExpr String
+newtype SmtLib = SmtLib (SExpr String)
+
+instance Show SmtLib where
+  show (SmtLib s) = show s
 
 smtTy :: Type t -> String
 smtTy Integer = "Int"
@@ -23,34 +28,26 @@ smtTy Bool    = "Bool"
 
 --------------------------------------------------------------------------------
 
-declConst :: Type a -> String -> Term
-declConst t id = node "declare-fun" [atom id, unit, atom $ smtTy t]
+instance SmtFormat SmtLib where
+  push = SmtLib $ node "push" [atom "1"]
+  pop = SmtLib $ node "pop" [atom "1"]
+  checkSat = SmtLib $ singleton "check-sat"
+  setLogic l = SmtLib $ node "set-logic" [atom l]
+  declFun name retTy = SmtLib $
+    node "declare-fun" [atom name, unit, atom (smtTy retTy)]
+  assert c = SmtLib $ node "assert" [expr c]
 
-declFun :: String -> Type t -> Term
-declFun name retTy =
-  node "declare-fun" [atom name, unit, atom (smtTy retTy)]
-
-assert :: Constraint -> Term
-assert c = node "assert" [expr c]
-
-push :: Term
-push = node "push" [atom "1"]
-
-pop :: Term
-pop = node "pop" [atom "1"]
-
-checkSat :: Term
-checkSat = singleton "check-sat"
-
-setLogic :: String -> Term
-setLogic l = node "set-logic" [atom l]
+interpretSmtLib :: String -> Maybe SatResult
+interpretSmtLib "sat"   = Just Sat
+interpretSmtLib "unsat" = Just Unsat
+interpretSmtLib _       = Just Unknown
 
 --------------------------------------------------------------------------------
 
-uexpr :: U Expr -> Term
+uexpr :: U Expr -> SExpr String
 uexpr (U e) = expr e
 
-expr :: Expr t -> Term
+expr :: Expr t -> SExpr String
 
 expr (Const Integer v) = atom (show v)
 expr (Const Bool    b) = atom (if b then "true" else "false")
@@ -64,8 +61,24 @@ expr (Op1 _ op e) =
   node smtOp [expr e]
   where
     smtOp = case op of
-      Not -> "not"
-      Neg -> "-"
+      Not   -> "not"
+      Neg   -> "-"
+      Abs   -> "abs"
+      Exp   -> "exp"
+      Sqrt  -> "sqrt"
+      Log   -> "log"
+      Sin   -> "sin"
+      Tan   -> "tan"
+      Cos   -> "cos"
+      Asin  -> "asin"
+      Atan  -> "atan"
+      Acos  -> "acos"
+      Sinh  -> "sinh"
+      Tanh  -> "tanh"
+      Cosh  -> "cosh"
+      Asinh -> "asinh"
+      Atanh -> "atanh"
+      Acosh -> "acosh"
 
 expr (Op2 _ op e1 e2) =
   node smtOp [expr e1, expr e2]
@@ -81,9 +94,11 @@ expr (Op2 _ op e1 e2) =
       Add  -> "+"
       Sub  -> "-"
       Mul  -> "*"
+      FDiv -> "/"
+      Pow  -> "^"
 
-expr (SVal _ f ix) = case ix of
-      Fixed i -> atom $ f ++ "_" ++ show i
-      Var off -> atom $ f ++ "_n" ++ show off
+expr (SVal _ f ix) = atom $ case ix of
+      Fixed i -> f ++ "_" ++ show i
+      Var off -> f ++ "_n" ++ show off
 
 --------------------------------------------------------------------------------

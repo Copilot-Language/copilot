@@ -1,12 +1,12 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE LambdaCase, NamedFieldPuns, DeriveFunctor, FlexibleInstances #-}
+{-# LANGUAGE LambdaCase, NamedFieldPuns, DeriveFunctor, FlexibleInstances, RankNTypes, GADTs #-}
 
 module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
-  , lightProver
-  , yices, dReal, altErgo
+  , kInduction
+  , yices, dReal, altErgo, metit
   ) where
 
 import Copilot.Kind.IL.Translate
@@ -15,14 +15,18 @@ import Copilot.Kind.IL
 import System.IO (hClose)
 
 import qualified Copilot.Core as Core
+import Copilot.Kind.Light.Backend
 import qualified Copilot.Kind.Light.SMT as SMT
 
+import Copilot.Kind.Light.SMTLib
+import Copilot.Kind.Light.TPTP
+
 import Control.Applicative
-import Control.Monad (unless, liftM)
+import Control.Monad (msum, unless, ap, MonadPlus(..), (>=>))
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.Free
 
-import Copilot.Kind.Prover
+import qualified Copilot.Kind.Prover as P
 
 import Data.Default
 import qualified Data.Map as Map
@@ -36,7 +40,7 @@ import Data.Set (union, (\\), fromList, elems)
 data Options = Options
   { -- The maximum number of steps of the k-induction algorithm the prover runs
     -- before giving up.
-    kTimeout :: Integer
+    maxK :: Integer
 
     -- If `onlyBmc` is set to `True`, the prover will only search for
     -- counterexamples and won't try to prove the properties discharged to it.
@@ -45,172 +49,198 @@ data Options = Options
     -- If `debug` is set to `True`, the SMTLib queries produced by the prover
     -- are displayed in the standard output.
   , debug    :: Bool
-
-  , backend  :: SMT.Backend
   }
 
 instance Default Options where
   def = Options
-    { kTimeout  = 100
+    { maxK  = 10
     , onlyBmc   = False
     , debug     = False
-    , backend   = yices
     }
 
-lightProver :: Options -> Prover
-lightProver options = Prover
-  { proverName  = "Light"
-  , hasFeature  = \case
-      GiveCex -> False
-      HandleAssumptions -> True
-  , startProver = return . ProofState options Map.empty . translate
-  , askProver   = kInduction 10
-  , closeProver = const $ return ()
+kInduction :: SmtFormat a => Options -> Backend a -> P.Prover
+kInduction options backend = P.Prover
+  { P.proverName  = "Light"
+  , P.hasFeature  = \case
+      P.GiveCex -> False
+      P.HandleAssumptions -> True
+  , P.startProver = return . ProofState options backend Map.empty . translate
+  , P.askProver   = kInduction' (maxK options)
+  , P.closeProver = const $ return ()
   }
 
-yices = SMT.Backend
-  { SMT.cmd             = "yices-smt2"
-  , SMT.cmdOpts         = ["--incremental"]
-  , SMT.logic           = "QF_UFLIA"
-  , SMT.inputTerminator = const $ return ()
-  , SMT.incremental     = True
-  , SMT.format          = SMT.smtLib2
+yices :: Backend SmtLib
+yices = Backend
+  { cmd             = "yices-smt2"
+  , cmdOpts         = ["--incremental"]
+  , inputTerminator = const $ return ()
+  , incremental     = True
+  , logic           = "QF_UFLIA"
+  , interpret       = interpretSmtLib
   }
 
-altErgo = SMT.Backend
-  { SMT.cmd             = "alt-ergo.opt"
-  , SMT.cmdOpts         = []
-  , SMT.logic           = "QF_UFLIA"
-  , SMT.inputTerminator = hClose
-  , SMT.incremental     = False
-  , SMT.format          = SMT.smtLib2
+altErgo :: Backend SmtLib
+altErgo = Backend
+  { cmd             = "alt-ergo.opt"
+  , cmdOpts         = []
+  , inputTerminator = hClose
+  , incremental     = False
+  , logic           = "QF_NRA"
+  , interpret       = interpretSmtLib
   }
 
-dReal = SMT.Backend
-  { SMT.cmd             = "perl"
-  -- Run dReal with a timeout.
-  , SMT.cmdOpts         = ["-e", "alarm 10; exec dReal"]
-  , SMT.logic           = "QF_NRA"
-  , SMT.inputTerminator = hClose
-  , SMT.incremental     = False
-  , SMT.format          = SMT.smtLib2
+dReal :: Backend SmtLib
+dReal = Backend
+  { cmd             = "perl"
+  , cmdOpts         = ["-e", "alarm 5; exec dReal"]
+  , inputTerminator = hClose
+  , incremental     = False
+  , logic           = "QF_NRA"
+  , interpret       = interpretSmtLib
   }
 
-metit = SMT.Backend
-  { SMT.cmd             = "metit"
-  , SMT.cmdOpts         = ["--autoInclude"]
-  , SMT.logic           = ""
-  , SMT.inputTerminator = const $ return ()
-  , SMT.incremental     = False
-  , SMT.format          = SMT.tptp
+-- The argument is the path to the "tptp" subdirectory of the metitarski install location.
+metit :: String -> Backend Tptp
+metit installDir = Backend
+  { cmd             = "metit"
+  , cmdOpts         =
+      [ "--time", "5"
+      , "--autoInclude"
+      , "--tptp", installDir
+      , "/dev/stdin"
+      ]
+  , inputTerminator = hClose
+  , incremental     = False
+  , logic           = ""
+  , interpret       = interpretTptp
   }
 
 -------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
-data ProofTerm a = StartNewSolver String Bool SMT.Backend (SMT.Solver -> a)
-                 | DeclVars SMT.Solver [VarDescr] a
-                 | Assume SMT.Solver [Constraint] a
-                 | Entailed SMT.Solver [Constraint] (SMT.SatResult -> a)
-                 | Stop SMT.Solver a
-                 | Exit (Output, ProofState)
-                 deriving (Functor)
+newtype ProofScript b a = ProofScript { runPS :: ProofState b -> IO (Maybe a, ProofState b) }
+  deriving Functor
 
-type ProofScript = StateT ProofState StatelessPS
-type StatelessPS = Free ProofTerm
-data ProofState = ProofState
-  { opts    :: Options
-  , solvers :: Map.Map SolverId SMT.Solver
+instance Applicative (ProofScript b) where
+  pure = return
+  (<*>) = ap
+
+instance Monad (ProofScript b) where
+  return a = ProofScript $ \s -> return (return a, s)
+  m >>= f = ProofScript $ runPS m >=> \case
+    (Nothing, s') -> return (Nothing, s')
+    (Just a, s') -> runPS (f a) s'
+
+instance Alternative (ProofScript b) where
+  empty = mzero
+  (<|>) = mplus
+
+instance MonadPlus (ProofScript b) where
+  mzero = ProofScript $ \s -> return (Nothing, s)
+  a `mplus` b = ProofScript $ runPS a >=> \case
+    (Nothing, s') -> runPS b s'
+    a'            -> return a'
+
+data ProofState b = ProofState
+  { options :: Options
+  , backend :: Backend b
+  , solvers :: Map.Map SolverId (SMT.Solver b)
   , spec    :: IL
   }
 
 data SolverId = Base | Step
   deriving (Show, Ord, Eq)
 
-startNewSolver :: SolverId -> ProofScript SMT.Solver
-startNewSolver sid = do
-  opts <- opts <$> get
-  solver <- liftF $ StartNewSolver (show sid) (debug opts) (backend opts) id
-  modify $ \s@ProofState { solvers }
-    -> s { solvers = Map.insert sid solver solvers }
-  return solver
+liftIO :: IO a -> ProofScript b a
+liftIO m = ProofScript $ \s -> m >>= \a -> return (return a, s)
 
-declVars :: SolverId -> [VarDescr] -> ProofScript ()
-declVars sid vs = do
-  solver <- getSolver sid
-  liftF $ DeclVars solver vs ()
-  modify $ \s@ProofState { solvers }
-    -> s { solvers = Map.insert sid (SMT.updateVars solver vs) solvers }
+getOptions :: ProofScript b Options
+getOptions = ProofScript $ \s@(ProofState { options }) -> return (return options, s)
 
-assume :: SolverId -> [Constraint] -> ProofScript ()
-assume sid cs = getSolver sid >>= \s -> liftF $ Assume s cs ()
+getBackend :: ProofScript b (Backend b)
+getBackend = ProofScript $ \s@(ProofState { backend }) -> return (return backend, s)
 
-entailed :: SolverId -> [Constraint] -> ProofScript SMT.SatResult
-entailed sid cs = do
-  opts <- opts <$> get
-  solver <- getSolver sid
-  result <- liftF $ Entailed solver cs id
-  unless (SMT.incremental $ backend opts) $ stop sid
-  return result
+getSpec :: ProofScript b IL
+getSpec = ProofScript $ \s@(ProofState { spec }) -> return (return spec, s)
 
-stop :: SolverId -> ProofScript ()
-stop id = do
-  s <- getSolver id
-  modify $ \s@ProofState { solvers } -> s { solvers = Map.delete id solvers }
-  liftF $ Stop s ()
-
-halt :: Output -> ProofScript a
-halt r = get >>= (liftF . Exit . ((,) r))
-
-stopSolvers :: ProofScript ()
-stopSolvers = do
-  solvers <- solvers <$> get
-  mapM_ (\s -> lift $ liftF $ Stop s ()) (snd <$> Map.toList solvers)
-
-entailment :: SolverId -> [Constraint] -> [Constraint] -> ProofScript SMT.SatResult
-entailment sid assumptions props = do
-  declVars sid $ nub $ getVars assumptions ++ getVars props
-  assume sid assumptions
-  entailed sid props
-
-getSolver :: SolverId -> ProofScript SMT.Solver
-getSolver sid = do
-  solvers <- solvers <$> get
-  case Map.lookup sid solvers of
-    Nothing -> startNewSolver sid
-    Just solver -> return solver
-
-getModels :: [PropId] -> [PropId] -> ProofScript ([Constraint], [Constraint], [Constraint])
+getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint])
 getModels assumptionIds toCheckIds = do
-  IL {modelInit, modelRec, properties} <- spec <$> get
+  IL {modelInit, modelRec, properties} <- getSpec
   let assumptions = selectProps assumptionIds properties
       modelRec'   = modelRec ++ assumptions
       toCheck     = selectProps toCheckIds properties
   return (modelInit, modelRec', toCheck)
 
-runSMTLib :: StatelessPS (Output, ProofState) -> IO (Output, ProofState)
-runSMTLib (Pure v) = return v
-runSMTLib (Free v) = case v of
-  DeclVars s vs a             -> SMT.declVars s vs >> runSMTLib a
-  Assume s cs a               -> SMT.assume s cs >> runSMTLib a
-  StartNewSolver name dbg b f -> SMT.startNewSolver name dbg b >>= runSMTLib . f
-  Entailed s cs f             -> SMT.entailed s cs >>= runSMTLib . f
-  Stop s a                    -> SMT.stop s >> runSMTLib a
-  Exit v                      -> return v
+getSolvers :: ProofScript b (Map.Map SolverId (SMT.Solver b))
+getSolvers = ProofScript $ \s@(ProofState { solvers }) -> return (return solvers, s)
 
-kInduction :: Integer -> ProofState -> [PropId] -> [PropId] -> IO Output
-kInduction k st as ps = (foldl mplus mzero $ map (induction as ps) $ range k) >>= term
-  where
-    range k = if k > 0 then [1 .. k] else [1 ..]
-    mzero = return (Output Unknown [""], st)
-    mplus :: IO (Output, ProofState) -> ProofScript Output -> IO (Output, ProofState)
-    mplus m b = m >>= \case
-      r@(Output Valid _, _) -> return r
-      (_, st)               -> runSMTLib $ runStateT b st
-    term (o, st) = liftM fst $ runSMTLib $ runStateT (stopSolvers >> return o) st
+getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
+getSolver sid = do
+  solvers <- getSolvers
+  case Map.lookup sid solvers of
+    Nothing -> startNewSolver sid
+    Just solver -> return solver
 
-induction :: [PropId] -> [PropId] -> Integer -> ProofScript Output
+setSolver :: SolverId -> SMT.Solver b -> ProofScript b ()
+setSolver sid solver = ProofScript $ \s@(ProofState { solvers }) ->
+  return (return (), s { solvers = Map.insert sid solver solvers })
+
+deleteSolver :: SolverId -> ProofScript b ()
+deleteSolver sid = ProofScript $ \s@(ProofState { solvers }) ->
+  return (return (), s { solvers = Map.delete sid solvers })
+
+startNewSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
+startNewSolver sid = do
+  opts <- getOptions
+  backend <- getBackend
+  solver <- liftIO $ SMT.startNewSolver (show sid) (debug opts) backend
+  setSolver sid solver
+  return solver
+
+declVars :: SmtFormat b => SolverId -> [VarDescr] -> ProofScript b ()
+declVars sid vs = do
+  solver <- getSolver sid
+  liftIO $ SMT.declVars solver vs
+  setSolver sid $ SMT.updateVars solver vs
+
+assume :: SmtFormat b => SolverId -> [Constraint] -> ProofScript b ()
+assume sid cs = getSolver sid >>= \s -> liftIO $ SMT.assume s cs
+
+entailed :: SmtFormat b => SolverId -> [Constraint] -> ProofScript b SatResult
+entailed sid cs = do
+  backend <- getBackend
+  solver <- getSolver sid
+  result <- liftIO $ SMT.entailed solver cs
+  unless (incremental backend) $ stop sid
+  return result
+
+stop :: SmtFormat b => SolverId -> ProofScript b ()
+stop id = do
+  s <- getSolver id
+  deleteSolver id
+  liftIO $ SMT.stop s
+
+halt :: ProofScript b a
+halt = mzero
+
+stopSolvers :: SmtFormat b => ProofScript b ()
+stopSolvers = do
+  solvers <- getSolvers
+  mapM_ stop (fst <$> Map.toList solvers)
+
+entailment :: SmtFormat b => SolverId -> [Constraint] -> [Constraint] -> ProofScript b SatResult
+entailment sid assumptions props = do
+  declVars sid $ nub $ getVars assumptions ++ getVars props
+  assume sid assumptions
+  entailed sid props
+
+kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO P.Output
+kInduction' k s as ps = (fromMaybe (P.Output P.Unknown [(if k /= 1 then "k-" else "") ++ "induction failed"]) . fst)
+  <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
+  where range k = if k > 0 then [1 .. k] else [1 ..]
+
+induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b P.Output
 induction assumptionIds toCheckIds k = do
 
   (modelInit, modelRec, toCheck) <- getModels assumptionIds toCheckIds
@@ -218,17 +248,17 @@ induction assumptionIds toCheckIds k = do
   let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
       baseInv = [evalAt (Fixed k) m | m <- toCheck]
   entailment Base (modelInit ++ base) baseInv >>= \case
-    SMT.Sat     -> halt $ Output Invalid ["base case failed"]
-    SMT.Unknown -> halt $ Output Unknown ["the base case solver was indecisive"]
+    Sat     -> halt -- $ P.Output Invalid ["base case failed"]
+    Unknown -> halt -- $ P.Output Unknown ["the base case solver was indecisive"]
     _           -> return ()
 
   let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k]]
                 ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k - 1]]
       stepInv = [evalAt (_n_plus k) m | m <- toCheck]
   entailment Step (modelInit ++ step) stepInv >>= \case
-    SMT.Sat     -> halt $ Output Invalid ["inductive step failed"]
-    SMT.Unknown -> halt $ Output Unknown ["the inductive case solver was indecisive"]
-    SMT.Unsat   -> return $ Output Valid ["proved with k-induction, k = " ++ show k]
+    Sat     -> halt -- $ P.Output Invalid ["inductive step failed"]
+    Unknown -> halt -- $ P.Output Unknown ["the inductive case solver was indecisive"]
+    Unsat   -> return $ P.Output P.Valid ["proved with k-induction, k = " ++ show k]
 
 selectProps :: [PropId] -> Map.Map PropId Constraint -> [Constraint]
 selectProps propIds properties =

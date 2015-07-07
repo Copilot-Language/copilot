@@ -96,13 +96,25 @@ streamRec (C.Stream { C.streamId       = id
 
 expr :: Type t -> C.Expr a -> Trans (Expr t)
 
--- TODO(chathhorn): clean up
+-- TODO(chathhorn): blegh clean up
 expr t (C.Const ct@C.Double v)
   | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t (Neg) (Const t (cast t $ toDyn ct (-v)))
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
 expr t (C.Const ct@C.Float v)
   | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t (Neg) (Const t (cast t $ toDyn ct (-v)))
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Int8 v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Int16 v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Int32 v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Int64 v)
+  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
 
 expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
 

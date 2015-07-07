@@ -17,7 +17,7 @@ import Copilot.Kind.Misc.Operators
 
 import Copilot.Kind.Misc.Error as Err
 
-import Control.Monad (liftM)
+import Control.Applicative ((<$>))
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ data UnhandledOp2 = forall a b c .
 handleOp1 ::
   -- 'm' is the monad in which the computation is made
   -- 'resT' is the desired return type of the expression being translated
-  forall m expr _a _b resT. (Monad m) =>
+  forall m expr _a _b resT. (Functor m) =>
   -- The desired return type
   Type resT ->
   -- The unary operator encountered and its argument
@@ -50,28 +50,28 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.Not      -> boolOp Not (handleExpr Bool e)
 
   -- Numeric operators
-  C.Abs ta   -> notHandled ta noTag "abs"
+  C.Abs _   -> numOp Abs
   C.Sign ta  -> notHandled ta noTag "sign"
 
   -- Fractional operators
   C.Recip ta -> notHandled ta noTag "recip"
 
   -- Floating operators
-  C.Exp ta   -> notHandled ta noTag "exp"
-  C.Sqrt ta  -> notHandled ta noTag "sqrt"
-  C.Log ta   -> notHandled ta noTag "log"
-  C.Sin ta   -> notHandled ta noTag "sin"
-  C.Tan ta   -> notHandled ta noTag "tan"
-  C.Cos ta   -> notHandled ta noTag "cos"
-  C.Asin ta  -> notHandled ta noTag "asin"
-  C.Atan ta  -> notHandled ta noTag "atan"
-  C.Acos ta  -> notHandled ta noTag "acos"
-  C.Sinh ta  -> notHandled ta noTag "sinh"
-  C.Tanh ta  -> notHandled ta noTag "tanh"
-  C.Cosh ta  -> notHandled ta noTag "cosh"
-  C.Asinh ta -> notHandled ta noTag "asinh"
-  C.Atanh ta -> notHandled ta noTag "atanh"
-  C.Acosh ta -> notHandled ta noTag "acosh"
+  C.Exp _    -> numOp Exp
+  C.Sqrt _   -> numOp Sqrt
+  C.Log _    -> numOp Log
+  C.Sin _    -> numOp Sin
+  C.Tan _    -> numOp Tan
+  C.Cos _    -> numOp Cos
+  C.Asin _   -> numOp Asin
+  C.Atan _   -> numOp Atan
+  C.Acos _   -> numOp Acos
+  C.Sinh _   -> numOp Sinh
+  C.Tanh _   -> numOp Tanh
+  C.Cosh _   -> numOp Cosh
+  C.Asinh _  -> numOp Asinh
+  C.Atanh _  -> numOp Atanh
+  C.Acosh _  -> numOp Acosh
 
   -- Bitwise operators.
   C.BwNot ta -> notHandled ta noTag "bwnot"
@@ -81,9 +81,12 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
 
   where
     boolOp :: Op1 a Bool -> m (expr a) -> m (expr resT)
-    boolOp op e1'= case resT of
-      Bool -> liftM (mkOp resT op) e1'
+    boolOp op e = case resT of
+      Bool -> (mkOp resT op) <$> e
       _    -> Err.impossible typeErrMsg
+
+    numOp :: Op1 resT resT -> m (expr resT)
+    numOp op = (mkOp resT op) <$> (handleExpr resT e)
 
     -- Casting from Integer (Only possible solution)
     castTo :: C.Type cta -> C.Type ctb -> m (expr resT)
@@ -130,10 +133,10 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
   C.Div ta    -> notHandled ta "div"
 
   -- Fractional operators.
-  C.Fdiv ta   -> notHandled ta "/"
+  C.Fdiv _    -> numOp FDiv
 
   -- Floating operators.
-  C.Pow ta    -> notHandled ta "^"
+  C.Pow _     -> numOp Pow
   C.Logb ta   -> notHandled ta "logb"
 
   -- Equality operators.

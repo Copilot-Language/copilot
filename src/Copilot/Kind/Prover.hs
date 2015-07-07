@@ -21,15 +21,9 @@ import Control.Applicative (liftA2, liftA)
 
 data Cex = Cex
 
-type Infos = [String]
+data Output = Output Status [String]
 
-data Output = Output Status Infos
-
-data Status
-  = Valid
-  | Invalid
-  | Unknown
-  | Error
+data Status = Valid | Invalid | Unknown | Error
 
 data Feature = GiveCex | HandleAssumptions
 
