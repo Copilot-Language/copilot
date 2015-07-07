@@ -96,7 +96,7 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
     mux (mins <= c && c <= maxes)
       (s' || (s && (nextRes c s s' k)))
       ((c > maxes) && s && (nextRes c s s' k))
-  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
+  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([False] ++ s') (k - 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t + d), s1 is true at time (t + d),
@@ -168,7 +168,7 @@ matchingSince l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
     mux (mins <= c && c <= maxes)
       (s && (s' || (nextRes c s s' k)))
       ((c > maxes) && s && (nextRes c s s' k))
-  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
+  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([False] ++ s') (k - 1)
 
 -- Matching Release: Same semantics as Release, except with
 -- s1 or s0 needing to hold at time (t + d) instead of just s1
