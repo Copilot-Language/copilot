@@ -64,7 +64,7 @@ alwaysBeen l u clk dist s = res clk s ((u `P.div` dist) + 1)
   res _ _ 0 = true
   res c s k =
     mux (mins <= c && c <= maxes) (s && (nextRes c s k)) (nextRes c s k)
-  nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
+  nextRes c s k = res ([0] ++ c) ([True] ++ s) (k - 1)
 
 -- Until: True at time t iff there exists a d with l <= d <= u
 -- such that s1 is true at time (t + d),
@@ -96,7 +96,7 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
     mux (mins <= c && c <= maxes)
       (s' || (s && (nextRes c s s' k)))
       ((c > maxes) && s && (nextRes c s s' k))
-  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
+  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t + d), s1 is true at time (t + d),
@@ -133,7 +133,7 @@ trigger l u clk dist s0 s1 = res clk s1 iter
     mux (mins > c || c > maxes || s)
       (nextRes c s k)
       (res' clk s0 iter c)
-  nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
+  nextRes c s k = res ([0] ++ c) ([True] ++ s) (k - 1)
   res' _ _ 0 _ = false
   res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
   nextRes' c s k lowl = res' ([0] ++ c) ([False] ++ s) (k - 1) lowl
@@ -168,7 +168,7 @@ matchingSince l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
     mux (mins <= c && c <= maxes)
       (s && (s' || (nextRes c s s' k)))
       ((c > maxes) && s && (nextRes c s s' k))
-  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
+  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
 
 -- Matching Release: Same semantics as Release, except with
 -- s1 or s0 needing to hold at time (t + d) instead of just s1
@@ -203,7 +203,7 @@ matchingTrigger l u clk dist s0 s1 = res clk s0 s1 iter
     mux (mins > c || c > maxes || (s' && s))
       (nextRes c s s' k)
       (res' clk s0 iter c)
-  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
+  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
   res' _ _ 0 _ = false
   res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
   nextRes' c s k lowl = res' ([0] ++ c) ([False] ++ s) (k - 1) lowl
