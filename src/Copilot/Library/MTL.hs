@@ -12,7 +12,7 @@ import Copilot.Library.Utils
 
 -- It is necessary to provide a number of time units dist
 -- to each function, where the distance between the times
--- of any two adjacent clock samples exceeds dist
+-- of any two adjacent clock samples is no less than dist
 
 -- Eventually: True at time t iff s is true at some time t',
 -- where (t + l) <= t' <= (t + u)
@@ -23,9 +23,9 @@ eventually l u clk dist s = res clk s ((u `P.div` dist) + 1)
   mins = (clk + (constant l))
   maxes = (clk + (constant u))
   res _ _ 0 = false
-  res clk s k =
-    mux (mins <= clk && clk <= maxes) (s || (nextRes clk s k)) (nextRes clk s k)
-  nextRes clk s k = res (drop 1 clk) (drop 1 s) (k - 1)
+  res c s k =
+    mux (mins <= c && c <= maxes) (s || (nextRes c s k)) (nextRes c s k)
+  nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
 
 -- EventuallyPrev: True at time t iff s is true at some time t',
 -- where (t - u) <= t' <= (t - l)
@@ -36,9 +36,9 @@ eventuallyPrev l u clk dist s = res clk s ((u `P.div` dist) + 1)
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   res _ _ 0 = false
-  res clk s k =
-    mux (mins <= clk && clk <= maxes) (s || (nextRes clk s k)) (nextRes clk s k)
-  nextRes clk s k = res ([0] ++ clk) ([False] ++ s) (k - 1)
+  res c s k =
+    mux (mins <= c && c <= maxes) (s || (nextRes c s k)) (nextRes c s k)
+  nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
 
 -- Always: True at time t iff s is true at all times t'
 -- where (t + l) <= t' <= (t + u)
@@ -49,9 +49,9 @@ always l u clk dist s = res clk s ((u `P.div` dist) + 1)
   mins = (clk + (constant l)) 
   maxes = (clk + (constant u)) 
   res _ _ 0 = true 
-  res clk s k = 
-    mux (mins <= clk && clk <= maxes) (s && (nextRes clk s k)) (nextRes clk s k)
-  nextRes clk s k = res (drop 1 clk) (drop 1 s) (k - 1)
+  res c s k = 
+    mux (mins <= c && c <= maxes) (s && (nextRes c s k)) (nextRes c s k)
+  nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
 
 -- AlwaysBeen: True at time t iff s is true at all times t'
 -- where (t - u) <= t' <= (t - l)
@@ -62,9 +62,9 @@ alwaysBeen l u clk dist s = res clk s ((u `P.div` dist) + 1)
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   res _ _ 0 = true
-  res clk s k =
-    mux (mins <= clk && clk <= maxes) (s && (nextRes clk s k)) (nextRes clk s k)
-  nextRes clk s k = res ([0] ++ clk) ([False] ++ s) (k - 1)
+  res c s k =
+    mux (mins <= c && c <= maxes) (s && (nextRes c s k)) (nextRes c s k)
+  nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
 
 -- Until: True at time t iff there exists a d with l <= d <= u
 -- such that s1 is true at time (t + d),
@@ -76,11 +76,11 @@ until l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   mins = (clk + (constant l))
   maxes = (clk + (constant u))
   res _ _ _ 0 = false
-  res clk s s' k =
-    mux (mins <= clk && clk <= maxes)
-      (s' || (s && (nextRes clk s s' k)))
-      ((clk < mins) && s && (nextRes clk s s' k))
-  nextRes clk s s' k = res (drop 1 clk) (drop 1 s) (drop 1 s') (k - 1)
+  res c s s' k =
+    mux (mins <= c && c <= maxes)
+      (s' || (s && (nextRes c s s' k)))
+      ((c < mins) && s && (nextRes c s s' k))
+  nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Since: True at time t iff there exists a d with l <= d <= u
 -- such that s1 is true at time (t - d),
@@ -92,11 +92,11 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   res _ _ _ 0 = false 
-  res clk s s' k =
-    mux (mins <= clk && clk <= maxes)
-      (s' || (s && (nextRes clk s s' k)))
-      ((clk > maxes) && s && (nextRes clk s s' k))
-  nextRes clk s s' k = res ([0] ++ clk) ([False] ++ s) ([False] ++ s') (k - 1)
+  res c s s' k =
+    mux (mins <= c && c <= maxes)
+      (s' || (s && (nextRes c s s' k)))
+      ((c > maxes) && s && (nextRes c s s' k))
+  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t + d), s1 is true at time (t + d),
@@ -108,16 +108,15 @@ release l u clk dist s0 s1 = res clk s1 iter
   mins = (clk + (constant l))
   maxes = (clk + (constant u))
   iter = (u `P.div` dist) + 1
-  c = clk
   res _ _ 0 = true
-  res clk s k = 
-    mux (mins > clk || clk > maxes || s)
-      (nextRes clk s k)
-      (res' c s0 iter clk)
-  nextRes clk s k = res (drop 1 clk) (drop 1 s) (k - 1)
+  res c s k = 
+    mux (mins > c || c > maxes || s)
+      (nextRes c s k)
+      (res' clk s0 iter c)
+  nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
   res' _ _ 0 _ = false
-  res' clk s k upl = ((clk < upl) && s) || (nextRes' clk s k upl)
-  nextRes' clk s k upl = res' (drop 1 clk) (drop 1 s) (k - 1) upl
+  res' c s k upl = ((c < upl) && s) || (nextRes' c s k upl)
+  nextRes' c s k upl = res' (drop 1 c) (drop 1 s) (k - 1) upl
 
 -- Trigger: True at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t - d), s1 is true at time (t - d),
@@ -129,16 +128,15 @@ trigger l u clk dist s0 s1 = res clk s1 iter
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   iter = (u `P.div` dist) + 1
-  c = clk
   res _ _ 0 = true
-  res clk s k =
-    mux (mins > clk || clk > maxes || s)
-      (nextRes clk s k)
-      (res' c s0 iter clk)
-  nextRes clk s k = res ([0] ++ clk) ([False] ++ s) (k - 1)
+  res c s k =
+    mux (mins > c || c > maxes || s)
+      (nextRes c s k)
+      (res' clk s0 iter c)
+  nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
   res' _ _ 0 _ = false
-  res' clk s k lowl = ((clk > lowl) && s) || (nextRes' clk s k lowl)
-  nextRes' clk s k lowl = res' ([0] ++ clk) ([False] ++ s) (k - 1) lowl
+  res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
+  nextRes' c s k lowl = res' ([0] ++ c) ([False] ++ s) (k - 1) lowl
 
 -- Matching Variants
 
@@ -151,11 +149,11 @@ matchingUntil l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   mins = (clk + (constant l))
   maxes = (clk + (constant u))
   res _ _ _ 0 = false
-  res clk s s' k =
-    mux (mins <= clk && clk <= maxes)
-      (s && (s' || (nextRes clk s s' k)))
-      ((clk < mins) && s && (nextRes clk s s' k))
-  nextRes clk s s' k = res (drop 1 clk) (drop 1 s) (drop 1 s') (k - 1)
+  res c s s' k =
+    mux (mins <= c && c <= maxes)
+      (s && (s' || (nextRes c s s' k)))
+      ((c < mins) && s && (nextRes c s s' k))
+  nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Matching Since: Same semantics as Since, except with both s1 and s0
 -- needing to hold at time (t - d) instead of just s1
@@ -166,11 +164,11 @@ matchingSince l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   res _ _ _ 0 = false 
-  res clk s s' k =
-    mux (mins <= clk && clk <= maxes)
-      (s && (s' || (nextRes clk s s' k)))
-      ((clk > maxes) && s && (nextRes clk s s' k))
-  nextRes clk s s' k = res ([0] ++ clk) ([False] ++ s) ([False] ++ s') (k - 1)
+  res c s s' k =
+    mux (mins <= c && c <= maxes)
+      (s && (s' || (nextRes c s s' k)))
+      ((c > maxes) && s && (nextRes c s s' k))
+  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
 
 -- Matching Release: Same semantics as Release, except with
 -- s1 or s0 needing to hold at time (t + d) instead of just s1
@@ -181,16 +179,15 @@ matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
   mins = (clk + (constant l))
   maxes = (clk + (constant u))
   iter = (u `P.div` dist) + 1
-  c = clk
   res _ _ _ 0 = true
-  res clk s s' k = 
-    mux (mins > clk || clk > maxes || (s' && s))
-      (nextRes clk s s' k)
-      (res' c s0 iter clk)
-  nextRes clk s s' k = res (drop 1 clk) (drop 1 s) (drop 1 s') (k - 1)
+  res c s s' k = 
+    mux (mins > c || c > maxes || (s' && s))
+      (nextRes c s s' k)
+      (res' clk s0 iter c)
+  nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
   res' _ _ 0 _ = false
-  res' clk s k upl = ((clk < upl) && s) || (nextRes' clk s k upl)
-  nextRes' clk s k upl = res' (drop 1 clk) (drop 1 s) (k - 1) upl
+  res' c s k upl = ((c < upl) && s) || (nextRes' c s k upl)
+  nextRes' c s k upl = res' (drop 1 c) (drop 1 s) (k - 1) upl
 
 -- Matching Trigger: Same semantics as Trigger, except with
 -- s1 or s0 needing to hold at time (t - d) instead of just s1
@@ -201,13 +198,12 @@ matchingTrigger l u clk dist s0 s1 = res clk s0 s1 iter
   mins = (clk - (constant u))
   maxes = (clk - (constant l))
   iter = (u `P.div` dist) + 1
-  c = clk
   res _ _ _ 0 = true
-  res clk s s' k =
-    mux (mins > clk || clk > maxes || (s' && s))
-      (nextRes clk s s' k)
-      (res' c s0 iter clk)
-  nextRes clk s s' k = res ([0] ++ clk) ([False] ++ s) ([False] ++ s') (k - 1)
+  res c s s' k =
+    mux (mins > c || c > maxes || (s' && s))
+      (nextRes c s s' k)
+      (res' clk s0 iter c)
+  nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([False] ++ s') (k - 1)
   res' _ _ 0 _ = false
-  res' clk s k lowl = ((clk > lowl) && s) || (nextRes' clk s k lowl)
-  nextRes' clk s k lowl = res' ([0] ++ clk) ([False] ++ s) (k - 1) lowl
+  res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
+  nextRes' c s k lowl = res' ([0] ++ c) ([False] ++ s) (k - 1) lowl
