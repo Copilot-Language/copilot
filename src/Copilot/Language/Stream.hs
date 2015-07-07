@@ -37,6 +37,8 @@ data Stream :: * -> * where
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
   ExternStruct:: Typed a
               => String -> [StructArg] -> Stream a
+  --GetField    :: (Typed a, Typed b)
+  --            => Core.StructData -> Stream a -> Stream b
   Local       :: (Typed a, Typed b) 
               => Stream a -> (Stream a -> Stream b) -> Stream b
   Var         :: Typed a 
