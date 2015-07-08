@@ -1,12 +1,13 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE LambdaCase, NamedFieldPuns, DeriveFunctor, FlexibleInstances, RankNTypes, GADTs #-}
+{-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs #-}
 
 module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
   , kInduction
   , yices, dReal, altErgo, metit
+  , Backend, SmtFormat
   ) where
 
 import Copilot.Kind.IL.Translate
@@ -14,26 +15,26 @@ import Copilot.Kind.IL
 
 import System.IO (hClose)
 
-import qualified Copilot.Core as Core
 import Copilot.Kind.Light.Backend
 import qualified Copilot.Kind.Light.SMT as SMT
 
-import Copilot.Kind.Light.SMTLib
-import Copilot.Kind.Light.TPTP
+import Copilot.Kind.Light.SMTLib (SmtLib)
+import Copilot.Kind.Light.TPTP (Tptp)
+import qualified Copilot.Kind.Light.SMTLib as SMTLib
+import qualified Copilot.Kind.Light.TPTP as TPTP
 
 import Control.Applicative
-import Control.Monad (msum, unless, ap, MonadPlus(..), (>=>))
+import Control.Monad (msum, unless, MonadPlus(..))
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
-import Control.Monad.Free
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Maybe
 
 import qualified Copilot.Kind.Prover as P
 
 import Data.Default
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
-import Data.List (intersectBy, nub)
-import Data.Function (on)
-import Data.Set (union, (\\), fromList, elems)
+import Data.List (nub)
 
 --------------------------------------------------------------------------------
 
@@ -76,7 +77,7 @@ yices = Backend
   , inputTerminator = const $ return ()
   , incremental     = True
   , logic           = "QF_UFLIA"
-  , interpret       = interpretSmtLib
+  , interpret       = SMTLib.interpret
   }
 
 altErgo :: Backend SmtLib
@@ -86,7 +87,7 @@ altErgo = Backend
   , inputTerminator = hClose
   , incremental     = False
   , logic           = "QF_NRA"
-  , interpret       = interpretSmtLib
+  , interpret       = SMTLib.interpret
   }
 
 dReal :: Backend SmtLib
@@ -96,7 +97,7 @@ dReal = Backend
   , inputTerminator = hClose
   , incremental     = False
   , logic           = "QF_NRA"
-  , interpret       = interpretSmtLib
+  , interpret       = SMTLib.interpret
   }
 
 -- The argument is the path to the "tptp" subdirectory of the metitarski install location.
@@ -112,35 +113,17 @@ metit installDir = Backend
   , inputTerminator = hClose
   , incremental     = False
   , logic           = ""
-  , interpret       = interpretTptp
+  , interpret       = TPTP.interpret
   }
 
 -------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
-newtype ProofScript b a = ProofScript { runPS :: ProofState b -> IO (Maybe a, ProofState b) }
-  deriving Functor
+type ProofScript b = MaybeT (StateT (ProofState b) IO)
 
-instance Applicative (ProofScript b) where
-  pure = return
-  (<*>) = ap
-
-instance Monad (ProofScript b) where
-  return a = ProofScript $ \s -> return (return a, s)
-  m >>= f = ProofScript $ runPS m >=> \case
-    (Nothing, s') -> return (Nothing, s')
-    (Just a, s') -> runPS (f a) s'
-
-instance Alternative (ProofScript b) where
-  empty = mzero
-  (<|>) = mplus
-
-instance MonadPlus (ProofScript b) where
-  mzero = ProofScript $ \s -> return (Nothing, s)
-  a `mplus` b = ProofScript $ runPS a >=> \case
-    (Nothing, s') -> runPS b s'
-    a'            -> return a'
+runPS :: ProofScript b a -> ProofState b -> IO (Maybe a, ProofState b)
+runPS ps = runStateT (runMaybeT ps)
 
 data ProofState b = ProofState
   { options :: Options
@@ -152,17 +135,14 @@ data ProofState b = ProofState
 data SolverId = Base | Step
   deriving (Show, Ord, Eq)
 
-liftIO :: IO a -> ProofScript b a
-liftIO m = ProofScript $ \s -> m >>= \a -> return (return a, s)
-
 getOptions :: ProofScript b Options
-getOptions = ProofScript $ \s@(ProofState { options }) -> return (return options, s)
+getOptions = options <$> get
 
 getBackend :: ProofScript b (Backend b)
-getBackend = ProofScript $ \s@(ProofState { backend }) -> return (return backend, s)
+getBackend = backend <$> get
 
 getSpec :: ProofScript b IL
-getSpec = ProofScript $ \s@(ProofState { spec }) -> return (return spec, s)
+getSpec = spec <$> get
 
 getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint])
 getModels assumptionIds toCheckIds = do
@@ -173,7 +153,7 @@ getModels assumptionIds toCheckIds = do
   return (modelInit, modelRec', toCheck)
 
 getSolvers :: ProofScript b (Map.Map SolverId (SMT.Solver b))
-getSolvers = ProofScript $ \s@(ProofState { solvers }) -> return (return solvers, s)
+getSolvers = solvers <$> get
 
 getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 getSolver sid = do
@@ -183,12 +163,12 @@ getSolver sid = do
     Just solver -> return solver
 
 setSolver :: SolverId -> SMT.Solver b -> ProofScript b ()
-setSolver sid solver = ProofScript $ \s@(ProofState { solvers }) ->
-  return (return (), s { solvers = Map.insert sid solver solvers })
+setSolver sid solver =
+  (lift . modify) $ \s -> s { solvers = Map.insert sid solver (solvers s) }
 
 deleteSolver :: SolverId -> ProofScript b ()
-deleteSolver sid = ProofScript $ \s@(ProofState { solvers }) ->
-  return (return (), s { solvers = Map.delete sid solvers })
+deleteSolver sid =
+  (lift . modify) $ \s -> s { solvers = Map.delete sid (solvers s) }
 
 startNewSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 startNewSolver sid = do
@@ -236,7 +216,8 @@ entailment sid assumptions props = do
   entailed sid props
 
 kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO P.Output
-kInduction' k s as ps = (fromMaybe (P.Output P.Unknown [(if k /= 1 then "k-" else "") ++ "induction failed"]) . fst)
+kInduction' k s as ps =
+  (fromMaybe (P.Output P.Unknown [(if k /= 1 then "k-" else "") ++ "induction failed"]) . fst)
   <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
   where range k = if k > 0 then [1 .. k] else [1 ..]
 
@@ -250,7 +231,7 @@ induction assumptionIds toCheckIds k = do
   entailment Base (modelInit ++ base) baseInv >>= \case
     Sat     -> halt -- $ P.Output Invalid ["base case failed"]
     Unknown -> halt -- $ P.Output Unknown ["the base case solver was indecisive"]
-    _           -> return ()
+    _       -> return ()
 
   let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k]]
                 ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k - 1]]

@@ -23,7 +23,6 @@ library
   ghc-options             : -Wall -fwarn-tabs 
                             -fno-warn-name-shadowing
                             -fno-warn-unused-binds
-                            -fno-warn-unused-imports
                             -fno-warn-missing-signatures
 
   build-depends           : base >= 4.3
@@ -51,9 +50,7 @@ library
                           , Copilot.Kind.Light.Prover
                           , Copilot.Kind.Kind2.Prover
                           
-  other-modules           : Copilot.Kind.ProofScheme
-                          , Copilot.Kind.Prove
-                          , Copilot.Kind.Prover
+  other-modules           : Copilot.Kind.Prover
                           
                           , Copilot.Kind.CoreUtils.Expr
                           , Copilot.Kind.CoreUtils.Operators

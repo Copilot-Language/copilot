@@ -2,14 +2,11 @@
 
 {-# LANGUAGE GADTs, LambdaCase #-}
 
-module Copilot.Kind.Light.TPTP (Tptp, interpretTptp) where
+module Copilot.Kind.Light.TPTP (Tptp, interpret) where
 
-import Copilot.Kind.Light.Backend
+import Copilot.Kind.Light.Backend (SmtFormat (..), SatResult (..))
 import Copilot.Kind.IL
 
-import Control.Monad
-import Control.Applicative ((<$>))
-import Data.Maybe
 import Data.List
 
 --------------------------------------------------------------------------------
@@ -39,8 +36,8 @@ instance SmtFormat Tptp where
   declFun = const $ const Null
   assert c = Ax $ expr c
 
-interpretTptp :: String -> Maybe SatResult
-interpretTptp str
+interpret :: String -> Maybe SatResult
+interpret str
   | "SZS status Unsatisfiable" `isPrefixOf` str = Just Unsat
   | "SZS status"               `isPrefixOf` str = Just Unknown
   | otherwise                                   = Nothing

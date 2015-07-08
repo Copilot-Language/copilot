@@ -2,17 +2,12 @@
 
 {-# LANGUAGE GADTs, FlexibleInstances #-}
 
-module Copilot.Kind.Light.SMTLib (SmtLib, interpretSmtLib) where
+module Copilot.Kind.Light.SMTLib (SmtLib, interpret) where
 
-import Copilot.Kind.Light.Backend
+import Copilot.Kind.Light.Backend (SmtFormat (..), SatResult (..))
 
 import Copilot.Kind.IL
 import Copilot.Kind.Misc.SExpr
-import Copilot.Kind.Misc.Error as Err
-
-import Control.Monad
-import Control.Applicative ((<$>))
-import Data.Maybe
 
 --------------------------------------------------------------------------------
 
@@ -37,10 +32,10 @@ instance SmtFormat SmtLib where
     node "declare-fun" [atom name, unit, atom (smtTy retTy)]
   assert c = SmtLib $ node "assert" [expr c]
 
-interpretSmtLib :: String -> Maybe SatResult
-interpretSmtLib "sat"   = Just Sat
-interpretSmtLib "unsat" = Just Unsat
-interpretSmtLib _       = Just Unknown
+interpret :: String -> Maybe SatResult
+interpret "sat"   = Just Sat
+interpret "unsat" = Just Unsat
+interpret _       = Just Unknown
 
 --------------------------------------------------------------------------------
 

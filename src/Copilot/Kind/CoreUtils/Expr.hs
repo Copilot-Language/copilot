@@ -6,7 +6,6 @@ module Copilot.Kind.CoreUtils.Expr where
 
 import Copilot.Core
 import Data.Monoid
-import Data.List (concatMap)
 
 --------------------------------------------------------------------------------
 

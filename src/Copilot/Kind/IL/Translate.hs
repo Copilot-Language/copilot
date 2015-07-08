@@ -11,9 +11,7 @@ import Copilot.Kind.Misc.Utils
 import qualified Copilot.Core as C
 import Copilot.Kind.CoreUtils.Operators
 import qualified Data.Map.Strict as Map
-import qualified Data.Set as Set
 
-import Control.Monad.Writer
 import Control.Monad.State
 
 import Data.Char

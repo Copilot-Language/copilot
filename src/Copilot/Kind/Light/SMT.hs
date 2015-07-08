@@ -8,7 +8,6 @@ module Copilot.Kind.Light.SMT
   ) where
 
 import Copilot.Kind.IL
-import Copilot.Kind.Misc.Error as Err
 
 import Copilot.Kind.Light.Backend
 
@@ -19,7 +18,6 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Control.Applicative ((<$>))
 import Data.Maybe
-import Data.List (foldl')
 import Data.Set ((\\), fromList, Set, union, empty, elems)
 
 --------------------------------------------------------------------------------

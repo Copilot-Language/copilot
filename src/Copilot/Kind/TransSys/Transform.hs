@@ -11,8 +11,6 @@ module Copilot.Kind.TransSys.Transform
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.TransSys.Renaming
-import Copilot.Kind.Misc.Type
-import Copilot.Kind.Misc.Operators
 
 import Copilot.Kind.Misc.Utils
 
@@ -22,8 +20,6 @@ import qualified Data.Map   as Map
 import qualified Data.Set   as Set
 import qualified Data.Graph as Graph
 import qualified Data.Bimap as Bimap
-
-import qualified Copilot.Kind.Misc.Error as Err
 
 --------------------------------------------------------------------------------
 

@@ -7,7 +7,6 @@ module Copilot.Kind.TransSys.Translate ( translate ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.Misc.Cast
-import Copilot.Kind.Misc.Type
 import Copilot.Kind.CoreUtils.Operators
 
 import Copilot.Kind.Misc.Utils

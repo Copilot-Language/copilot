@@ -5,10 +5,6 @@ module Copilot.Kind.Misc.Invariants
   , prop
   ) where
 
-import Data.List
-import Control.Exception.Base (assert)
-import Debug.Trace (trace)
-
 class HasInvariants a where
 
   invariants :: a -> [(String, Bool)]

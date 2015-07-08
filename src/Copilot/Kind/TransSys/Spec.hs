@@ -26,11 +26,7 @@ import Copilot.Kind.Misc.Type
 import Copilot.Kind.Misc.Operators
 import Copilot.Kind.Misc.Invariants
 
-import Data.Map (Map)
-import Data.Bimap (Bimap)
-
 import Copilot.Kind.Misc.Utils
-import Data.Set (isSubsetOf, member)
 
 import qualified Data.List  as List
 import qualified Data.Map   as Map

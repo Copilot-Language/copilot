@@ -4,14 +4,10 @@
 
 module Copilot.Kind.Kind2.Prover
   ( module Data.Default
-  , module Copilot.Kind.ProofScheme
-  , module Copilot.Kind.Prove
   , Options (..)
   , kind2Prover
   ) where
 
-import Copilot.Kind.Prove
-import Copilot.Kind.ProofScheme
 import Copilot.Kind.Prover
 import Copilot.Kind.Kind2.Output
 import Copilot.Kind.Kind2.PrettyPrint
@@ -21,15 +17,12 @@ import Copilot.Kind.Kind2.Translate
 import System.IO hiding (openTempFile)
 import Copilot.Kind.Misc.Utils (openTempFile)
 
-import Data.List (intercalate)
 import System.Process
 
-import Control.Monad (void)
 import System.Directory
 import Data.Default
 
 import qualified Copilot.Kind.TransSys as TS
-import qualified Copilot.Core          as Core
 
 --------------------------------------------------------------------------------
 
@@ -61,9 +54,9 @@ kind2BaseOptions = ["--input-format", "native", "-xml"]
 --------------------------------------------------------------------------------
 
 askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
-askKind2 (ProverST opts spec) assumptions [toCheck] = do
+askKind2 (ProverST opts spec) assumptions toCheck = do
 
-  let kind2Input = prettyPrint . toKind2 Modular assumptions [toCheck] $ spec
+  let kind2Input = prettyPrint . toKind2 Modular assumptions toCheck $ spec
 
   (tempName, tempHandle) <- openTempFile "." "out" "kind"
   hPutStr tempHandle kind2Input
@@ -77,6 +70,6 @@ askKind2 (ProverST opts spec) assumptions [toCheck] = do
   putStrLn kind2Input
 
   removeFile tempName
-  return $ parseOutput toCheck output
+  return $ parseOutput (head toCheck) output -- TODO support multiple toCheck props
 
 --------------------------------------------------------------------------------

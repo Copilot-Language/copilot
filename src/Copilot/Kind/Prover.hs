@@ -1,25 +1,25 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE NamedFieldPuns, ViewPatterns, ExistentialQuantification #-}
 
 module Copilot.Kind.Prover
-  ( Cex     (..)
-  , Output  (..)
+  ( Output  (..)
   , Status  (..)
   , Feature (..)
   , Prover  (..)
+  , PropId
+  , check, msg, assert, assume, assuming
+  , prove
   , combine
   ) where
 
-import Copilot.Kind.ProofScheme
 import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
-import Control.Applicative (liftA2, liftA)
+import Control.Applicative (liftA2)
+import Control.Monad.Writer
 
 --------------------------------------------------------------------------------
-
-data Cex = Cex
 
 data Output = Output Status [String]
 
@@ -42,7 +42,71 @@ data Prover = forall r . Prover
   , closeProver    :: r -> IO ()
   }
 
+type PropId = String
+
+type ProofScheme = Writer [Action] ()
+
+data Action
+  = Check  Prover PropId
+  | Assume PropId
+  | Local  [Action]
+  | Pragma Pragma
+
+data Pragma = PrintMsg String deriving (Show)
+
 --------------------------------------------------------------------------------
+
+check :: Prover -> PropId -> ProofScheme
+check prover p = tell [Check prover p]
+
+msg :: String -> ProofScheme
+msg s = tell [Pragma $ PrintMsg s]
+
+assert :: Prover -> PropId -> ProofScheme
+assert prover p = tell [Check prover p, Assume p]
+
+assume :: PropId -> ProofScheme
+assume p = tell [Assume p]
+
+assuming :: [PropId] -> ProofScheme -> ProofScheme
+assuming ps = censor wrap
+  where wrap actions = [Local $ map Assume ps ++ actions]
+
+prove :: ProofScheme -> Core.Spec -> IO ()
+prove (execWriter -> actions) spec = do
+
+    processActions [] actions
+    putStrLn "Finished."
+
+    where
+      processActions _ [] = return ()
+      processActions context (action:nextActions) = case action of
+        Check (Prover { startProver, askProver, closeProver }) propId -> do
+          prover <- startProver spec
+          (Output status infos) <- askProver prover context [propId]
+          case status of
+            Valid     -> putStrLn $ propId ++ ": valid "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Invalid   -> putStrLn $ propId ++ ": invalid "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Error     -> putStrLn $ propId ++ ": error "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+            Unknown   -> putStrLn $ propId ++ ": unknown "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
+          closeProver prover
+          processActions context nextActions
+
+        Assume propId -> do
+          processActions (propId : context) nextActions
+
+        Pragma (PrintMsg s) -> do
+          putStrLn s
+          processActions context nextActions
+
+        Local localActions -> do
+          processActions context localActions
+          processActions context nextActions
+
 
 combine :: Prover -> Prover -> Prover
 combine
