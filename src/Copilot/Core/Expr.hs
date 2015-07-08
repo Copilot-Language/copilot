@@ -50,8 +50,9 @@ data Expr a where
   ExternFun    :: Type a -> Name -> [UExpr] -> Maybe (Expr a) 
                -> Maybe Tag -> Expr a
   ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
-               -> Maybe [[b]] -> Maybe Tag -> Expr b 
-  ExternStruct :: Type a -> Name -> [SExpr] -> Maybe Tag -> Expr a
+               -> Maybe [[b]] -> Maybe Tag -> Expr b
+  ExternStruct :: Type a -> Name -> [UExpr] -> Maybe Tag -> Expr a
+  --GetField     :: Type a -> Name -> Name -> Expr a
   Op1          :: Op1 a b -> Expr a -> Expr b 
   Op2          :: Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d

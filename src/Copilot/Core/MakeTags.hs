@@ -29,15 +29,15 @@ mkTagsSpec
     { specStreams    = strms
     , specObservers  = obsvs
     , specTriggers   = trigs
-    , specProperties = props
-    , specStructs    = strs
-    } =
-  liftM5 Spec
+    , specProperties = props }
+    {-, specStructs    = strs
+    -} =
+  liftM4 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
     (mkTagsProps props)
-    (mkTagsStrs  strs)
+    --(mkTagsStrs  strs)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -104,7 +104,7 @@ mkTagsStrs  = mapM $ fromJust . mkTagsStr
       , structInst = inst } =
         case inst of
           ExternStruct x y sargs z -> Just $ do
-            sargs' <- mapM mkTagsSExpr sargs
+            sargs' <- mapM mkTagsUExpr sargs
             return $ StructData
               { structName = name
               , structInst = ExternStruct x y sargs' z }
@@ -116,11 +116,11 @@ mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
     e' <- mkTagsExpr e
     return $ UExpr { uExprExpr = e', uExprType = t }
 
-mkTagsSExpr :: SExpr -> State Int SExpr
+{-mkTagsSExpr :: SExpr -> State Int SExpr
 mkTagsSExpr SExpr { sname = n, uexpr = u } =
   do
     u' <- mkTagsUExpr u
-    return $ SExpr { sname = n, uexpr = u' }
+    return $ SExpr { sname = n, uexpr = u' }-}
 
 mkTagsExpr :: Expr a -> State Int (Expr a)
 mkTagsExpr e0 = case e0 of
@@ -136,7 +136,7 @@ mkTagsExpr e0 = case e0 of
               size idx e _       -> do idx' <- mkTagsExpr idx
                                        k <- next
                                        return $ ExternArray t1 t2 name size idx' e (Just k)
-  ExternStruct t name sargs _    -> do args' <- mapM mkTagsSExpr sargs
+  ExternStruct t name sargs _    -> do args' <- mapM mkTagsUExpr sargs
                                        k <- next
                                        return $ ExternStruct t name args' (Just k)
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)

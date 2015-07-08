@@ -65,7 +65,7 @@ data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
-  , specProperties   :: [Property]
-  , specStructs      :: [StructData] }
+  , specProperties   :: [Property] }
+  --, specStructs      :: [StructData] }
 
 --------------------------------------------------------------------------------
