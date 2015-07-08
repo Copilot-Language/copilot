@@ -10,8 +10,8 @@ import Copilot.Language
 import qualified Prelude as P
 import Copilot.Library.Utils
 
--- It is necessary to provide a number of time units dist
--- to each function, where the distance between the times
+-- It is necessary to provide a positive number of time units
+-- dist to each function, where the distance between the times
 -- of any two adjacent clock samples is no less than dist
 
 -- Eventually: True at time t iff s is true at some time t',
@@ -100,7 +100,7 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t + d), s1 is true at time (t + d),
--- or s0 is true at some time t' with t <= t' < t + d
+-- or s0 has a true sample at some time t' with t <= t' < t + d
 release :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
 release l u clk dist s0 s1 = res clk s1 iter
@@ -120,7 +120,7 @@ release l u clk dist s0 s1 = res clk s1 iter
 
 -- Trigger: True at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t - d), s1 is true at time (t - d),
--- or s0 is true at some time t' with t - d < t' <= t 
+-- or s0 has a true sample at some time t' with t - d < t' <= t 
 trigger :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
 trigger l u clk dist s0 s1 = res clk s1 iter
@@ -159,16 +159,7 @@ matchingUntil l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
 -- needing to hold at time (t - d) instead of just s1
 matchingSince :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-matchingSince l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
-  where
-  mins = (clk - (constant u))
-  maxes = (clk - (constant l))
-  res _ _ _ 0 = false 
-  res c s s' k =
-    mux (mins <= c && c <= maxes)
-      (s && (s' || (nextRes c s s' k)))
-      ((c > maxes) && s && (nextRes c s s' k))
-  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([False] ++ s') (k - 1)
+matchingSince l u clk dist s0 s1 = since l u clk dist s0 (s0 && s1)
 
 -- Matching Release: Same semantics as Release, except with
 -- s1 or s0 needing to hold at time (t + d) instead of just s1
@@ -193,17 +184,4 @@ matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
 -- s1 or s0 needing to hold at time (t - d) instead of just s1
 matchingTrigger :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-matchingTrigger l u clk dist s0 s1 = res clk s0 s1 iter
-  where
-  mins = (clk - (constant u))
-  maxes = (clk - (constant l))
-  iter = (u `P.div` dist) + 1
-  res _ _ _ 0 = true
-  res c s s' k =
-    mux (mins > c || c > maxes || (s' && s))
-      (nextRes c s s' k)
-      (res' clk s0 iter c)
-  nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([True] ++ s') (k - 1)
-  res' _ _ 0 _ = false
-  res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
-  nextRes' c s k lowl = res' ([0] ++ c) ([False] ++ s) (k - 1) lowl
+matchingTrigger l u clk dist s0 s1 = Copilot.Library.MTL.trigger l u clk dist s0 (s0 && s1)
