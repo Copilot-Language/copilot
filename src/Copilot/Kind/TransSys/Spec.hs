@@ -52,27 +52,24 @@ data Node = Node
   , nodeConstrs       :: [Expr Bool] }
 
 
-data Var     =  Var {varName :: String}
-                deriving (Eq, Show, Ord)
+data Var      =  Var {varName :: String}
+  deriving (Eq, Show, Ord)
 
-data ExtVar  =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var }
-                deriving (Eq, Ord)
+data ExtVar   =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var }
+  deriving (Eq, Ord)
 
 data VarDescr = forall t . VarDescr
   { varType :: Type t
   , varDef  :: VarDef t }
 
-data VarDef t =
-    Pre t Var
-  | Expr (Expr t)
-  | Constrs [Expr Bool]
+data VarDef t = Pre t Var | Expr (Expr t) | Constrs [Expr Bool]
 
 data Expr t where
-  Const  :: Type t -> t -> Expr t
-  Ite    :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
-  Op1    :: Type t -> Op1 x t -> Expr x -> Expr t
-  Op2    :: Type t -> Op2 x y t -> Expr x -> Expr y -> Expr t
-  VarE   :: Type t -> Var -> Expr t
+  Const :: Type t -> t -> Expr t
+  Ite   :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
+  Op1   :: Type t -> Op1 x t -> Expr x -> Expr t
+  Op2   :: Type t -> Op2 x y t -> Expr x -> Expr y -> Expr t
+  VarE  :: Type t -> Var -> Expr t
 
 --------------------------------------------------------------------------------
 

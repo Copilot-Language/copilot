@@ -83,7 +83,7 @@ entailed :: SmtFormat a => Solver a -> [Constraint] -> IO SatResult
 entailed s cs = do
   when (incremental $ backend s) $ send s push
   case cs of
-      []  -> assume s [Const Bool True]
+      []  -> putStrLn "Warning: no proposition to prove." >> assume s [Const Bool True]
       _   -> assume s [foldl1 (Op2 Bool Or) (map (Op1 Bool Not) cs)]
   send s checkSat
   (inputTerminator $ backend s) (inh s)

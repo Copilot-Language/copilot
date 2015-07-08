@@ -6,7 +6,7 @@ module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
   , kInduction
-  , yices, dReal, altErgo, metit
+  , yices, dReal, altErgo, metit, z3
   , Backend, SmtFormat
   ) where
 
@@ -23,15 +23,15 @@ import Copilot.Kind.Light.TPTP (Tptp)
 import qualified Copilot.Kind.Light.SMTLib as SMTLib
 import qualified Copilot.Kind.Light.TPTP as TPTP
 
-import Control.Applicative
+import Control.Applicative ((<$>), (<*))
 import Control.Monad (msum, unless, MonadPlus(..))
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Maybe
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Maybe (MaybeT (..))
 
 import qualified Copilot.Kind.Prover as P
 
-import Data.Default
+import Data.Default (Default(..))
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.List (nub)
@@ -41,15 +41,15 @@ import Data.List (nub)
 data Options = Options
   { -- The maximum number of steps of the k-induction algorithm the prover runs
     -- before giving up.
-    maxK :: Integer
+    maxK    :: Integer
 
     -- If `onlyBmc` is set to `True`, the prover will only search for
     -- counterexamples and won't try to prove the properties discharged to it.
-  , onlyBmc  :: Bool
+  , onlyBmc :: Bool
 
-    -- If `debug` is set to `True`, the SMTLib queries produced by the prover
+    -- If `debug` is set to `True`, the SMTLib/TPTP queries produced by the prover
     -- are displayed in the standard output.
-  , debug    :: Bool
+  , debug   :: Bool
   }
 
 instance Default Options where
@@ -76,7 +76,7 @@ yices = Backend
   , cmdOpts         = ["--incremental"]
   , inputTerminator = const $ return ()
   , incremental     = True
-  , logic           = "QF_UFLIA"
+  , logic           = "QF_LIRA"
   , interpret       = SMTLib.interpret
   }
 
@@ -86,7 +86,17 @@ altErgo = Backend
   , cmdOpts         = []
   , inputTerminator = hClose
   , incremental     = False
-  , logic           = "QF_NRA"
+  , logic           = "QF_NIRA"
+  , interpret       = SMTLib.interpret
+  }
+
+z3 :: Backend SmtLib
+z3 = Backend
+  { cmd             = "z3"
+  , cmdOpts         = ["-smt2", "-in"]
+  , inputTerminator = const $ return ()
+  , incremental     = True
+  , logic           = "QF_NIRA"
   , interpret       = SMTLib.interpret
   }
 
@@ -204,6 +214,10 @@ stop id = do
 halt :: ProofScript b a
 halt = mzero
 
+proofKind :: Integer -> String
+proofKind 1 = "induction"
+proofKind k = "k-induction (k = " ++ show k ++ ")"
+
 stopSolvers :: SmtFormat b => ProofScript b ()
 stopSolvers = do
   solvers <- getSolvers
@@ -217,7 +231,7 @@ entailment sid assumptions props = do
 
 kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO P.Output
 kInduction' k s as ps =
-  (fromMaybe (P.Output P.Unknown [(if k /= 1 then "k-" else "") ++ "induction failed"]) . fst)
+  (fromMaybe (P.Output P.Unknown ["proof by " ++ proofKind k ++ " failed"]) . fst)
   <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
   where range k = if k > 0 then [1 .. k] else [1 ..]
 
@@ -226,20 +240,20 @@ induction assumptionIds toCheckIds k = do
 
   (modelInit, modelRec, toCheck) <- getModels assumptionIds toCheckIds
 
-  let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
-      baseInv = [evalAt (Fixed k) m | m <- toCheck]
+  let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k - 1]]
+      baseInv = [evalAt (Fixed i) m | m <- toCheck, i <- [0 .. k - 1]]
   entailment Base (modelInit ++ base) baseInv >>= \case
-    Sat     -> halt -- $ P.Output Invalid ["base case failed"]
-    Unknown -> halt -- $ P.Output Unknown ["the base case solver was indecisive"]
+    Sat     -> halt
+    Unknown -> halt
     _       -> return ()
 
   let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k]]
                 ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k - 1]]
       stepInv = [evalAt (_n_plus k) m | m <- toCheck]
   entailment Step (modelInit ++ step) stepInv >>= \case
-    Sat     -> halt -- $ P.Output Invalid ["inductive step failed"]
-    Unknown -> halt -- $ P.Output Unknown ["the inductive case solver was indecisive"]
-    Unsat   -> return $ P.Output P.Valid ["proved with k-induction, k = " ++ show k]
+    Sat     -> halt
+    Unknown -> halt
+    Unsat   -> return $ P.Output P.Valid ["proved with " ++ proofKind k]
 
 selectProps :: [PropId] -> Map.Map PropId Constraint -> [Constraint]
 selectProps propIds properties =
