@@ -37,7 +37,6 @@ module Copilot.Language.Operators.Extern
   ) where
 
 import Copilot.Core (Typed)
-import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 import Data.Word
 import Data.Int

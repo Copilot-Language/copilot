@@ -19,10 +19,6 @@ module Copilot.Language.Spec
   , triggers
   , trigger
   , arg
-  , StructData (..)
-  , structarg
-  , structs
-  , struct
   , Property (..)
   , prop
   , properties
@@ -75,22 +71,12 @@ properties =
       PropertyItem p -> p : ls
       _              -> ls
 
-structs :: [SpecItem] -> [StructData]
-structs =
-  foldl' structs' []
-  where
-  structs' ls e =
-    case e of
-      StructItem s -> s : ls
-      _            -> ls
-
 --------------------------------------------------------------------------------
 
 data SpecItem
   = ObserverItem Observer
   | TriggerItem  Trigger
   | PropertyItem Property
-  | StructItem StructData
 
 --------------------------------------------------------------------------------
 
@@ -129,20 +115,6 @@ arg = Arg
 
 --------------------------------------------------------------------------------
 
-structarg :: String -> Arg -> StructArg
-structarg n a = StructArg { name_ = n, arg' = a }
-
---------------------------------------------------------------------------------
-
-data StructData where
-  StructData :: Core.Name -> [StructArg] -> StructData
-
---------------------------------------------------------------------------------
-
-struct :: String -> [StructArg] -> Spec
-struct name sargs = tell [StructItem $ StructData name sargs]
-
---------------------------------------------------------------------------------
 {-
 -- | Struct operator.
 

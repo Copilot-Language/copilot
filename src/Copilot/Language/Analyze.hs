@@ -360,7 +360,7 @@ collectExts refStreams stream_ env_ = do
                   env sargs
         --let argTypes = map (\(Arg arg_) -> (n, getSimpleType arg_)) sargs
         let argTypes = map (\(Arg arg_) -> getSimpleType arg_) sargs
-        let struct = (name, C.SStruct)
+        let struct = (name, getSimpleType stream)
         return env' { externStructEnv = struct : externStructEnv env'
                     , externStructArgs = (name, argTypes) : externStructArgs env' }
 
