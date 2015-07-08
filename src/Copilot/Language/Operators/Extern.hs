@@ -63,7 +63,7 @@ externArray = ExternArray
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
 
-externStruct :: Typed a => String -> [StructArg] -> Stream a
+externStruct :: Typed a => String -> [Arg] -> Stream a
 externStruct = ExternStruct
 
 {-(#) :: Typed a => Core.StructData -> String -> Stream a

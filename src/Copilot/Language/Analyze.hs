@@ -147,11 +147,11 @@ analyzeExpr refStreams s = do
                                  SeenStruct-> go SeenStruct nodes' idx
       ExternStruct _ sargs -> case seenExt of
                                 NoExtern  ->
-                                  mapM_ (\(StructArg { arg' = Arg a }) -> go SeenStruct nodes' a) sargs
+                                  mapM_ (\(Arg a) -> go SeenStruct nodes' a) sargs
                                 SeenFun   -> throw NestedExternFun
                                 SeenArr   -> throw NestedArray
                                 SeenStruct->
-                                  mapM_ (\(StructArg { arg' = Arg a }) -> go SeenStruct nodes' a) sargs
+                                  mapM_ (\(Arg a) -> go SeenStruct nodes' a) sargs
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -216,7 +216,7 @@ data ExternEnv = ExternEnv
   , externFunEnv  :: [(String, C.SimpleType)] 
   , externFunArgs :: [(String, [C.SimpleType])]
   , externStructEnv  :: [(String, C.SimpleType)]
-  , externStructArgs :: [(String, [(String, C.SimpleType)])]
+  , externStructArgs :: [(String, [C.SimpleType])]
   }
 
 --------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
     -- symbol names given different number of args and right types?
     funcArgCheck args
     --funcArgCheck struct_args
-    structArgCheck struct_args
+    funcArgCheck struct_args
   
   where
   findDups :: [(String, a)] -> [(String, b)] -> IO ()
@@ -285,8 +285,9 @@ analyzeExts ExternEnv { externVarEnv  = vars
                else throw (BadFunctionArgType name)
         else throw (BadNumberOfArgs name) 
 
-  structArgCheck :: [(String, [(String, C.SimpleType)])] -> IO ()
-  structArgCheck ls = foldr (\sarg' _ -> findDups sarg' sarg') (return ()) $ map snd ls
+  {-structArgCheck :: [(String, [C.SimpleType])] -> IO ()
+  structArgCheck ls = foldr (\sarg' _ -> findDups (getArgName sarg', sarg') (getArgName sarg', sarg'))
+                        (return ()) $ map snd ls-}
 
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
@@ -355,12 +356,13 @@ collectExts refStreams stream_ env_ = do
         return env' { externArrEnv = arr : externArrEnv env' }
 
       ExternStruct name sargs -> do
-        env' <- foldM (\env' (StructArg { arg' = Arg arg_ }) -> go nodes env' arg_)
+        env' <- foldM (\env' (Arg arg_) -> go nodes env' arg_)
                   env sargs
-        let argTypes = map (\(StructArg { name_ = n, arg' = Arg arg_ }) -> (n, getSimpleType arg_)) sargs
+        --let argTypes = map (\(Arg arg_) -> (n, getSimpleType arg_)) sargs
+        let argTypes = map (\(Arg arg_) -> getSimpleType arg_) sargs
         let struct = (name, C.SStruct)
         return env' { externStructEnv = struct : externStructEnv env'
-                     , externStructArgs = (name, argTypes) : externStructArgs env' }
+                    , externStructArgs = (name, argTypes) : externStructArgs env' }
 
       Local e _              -> go nodes env e 
       Var _                  -> return env
@@ -372,6 +374,15 @@ collectExts refStreams stream_ env_ = do
                                    go nodes env'' e3 
 
 --------------------------------------------------------------------------------
+
+getArgName :: forall a. C.Typed a => Stream a -> String
+getArgName arg_stream =
+  case arg_stream of
+    Extern cs _          -> cs
+    ExternFun cs _ _     -> cs
+    ExternArray cs _ _ _ -> cs
+    ExternStruct cs _    -> cs
+    _                    -> ""
 
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
