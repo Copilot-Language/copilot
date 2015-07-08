@@ -172,7 +172,7 @@ matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
   iter = (u `P.div` dist) + 1
   res _ _ _ 0 = true
   res c s s' k = 
-    mux (mins > c || c > maxes || (s' && s))
+    mux (mins > c || c > maxes || s' || s)
       (nextRes c s s' k)
       (res' clk s0 iter c)
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
@@ -184,4 +184,4 @@ matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
 -- s1 or s0 needing to hold at time (t - d) instead of just s1
 matchingTrigger :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-matchingTrigger l u clk dist s0 s1 = Copilot.Library.MTL.trigger l u clk dist s0 (s0 && s1)
+matchingTrigger l u clk dist s0 s1 = Copilot.Library.MTL.trigger l u clk dist s0 (s0 || s1)
