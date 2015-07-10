@@ -20,9 +20,8 @@ indent = nest 4
 emptyLine = text ""
 
 ppSpec :: IL -> Doc
-ppSpec (IL { modelInit, modelRec, properties, depth }) =
-     text "DEPTH" <+> colon <+> int depth $$ emptyLine
-  $$ text "MODEL INIT"
+ppSpec (IL { modelInit, modelRec, properties }) =
+  text "MODEL INIT"
   $$ indent (foldr (($$) . ppExpr) empty modelInit) $$ emptyLine
   $$ text "MODEL REC"
   $$ indent (foldr (($$) . ppExpr) empty modelRec) $$ emptyLine
@@ -37,10 +36,10 @@ ppSeqDescr :: SeqDescr -> Doc
 ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
 
 ppVarDescr :: VarDescr -> Doc
-ppVarDescr (VarDescr id ret) =
+ppVarDescr (VarDescr id ret args) =
   text id
   <+> colon
-  <+> text "()"
+  <+> (hsep . punctuate (space <> text "->" <> space) $ map ppUType args)
   <+> text "->"
   <+> ppType ret
 

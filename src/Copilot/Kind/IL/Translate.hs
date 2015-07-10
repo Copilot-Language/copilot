@@ -58,8 +58,6 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
     { modelInit
     , modelRec = mainConstraints ++ localConstraints
     , properties
-    , depth = maximum $
-      [0] ++ map (\(C.Stream { C.streamBuffer }) -> length streamBuffer) specStreams
     }
 
 seqDescr :: C.Stream -> SeqDescr
@@ -168,7 +166,7 @@ mkVarName name args = name ++ "_" ++ concatMap argToString args
 argToString :: U Expr -> String
 argToString (U (Const Integer x)) = show x
 argToString (U (Op2 _ Add e1 e2)) = argToString (U e1) ++ argToString (U e2)
-argToString (U _) = error "what"
+argToString (U _) = error "translating arg to string (should never happen)"
 
 data TransST = TransST
   { _localSeqs :: [SeqDescr]
@@ -193,12 +191,16 @@ getExprVars (Const _ _) = []
 getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
 getExprVars (Op1 _ _ e) = getExprVars e
 getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
-getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t]
-getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t]
-getExprVars (FunApp _ _ args) = concatMap getUExprVars args
+getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t []]
+getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t []]
+getExprVars (FunApp t name args) = [VarDescr name t (map typeOfU args)]
+  ++ concatMap getUExprVars args
 
 getUExprVars :: U Expr -> [VarDescr]
 getUExprVars (U e) = getExprVars e
+
+typeOfU :: U Expr -> U Type
+typeOfU (U e) = U $ typeOf e
 
 getLocalVarsConstraints :: Trans [Constraint]
 getLocalVarsConstraints = _localVarsConstraints <$> get

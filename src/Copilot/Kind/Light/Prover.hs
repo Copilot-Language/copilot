@@ -6,8 +6,9 @@ module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
   , kInduction
-  , yices, dReal, altErgo, metit, z3
-  , Backend, SmtFormat
+  , yices, dReal, altErgo, metit, z3, cvc4
+  , Backend (..), SmtFormat
+  , SmtLib, Tptp
   ) where
 
 import Copilot.Kind.IL.Translate
@@ -61,7 +62,7 @@ instance Default Options where
 
 kInduction :: SmtFormat a => Options -> Backend a -> P.Prover
 kInduction options backend = P.Prover
-  { P.proverName  = "Light"
+  { P.proverName  = "k-induction"
   , P.hasFeature  = \case
       P.GiveCex -> False
       P.HandleAssumptions -> True
@@ -72,37 +73,52 @@ kInduction options backend = P.Prover
 
 yices :: Backend SmtLib
 yices = Backend
-  { cmd             = "yices-smt2"
+  { name            = "Yices"
+  , cmd             = "yices-smt2"
   , cmdOpts         = ["--incremental"]
   , inputTerminator = const $ return ()
   , incremental     = True
-  , logic           = "QF_LIRA"
+  , logic           = "QF_UFLIRA"
+  , interpret       = SMTLib.interpret
+  }
+
+cvc4 :: Backend SmtLib
+cvc4 = Backend
+  { name            = "CVC4"
+  , cmd             = "cvc4"
+  , cmdOpts         = ["--incremental", "--lang=smt2"]
+  , inputTerminator = const $ return ()
+  , incremental     = True
+  , logic           = "QF_UFNIRA"
   , interpret       = SMTLib.interpret
   }
 
 altErgo :: Backend SmtLib
 altErgo = Backend
-  { cmd             = "alt-ergo.opt"
+  { name            = "Alt-Ergo"
+  , cmd             = "alt-ergo.opt"
   , cmdOpts         = []
   , inputTerminator = hClose
   , incremental     = False
-  , logic           = "QF_NIRA"
+  , logic           = "QF_UFNIRA"
   , interpret       = SMTLib.interpret
   }
 
 z3 :: Backend SmtLib
 z3 = Backend
-  { cmd             = "z3"
+  { name            = "Z3"
+  , cmd             = "z3"
   , cmdOpts         = ["-smt2", "-in"]
   , inputTerminator = const $ return ()
   , incremental     = True
-  , logic           = "QF_NIRA"
+  , logic           = "QF_UFNIRA"
   , interpret       = SMTLib.interpret
   }
 
 dReal :: Backend SmtLib
 dReal = Backend
-  { cmd             = "perl"
+  { name            = "dReal"
+  , cmd             = "perl"
   , cmdOpts         = ["-e", "alarm 5; exec dReal"]
   , inputTerminator = hClose
   , incremental     = False
@@ -110,10 +126,12 @@ dReal = Backend
   , interpret       = SMTLib.interpret
   }
 
--- The argument is the path to the "tptp" subdirectory of the metitarski install location.
+-- The argument is the path to the "tptp" subdirectory of the metitarski
+-- install location.
 metit :: String -> Backend Tptp
 metit installDir = Backend
-  { cmd             = "metit"
+  { name            = "MetiTarski"
+  , cmd             = "metit"
   , cmdOpts         =
       [ "--time", "5"
       , "--autoInclude"
@@ -145,29 +163,17 @@ data ProofState b = ProofState
 data SolverId = Base | Step
   deriving (Show, Ord, Eq)
 
-getOptions :: ProofScript b Options
-getOptions = options <$> get
-
-getBackend :: ProofScript b (Backend b)
-getBackend = backend <$> get
-
-getSpec :: ProofScript b IL
-getSpec = spec <$> get
-
 getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint])
 getModels assumptionIds toCheckIds = do
-  IL {modelInit, modelRec, properties} <- getSpec
+  IL {modelInit, modelRec, properties} <- spec <$> get
   let assumptions = selectProps assumptionIds properties
       modelRec'   = modelRec ++ assumptions
       toCheck     = selectProps toCheckIds properties
   return (modelInit, modelRec', toCheck)
 
-getSolvers :: ProofScript b (Map.Map SolverId (SMT.Solver b))
-getSolvers = solvers <$> get
-
 getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 getSolver sid = do
-  solvers <- getSolvers
+  solvers <- solvers <$> get
   case Map.lookup sid solvers of
     Nothing -> startNewSolver sid
     Just solver -> return solver
@@ -182,8 +188,8 @@ deleteSolver sid =
 
 startNewSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 startNewSolver sid = do
-  opts <- getOptions
-  backend <- getBackend
+  opts <- options <$> get
+  backend <- backend <$> get
   solver <- liftIO $ SMT.startNewSolver (show sid) (debug opts) backend
   setSolver sid solver
   return solver
@@ -199,7 +205,7 @@ assume sid cs = getSolver sid >>= \s -> liftIO $ SMT.assume s cs
 
 entailed :: SmtFormat b => SolverId -> [Constraint] -> ProofScript b SatResult
 entailed sid cs = do
-  backend <- getBackend
+  backend <- backend <$> get
   solver <- getSolver sid
   result <- liftIO $ SMT.entailed solver cs
   unless (incremental backend) $ stop sid
@@ -220,7 +226,7 @@ proofKind k = "k-induction (k = " ++ show k ++ ")"
 
 stopSolvers :: SmtFormat b => ProofScript b ()
 stopSolvers = do
-  solvers <- getSolvers
+  solvers <- solvers <$> get
   mapM_ stop (fst <$> Map.toList solvers)
 
 entailment :: SmtFormat b => SolverId -> [Constraint] -> [Constraint] -> ProofScript b SatResult
@@ -250,7 +256,7 @@ induction assumptionIds toCheckIds k = do
   let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k]]
                 ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k - 1]]
       stepInv = [evalAt (_n_plus k) m | m <- toCheck]
-  entailment Step (modelInit ++ step) stepInv >>= \case
+  entailment Step step stepInv >>= \case
     Sat     -> halt
     Unknown -> halt
     Unsat   -> return $ P.Output P.Valid ["proved with " ++ proofKind k]

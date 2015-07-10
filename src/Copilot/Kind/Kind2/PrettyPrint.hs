@@ -17,11 +17,10 @@ kwPrime = "prime"
 --------------------------------------------------------------------------------
 
 prettyPrint :: File -> String
-prettyPrint ast =
+prettyPrint =
   intercalate "\n\n"
   . map (SExpr.toString shouldIndent id)
   . ppFile
-  $ ast
 
 -- Defines the indentation policy of the S-Expressions
 shouldIndent :: SSExpr -> Bool

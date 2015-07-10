@@ -16,6 +16,9 @@ newtype SmtLib = SmtLib (SExpr String)
 instance Show SmtLib where
   show (SmtLib s) = show s
 
+usmtTy :: U Type -> String
+usmtTy (U t) = smtTy t
+
 smtTy :: Type t -> String
 smtTy Integer = "Int"
 smtTy Real    = "Real"
@@ -28,8 +31,8 @@ instance SmtFormat SmtLib where
   pop = SmtLib $ node "pop" [atom "1"]
   checkSat = SmtLib $ singleton "check-sat"
   setLogic l = SmtLib $ node "set-logic" [atom l]
-  declFun name retTy = SmtLib $
-    node "declare-fun" [atom name, unit, atom (smtTy retTy)]
+  declFun name retTy args = SmtLib $
+    node "declare-fun" [atom name, (list $ map (atom . usmtTy) args), atom (smtTy retTy)]
   assert c = SmtLib $ node "assert" [expr c]
 
 interpret :: String -> Maybe SatResult

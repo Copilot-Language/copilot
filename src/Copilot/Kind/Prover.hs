@@ -8,6 +8,7 @@ module Copilot.Kind.Prover
   , Feature (..)
   , Prover  (..)
   , PropId
+  , ProofScheme
   , check, msg, assert, assume, assuming
   , prove
   , combine

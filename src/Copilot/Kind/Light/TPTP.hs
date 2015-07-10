@@ -33,7 +33,7 @@ instance SmtFormat Tptp where
   pop = Null
   checkSat = Null
   setLogic = const Null
-  declFun = const $ const Null
+  declFun = const $ const $ const Null
   assert c = Ax $ expr c
 
 interpret :: String -> Maybe SatResult

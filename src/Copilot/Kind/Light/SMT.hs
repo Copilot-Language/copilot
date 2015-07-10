@@ -50,12 +50,12 @@ receive s = fromJust <$> runMaybeT (msum $ repeat line)
   where
     line :: MaybeT IO SatResult
     line = do
-      eof <- lift $ hIsEOF $ outh s
+      eof <- liftIO $ hIsEOF $ outh s
       if eof
-        then lift (debug True s "[received: EOF]") >> return Unknown
+        then liftIO (debug True s "[received: EOF]") >> return Unknown
         else do
-          ln <- lift $ hGetLine $ outh s
-          lift $ debug True s $ "[received: " ++ ln ++ "]"
+          ln <- liftIO $ hGetLine $ outh s
+          liftIO $ debug True s $ "[received: " ++ ln ++ "]"
           MaybeT $ return $ (interpret $ backend s) ln
 
 --------------------------------------------------------------------------------
@@ -94,7 +94,8 @@ entailed s cs = do
 declVars :: SmtFormat a => Solver a -> [VarDescr] -> IO ()
 declVars s@(Solver { vars }) decls = do
   let newVars = elems $ fromList decls \\ vars
-  forM_ newVars $ \(VarDescr {varName, varType}) -> send s $ declFun varName varType
+  forM_ newVars $ \(VarDescr {varName, varType, args}) ->
+    send s $ declFun varName varType args
 
 updateVars :: Solver a -> [VarDescr] -> Solver a
 updateVars s@(Solver { vars }) newVars =

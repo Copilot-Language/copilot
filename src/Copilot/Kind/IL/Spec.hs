@@ -50,6 +50,7 @@ data Expr t where
 data VarDescr = forall t . VarDescr
   { varName :: String
   , varType :: Type t
+  , args    :: [U Type]
   }
 
 instance Eq VarDescr where
@@ -73,7 +74,6 @@ data IL = IL
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
-  , depth       :: Int
   }
 
 --------------------------------------------------------------------------------

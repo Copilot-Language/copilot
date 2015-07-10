@@ -12,11 +12,12 @@ class Show a => SmtFormat a where
    pop             :: a
    checkSat        :: a
    setLogic        :: String -> a
-   declFun         :: forall t. String -> Type t -> a
+   declFun         :: forall t. String -> Type t -> [U Type] -> a
    assert          :: Constraint -> a
 
 data Backend a = Backend
-  { cmd             :: String
+  { name            :: String
+  , cmd             :: String
   , cmdOpts         :: [String]
   , inputTerminator :: Handle -> IO ()
   , incremental     :: Bool
