@@ -6,5 +6,5 @@ ghc:
 before_install:
   - git clone --depth 1 https://github.com/Copilot-Language/copilot-core
   - git clone --depth 1 https://github.com/Copilot-Language/copilot-language
-  - cd copilot-core && cabal install --only-dependencies && cabal configure && cabal build && cabal install
+  - cd copilot-core && cabal install --only-dependencies && cabal configure && cabal build && cabal install && popd
   - cd copilot-language && cabal install --only-dependencies && cabal configure && cabal build && cabal install
