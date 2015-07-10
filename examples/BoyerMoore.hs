@@ -9,6 +9,7 @@ import Control.Monad (forM_)
 
 import Language.Copilot hiding (length)
 import Copilot.Kind
+import Copilot.Kind.Light
 import Copilot.Kind.Lib (arbitraryCst)
 
 import qualified Prelude   as P
@@ -33,10 +34,10 @@ majorityVote (x : xs) = aux x 1 xs
     aux p' s' ls
 
 
-okWith :: 
-  forall a . (Typed a, Eq a) => 
+okWith ::
+  forall a . (Typed a, Eq a) =>
   Stream a -> [Stream a] -> Stream a -> Stream Bool
-  
+
 okWith a l maj = (a /= maj) ==> ((2 * count a l) <= length l)
   where
   count :: Stream a -> [Stream a] -> Stream Word8
@@ -50,13 +51,13 @@ spec = do
   forM_ (zip [1..] ss) $ \(k :: Int, s) ->
     observer ((P.++) "s" (show k)) s
   observer "maj" maj
-  
+
   prop "OK" (okWith (arbitraryCst "n") ss maj)
   prop "i1" (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
   prop "r1" (maj == 1)
 
   where
-  
+
     s1 :: Stream Word8
     s1 = externW8 "s1" (Just $ repeat 1)
     s2 = externW8 "s2" (Just $ repeat 3)
@@ -66,14 +67,13 @@ spec = do
     s6 = externW8 "s6" (Just $ repeat 2)
     s7 = externW8 "s7" (Just $ repeat 1)
     ss = [s1, s2, s3, s4, s5, s6, s7]
-    
+
     maj = majorityVote ss
 
 --------------------------------------------------------------------------------
 
-scheme :: ProofScheme
-scheme = do
-  check "OK"
-  assuming ["i1"] $ check "r1"
+scheme prover = do
+  check prover "OK"
+  assuming ["i1"] $ check prover "r1"
 
 --------------------------------------------------------------------------------

@@ -2,19 +2,22 @@
 
 {-# LANGUAGE RankNTypes, NamedFieldPuns, ScopedTypeVariables, GADTs #-}
 
-module Copilot.Kind.IL.Translate ( translate, getVars ) where
+module Copilot.Kind.IL.Translate ( translate ) where
 
 import Copilot.Kind.IL.Spec
 import Copilot.Kind.Misc.Cast
-import Copilot.Kind.Misc.Utils
+import Copilot.Kind.CoreUtils.Operators
 
 import qualified Copilot.Core as C
-import Copilot.Kind.CoreUtils.Operators
+
 import qualified Data.Map.Strict as Map
 
+import Control.Applicative ((<$>))
 import Control.Monad.State
 
 import Data.Char
+
+import Text.Printf
 
 --------------------------------------------------------------------------------
 
@@ -42,7 +45,6 @@ ncUnhandledOp = id
 translate :: C.Spec -> IL
 translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
 
-  let mainSeqs = map seqDescr specStreams
   let modelInit = concatMap streamInit specStreams
 
   mainConstraints <- mapM streamRec specStreams
@@ -60,16 +62,12 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
     , properties
     }
 
-seqDescr :: C.Stream -> SeqDescr
-seqDescr (C.Stream { C.streamId, C.streamExprType }) =
-  casting streamExprType $ SeqDescr $ ncSeq streamId
-
 streamInit :: C.Stream -> [Constraint]
 streamInit (C.Stream { C.streamId       = id
                      , C.streamBuffer   = b :: [val]
                      , C.streamExprType = ty}) =
 
-  zipWith initConstraint [0,1..] b
+  zipWith initConstraint [0..] b
   where
     initConstraint :: Integer -> val -> Constraint
     initConstraint p v = casting ty $ \ty' ->
@@ -82,37 +80,28 @@ streamRec (C.Stream { C.streamId       = id
                     , C.streamExpr     = e
                     , C.streamBuffer   = b
                     , C.streamExprType = ty})
-  = let depth = length b in casting ty $ \ty' ->
-    do
+  = casting ty $ \ty' -> do
       e' <- expr ty' e
-      return $ Op2 Bool Eq
-         (SVal ty' (ncSeq id) (_n_plus depth)) e'
+      return $ Op2 Bool Eq (SVal ty' (ncSeq id) (_n_plus $ length b)) e'
 
 --------------------------------------------------------------------------------
 
+addSign :: (Ord t, Num t) => Type t' -> C.Type t -> t -> Trans (Expr t')
+addSign t ct v
+  | v >= 0    = return $ Const t (cast t $ toDyn ct v)
+  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+
 expr :: Type t -> C.Expr a -> Trans (Expr t)
 
--- TODO(chathhorn): blegh clean up
-expr t (C.Const ct@C.Double v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
-expr t (C.Const ct@C.Float v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
-expr t (C.Const ct@C.Int8 v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
-expr t (C.Const ct@C.Int16 v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
-expr t (C.Const ct@C.Int32 v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
-expr t (C.Const ct@C.Int64 v)
-  | v >= 0 = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+expr t (C.Const ct@C.Double v) = addSign t ct v
+expr t (C.Const ct@C.Float v)  = addSign t ct v
+expr t (C.Const ct@C.Int8 v)   = addSign t ct v
+expr t (C.Const ct@C.Int16 v)  = addSign t ct v
+expr t (C.Const ct@C.Int32 v)  = addSign t ct v
+expr t (C.Const ct@C.Int64 v)  = addSign t ct v
+expr t (C.Const ct v)          = return $ Const t (cast t $ toDyn ct v)
 
-expr t (C.Const ct v) = return $ Const t (cast t $ toDyn ct v)
+expr t (C.Label _ _ e) = expr t e
 
 expr t (C.Drop _ k id) = return $ SVal t (ncSeq id) (_n_plus k)
 
@@ -173,7 +162,7 @@ data TransST = TransST
   , _localVarsConstraints :: [Constraint]
   }
 
-type Trans a = State TransST a
+type Trans = State TransST
 
 newExternVar :: SeqDescr -> Trans ()
 newExternVar d = modify $ \st -> st {_localSeqs = d : _localSeqs st}
@@ -182,25 +171,6 @@ newLocalVar :: SeqDescr -> Constraint -> Trans ()
 newLocalVar d c = do
   modify $ \st -> st {_localSeqs = d : _localSeqs st}
   modify $ \st -> st {_localVarsConstraints = c : _localVarsConstraints st}
-
-getVars :: [Constraint] -> [VarDescr]
-getVars = nubBy' (compare `on` varName) . concatMap getExprVars
-
-getExprVars :: Expr a -> [VarDescr]
-getExprVars (Const _ _) = []
-getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
-getExprVars (Op1 _ _ e) = getExprVars e
-getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
-getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t []]
-getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t []]
-getExprVars (FunApp t name args) = [VarDescr name t (map typeOfU args)]
-  ++ concatMap getUExprVars args
-
-getUExprVars :: U Expr -> [VarDescr]
-getUExprVars (U e) = getExprVars e
-
-typeOfU :: U Expr -> U Type
-typeOfU (U e) = U $ typeOf e
 
 getLocalVarsConstraints :: Trans [Constraint]
 getLocalVarsConstraints = _localVarsConstraints <$> get

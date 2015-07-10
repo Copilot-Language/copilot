@@ -24,7 +24,7 @@ import qualified Copilot.Kind.Misc.Type as K
 
 type Dyn = Dynamic Type
 
-castedType :: forall t . Type t -> K.U K.Type
+castedType :: Type t -> K.U K.Type
 castedType t = case t of
   Bool    -> K.U K.Bool
   Int8    -> K.U K.Integer

@@ -28,6 +28,15 @@ import Copilot.Kind.Misc.Invariants
 
 import Copilot.Kind.Misc.Utils
 
+import Control.Applicative (liftA2)
+import Control.Monad (foldM, guard)
+
+import Data.Maybe
+import Data.Monoid (Monoid, (<>), mempty, mconcat)
+import Data.Map (Map)
+import Data.Set (Set, isSubsetOf, member)
+import Data.Bimap (Bimap)
+
 import qualified Data.List  as List
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set

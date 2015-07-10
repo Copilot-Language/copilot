@@ -11,11 +11,14 @@ module Copilot.Kind.TransSys.Renaming
   , getRenamingF
   ) where
 
-import Copilot.Kind.Misc.Utils
 import Copilot.Kind.TransSys.Spec
 
 import Control.Monad.State.Lazy
 import Control.Applicative
+
+import Data.Maybe (fromMaybe)
+import Data.Map (Map)
+import Data.Set (Set, member)
 
 import qualified Data.Map  as Map
 import qualified Data.Set  as Set

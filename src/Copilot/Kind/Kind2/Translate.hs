@@ -8,13 +8,18 @@ module Copilot.Kind.Kind2.Translate
   ) where
 
 import Copilot.Kind.TransSys
-import Copilot.Kind.Misc.Utils
-import Data.List (sort)
+import qualified Copilot.Kind.Kind2.AST as K
+
+import Control.Exception.Base (assert)
+
+import Data.Function (on)
+import Data.Maybe (fromJust)
+
+import Data.List (sort, sortBy)
+import Data.Map (Map, (!))
 
 import qualified Data.Map as Map
 import qualified Data.Bimap as Bimap
-
-import qualified Copilot.Kind.Kind2.AST as K
 
 --------------------------------------------------------------------------------
 

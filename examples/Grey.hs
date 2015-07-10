@@ -6,9 +6,11 @@ import Prelude ()
 import Language.Copilot
 import Copilot.Kind
 
+import Copilot.Kind.Light
+
 intCounter :: Stream Bool -> Stream Word64
 intCounter reset = time
-  where 
+  where
     time = if reset then 0
            else [0] ++ if time == 3 then 0 else time + 1
 
@@ -23,16 +25,15 @@ spec :: Spec
 spec = do
   prop "iResetOk"   (r ==> (ic == 0))
   prop "eqCounters" (it == gt)
-  
+
   where
     ic = intCounter r
     it = ic == 2
     gt = greyTick r
     r  = extern "reset" Nothing
-    
-scheme :: ProofScheme
-scheme = do
-  check "iResetOk"
-  check "eqCounters"
-  
-  
+
+scheme prover = do
+  check prover "iResetOk"
+  check prover "eqCounters"
+
+

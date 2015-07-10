@@ -25,7 +25,7 @@ import Fib
 --prover = lightProver def {onlyBmc = True, kTimeout = 5}
 --prover = lightProver def { debugMode = True }
 prover =
-  lightProver def {debugMode = True} 
+  lightProver def {debugMode = True}
   `combine` kind2Prover def
 
 main :: IO ()
@@ -37,7 +37,7 @@ main =  do
   putStrLn line
   putStrLn $ TS.prettyPrint . TS.complete . TS.removeCycles . TS.translate $ cspec
   prove prover scheme cspec
-  
+
   where line = replicate 79 '-'
 
 --------------------------------------------------------------------------------

@@ -7,12 +7,17 @@ module Copilot.Kind.TransSys.Translate ( translate ) where
 
 import Copilot.Kind.TransSys.Spec
 import Copilot.Kind.Misc.Cast
+import Copilot.Kind.Misc.Utils
 import Copilot.Kind.CoreUtils.Operators
 
-import Copilot.Kind.Misc.Utils
+import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 
 import Data.Char (isNumber)
+import Data.Function (on)
+
+import Data.Map (Map)
+import Data.Bimap (Bimap)
 
 import qualified Copilot.Core as C
 import qualified Data.Map     as Map
@@ -158,6 +163,7 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
     newImportedVar var (mkExtVar node varName)
   return $ VarE t var
 
+expr t (C.Label _ _ e) = expr t e
 
 expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
   l' <- expr tl' l

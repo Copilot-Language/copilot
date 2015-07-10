@@ -14,7 +14,15 @@ import Copilot.Kind.TransSys.Renaming
 
 import Copilot.Kind.Misc.Utils
 
-import Data.List (sort)
+import Control.Monad (foldM, forM_, forM, guard)
+
+import Data.List (sort, (\\), intercalate, partition)
+
+import Control.Exception.Base (assert)
+
+import Data.Map (Map, (!))
+import Data.Set (member)
+import Data.Bimap (Bimap)
 
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set
@@ -201,8 +209,7 @@ removeCycles spec =
 
 complete :: TransSys -> TransSys
 complete spec =
-  assert (isTopologicallySorted spec)
-  $ spec { specNodes = specNodes' }
+  assert (isTopologicallySorted spec) $ spec { specNodes = specNodes' }
 
   where
 

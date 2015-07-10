@@ -1,7 +1,9 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE RebindableSyntax #-}
 
-module SerialBoyerMoore (spec, scheme) where
+module SerialBoyerMoore where
+
+import Copilot.Kind.Light.Prover
 
 import Prelude ()
 import Language.Copilot hiding (majority)
@@ -18,12 +20,12 @@ majority l = (p, s, j)
   where
     p  = [0] ++ if s <= 0 then l else p
     s  = [0] ++ if p == l || s <= 0 then s + 1 else s - 1
-    
+
     k  = [0] ++ (1 + k)
-    
+
     count m = cnt
       where cnt = [0] ++ if l == m then cnt + 1 else cnt
-    
+
     j = forAllCst allowed $ \m ->
           local (count m) $ \cnt ->
           let j0 = (m /= p) ==> ((s + 2 * cnt) <= k)
@@ -38,13 +40,13 @@ spec = do
 
   prop "J"  j
   prop "inRange" (existsCst allowed $ \a -> input == a)
-  
+
   where
     input = externW8 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
     (p, s, j) = majority input
-    
 
-scheme = do
-  assuming ["inRange"] $ check "J"
-  
+
+scheme prover = do
+  assuming ["inRange"] $ check prover "J"
+
 --------------------------------------------------------------------------------

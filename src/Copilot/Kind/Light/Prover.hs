@@ -13,8 +13,7 @@ module Copilot.Kind.Light.Prover
 
 import Copilot.Kind.IL.Translate
 import Copilot.Kind.IL
-
-import System.IO (hClose)
+import qualified Copilot.Kind.Prover as P
 
 import Copilot.Kind.Light.Backend
 import qualified Copilot.Kind.Light.SMT as SMT
@@ -30,12 +29,13 @@ import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Maybe (MaybeT (..))
 
-import qualified Copilot.Kind.Prover as P
-
+import Data.Maybe (fromMaybe)
+import Data.Function (on)
 import Data.Default (Default(..))
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe)
-import Data.List (nub)
+import Copilot.Kind.Misc.Utils
+
+import System.IO (hClose)
 
 --------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ cvc4 :: Backend SmtLib
 cvc4 = Backend
   { name            = "CVC4"
   , cmd             = "cvc4"
-  , cmdOpts         = ["--incremental", "--lang=smt2"]
+  , cmdOpts         = ["--incremental", "--lang=smt2", "--tlimit-per=5000"]
   , inputTerminator = const $ return ()
   , incremental     = True
   , logic           = "QF_UFNIRA"
@@ -221,7 +221,7 @@ halt :: ProofScript b a
 halt = mzero
 
 proofKind :: Integer -> String
-proofKind 1 = "induction"
+proofKind 0 = "induction"
 proofKind k = "k-induction (k = " ++ show k ++ ")"
 
 stopSolvers :: SmtFormat b => ProofScript b ()
@@ -231,31 +231,47 @@ stopSolvers = do
 
 entailment :: SmtFormat b => SolverId -> [Constraint] -> [Constraint] -> ProofScript b SatResult
 entailment sid assumptions props = do
-  declVars sid $ nub $ getVars assumptions ++ getVars props
+  declVars sid $ nub' $ getVars assumptions ++ getVars props
   assume sid assumptions
   entailed sid props
+
+getVars :: [Constraint] -> [VarDescr]
+getVars = nubBy' (compare `on` varName) . concatMap getExprVars
+
+getExprVars :: Expr a -> [VarDescr]
+getExprVars (Const _ _) = []
+getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
+getExprVars (Op1 _ _ e) = getExprVars e
+getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
+getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t []]
+getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t []]
+getExprVars (FunApp t name args) = [VarDescr name t (map typeOfU args)]
+  ++ concatMap getUExprVars args
+  where
+    getUExprVars (U e) = getExprVars e
+    typeOfU (U e)      = U $ typeOf e
 
 kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO P.Output
 kInduction' k s as ps =
   (fromMaybe (P.Output P.Unknown ["proof by " ++ proofKind k ++ " failed"]) . fst)
   <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
-  where range k = if k > 0 then [1 .. k] else [1 ..]
+  where range k = if k >= 0 then [0 .. k] else [0 ..]
 
 induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b P.Output
 induction assumptionIds toCheckIds k = do
 
   (modelInit, modelRec, toCheck) <- getModels assumptionIds toCheckIds
 
-  let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k - 1]]
-      baseInv = [evalAt (Fixed i) m | m <- toCheck, i <- [0 .. k - 1]]
+  let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
+      baseInv = [evalAt (Fixed k) m | m <- toCheck]
   entailment Base (modelInit ++ base) baseInv >>= \case
-    Sat     -> halt
+    Sat     -> halt -- Should be invalid in this case.
     Unknown -> halt
     _       -> return ()
 
-  let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k]]
-                ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k - 1]]
-      stepInv = [evalAt (_n_plus k) m | m <- toCheck]
+  let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k + 1]]
+                ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k]]
+      stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
   entailment Step step stepInv >>= \case
     Sat     -> halt
     Unknown -> halt
