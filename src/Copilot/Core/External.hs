@@ -68,6 +68,7 @@ externVarsExpr e0 = case e0 of
   Op3 _ e1 e2 e3            -> externVarsExpr e1 `append`
                                externVarsExpr e2 `append`
                                externVarsExpr e3
+  Label t s e               -> externVarsExpr e
 
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
@@ -94,6 +95,7 @@ externArraysExpr e0 = case e0 of
   Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
                                      externArraysExpr e2 `append`
                                      externArraysExpr e3
+  Label t s e                     -> externArraysExpr e
 
 externArraysUExpr :: UExpr -> DList ExtArray
 externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
@@ -111,7 +113,7 @@ externFunsExpr e0 = case e0 of
   Var _ _                     -> empty
   ExternVar _ _ _             -> empty
   ExternArray _ _ _ _ idx _ _ -> externFunsExpr idx
-  ExternFun t name ues _ tag  -> singleton (ExtFun name t ues tag)
+  ExternFun t name ues _ tag  -> concat $ singleton (ExtFun name t ues tag) : (map externFunsUExpr ues)
   ExternStruct _ _ _ _        -> empty
   GetField _ _ _              -> empty
   Op1 _ e                     -> externFunsExpr e
@@ -119,6 +121,11 @@ externFunsExpr e0 = case e0 of
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
                                  externFunsExpr e2 `append`
                                  externFunsExpr e3
+  Label t s e                 -> externFunsExpr e
+
+externFunsUExpr :: UExpr -> DList ExtFun
+externFunsUExpr UExpr { uExprExpr = e } = externFunsExpr e
+
 
 --------------------------------------------------------------------------------
 

@@ -30,15 +30,14 @@ ppExpr e0 = case e0 of
   Const t x                  -> text (showWithType Haskell t x)
   Drop _ 0 id                -> strmName id
   Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
-  ExternVar _ name _         -> text "extern" <+> doubleQuotes (text name)
+  ExternVar _ name _         -> text "Ext_" <> (text name)
   ExternFun _ name args _ _  -> 
-    text "extern" <+> doubleQuotes 
-      (text name <> lparen <> 
-         hcat (punctuate (comma <> space) (map ppUExpr args))
+    text "Extf_" <> (text name) <> lparen <> 
+         (hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
   ExternArray _ _ name 
-              _ idx _ _      -> text "extern" <+> doubleQuotes (text name <> lbrack 
-                                  <> ppExpr idx <> rbrack)
+              _ idx _ _      -> text "Exta_" <> (text name) <> lbrack 
+                                  <> ppExpr idx <> rbrack
   ExternStruct _ name args _ -> text "struct" <+> doubleQuotes (text name <> lbrace
                                     <> vcat (punctuate (semi <> space) (map ppUExpr $ args)) <> rbrace)
   GetField _ _ name          -> text "field" <+> doubleQuotes (text name)
@@ -48,6 +47,7 @@ ppExpr e0 = case e0 of
   Op1 op e                   -> ppOp1 op (ppExpr e)
   Op2 op e1 e2               -> ppOp2 op (ppExpr e1) (ppExpr e2)
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
+  Label t s e                -> text "label "<>doubleQuotes (text s) <+> (ppExpr e)
 
 ppUExpr :: UExpr -> Doc
 ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
@@ -165,13 +165,24 @@ ppObserver
 
 --------------------------------------------------------------------------------
 
+ppProperty :: Property -> Doc
+ppProperty
+  Property
+    { propertyName     = name
+    , propertyExpr     = e }
+  =   text "property \"" <> text name <> text "\""
+  <+> text "="
+  <+> ppExpr e
+
+--------------------------------------------------------------------------------
+
 ppSpec :: Spec -> Doc
-ppSpec spec = cs $$ ds $$ es -- $$ fs
+ppSpec spec = cs $$ ds $$ es $$ fs
   where
     cs = foldr (($$) . ppStream)   empty (specStreams   spec)
     ds = foldr (($$) . ppTrigger)  empty (specTriggers  spec)
     es = foldr (($$) . ppObserver) empty (specObservers spec)
-    --fs = foldr (($$) . ppStruct)   empty (specStructs   spec)
+    fs = foldr (($$) . ppProperty) empty (specProperties spec)
 
 --------------------------------------------------------------------------------
 
