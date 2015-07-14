@@ -29,4 +29,3 @@ uninitialized t =
     Word64 -> 0
     Float  -> 0
     Double -> 0
-    Struct -> Undefined

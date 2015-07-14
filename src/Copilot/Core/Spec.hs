@@ -11,11 +11,10 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
-  , StructData (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
-import Copilot.Core.Type (Type, Typed, Struct)
+import Copilot.Core.Type (Type, Typed)
 
 --------------------------------------------------------------------------------
 
@@ -48,13 +47,6 @@ data Trigger = Trigger
 data Property = Property
   { propertyName     :: Name
   , propertyExpr     :: Expr Bool }
-  
---------------------------------------------------------------------------------
-
--- | A struct.
-data StructData = {-forall a .-} StructData
-  { structName      :: Name
-  , structInst      :: Expr Struct }
 
 --------------------------------------------------------------------------------
 
@@ -66,6 +58,5 @@ data Spec = Spec
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
   , specProperties   :: [Property] }
-  --, specStructs      :: [StructData] }
 
 --------------------------------------------------------------------------------

@@ -62,6 +62,7 @@ externVarsExpr e0 = case e0 of
   ExternArray _ _ _ _ e _ _ -> externVarsExpr e
   ExternFun _ _ ues _ _     -> concat (map externVarsUExpr ues)
   ExternStruct _ _ _ _      -> empty
+  GetField _ _ _            -> empty
   Op1 _ e                   -> externVarsExpr e
   Op2 _ e1 e2               -> externVarsExpr e1 `append` externVarsExpr e2
   Op3 _ e1 e2 e3            -> externVarsExpr e1 `append`
@@ -87,6 +88,7 @@ externArraysExpr e0 = case e0 of
               size idx _ tag      -> singleton (ExtArray name t2 idx t1 size tag)
   ExternFun _ _ ues _ _           -> concat (map externArraysUExpr ues)
   ExternStruct _ _ _ _            -> empty
+  GetField _ _ _                  -> empty
   Op1 _ e                         -> externArraysExpr e
   Op2 _ e1 e2                     -> externArraysExpr e1 `append` externArraysExpr e2
   Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
@@ -111,6 +113,7 @@ externFunsExpr e0 = case e0 of
   ExternArray _ _ _ _ idx _ _ -> externFunsExpr idx
   ExternFun t name ues _ tag  -> singleton (ExtFun name t ues tag)
   ExternStruct _ _ _ _        -> empty
+  GetField _ _ _              -> empty
   Op1 _ e                     -> externFunsExpr e
   Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
@@ -134,6 +137,7 @@ externStructsExpr e0 = case e0 of
   ExternStruct _ name ses tag     -> {-if t == Struct then -}singleton (ExtStruct name ses tag){- else empty-}
                                       --concat . map externStructsUExpr ues
                       -- all expressions in a struct are typed
+  GetField _ _ _                  -> empty
   Op1   _ _                       -> empty
   Op2   _ _ _                     -> empty
   Op3   _ _ _ _                   -> empty
@@ -153,8 +157,7 @@ all :: (forall a . Expr a -> DList b) -> Spec -> DList b
 all f spec =
   concat (fmap (allStream) (specStreams   spec)) `append`
   concat (fmap allTrigger  (specTriggers  spec)) `append`
-  concat (fmap allObserver (specObservers spec)) --`append`
-  --concat (fmap allStruct   (specStructs   spec))
+  concat (fmap allObserver (specObservers spec))
 
   where
   
@@ -174,8 +177,3 @@ all f spec =
 
   allObserver
     Observer { observerExpr = e } = f e
-
-  allStruct
-    StructData { structInst = ExternStruct _ _ sargs _ } = concat (fmap allUExpr sargs)
-  allStruct
-    StructData { structName = _, structInst = _ } = empty

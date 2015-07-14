@@ -78,7 +78,7 @@ data Op2 a b c where
   BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
   BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
   -- Struct operators.
-  GetField :: Type a -> Type b -> Op2 a String b
+  --GetField :: Type a -> Type b -> Op2 a String b
 
 -- | Ternary operators.
 data Op3 a b c d where

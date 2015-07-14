@@ -29,15 +29,13 @@ mkTagsSpec
     { specStreams    = strms
     , specObservers  = obsvs
     , specTriggers   = trigs
-    , specProperties = props }
-    {-, specStructs    = strs
-    -} =
+    , specProperties = props
+    } =
   liftM4 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
     (mkTagsProps props)
-    --(mkTagsStrs  strs)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -94,33 +92,11 @@ mkTagsProps = mapM mkTagsProp
           e' <- mkTagsExpr (propertyExpr p)
           return $ p { propertyExpr = e' }
 
-mkTagsStrs  :: [StructData] -> State Int [StructData]
-mkTagsStrs  = mapM $ fromJust . mkTagsStr
-
-  where
-    mkTagsStr :: StructData -> Maybe (State Int StructData)
-    mkTagsStr StructData
-      { structName = name
-      , structInst = inst } =
-        case inst of
-          ExternStruct x y sargs z -> Just $ do
-            sargs' <- mapM mkTagsUExpr sargs
-            return $ StructData
-              { structName = name
-              , structInst = ExternStruct x y sargs' z }
-          _                        -> Nothing
-
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
   do
     e' <- mkTagsExpr e
     return $ UExpr { uExprExpr = e', uExprType = t }
-
-{-mkTagsSExpr :: SExpr -> State Int SExpr
-mkTagsSExpr SExpr { sname = n, uexpr = u } =
-  do
-    u' <- mkTagsUExpr u
-    return $ SExpr { sname = n, uexpr = u' }-}
 
 mkTagsExpr :: Expr a -> State Int (Expr a)
 mkTagsExpr e0 = case e0 of
@@ -139,6 +115,7 @@ mkTagsExpr e0 = case e0 of
   ExternStruct t name sargs _    -> do args' <- mapM mkTagsUExpr sargs
                                        k <- next
                                        return $ ExternStruct t name args' (Just k)
+  GetField t id name             -> return $ GetField t id name
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)
