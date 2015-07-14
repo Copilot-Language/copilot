@@ -165,8 +165,8 @@ data SolverId = Base | Step
 
 getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint])
 getModels assumptionIds toCheckIds = do
-  IL {modelInit, modelRec, properties} <- spec <$> get
-  let assumptions = selectProps assumptionIds properties
+  IL {modelInit, modelRec, properties, bounds} <- spec <$> get
+  let assumptions = selectProps (assumptionIds ++ bounds) properties
       modelRec'   = modelRec ++ assumptions
       toCheck     = selectProps toCheckIds properties
   return (modelInit, modelRec', toCheck)

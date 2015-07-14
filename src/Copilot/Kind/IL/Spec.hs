@@ -74,6 +74,7 @@ data IL = IL
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
+  , bounds      :: [PropId]
   }
 
 --------------------------------------------------------------------------------
