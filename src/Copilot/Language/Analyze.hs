@@ -152,6 +152,7 @@ analyzeExpr refStreams s = do
                                 SeenArr   -> throw NestedArray
                                 SeenStruct->
                                   mapM_ (\(Arg a) -> go SeenStruct nodes' a) sargs
+      GetField e field    -> analyzeAppend refStreams dstn e () analyzeExpr --Copied from `Append` case
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()

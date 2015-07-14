@@ -189,6 +189,15 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
+      GetField _ field -> do
+        s <- mkStream refMkId refStreams refMap e0
+        return $ Core.GetField typeOf s field
+        {-  ISSUE: UNLIKE APPEND, GETFIELD DOES NOT HAVE CONSISTENT RETURN TYPE
+              --> NEED TO PROPERLY DEFINE GETFIELD IN EXPR
+                --> IMPLEMENT GETFIELD FROM CORE THROUGH LANGUAGE -}
+
+      ------------------------------------------------------
+
       Op1 op e -> do
           w <- go e
           return $ Core.Op1 op w
