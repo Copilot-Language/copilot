@@ -57,7 +57,7 @@ ppType Real = atom "Real"
 ppType Bool = atom "Bool"
 
 ppTerm :: Term -> SSExpr
-ppTerm (ValueLitteral  c) = atom c
+ppTerm (ValueLiteral  c) = atom c
 ppTerm (PrimedStateVar v) = list [atom kwPrime, atom v]
 ppTerm (StateVar v) = atom v
 ppTerm (FunApp f args) = node f $ map ppTerm args

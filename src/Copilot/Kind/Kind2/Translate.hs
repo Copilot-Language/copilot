@@ -136,10 +136,10 @@ trPrimedVar :: Var -> K.Term
 trPrimedVar v = K.PrimedStateVar (varName v)
 
 trConst :: Type t -> t -> K.Term
-trConst Integer v     = K.ValueLitteral (show v)
-trConst Real    v     = K.ValueLitteral (show v)
-trConst Bool    True  = K.ValueLitteral "true"
-trConst Bool    False = K.ValueLitteral "false"
+trConst Integer v     = K.ValueLiteral (show v)
+trConst Real    v     = K.ValueLiteral (show v)
+trConst Bool    True  = K.ValueLiteral "true"
+trConst Bool    False = K.ValueLiteral "false"
 
 --------------------------------------------------------------------------------
 
