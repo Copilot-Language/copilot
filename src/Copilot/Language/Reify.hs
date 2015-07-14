@@ -160,6 +160,12 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
+      Label s e -> do
+          w <- go e
+          return $ Core.Label typeOf s w
+
+      ------------------------------------------------------
+
       Var cs -> return $ Core.Var typeOf cs
 
       ------------------------------------------------------

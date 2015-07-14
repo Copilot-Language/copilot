@@ -48,6 +48,7 @@ library
                  , Copilot.Language.Operators.Extern
                  , Copilot.Language.Operators.Integral
                  , Copilot.Language.Operators.Local
+                 , Copilot.Language.Operators.Label
                  , Copilot.Language.Operators.Mux
                  , Copilot.Language.Operators.Ord
                  , Copilot.Language.Operators.Temporal

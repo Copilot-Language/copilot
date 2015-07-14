@@ -162,6 +162,7 @@ analyzeExpr refStreams s = do
       Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >> 
                              go seenExt nodes' e2 >> 
                              go seenExt nodes' e3
+      Label _ e           -> go seenExt nodes' e
 
 --------------------------------------------------------------------------------
 
@@ -373,6 +374,7 @@ collectExts refStreams stream_ env_ = do
       Op3 _ e1 e2 e3         -> do env' <- go nodes env e1  
                                    env'' <- go nodes env' e2 
                                    go nodes env'' e3 
+      Label _ e              -> go nodes env e 
 
 --------------------------------------------------------------------------------
 
