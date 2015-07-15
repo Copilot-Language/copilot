@@ -77,8 +77,8 @@ addBounds spec@(C.Spec { C.specStreams, C.specProperties }) =
   (map propName properties, spec {C.specProperties = specProperties ++ properties})
   where
     properties :: [C.Property]
-    properties = (foldl' (++) [] $ map seqBound specStreams)
-      ++ (foldl' (++) [] $ map extBound (nubBy' (compare `on` fst) $ foldCSpecExprs getExterns spec))
+    properties = foldl' (++) [] (map seqBound specStreams)
+      ++ foldl' (++) [] (map extBound (nubBy' (compare `on` fst) $ foldCSpecExprs getExterns spec))
     seqBound :: C.Stream -> [C.Property]
     seqBound (C.Stream { C.streamId, C.streamExprType }) = case streamExprType of
       C.Int8    -> seqBound' C.Int8
@@ -141,20 +141,21 @@ streamRec (C.Stream { C.streamId       = id
 
 --------------------------------------------------------------------------------
 
-addSign :: (Ord t, Num t) => Type t' -> C.Type t -> t -> Trans (Expr t')
-addSign t ct v
-  | v >= 0    = return $ Const t (cast t $ toDyn ct v)
-  | otherwise = return $ Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
 
 expr :: Type t -> C.Expr a -> Trans (Expr t)
 
-expr t (C.Const ct@C.Double v) = addSign t ct v
-expr t (C.Const ct@C.Float v)  = addSign t ct v
-expr t (C.Const ct@C.Int8 v)   = addSign t ct v
-expr t (C.Const ct@C.Int16 v)  = addSign t ct v
-expr t (C.Const ct@C.Int32 v)  = addSign t ct v
-expr t (C.Const ct@C.Int64 v)  = addSign t ct v
-expr t (C.Const ct v)          = return $ Const t (cast t $ toDyn ct v)
+expr t (C.Const ct v) = return $ case ct of
+  C.Int8   -> negify t ct v
+  C.Int16  -> negify t ct v
+  C.Int32  -> negify t ct v
+  C.Int64  -> negify t ct v
+  C.Float  -> negify t ct v
+  C.Double -> negify t ct v
+  _        -> Const t (cast t $ toDyn ct v)
+  where negify :: (Ord t, Num t) => Type t' -> C.Type t -> t -> Expr t'
+        negify t ct v
+            | v >= 0    = Const t (cast t $ toDyn ct v)
+            | otherwise = Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
 
 expr t (C.Label _ _ e) = expr t e
 
@@ -181,6 +182,24 @@ expr t (C.ExternFun _ name args _ _) = do
 expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \_ -> do
   ind' <- U <$> expr Integer ind
   return $ FunApp t (ncExternFun name) [ind']
+
+expr t (C.Op1 (C.Sign ta) e) = case ta of
+  C.Int8   -> trSign t ta e
+  C.Int16  -> trSign t ta e
+  C.Int32  -> trSign t ta e
+  C.Int64  -> trSign t ta e
+  C.Float  -> trSign t ta e
+  C.Double -> trSign t ta e
+  _        -> expr t $ C.Const ta 1
+  where trSign :: (Ord t, Num t) => Type t' -> C.Type t -> C.Expr t -> Trans (Expr t')
+        trSign t ta e =
+          expr t (C.Op3 (C.Mux ta)
+            (C.Op2 (C.Lt ta) e (C.Const ta 0))
+            (C.Const ta (-1))
+            (C.Op3 (C.Mux ta)
+              (C.Op2 (C.Gt ta) e (C.Const ta 0))
+              (C.Const ta 1)
+              (C.Const ta 0)))
 
 expr t (C.Op1 op e) = handleOp1 t (op, e) expr notHandled Op1
   where notHandled (UnhandledOp1 opName ta _) = do

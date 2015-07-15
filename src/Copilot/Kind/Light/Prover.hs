@@ -13,6 +13,7 @@ module Copilot.Kind.Light.Prover
 
 import Copilot.Kind.IL.Translate
 import Copilot.Kind.IL
+import Copilot.Kind.Prover (Output (..))
 import qualified Copilot.Kind.Prover as P
 
 import Copilot.Kind.Light.Backend
@@ -24,10 +25,10 @@ import qualified Copilot.Kind.Light.SMTLib as SMTLib
 import qualified Copilot.Kind.Light.TPTP as TPTP
 
 import Control.Applicative ((<$>), (<*))
-import Control.Monad (msum, unless, MonadPlus(..))
+import Control.Monad (msum, unless, mzero)
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Maybe (MaybeT (..))
+import Control.Monad.Trans.Maybe
 
 import Data.Maybe (fromMaybe)
 import Data.Function (on)
@@ -163,13 +164,13 @@ data ProofState b = ProofState
 data SolverId = Base | Step
   deriving (Show, Ord, Eq)
 
-getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint])
+getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint], Bool)
 getModels assumptionIds toCheckIds = do
   IL {modelInit, modelRec, properties, bounds} <- spec <$> get
   let assumptions = selectProps (assumptionIds ++ bounds) properties
       modelRec'   = modelRec ++ assumptions
       toCheck     = selectProps toCheckIds properties
-  return (modelInit, modelRec', toCheck)
+  return (modelInit, modelRec', toCheck, null modelRec)
 
 getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 getSolver sid = do
@@ -217,9 +218,6 @@ stop id = do
   deleteSolver id
   liftIO $ SMT.stop s
 
-halt :: ProofScript b a
-halt = mzero
-
 proofKind :: Integer -> String
 proofKind 0 = "induction"
 proofKind k = "k-induction (k = " ++ show k ++ ")"
@@ -251,31 +249,42 @@ getExprVars (FunApp t name args) = [VarDescr name t (map typeOfU args)]
     getUExprVars (U e) = getExprVars e
     typeOfU (U e)      = U $ typeOf e
 
-kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO P.Output
+unknown :: ProofScript b a
+unknown = mzero
+
+invalid :: String -> ProofScript b Output
+invalid msg = return $ Output P.Invalid [msg]
+
+valid :: String -> ProofScript b Output
+valid msg = return $ Output P.Valid [msg]
+
+kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO Output
 kInduction' k s as ps =
-  (fromMaybe (P.Output P.Unknown ["proof by " ++ proofKind k ++ " failed"]) . fst)
+  (fromMaybe (Output P.Unknown ["proof by " ++ proofKind k ++ " failed"]) . fst)
   <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
   where range k = if k >= 0 then [0 .. k] else [0 ..]
 
-induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b P.Output
+induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b Output
 induction assumptionIds toCheckIds k = do
 
-  (modelInit, modelRec, toCheck) <- getModels assumptionIds toCheckIds
+  (modelInit, modelRec, toCheck, noStreams) <- getModels assumptionIds toCheckIds
 
   let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
       baseInv = [evalAt (Fixed k) m | m <- toCheck]
-  entailment Base (modelInit ++ base) baseInv >>= \case
-    Sat     -> halt -- Should be invalid in this case.
-    Unknown -> halt
-    _       -> return ()
 
   let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k + 1]]
                 ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k]]
       stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
-  entailment Step step stepInv >>= \case
-    Sat     -> halt
-    Unknown -> halt
-    Unsat   -> return $ P.Output P.Valid ["proved with " ++ proofKind k]
+
+  entailment Base (modelInit ++ base) baseInv >>= \case
+    Sat     -> invalid ("base case failed for " ++ proofKind k)
+    Unknown -> unknown
+    Unsat   -> if noStreams
+      then valid ("proved with " ++ proofKind k)
+      else entailment Step step stepInv >>= \case
+        Sat     -> unknown
+        Unknown -> unknown
+        Unsat   -> valid ("proved with " ++ proofKind k)
 
 selectProps :: [PropId] -> Map.Map PropId Constraint -> [Constraint]
 selectProps propIds properties =

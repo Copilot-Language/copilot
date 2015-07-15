@@ -40,8 +40,8 @@ data SeqIndex = Fixed Integer | Var Offset
 data Expr t where
   Const  :: Type t -> t -> Expr t
   Ite    :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
-  Op1    :: Type t -> Op1 x t -> Expr x -> Expr t
-  Op2    :: Type t -> Op2 x y t -> Expr x -> Expr y -> Expr t
+  Op1    :: Type t -> Op1 a t -> Expr a -> Expr t
+  Op2    :: Type t -> Op2 a b t -> Expr a -> Expr b -> Expr t
   SVal   :: Type t -> SeqId -> SeqIndex -> Expr t
   FunApp :: Type t -> String -> [U Expr] -> Expr t
 
