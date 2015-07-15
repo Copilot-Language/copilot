@@ -51,9 +51,7 @@ data Action
   = Check  Prover PropId
   | Assume PropId
   | Local  [Action]
-  | Pragma Pragma
-
-data Pragma = PrintMsg String deriving (Show)
+  | PrintMsg String
 
 --------------------------------------------------------------------------------
 
@@ -61,7 +59,7 @@ check :: Prover -> PropId -> ProofScheme
 check prover p = tell [Check prover p]
 
 msg :: String -> ProofScheme
-msg s = tell [Pragma $ PrintMsg s]
+msg s = tell [PrintMsg s]
 
 assert :: Prover -> PropId -> ProofScheme
 assert prover p = tell [Check prover p, Assume p]
@@ -100,7 +98,7 @@ prove (execWriter -> actions) spec = do
         Assume propId -> do
           processActions (propId : context) nextActions
 
-        Pragma (PrintMsg s) -> do
+        PrintMsg s -> do
           putStrLn s
           processActions context nextActions
 

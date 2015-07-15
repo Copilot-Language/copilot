@@ -50,11 +50,11 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.Not      -> boolOp Not (handleExpr Bool e)
 
   -- Numeric operators
-  C.Abs _   -> numOp Abs
-  C.Sign ta  -> notHandled ta noTag "sign"
+  C.Abs _    -> numOp Abs
+  C.Sign ta  -> notHandled ta "sign"
 
   -- Fractional operators
-  C.Recip ta -> notHandled ta noTag "recip"
+  C.Recip ta -> notHandled ta "recip"
 
   -- Floating operators
   C.Exp _    -> numOp Exp
@@ -74,7 +74,7 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.Acosh _  -> numOp Acosh
 
   -- Bitwise operators.
-  C.BwNot ta -> notHandled ta noTag "bwnot"
+  C.BwNot ta -> notHandled ta "bwnot"
 
   -- Casting operator.
   C.Cast ta tb -> castTo ta tb
@@ -92,17 +92,13 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
     castTo :: C.Type cta -> C.Type ctb -> m (expr resT)
     castTo ta tb = casting tb $ \tb' -> case (tb', resT) of
       (Integer, Integer) -> handleExpr Integer e
-      (Real, Real)       -> notHandled ta noTag "int2real"
+      (Real, Real)       -> notHandled ta "int2real"
       _                  -> Err.impossible typeErrMsg
 
     notHandled ::
-      C.Type a -> (forall c . Type c -> String) -> String -> m (expr resT)
-    notHandled ta typeTag s = casting ta $ \ta' ->
-      notHandledF $ UnhandledOp1 (typeTag ta' ++ s) ta' resT
-
-    tagReal Real = "f"
-    tagReal _    = ""
-    noTag _ = ""
+      C.Type a -> String -> m (expr resT)
+    notHandled ta s = casting ta $ \ta' ->
+      notHandledF $ UnhandledOp1 s ta' resT
 
 --------------------------------------------------------------------------------
 

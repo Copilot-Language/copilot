@@ -119,7 +119,7 @@ dReal :: Backend SmtLib
 dReal = Backend
   { name            = "dReal"
   , cmd             = "perl"
-  , cmdOpts         = ["-e", "alarm 5; exec dReal"]
+  , cmdOpts         = ["-e", "alarm 10; exec dReal"]
   , inputTerminator = hClose
   , incremental     = False
   , logic           = "QF_NRA"

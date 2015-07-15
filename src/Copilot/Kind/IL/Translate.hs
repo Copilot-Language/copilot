@@ -8,6 +8,7 @@ module Copilot.Kind.IL.Translate ( translate ) where
 import Copilot.Kind.IL.Spec
 import Copilot.Kind.Misc.Cast
 import Copilot.Kind.CoreUtils.Operators
+import Copilot.Kind.CoreUtils.Expr
 
 import qualified Copilot.Core as C
 
@@ -20,6 +21,9 @@ import Data.Char
 import Data.List (foldl')
 
 import Text.Printf
+
+import Copilot.Kind.Misc.Utils (nubBy')
+import Data.Function (on)
 
 --------------------------------------------------------------------------------
 
@@ -73,29 +77,50 @@ addBounds spec@(C.Spec { C.specStreams, C.specProperties }) =
   (map propName properties, spec {C.specProperties = specProperties ++ properties})
   where
     properties :: [C.Property]
-    properties = foldl' (++) [] $ map bound specStreams
-    bound :: C.Stream -> [C.Property]
-    bound (C.Stream { C.streamId, C.streamExprType }) = case streamExprType of
-      C.Int8    -> bound' streamId C.Int8
-      C.Int16   -> bound' streamId C.Int16
-      C.Int32   -> bound' streamId C.Int32
-      C.Int64   -> bound' streamId C.Int64
-      C.Word8   -> bound' streamId C.Word8
-      C.Word16  -> bound' streamId C.Word16
-      C.Word32  -> bound' streamId C.Word32
-      C.Word64  -> bound' streamId C.Word64
+    properties = (foldl' (++) [] $ map seqBound specStreams)
+      ++ (foldl' (++) [] $ map extBound (nubBy' (compare `on` fst) $ foldCSpecExprs getExterns spec))
+    seqBound :: C.Stream -> [C.Property]
+    seqBound (C.Stream { C.streamId, C.streamExprType }) = case streamExprType of
+      C.Int8    -> seqBound' C.Int8
+      C.Int16   -> seqBound' C.Int16
+      C.Int32   -> seqBound' C.Int32
+      C.Int64   -> seqBound' C.Int64
+      C.Word8   -> seqBound' C.Word8
+      C.Word16  -> seqBound' C.Word16
+      C.Word32  -> seqBound' C.Word32
+      C.Word64  -> seqBound' C.Word64
       _         -> []
-    bound' :: (Ord a, Bounded a) => C.Id -> C.Type a ->  [C.Property]
-    bound' streamId t = [C.Property (ncSeq streamId ++ "_bounds")
+      where seqBound' :: (Ord a, Bounded a) => C.Type a -> [C.Property]
+            seqBound' t = bound (ncSeq streamId) (C.Drop t 0 streamId) t
+    extBound :: (String, U2 C.Expr C.Type) -> [C.Property]
+    extBound (name, U2 e t) = case t of
+      C.Int8    -> extBound' e C.Int8
+      C.Int16   -> extBound' e C.Int16
+      C.Int32   -> extBound' e C.Int32
+      C.Int64   -> extBound' e C.Int64
+      C.Word8   -> extBound' e C.Word8
+      C.Word16  -> extBound' e C.Word16
+      C.Word32  -> extBound' e C.Word32
+      C.Word64  -> extBound' e C.Word64
+      _         -> []
+      where extBound' :: (Ord a, Bounded a) => C.Expr a -> C.Type a -> [C.Property]
+            extBound' = bound (ncExternVar name)
+    bound :: (Ord a, Bounded a) => String -> C.Expr a -> C.Type a -> [C.Property]
+    bound name var t = [C.Property (name ++ "_bounds")
       $ C.Op2 C.And
-      (C.Op2 (C.Le t) (C.Const t minBound) (C.Drop t 0 streamId))
-      (C.Op2 (C.Ge t) (C.Const t maxBound) (C.Drop t 0 streamId))]
+      (C.Op2 (C.Le t) (C.Const t minBound) var)
+      (C.Op2 (C.Ge t) (C.Const t maxBound) var)]
+    getExterns :: C.Expr a -> [(String, U2 C.Expr C.Type)]
+    getExterns e = case e of
+      (C.ExternVar t name _)     -> [(name, U2 e t)]
+      (C.ExternFun t name _ _ _) -> [(name, U2 e t)]
+      _                          -> []
     propName (C.Property name _) = name
 
 streamInit :: C.Stream -> [Constraint]
 streamInit (C.Stream { C.streamId       = id
                      , C.streamBuffer   = b :: [val]
-                     , C.streamExprType = ty}) =
+                     , C.streamExprType = ty }) =
 
   zipWith initConstraint [0..] b
   where
