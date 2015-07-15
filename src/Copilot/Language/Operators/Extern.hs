@@ -33,6 +33,7 @@ module Copilot.Language.Operators.Extern
   , externArrayF
   , externArrayD
   , funArg -- * Deprecated.
+  , externStruct
   ) where
 
 import Copilot.Core (Typed)
@@ -57,6 +58,9 @@ externArray = ExternArray
 -- | Deprecated.
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
+
+externStruct :: Typed a => String -> [StructArg] -> Maybe (Stream a) -> Stream a
+externStruct = ExternStruct
 
 --------------------------------------------------------------------------------
 
