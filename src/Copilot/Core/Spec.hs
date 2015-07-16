@@ -11,10 +11,17 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
+  , BitStruct (..)
+  , StructInfo
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type, Typed)
+import Data.BitArray
+
+--------------------------------------------------------------------------------
+
+type StructInfo = [(Name, Int)]
 
 --------------------------------------------------------------------------------
 
@@ -49,6 +56,12 @@ data Property = Property
   , propertyExpr     :: Expr Bool }
 
 --------------------------------------------------------------------------------
+-- | Struct representation as a bit array.
+data BitStruct = BitStruct
+  { structName       :: Name
+  , structFields     :: (StructInfo, BitArray) }
+
+--------------------------------------------------------------------------------
 
 -- | A Copilot specification consists of a list of variables bound to anonymous
 -- streams, a list of anomymous streams, a list of observers, a list of
@@ -57,6 +70,7 @@ data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
-  , specProperties   :: [Property] }
+  , specProperties   :: [Property]
+  , specStructs      :: [BitStruct] }
 
 --------------------------------------------------------------------------------
