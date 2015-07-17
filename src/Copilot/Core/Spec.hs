@@ -12,16 +12,15 @@ module Copilot.Core.Spec
   , Spec (..)
   , Property (..)
   , BitStruct (..)
-  , StructInfo
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type, Typed)
-import Data.BitArray
+--import Data.BitArray
 
 --------------------------------------------------------------------------------
 
-type StructInfo = [(Name, Int)]
+--type StructInfo = [(Name, Int)]
 
 --------------------------------------------------------------------------------
 
@@ -56,10 +55,11 @@ data Property = Property
   , propertyExpr     :: Expr Bool }
 
 --------------------------------------------------------------------------------
+
 -- | Struct representation as a bit array.
 data BitStruct = BitStruct
   { structName       :: Name
-  , structFields     :: (StructInfo, BitArray) }
+  , structFields     :: [(Name, UExpr)] }
 
 --------------------------------------------------------------------------------
 

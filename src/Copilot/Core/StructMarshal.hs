@@ -4,25 +4,31 @@
 
 {-# LANGUAGE Safe #-}
 
-module Copilot.Core.StructMarshall
+module Copilot.Core.StructMarshal
   ( marshalFields
-  , demarshalFields
+  , demarshalField
   ) where
 
-import Copilot.Core.Expr (Name, Id, Expr, UExpr)
+import Copilot.Core.Expr as E
 import Copilot.Core.Type (Type, Typed)
 import Copilot.Core.Spec
-import Data.BitArray
+--import Data.BitArray
+import Data.Vector.Unboxed hiding (foldr)
+--import Data.Serialize
 
 --------------------------------------------------------------------------------
 
-marshalFields :: [Type] -> BitArray
+-- | Convert Struct to Bit Vector
+marshalFields :: [Type] -> Vector
 marshalFields fields =
-  foldr buildStruct BitArray fields
-  where
-    buildStruct :: Type -> BitArray -> BitArray
+  foldr cons empty fields
 
-
-
-demarshalFields :: BitArray -> [Type]
+-- | Convert Bit Vector to Struct
+{-demarshalFields :: Vector -> [UExpr]
 demarshalFields struct =
+  let -}
+
+-- | Get Struct Field from Bit Vector
+demarshalField :: Vector -> Type -> Int -> UExpr
+demarshalField struct t i =
+  UExpr { uExprType = t, uExprExpr = Expr struct!i }
