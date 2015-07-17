@@ -30,14 +30,14 @@ mkTagsSpec
     , specObservers  = obsvs
     , specTriggers   = trigs
     , specProperties = props
-    , specStructs    = strts
+    --, specStructs    = strts
     } =
   liftM4 Spec
     (mkTagsStrms strms)
     (mkTagsObsvs obsvs)
     (mkTagsTrigs trigs)
     (mkTagsProps props)
-    (mkTagsStrts strts)
+    --(mkTagsStrts strts)
 
 mkTagsStrms :: [Stream] -> State Int [Stream]
 mkTagsStrms = mapM mkTagsStrm
@@ -94,7 +94,7 @@ mkTagsProps = mapM mkTagsProp
           e' <- mkTagsExpr (propertyExpr p)
           return $ p { propertyExpr = e' }
 
-mkTagsStrts :: [BitStruct] -> State Int [BitStruct]
+{-mkTagsStrts :: [BitStruct] -> State Int [BitStruct]
 mkTagsStrts = mapM mkTagsStrt
 
   where
@@ -106,6 +106,12 @@ mkTagsStrts = mapM mkTagsStrt
           return $ BitStruct
             { structName      = name
             , structFields    = fields' }
+-}
+mkTagsSExpr :: (Name, UExpr) -> State Int (Name, UExpr)
+mkTagsSExpr (name, UExpr { uExprExpr = e, uExprType = t }) =
+  do
+    e' <- mkTagsExpr e
+    return (name, UExpr { uExprExpr = e', uExprType = t })
 
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
@@ -127,7 +133,7 @@ mkTagsExpr e0 = case e0 of
               size idx e _       -> do idx' <- mkTagsExpr idx
                                        k <- next
                                        return $ ExternArray t1 t2 name size idx' e (Just k)
-  ExternStruct t name sargs _    -> do args' <- mapM mkTagsUExpr sargs
+  ExternStruct t name sargs _    -> do args' <- mapM mkTagsSExpr sargs
                                        k <- next
                                        return $ ExternStruct t name args' (Just k)
   GetField t id name             -> return $ GetField t id name

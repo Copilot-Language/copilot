@@ -40,7 +40,7 @@ data ExtFun = forall a . ExtFun
 
 data ExtStruct = ExtStruct
   { externStructName  :: Name
-  , externStructArgs  :: [UExpr]
+  , externStructArgs  :: [(Name, UExpr)]
   , externStructTag   :: Maybe Tag }
 
 --------------------------------------------------------------------------------

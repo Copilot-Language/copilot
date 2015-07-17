@@ -11,7 +11,7 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
-  , BitStruct (..)
+  , StructData (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
@@ -57,7 +57,7 @@ data Property = Property
 --------------------------------------------------------------------------------
 
 -- | Struct representation as a bit array.
-data BitStruct = BitStruct
+data StructData = StructData
   { structName       :: Name
   , structFields     :: [(Name, UExpr)] }
 
@@ -70,7 +70,7 @@ data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
-  , specProperties   :: [Property]
-  , specStructs      :: [BitStruct] }
+  , specProperties   :: [Property] }
+  --, specStructs      :: [StructData] }
 
 --------------------------------------------------------------------------------
