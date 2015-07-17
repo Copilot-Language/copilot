@@ -18,7 +18,7 @@ import Copilot.Core (Typed, Id, typeOf, impossible)
 --import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
-import Copilot.Language.Stream (Stream (..), Arg (..), StructArg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..))
 
 import Prelude hiding (id)
 import Data.IORef
@@ -113,6 +113,30 @@ mkProperty refMkId refStreams refMap (Property name guard) = do
 
 --------------------------------------------------------------------------------
 
+--{-# INLINE mkStruct #-}
+{-mkStruct
+  :: IORef Int
+  -> IORef (Map Core.Id)
+  -> IORef [Core.Stream]
+  -> StructData
+  -> IO Core.StructData
+mkStruct refMkId refStreams refMap (StructData name fields) = do
+    fields' <- mapM mkStructField fields
+    return $
+      Core.StructData
+        { Core.structName    = name
+        , Core.structFields  = fields' }
+
+    where
+
+    mkStructField :: String -> Arg -> IO (Core.Name, Core.UExpr)
+    mkStructField cs (Arg e) = do
+      w <- mkExpr refMkId refStreams refMap e
+      return (cs, $ Core.UExpr typeOf w)
+-}
+--------------------------------------------------------------------------------
+
+
 {-# INLINE mkExpr #-}
 mkExpr
   :: Typed a
@@ -190,7 +214,7 @@ mkExpr refMkId refStreams refMap = go
       ------------------------------------------------------
 
       ExternStruct cs sargs -> trace (show cs) $ do
-          args' <- mapM mkFunArg sargs
+          args' <- mapM (\(name, (Arg e)) -> (name, mkFunArg (Arg e))) sargs
           return $ Core.ExternStruct typeOf cs args' Nothing
 
       ------------------------------------------------------
@@ -230,11 +254,11 @@ mkExpr refMkId refStreams refMap = go
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
 
-  mkStructArg :: StructArg -> IO Core.SExpr
+  {-mkStructArg :: StructArg -> IO Core.SExpr
   mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
       w <- mkExpr refMkId refStreams refMap a
       return $ Core.SExpr n $ Core.UExpr typeOf w
-
+-}
 --------------------------------------------------------------------------------
 
 --{-# INLINE mkStruct #-}

@@ -36,7 +36,7 @@ data Stream :: * -> * where
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
   ExternStruct:: Typed a
-              => String -> [Arg] -> Stream a
+              => String -> [(String, Arg)] -> Stream a
   GetField    :: (Typed a, Typed b)
               => Stream a -> String -> Stream b
   Local       :: (Typed a, Typed b) 
