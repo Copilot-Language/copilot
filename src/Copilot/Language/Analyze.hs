@@ -147,11 +147,11 @@ analyzeExpr refStreams s = do
                                  SeenStruct-> go SeenStruct nodes' idx
       ExternStruct _ sargs -> case seenExt of
                                 NoExtern  ->
-                                  mapM_ (\(Arg a) -> go SeenStruct nodes' a) sargs
+                                  mapM_ (\(_, Arg a) -> go SeenStruct nodes' a) sargs
                                 SeenFun   -> throw NestedExternFun
                                 SeenArr   -> throw NestedArray
                                 SeenStruct->
-                                  mapM_ (\(Arg a) -> go SeenStruct nodes' a) sargs
+                                  mapM_ (\(_, Arg a) -> go SeenStruct nodes' a) sargs
       GetField e field    -> analyzeAppend refStreams dstn e () analyzeExpr --Copied from `Append` case
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
@@ -358,10 +358,10 @@ collectExts refStreams stream_ env_ = do
         return env' { externArrEnv = arr : externArrEnv env' }
 
       ExternStruct name sargs -> do
-        env' <- foldM (\env' (Arg arg_) -> go nodes env' arg_)
+        env' <- foldM (\env' (_, Arg arg_) -> go nodes env' arg_)
                   env sargs
         --let argTypes = map (\(Arg arg_) -> (n, getSimpleType arg_)) sargs
-        let argTypes = map (\(Arg arg_) -> getSimpleType arg_) sargs
+        let argTypes = map (\(_, Arg arg_) -> getSimpleType arg_) sargs
         let struct = (name, getSimpleType stream)
         return env' { externStructEnv = struct : externStructEnv env'
                     , externStructArgs = (name, argTypes) : externStructArgs env' }

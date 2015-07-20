@@ -214,14 +214,14 @@ mkExpr refMkId refStreams refMap = go
       ------------------------------------------------------
 
       ExternStruct cs sargs -> trace (show cs) $ do
-          args' <- mapM (\(name, (Arg e)) -> (name, mkFunArg (Arg e))) sargs
+          args' <- mapM (\(name, Arg e) -> mkStrArg (name, Arg e)) sargs
           return $ Core.ExternStruct typeOf cs args' Nothing
 
       ------------------------------------------------------
 
-      GetField _ field -> do
-        s <- mkStream refMkId refStreams refMap e0
-        return $ Core.GetField typeOf s field
+      GetField struct field -> do
+        --s <- mkStream refMkId refStreams refMap e0
+        return $ Core.GetField typeOf {-s-}struct field
         {-  ISSUE: UNLIKE APPEND, GETFIELD DOES NOT HAVE CONSISTENT RETURN TYPE
               --> NEED TO PROPERLY DEFINE GETFIELD IN EXPR
                 --> IMPLEMENT GETFIELD FROM CORE THROUGH LANGUAGE -}
@@ -253,6 +253,11 @@ mkExpr refMkId refStreams refMap = go
   mkFunArg (Arg e) = do
       w <- mkExpr refMkId refStreams refMap e
       return $ Core.UExpr typeOf w
+
+  mkStrArg :: (Core.Name, Arg) -> IO (Core.Name, Core.UExpr)
+  mkStrArg (name, Arg e) = do
+      w <- mkExpr refMkId refStreams refMap e
+      return $ (name, Core.UExpr typeOf w)
 
   {-mkStructArg :: StructArg -> IO Core.SExpr
   mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
