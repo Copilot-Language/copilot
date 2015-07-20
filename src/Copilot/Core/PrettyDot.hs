@@ -9,7 +9,7 @@
 
 module Copilot.Core.PrettyDot
   ( prettyPrintDot
-  , ppExprDot
+  , prettyPrintExprDot
   ) where
 
 import Copilot.Core
@@ -19,10 +19,6 @@ import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
 import Text.Printf
 
---------------------------------------------------------------------------------
-
-strmName :: Int -> Doc
-strmName id = text "s" <> int id
 
 --------------------------------------------------------------------------------
 
@@ -163,9 +159,9 @@ ppStream i
     <> text (printf "%s [label=\"++\",color=green, style=filled]\n" ((show $ i+1)::String))
     <> text (printf "%s -> %s\n" (show i::String) ((show $ i+1)::String))
     <> text (printf "%s [label=\"[%s]\",color=green, style=filled]\n" ((show $ i+2)::String) ((concat $ intersperse "," $ map (showWithType Haskell t) buffer )) ::String)
-    <> text (printf "%s -> %s\n" (show i::String) ((show $ i+2)::String))
+    <> text (printf "%s -> %s\n" (show (i+1)::String) ((show $ i+2)::String))
     <> r1, i1)
-    where (r1, i1) = ppExprDot (i+3) i e
+    where (r1, i1) = ppExprDot (i+3) (i+1) e
 --------------------------------------------------------------------------------
 
 ppTrigger :: Int -> Trigger -> (Doc, Int)
@@ -278,6 +274,13 @@ ppSpecDot i spec =
     bb = text "\n}\n"
 
 --------------------------------------------------------------------------------
+
+-- | Pretty-prints a Copilot expression.
+prettyPrintExprDot :: Expr a -> String
+prettyPrintExprDot s = render rr
+  where 
+    (r1,i1) = (ppExprDot 1 0 s)
+    rr = (text "digraph G {\nnode [shape=box]\n" $$ (text (printf "%s [label=\"file: \n?????\",color=red, style=filled]\n" (show 0))) <> r1 $$ text "\n}\n")
 
 -- | Pretty-prints a Copilot specification.
 prettyPrintDot :: Spec -> String
