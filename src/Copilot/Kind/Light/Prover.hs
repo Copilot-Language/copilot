@@ -7,7 +7,7 @@ module Copilot.Kind.Light.Prover
   , Options (..)
   , kInduction
   , yices, dReal, altErgo, metit, z3, cvc4
-  , Backend (..), SmtFormat
+  , Backend, SmtFormat
   , SmtLib, Tptp
   ) where
 
@@ -28,7 +28,7 @@ import Control.Applicative ((<$>), (<*))
 import Control.Monad (msum, unless, mzero)
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Maybe (MaybeT (..))
 
 import Data.Maybe (fromMaybe)
 import Data.Function (on)
@@ -134,7 +134,7 @@ metit installDir = Backend
   { name            = "MetiTarski"
   , cmd             = "metit"
   , cmdOpts         =
-      [ "--time", "5"
+      [ "--time", "30"
       , "--autoInclude"
       , "--tptp", installDir
       , "/dev/stdin"
@@ -238,6 +238,7 @@ getVars = nubBy' (compare `on` varName) . concatMap getExprVars
 
 getExprVars :: Expr a -> [VarDescr]
 getExprVars (Const _ _) = []
+getExprVars (ConstI _ _) = []
 getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
 getExprVars (Op1 _ _ e) = getExprVars e
 getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2

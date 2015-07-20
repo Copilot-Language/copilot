@@ -53,6 +53,7 @@ ppUExpr :: U Expr -> Doc
 ppUExpr (U e) = ppExpr e
 
 ppExpr :: Expr t -> Doc
+ppExpr (ConstI _ v)      = text . show $ v
 ppExpr (Const Integer v) = text . show $ v
 ppExpr (Const Bool    v) = text . show $ v
 ppExpr (Const Real    v) = text . show $ v

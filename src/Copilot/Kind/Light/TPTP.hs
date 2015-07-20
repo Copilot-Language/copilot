@@ -21,8 +21,8 @@ instance Show Tptp where
   show Null      = ""
 
 instance Show TptpExpr where
-  show (Bin expr1 op expr2) = "(" ++ show expr1 ++ op ++ show expr2 ++ ")"
-  show (Un op expr) = "(" ++ op ++ show expr ++ ")"
+  show (Bin expr1 op expr2) = "(" ++ show expr1 ++ " " ++ op ++ " " ++ show expr2 ++ ")"
+  show (Un op expr) = "(" ++ op ++ " " ++ show expr ++ ")"
   show (Atom atom) = atom
   show (Fun name args) = name ++ "(" ++ intercalate ", " (map show args) ++ ")"
 
@@ -49,9 +49,10 @@ uexpr (U e) = expr e
 
 expr :: Expr t -> TptpExpr
 
+expr (ConstI _ v)      = Atom $ show v
 expr (Const Integer v) = Atom $ show v
-expr (Const Bool b) = Atom $ if b then "true" else "false"
-expr (Const Real v) = Atom $ show v
+expr (Const Bool b)    = Atom $ if b then "true" else "false"
+expr (Const Real v)    = Atom $ show v
 
 expr (Ite _ cond expr1 expr2) = Bin (Bin (expr cond) "=>" (expr expr1))
   "&" (Bin (Un "~" (expr cond)) "=>" (expr expr2))
@@ -101,6 +102,7 @@ showOp2 = \case
   Add   -> "+"
   Sub   -> "-"
   Mul   -> "*"
+  Mod   -> "mod"
   FDiv  -> "/"
   Pow   -> "^"
 

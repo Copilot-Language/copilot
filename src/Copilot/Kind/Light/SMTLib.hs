@@ -47,6 +47,7 @@ uexpr (U e) = expr e
 
 expr :: Expr t -> SExpr String
 
+expr (ConstI _ v)      = atom (show v)
 expr (Const Integer v) = atom (show v)
 expr (Const Bool    b) = atom (if b then "true" else "false")
 expr (Const Real    v) = atom (show v)
@@ -92,6 +93,7 @@ expr (Op2 _ op e1 e2) =
       Add  -> "+"
       Sub  -> "-"
       Mul  -> "*"
+      Mod  -> "mod"
       FDiv -> "/"
       Pow  -> "^"
 

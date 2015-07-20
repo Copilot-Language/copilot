@@ -77,7 +77,7 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.BwNot ta -> notHandled ta "bwnot"
 
   -- Casting operator.
-  C.Cast ta tb -> castTo ta tb
+  C.Cast _ tb -> castTo tb
 
   where
     boolOp :: Op1 a Bool -> m (expr a) -> m (expr resT)
@@ -89,10 +89,10 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
     numOp op = (mkOp resT op) <$> (handleExpr resT e)
 
     -- Casting from Integer (Only possible solution)
-    castTo :: C.Type cta -> C.Type ctb -> m (expr resT)
-    castTo ta tb = casting tb $ \tb' -> case (tb', resT) of
+    castTo :: C.Type ctb -> m (expr resT)
+    castTo tb = casting tb $ \tb' -> case (tb', resT) of
       (Integer, Integer) -> handleExpr Integer e
-      (Real, Real)       -> notHandled ta "int2real"
+      (Real, Real)       -> handleExpr Real e
       _                  -> Err.impossible typeErrMsg
 
     notHandled ::
@@ -125,7 +125,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
   C.Mul _      -> numOp Mul
 
   -- Integral operators.
-  C.Mod ta    -> notHandled ta "mod"
+  C.Mod _    -> numOp Mod
   C.Div ta    -> notHandled ta "div"
 
   -- Fractional operators.

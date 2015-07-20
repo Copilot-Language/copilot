@@ -144,18 +144,25 @@ streamRec (C.Stream { C.streamId       = id
 
 expr :: Type t -> C.Expr a -> Trans (Expr t)
 
-expr t (C.Const ct v) = return $ case ct of
-  C.Int8   -> negify t ct v
-  C.Int16  -> negify t ct v
-  C.Int32  -> negify t ct v
-  C.Int64  -> negify t ct v
-  C.Float  -> negify t ct v
-  C.Double -> negify t ct v
+expr t (C.Const ct v) = return $ case (t, ct) of
+  (Integer, C.Int8)   -> negifyI t ct v
+  (Integer, C.Int16)  -> negifyI t ct v
+  (Integer, C.Int32)  -> negifyI t ct v
+  (Integer, C.Int64)  -> negifyI t ct v
+  (_, C.Float)  -> negify t ct v
+  (_, C.Double) -> negify t ct v
   _        -> Const t (cast t $ toDyn ct v)
-  where negify :: (Ord t, Num t) => Type t' -> C.Type t -> t -> Expr t'
+  where negify :: (Ord a, Num a) => Type b -> C.Type a -> a -> Expr b
         negify t ct v
             | v >= 0    = Const t (cast t $ toDyn ct v)
-            | otherwise = Op1 t Neg (Const t (cast t $ toDyn ct (-v)))
+            | otherwise = Op1 t Neg $ Const t (cast t $ toDyn ct (-v))
+        negifyI :: (Integral a, Integral b) => Type b -> C.Type a -> a -> Expr b
+        negifyI t _ v
+            | v >= 0    = ConstI t $ toInteger v
+            -- TODO(chathhorn): somehow handle this in a cleaner way.
+            -- Flipping the sign can take the value out of the representable
+            -- range in the case of fixed-width ints.
+            | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
 
 expr t (C.Label _ _ e) = expr t e
 

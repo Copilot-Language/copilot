@@ -39,6 +39,7 @@ data SeqIndex = Fixed Integer | Var Offset
 
 data Expr t where
   Const  :: Type t -> t -> Expr t
+  ConstI :: Integral t => Type t -> Integer -> Expr t
   Ite    :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
   Op1    :: Type t -> Op1 a t -> Expr a -> Expr t
   Op2    :: Type t -> Op2 a b t -> Expr a -> Expr b -> Expr t
@@ -81,6 +82,7 @@ data IL = IL
 
 typeOf :: Expr a -> Type a
 typeOf e = case e of
+  ConstI t _       -> t
   Const  t _       -> t
   Ite    t _ _ _   -> t
   Op1    t _ _     -> t
@@ -99,6 +101,7 @@ iconst n = Const Integer (toInteger n)
 
 evalAt :: SeqIndex -> Expr a -> Expr a
 evalAt _ (Const t e) = Const t e
+evalAt _ (ConstI t e) = ConstI t e
 evalAt i (Op1 t op e) = Op1 t op (evalAt i e)
 evalAt i (Op2 t op e1 e2) = Op2 t op (evalAt i e1) (evalAt i e2)
 evalAt i (Ite t c e1 e2) = Ite t (evalAt i c) (evalAt i e1) (evalAt i e2)

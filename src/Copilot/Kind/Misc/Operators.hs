@@ -8,40 +8,41 @@ module Copilot.Kind.Misc.Operators where
 
 data Op1 a b where
   Not   :: Op1 Bool Bool
-  Neg   :: Op1 t t
-  Abs   :: Op1 t t
-  Exp   :: Op1 t t
-  Sqrt  :: Op1 t t
-  Log   :: Op1 t t
-  Sin   :: Op1 t t
-  Tan   :: Op1 t t
-  Cos   :: Op1 t t
-  Asin  :: Op1 t t
-  Atan  :: Op1 t t
-  Acos  :: Op1 t t
-  Sinh  :: Op1 t t
-  Tanh  :: Op1 t t
-  Cosh  :: Op1 t t
-  Asinh :: Op1 t t
-  Atanh :: Op1 t t
-  Acosh :: Op1 t t
+  Neg   :: Op1 a a
+  Abs   :: Op1 a a
+  Exp   :: Op1 a a
+  Sqrt  :: Op1 a a
+  Log   :: Op1 a a
+  Sin   :: Op1 a a
+  Tan   :: Op1 a a
+  Cos   :: Op1 a a
+  Asin  :: Op1 a a
+  Atan  :: Op1 a a
+  Acos  :: Op1 a a
+  Sinh  :: Op1 a a
+  Tanh  :: Op1 a a
+  Cosh  :: Op1 a a
+  Asinh :: Op1 a a
+  Atanh :: Op1 a a
+  Acosh :: Op1 a a
 
 data Op2 a b c where
   Eq     :: Op2 a    a    Bool
   And    :: Op2 Bool Bool Bool
   Or     :: Op2 Bool Bool Bool
 
-  Le     :: (Num t) => Op2 t t Bool
-  Lt     :: (Num t) => Op2 t t Bool
-  Ge     :: (Num t) => Op2 t t Bool
-  Gt     :: (Num t) => Op2 t t Bool
+  Le     :: (Num a) => Op2 a a Bool
+  Lt     :: (Num a) => Op2 a a Bool
+  Ge     :: (Num a) => Op2 a a Bool
+  Gt     :: (Num a) => Op2 a a Bool
 
-  Add    :: (Num t) => Op2 t t t
-  Sub    :: (Num t) => Op2 t t t
-  Mul    :: (Num t) => Op2 t t t
-  FDiv   :: (Num t) => Op2 t t t
+  Add    :: (Num a) => Op2 a a a
+  Sub    :: (Num a) => Op2 a a a
+  Mul    :: (Num a) => Op2 a a a
+  Mod    :: (Num a) => Op2 a a a
+  FDiv   :: (Num a) => Op2 a a a
 
-  Pow    :: (Num t) => Op2 t t t
+  Pow    :: (Num a) => Op2 a a a
 
 -------------------------------------------------------------------------------
 
@@ -78,6 +79,7 @@ instance Show (Op2 a b c) where
     Add  -> "+"
     Sub  -> "-"
     Mul  -> "*"
+    Mod  -> "mod"
     FDiv -> "/"
     Pow  -> "^"
 
