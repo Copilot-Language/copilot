@@ -85,3 +85,4 @@ library
     Copilot.Core.Type.Read
     Copilot.Core.Type.Uninitialized
     Copilot.Core.PrettyPrint
+    Copilot.Core.PrettyDot
