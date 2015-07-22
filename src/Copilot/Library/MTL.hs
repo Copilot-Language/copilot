@@ -24,8 +24,7 @@ eventually l u clk dist s = res clk s ((u `P.div` dist) + 1)
   maxes = (clk + (constant u))
   res _ _ 0 = false
   res c s k =
-    (c <= maxes) &&
-    (mux (mins <= c) (s || (nextRes c s k)) (nextRes c s k))
+    (c <= maxes) && (((mins <= c) && s) || (nextRes c s k))
   nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
 
 -- EventuallyPrev: True at time t iff s is true at some time t',
@@ -38,8 +37,7 @@ eventuallyPrev l u clk dist s = res clk s ((u `P.div` dist) + 1)
   maxes = (clk - (constant l))
   res _ _ 0 = false
   res c s k =
-    (mins <= c) &&
-    (mux (c <= maxes) (s || (nextRes c s k)) (nextRes c s k))
+    (mins <= c) && (((c <= maxes) && s) || (nextRes c s k))
   nextRes c s k = res ([0] ++ c) ([False] ++ s) (k - 1)
 
 -- Always: True at time t iff s is true at all times t'
@@ -52,8 +50,7 @@ always l u clk dist s = res clk s ((u `P.div` dist) + 1)
   maxes = (clk + (constant u)) 
   res _ _ 0 = true 
   res c s k = 
-    (c > maxes) ||
-    (mux (mins <= c) (s && (nextRes c s k)) (nextRes c s k))
+    (c > maxes) || ((nextRes c s k) && ((mins <= c) ==> s))
   nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
 
 -- AlwaysBeen: True at time t iff s is true at all times t'
@@ -66,8 +63,7 @@ alwaysBeen l u clk dist s = res clk s ((u `P.div` dist) + 1)
   maxes = (clk - (constant l))
   res _ _ 0 = true
   res c s k =
-    (c < mins) ||
-    (mux (c <= maxes) (s && (nextRes c s k)) (nextRes c s k))
+    (c < mins) || ((nextRes c s k) && ((c <= maxes) ==> s))
   nextRes c s k = res ([0] ++ c) ([True] ++ s) (k - 1)
 
 -- Until: True at time t iff there exists a d with l <= d <= u
@@ -82,9 +78,7 @@ until l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   res _ _ _ 0 = false
   res c s s' k =
     (c <= maxes) &&
-    (mux (mins <= c)
-      (s' || (s && (nextRes c s s' k)))
-      (s && (nextRes c s s' k)))
+    ((mins <= c && s') || (s && nextRes c s s' k))
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Since: True at time t iff there exists a d with l <= d <= u
@@ -99,9 +93,7 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   res _ _ _ 0 = false 
   res c s s' k =
     (mins <= c) &&
-    (mux (c <= maxes)
-      (s' || (s && (nextRes c s s' k)))
-      (s && (nextRes c s s' k)))
+    ((c <= maxes && s') || (s && (nextRes c s s' k)))
   nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([False] ++ s') (k - 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
@@ -157,9 +149,7 @@ matchingUntil l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   res _ _ _ 0 = false
   res c s s' k =
     (c <= maxes) &&
-    (mux (mins <= c)
-      (s && (s' || (nextRes c s s' k)))
-      (s && (nextRes c s s' k)))
+    s && ((mins <= c && s') || (nextRes c s s' k))
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Matching Since: Same semantics as Since, except with both s1 and s0
