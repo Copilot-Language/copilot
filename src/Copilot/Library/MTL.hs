@@ -77,8 +77,7 @@ until l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   maxes = (clk + (constant u))
   res _ _ _ 0 = false
   res c s s' k =
-    (c <= maxes) &&
-    ((mins <= c && s') || (s && nextRes c s s' k))
+    (c <= maxes) && ((mins <= c && s') || (s && nextRes c s s' k))
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Since: True at time t iff there exists a d with l <= d <= u
@@ -92,8 +91,7 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
   maxes = (clk - (constant l))
   res _ _ _ 0 = false 
   res c s s' k =
-    (mins <= c) &&
-    ((c <= maxes && s') || (s && (nextRes c s s' k)))
+    (mins <= c) && ((c <= maxes && s') || (s && (nextRes c s s' k)))
   nextRes c s s' k = res ([0] ++ c) ([True] ++ s) ([False] ++ s') (k - 1)
 
 -- Release: true at time t iff for all d with l <= d <= u where there
@@ -110,7 +108,7 @@ release l u clk dist s0 s1 = res clk s1 iter
   res c s k = 
     mux (mins > c || c > maxes || s)
       (nextRes c s k)
-      (res' clk s0 iter c)
+      (res' clk s0 (iter - k) c)
   nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
   res' _ _ 0 _ = false
   res' c s k upl = ((c < upl) && s) || (nextRes' c s k upl)
@@ -130,7 +128,7 @@ trigger l u clk dist s0 s1 = res clk s1 iter
   res c s k =
     mux (mins > c || c > maxes || s)
       (nextRes c s k)
-      (res' clk s0 iter c)
+      (res' clk s0 (iter - k) c)
   nextRes c s k = res ([0] ++ c) ([True] ++ s) (k - 1)
   res' _ _ 0 _ = false
   res' c s k lowl = ((c > lowl) && s) || (nextRes' c s k lowl)
@@ -171,7 +169,7 @@ matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
   res c s s' k = 
     mux (mins > c || c > maxes || s' || s)
       (nextRes c s s' k)
-      (res' clk s0 iter c)
+      (res' clk s0 (iter - k) c)
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
   res' _ _ 0 _ = false
   res' c s k upl = ((c < upl) && s) || (nextRes' c s k upl)
