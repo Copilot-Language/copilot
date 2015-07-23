@@ -51,6 +51,7 @@ library
     , Copilot.Library.Utils
     , Copilot.Library.Voting
     , Copilot.Library.Stacks
+    , Copilot.Library.MTL
 
   ghc-options:
     -fwarn-tabs
