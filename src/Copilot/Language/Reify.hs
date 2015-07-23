@@ -220,8 +220,8 @@ mkExpr refMkId refStreams refMap = go
       ------------------------------------------------------
 
       GetField struct field -> do
-        --s <- mkStream refMkId refStreams refMap e0
-        return $ Core.GetField typeOf {-s-}struct field
+        s <- go struct
+        return $ Core.GetField typeOf typeOf s field
         {-  ISSUE: UNLIKE APPEND, GETFIELD DOES NOT HAVE CONSISTENT RETURN TYPE
               --> NEED TO PROPERLY DEFINE GETFIELD IN EXPR
                 --> IMPLEMENT GETFIELD FROM CORE THROUGH LANGUAGE -}

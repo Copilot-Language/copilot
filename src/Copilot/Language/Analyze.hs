@@ -16,7 +16,7 @@ module Copilot.Language.Analyze
 
 import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
-import Copilot.Language.Stream (Stream (..), Arg (..), StructArg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
 
@@ -152,7 +152,7 @@ analyzeExpr refStreams s = do
                                 SeenArr   -> throw NestedArray
                                 SeenStruct->
                                   mapM_ (\(_, Arg a) -> go SeenStruct nodes' a) sargs
-      GetField e field    -> analyzeAppend refStreams dstn e () analyzeExpr --Copied from `Append` case
+      GetField e _        -> analyzeAppend refStreams dstn e () analyzeExpr --Copied from `Append` case
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -366,6 +366,8 @@ collectExts refStreams stream_ env_ = do
         return env' { externStructEnv = struct : externStructEnv env'
                     , externStructArgs = (name, argTypes) : externStructArgs env' }
 
+      GetField _ _           -> return env
+
       Local e _              -> go nodes env e 
       Var _                  -> return env
       Op1 _ e                -> go nodes env e 
@@ -377,7 +379,7 @@ collectExts refStreams stream_ env_ = do
       Label _ e              -> go nodes env e 
 
 --------------------------------------------------------------------------------
-
+{-
 getArgName :: forall a. C.Typed a => Stream a -> String
 getArgName arg_stream =
   case arg_stream of
@@ -386,7 +388,7 @@ getArgName arg_stream =
     ExternArray cs _ _ _ -> cs
     ExternStruct cs _    -> cs
     _                    -> ""
-
+-}
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
 
