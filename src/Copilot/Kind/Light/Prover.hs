@@ -166,11 +166,11 @@ data SolverId = Base | Step
 
 getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint], Bool)
 getModels assumptionIds toCheckIds = do
-  IL {modelInit, modelRec, properties, bounds} <- spec <$> get
+  IL {modelInit, modelRec, properties, bounds, inductive} <- spec <$> get
   let assumptions = selectProps (assumptionIds ++ bounds) properties
       modelRec'   = modelRec ++ assumptions
       toCheck     = selectProps toCheckIds properties
-  return (modelInit, modelRec', toCheck, null modelRec)
+  return (modelInit, modelRec', toCheck, inductive)
 
 getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 getSolver sid = do
@@ -268,7 +268,7 @@ kInduction' k s as ps =
 induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b Output
 induction assumptionIds toCheckIds k = do
 
-  (modelInit, modelRec, toCheck, noStreams) <- getModels assumptionIds toCheckIds
+  (modelInit, modelRec, toCheck, inductive) <- getModels assumptionIds toCheckIds
 
   let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
       baseInv = [evalAt (Fixed k) m | m <- toCheck]
@@ -280,8 +280,8 @@ induction assumptionIds toCheckIds k = do
   entailment Base (modelInit ++ base) baseInv >>= \case
     Sat     -> invalid ("base case failed for " ++ proofKind k)
     Unknown -> unknown
-    Unsat   -> if noStreams
-      then valid ("proved with " ++ proofKind k)
+    Unsat   ->
+      if not inductive then valid ("proved without induction")
       else entailment Step step stepInv >>= \case
         Sat     -> unknown
         Unknown -> unknown

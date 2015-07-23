@@ -51,7 +51,7 @@ expr :: Expr t -> TptpExpr
 
 expr (ConstI _ v)      = Atom $ show v
 expr (Const Integer v) = Atom $ show v
-expr (Const Bool b)    = Atom $ if b then "true" else "false"
+expr (Const Bool b)    = Atom $ if b then "$true" else "$false"
 expr (Const Real v)    = Atom $ show v
 
 expr (Ite _ cond expr1 expr2) = Bin (Bin (expr cond) "=>" (expr expr1))

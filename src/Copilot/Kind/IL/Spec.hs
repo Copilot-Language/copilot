@@ -76,6 +76,7 @@ data IL = IL
   , modelRec    :: [Constraint]
   , properties  :: Map PropId Constraint
   , bounds      :: [PropId]
+  , inductive   :: Bool
   }
 
 --------------------------------------------------------------------------------

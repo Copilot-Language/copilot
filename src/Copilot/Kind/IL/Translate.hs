@@ -44,6 +44,9 @@ ncExternFun n = "_" ++ n
 ncUnhandledOp :: String -> String
 ncUnhandledOp = id
 
+ncFresh :: Integer -> SeqId
+ncFresh n = "f" ++ show n
+
 --------------------------------------------------------------------------------
 
 -- | Translates a Copilot specification to an IL specification
@@ -70,6 +73,7 @@ translate spec = il { bounds = bounds }
             , modelRec = mainConstraints ++ localConstraints
             , properties
             , bounds = []
+            , inductive = not $ null specStreams
             }
 
 addBounds :: C.Spec -> ([PropId], C.Spec)
@@ -159,9 +163,9 @@ expr t (C.Const ct v) = return $ case (t, ct) of
         negifyI :: (Integral a, Integral b) => Type b -> C.Type a -> a -> Expr b
         negifyI t _ v
             | v >= 0    = ConstI t $ toInteger v
-            -- TODO(chathhorn): somehow handle this in a cleaner way.
-            -- Flipping the sign can take the value out of the representable
-            -- range in the case of fixed-width ints.
+            -- TODO(chathhorn): somehow handle this in a cleaner way. Flipping
+            -- the sign can take the value out of the representable range in
+            -- the case of fixed-width ints.
             | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
 
 expr t (C.Label _ _ e) = expr t e
@@ -170,8 +174,7 @@ expr t (C.Drop _ k id) = return $ SVal t (ncSeq id) (_n_plus k)
 
 expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
   ea' <- expr ta' ea
-  newLocalVar
-    (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
+  newLocalVar (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
   expr t eb
 
 expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
@@ -223,7 +226,11 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   cond' <- expr Bool cond
   e1'   <- expr t    e1
   e2'   <- expr t    e2
-  return $ Ite t cond' e1' e2'
+  f     <- fresh
+  let v = SVal t f _n_
+  newLocalVar $ Op2 Bool Or (Op1 Bool Not cond') (Op2 Bool Eq v e1')
+  newLocalVar $ Op2 Bool Or cond' (Op2 Bool Eq v e2')
+  return v
 
 --------------------------------------------------------------------------------
 
@@ -236,18 +243,26 @@ argToString (U (Op2 _ Add e1 e2)) = argToString (U e1) ++ argToString (U e2)
 argToString (U _) = error "translating arg to string (should never happen)"
 
 data TransST = TransST
-  { _localVarsConstraints :: [Constraint] }
+  { localVarsConstraints :: [Constraint]
+  , nextFresh            :: Integer
+  }
 
 type Trans = State TransST
 
 newLocalVar :: Constraint -> Trans ()
 newLocalVar c =
-  modify $ \st -> st {_localVarsConstraints = c : _localVarsConstraints st}
+  modify $ \st -> st {localVarsConstraints = c : localVarsConstraints st}
+
+fresh :: Trans String
+fresh = do
+  modify $ \st -> st {nextFresh = nextFresh st + 1}
+  n <- nextFresh <$> get
+  return $ ncFresh n
 
 getLocalVarsConstraints :: Trans [Constraint]
-getLocalVarsConstraints = _localVarsConstraints <$> get
+getLocalVarsConstraints = localVarsConstraints <$> get
 
 runTrans :: Trans a -> a
-runTrans m = evalState m $ TransST []
+runTrans m = evalState m $ TransST [] 0
 
 --------------------------------------------------------------------------------
