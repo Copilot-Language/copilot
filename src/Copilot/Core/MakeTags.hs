@@ -136,7 +136,7 @@ mkTagsExpr e0 = case e0 of
   ExternStruct t name sargs _    -> do args' <- mapM mkTagsSExpr sargs
                                        k <- next
                                        return $ ExternStruct t name args' (Just k)
-  GetField t id name             -> return $ GetField t id name
+  GetField ts tf id name         -> return $ GetField ts tf id name
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)

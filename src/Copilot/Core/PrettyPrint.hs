@@ -40,7 +40,7 @@ ppExpr e0 = case e0 of
                                   <> ppExpr idx <> rbrack
   ExternStruct _ name args _ -> text "struct" <+> doubleQuotes (text name <> lbrace
                                     <> vcat (punctuate (semi <> space) (map ppSExpr $ args)) <> rbrace)
-  GetField _ _ name          -> text "field" <+> doubleQuotes (text name)
+  GetField _ _ _ name        -> text "field" <+> doubleQuotes (text name)
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
                                           <+> ppExpr e1 $$ text "in" <+> ppExpr e2
   Var _ name                 -> text "var" <+> doubleQuotes (text name)

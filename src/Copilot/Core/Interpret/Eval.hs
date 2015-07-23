@@ -174,7 +174,7 @@ evalExpr_ k e0 locs strms = case e0 of
   ExternArray _ _ name size idx xs _ -> evalArray k name evalIdx xs size
     where evalIdx = evalExpr_ k idx locs strms
   ExternStruct _ _ _ _   -> error "unimplemented"
-  GetField _ _ _         -> error "unimplemented"
+  GetField _ _ _ _       -> error "unimplemented"
   Op1 op e1                          -> 
     let ev1 = evalExpr_ k e1 locs strms in 
     let op1 = evalOp1 op                in
