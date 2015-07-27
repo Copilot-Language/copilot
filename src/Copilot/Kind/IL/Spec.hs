@@ -41,8 +41,8 @@ data Expr t where
   Const  :: Type t -> t -> Expr t
   ConstI :: Integral t => Type t -> Integer -> Expr t
   Ite    :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
-  Op1    :: Type t -> Op1 a t -> Expr a -> Expr t
-  Op2    :: Type t -> Op2 a b t -> Expr a -> Expr b -> Expr t
+  Op1    :: Type t -> Op1 t -> Expr t -> Expr t
+  Op2    :: Type t -> Op2 a t -> Expr a -> Expr a -> Expr t
   SVal   :: Type t -> SeqId -> SeqIndex -> Expr t
   FunApp :: Type t -> String -> [U Expr] -> Expr t
 
@@ -74,8 +74,7 @@ data SeqDescr = forall t . SeqDescr
 data IL = IL
   { modelInit   :: [Constraint]
   , modelRec    :: [Constraint]
-  , properties  :: Map PropId Constraint
-  , bounds      :: [PropId]
+  , properties  :: Map PropId ([Constraint], Constraint)
   , inductive   :: Bool
   }
 

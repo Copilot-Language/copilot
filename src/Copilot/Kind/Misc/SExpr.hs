@@ -15,6 +15,7 @@ import Control.Monad
 data SExpr a = Atom a
              | List [SExpr a]
 
+blank        = Atom ""
 atom         = Atom                 -- s
 unit         = List []              -- ()
 singleton a  = List [Atom a]        -- (s)

@@ -8,30 +8,25 @@ module Copilot.Kind.IL.Translate ( translate ) where
 import Copilot.Kind.IL.Spec
 import Copilot.Kind.Misc.Cast
 import Copilot.Kind.CoreUtils.Operators
-import Copilot.Kind.CoreUtils.Expr
 
 import qualified Copilot.Core as C
 
 import qualified Data.Map.Strict as Map
 
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (<*))
 import Control.Monad.State
 
 import Data.Char
-import Data.List (foldl')
 
 import Text.Printf
 
-import Copilot.Kind.Misc.Utils (nubBy')
-import Data.Function (on)
-
 --------------------------------------------------------------------------------
 
--- 'nc' stands for **naming conventions**
+-- 'nc' stands for naming convention.
 ncSeq :: C.Id -> SeqId
 ncSeq = printf "s%d"
 
--- We assume all local variables have distinct names whatever their scopes are
+-- We assume all local variables have distinct names whatever their scopes.
 ncLocal :: C.Name -> SeqId
 ncLocal s = "l" ++ dropWhile (not . isNumber) s
 
@@ -52,74 +47,46 @@ ncFresh n = "f" ++ show n
 -- | Translates a Copilot specification to an IL specification
 
 translate :: C.Spec -> IL
-translate spec = il { bounds = bounds }
-  where (bounds, spec') = addBounds spec
-        il = translate' spec'
-        translate' (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
+translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
 
-          let modelInit = concatMap streamInit specStreams
+  let modelInit = concatMap streamInit specStreams
 
-          mainConstraints <- mapM streamRec specStreams
-          properties <- Map.fromList <$>
-            forM specProperties
-              (\(C.Property {C.propertyName, C.propertyExpr}) -> do
-                e' <- expr Bool propertyExpr
-                return (propertyName, e'))
+  mainConstraints <- mapM streamRec specStreams
 
-          localConstraints <- getLocalVarsConstraints
+  localConstraints <- getLocalConstraints
+  properties <- Map.fromList <$>
+    forM specProperties
+      (\(C.Property {C.propertyName, C.propertyExpr}) -> do
+        e' <- expr Bool propertyExpr
+        propConds <- getLocalConstraints
+        return (propertyName, (propConds, e')))
 
-          return IL
-            { modelInit
-            , modelRec = mainConstraints ++ localConstraints
-            , properties
-            , bounds = []
-            , inductive = not $ null specStreams
-            }
+  return IL
+    { modelInit
+    , modelRec = mainConstraints ++ localConstraints
+    , properties
+    , inductive = not $ null specStreams
+    }
 
-addBounds :: C.Spec -> ([PropId], C.Spec)
-addBounds spec@(C.Spec { C.specStreams, C.specProperties }) =
-  (map propName properties, spec {C.specProperties = specProperties ++ properties})
-  where
-    properties :: [C.Property]
-    properties = foldl' (++) [] (map seqBound specStreams)
-      ++ foldl' (++) [] (map extBound (nubBy' (compare `on` fst) $ foldCSpecExprs getExterns spec))
-    seqBound :: C.Stream -> [C.Property]
-    seqBound (C.Stream { C.streamId, C.streamExprType }) = case streamExprType of
-      C.Int8    -> seqBound' C.Int8
-      C.Int16   -> seqBound' C.Int16
-      C.Int32   -> seqBound' C.Int32
-      C.Int64   -> seqBound' C.Int64
-      C.Word8   -> seqBound' C.Word8
-      C.Word16  -> seqBound' C.Word16
-      C.Word32  -> seqBound' C.Word32
-      C.Word64  -> seqBound' C.Word64
-      _         -> []
-      where seqBound' :: (Ord a, Bounded a) => C.Type a -> [C.Property]
-            seqBound' t = bound (ncSeq streamId) (C.Drop t 0 streamId) t
-    extBound :: (String, U2 C.Expr C.Type) -> [C.Property]
-    extBound (name, U2 e t) = case t of
-      C.Int8    -> extBound' e C.Int8
-      C.Int16   -> extBound' e C.Int16
-      C.Int32   -> extBound' e C.Int32
-      C.Int64   -> extBound' e C.Int64
-      C.Word8   -> extBound' e C.Word8
-      C.Word16  -> extBound' e C.Word16
-      C.Word32  -> extBound' e C.Word32
-      C.Word64  -> extBound' e C.Word64
-      _         -> []
-      where extBound' :: (Ord a, Bounded a) => C.Expr a -> C.Type a -> [C.Property]
-            extBound' = bound (ncExternVar name)
-    bound :: (Ord a, Bounded a) => String -> C.Expr a -> C.Type a -> [C.Property]
-    bound name var t = [C.Property (name ++ "_bounds")
-      $ C.Op2 C.And
-      (C.Op2 (C.Le t) (C.Const t minBound) var)
-      (C.Op2 (C.Ge t) (C.Const t maxBound) var)]
-    getExterns :: C.Expr a -> [(String, U2 C.Expr C.Type)]
-    getExterns e = case e of
-      (C.ExternVar t name _)     -> [(name, U2 e t)]
-      (C.ExternFun t name _ _ _) -> [(name, U2 e t)]
-      _                          -> []
-    propName (C.Property name _) = name
+bound :: Expr b -> C.Type a -> Trans ()
+bound s t = case typeOf s of
+  Integer -> case t of
+    C.Int8    -> bound' s C.Int8
+    C.Int16   -> bound' s C.Int16
+    C.Int32   -> bound' s C.Int32
+    C.Int64   -> bound' s C.Int64
+    C.Word8   -> bound' s C.Word8
+    C.Word16  -> bound' s C.Word16
+    C.Word32  -> bound' s C.Word32
+    C.Word64  -> bound' s C.Word64
+    _         -> return ()
+  _         -> return ()
+  where bound' :: (Num b, Ord a, Bounded a) => Expr b -> C.Type a -> Trans ()
+        bound' var t = localConstraint (Op2 Bool And
+            (Op2 Bool Le (Const (typeOf var) $
+              cast (typeOf var) $ toDyn t minBound) var)
+            (Op2 Bool Ge (Const (typeOf var) $
+              cast (typeOf var) $ toDyn t maxBound) var))
 
 streamInit :: C.Stream -> [Constraint]
 streamInit (C.Stream { C.streamId       = id
@@ -140,11 +107,12 @@ streamRec (C.Stream { C.streamId       = id
                     , C.streamBuffer   = b
                     , C.streamExprType = ty})
   = casting ty $ \ty' -> do
+      let s = SVal ty' (ncSeq id) (_n_plus $ length b)
+      bound s ty
       e' <- expr ty' e
-      return $ Op2 Bool Eq (SVal ty' (ncSeq id) (_n_plus $ length b)) e'
+      return $ Op2 Bool Eq s e'
 
 --------------------------------------------------------------------------------
-
 
 expr :: Type t -> C.Expr a -> Trans (Expr t)
 
@@ -153,9 +121,9 @@ expr t (C.Const ct v) = return $ case (t, ct) of
   (Integer, C.Int16)  -> negifyI t ct v
   (Integer, C.Int32)  -> negifyI t ct v
   (Integer, C.Int64)  -> negifyI t ct v
-  (_, C.Float)  -> negify t ct v
-  (_, C.Double) -> negify t ct v
-  _        -> Const t (cast t $ toDyn ct v)
+  (_, C.Float)        -> negify t ct v
+  (_, C.Double)       -> negify t ct v
+  _                   -> Const t (cast t $ toDyn ct v)
   where negify :: (Ord a, Num a) => Type b -> C.Type a -> a -> Expr b
         negify t ct v
             | v >= 0    = Const t (cast t $ toDyn ct v)
@@ -174,24 +142,27 @@ expr t (C.Drop _ k id) = return $ SVal t (ncSeq id) (_n_plus k)
 
 expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
   ea' <- expr ta' ea
-  newLocalVar (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
+  localConstraint (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
   expr t eb
 
 expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
 
-expr t (C.ExternVar _ name _) = return $ SVal t (ncExternVar name) _n_
+expr t (C.ExternVar ct name _) = bound s ct >> return s
+  where s = SVal t (ncExternVar name) _n_
 
-expr t (C.ExternFun _ name args _ _) = do
+expr t (C.ExternFun ct name args _ _) = do
   args' <- mapM trArg args
-  return $ FunApp t (ncExternFun name) args'
-  where
-    trArg (C.UExpr {C.uExprExpr, C.uExprType}) = casting uExprType $ \ta ->
-      U <$> expr ta uExprExpr
+  let s = FunApp t (ncExternFun name) args'
+  bound s ct
+  return s
+  where trArg (C.UExpr {C.uExprExpr, C.uExprType}) = casting uExprType $ \ta ->
+          U <$> expr ta uExprExpr
 
 -- Arrays and functions are treated the same way
-expr t (C.ExternArray _ tb name _ ind _ _) = casting tb $ \_ -> do
-  ind' <- U <$> expr Integer ind
-  return $ FunApp t (ncExternFun name) [ind']
+expr t (C.ExternArray ta tb name _ ind _ _) =
+  expr t (C.ExternFun tb name [C.UExpr ta ind] Nothing Nothing)
+
+expr t (C.Op1 (C.Sqrt ta) e) = expr t (C.Op2 (C.Pow ta) e (C.Const ta 0.5))
 
 expr t (C.Op1 (C.Sign ta) e) = case ta of
   C.Int8   -> trSign t ta e
@@ -227,10 +198,10 @@ expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   e1'   <- expr t    e1
   e2'   <- expr t    e2
   f     <- fresh
-  let v = SVal t f _n_
-  newLocalVar $ Op2 Bool Or (Op1 Bool Not cond') (Op2 Bool Eq v e1')
-  newLocalVar $ Op2 Bool Or cond' (Op2 Bool Eq v e2')
-  return v
+  let s = SVal t f _n_
+  localConstraint $ Op2 Bool Or (Op1 Bool Not cond') (Op2 Bool Eq s e1')
+  localConstraint $ Op2 Bool Or cond' (Op2 Bool Eq s e2')
+  return s
 
 --------------------------------------------------------------------------------
 
@@ -243,15 +214,15 @@ argToString (U (Op2 _ Add e1 e2)) = argToString (U e1) ++ argToString (U e2)
 argToString (U _) = error "translating arg to string (should never happen)"
 
 data TransST = TransST
-  { localVarsConstraints :: [Constraint]
-  , nextFresh            :: Integer
+  { localConstraints :: [Constraint]
+  , nextFresh        :: Integer
   }
 
 type Trans = State TransST
 
-newLocalVar :: Constraint -> Trans ()
-newLocalVar c =
-  modify $ \st -> st {localVarsConstraints = c : localVarsConstraints st}
+localConstraint :: Constraint -> Trans ()
+localConstraint c =
+  modify $ \st -> st {localConstraints = c : localConstraints st}
 
 fresh :: Trans String
 fresh = do
@@ -259,8 +230,9 @@ fresh = do
   n <- nextFresh <$> get
   return $ ncFresh n
 
-getLocalVarsConstraints :: Trans [Constraint]
-getLocalVarsConstraints = localVarsConstraints <$> get
+getLocalConstraints :: Trans [Constraint]
+getLocalConstraints = (localConstraints <$> get) <*
+  (modify $ \st -> st {localConstraints = []})
 
 runTrans :: Trans a -> a
 runTrans m = evalState m $ TransST [] 0

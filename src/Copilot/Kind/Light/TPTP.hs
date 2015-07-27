@@ -69,7 +69,7 @@ expr (SVal _ f ix) = case ix of
       Fixed i -> Atom $ f ++ "_" ++ show i
       Var off -> Atom $ f ++ "_n" ++ show off
 
-showOp1 :: Op1 a b -> String
+showOp1 :: Op1 a -> String
 showOp1 = \case
   Not   -> "~"
   Neg   -> "-"
@@ -90,7 +90,7 @@ showOp1 = \case
   Atanh -> "arctanh"
   Acosh -> "arccosh"
 
-showOp2 :: Op2 a b c -> String
+showOp2 :: Op2 a b -> String
 showOp2 = \case
   Eq    -> "="
   Le    -> "<="

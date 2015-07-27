@@ -30,6 +30,7 @@ instance SmtFormat SmtLib where
   push = SmtLib $ node "push" [atom "1"]
   pop = SmtLib $ node "pop" [atom "1"]
   checkSat = SmtLib $ singleton "check-sat"
+  setLogic "" = SmtLib $ blank
   setLogic l = SmtLib $ node "set-logic" [atom l]
   declFun name retTy args = SmtLib $
     node "declare-fun" [atom name, (list $ map (atom . usmtTy) args), atom (smtTy retTy)]

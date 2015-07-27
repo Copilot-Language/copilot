@@ -41,7 +41,7 @@ handleOp1 ::
   -- A function to deal with a operators not handled by copilot-kind
   (UnhandledOp1 -> m (expr resT)) ->
   -- The Op1 constructor of the 'expr' type
-  (forall t a . Type t -> Op1 a t -> expr a -> expr t) ->
+  (forall t . Type t -> Op1 t -> expr t -> expr t) ->
 
   m (expr resT)
 
@@ -80,12 +80,12 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
   C.Cast _ tb -> castTo tb
 
   where
-    boolOp :: Op1 a Bool -> m (expr a) -> m (expr resT)
+    boolOp :: Op1 Bool -> m (expr Bool) -> m (expr resT)
     boolOp op e = case resT of
       Bool -> (mkOp resT op) <$> e
       _    -> Err.impossible typeErrMsg
 
-    numOp :: Op1 resT resT -> m (expr resT)
+    numOp :: Op1 resT -> m (expr resT)
     numOp op = (mkOp resT op) <$> (handleExpr resT e)
 
     -- Casting from Integer (Only possible solution)
@@ -109,7 +109,7 @@ handleOp2 ::
   (C.Op2 _a _b _c, C.Expr _a, C.Expr _b) ->
   (forall t t'. Type t -> C.Expr t' -> m (expr t)) ->
   (UnhandledOp2 -> m (expr resT)) ->
-  (forall t a b . Type t -> Op2 a b t -> expr a -> expr b -> expr t) ->
+  (forall t a . Type t -> Op2 a t -> expr a -> expr a -> expr t) ->
   (expr Bool -> expr Bool) ->
   m (expr resT)
 
@@ -157,12 +157,12 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
 
   where
 
-    boolOp :: Op2 a b Bool -> expr a -> expr b -> expr resT
+    boolOp :: Op2 a Bool -> expr a -> expr a -> expr resT
     boolOp op e1' e2' = case resT of
       Bool -> mkOp resT op e1' e2'
       _    -> Err.impossible typeErrMsg
 
-    boolConnector :: Op2 Bool Bool Bool -> m (expr resT)
+    boolConnector :: Op2 Bool Bool -> m (expr resT)
     boolConnector op = do
      e1' <- handleExpr Bool e1
      e2' <- handleExpr Bool e2
@@ -181,7 +181,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
         return $ notOp e
       _ -> Err.impossible typeErrMsg
 
-    numOp :: (forall num . (Num num) => Op2 num num num) -> m (expr resT)
+    numOp :: (forall num . (Num num) => Op2 num num) -> m (expr resT)
     numOp op = case resT of
       Integer -> do
         e1' <- handleExpr Integer e1
@@ -197,7 +197,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
 
     numComp ::
       C.Type cta ->
-      (forall num . (Num num) => Op2 num num Bool) -> m (expr resT)
+      (forall num . (Num num) => Op2 num Bool) -> m (expr resT)
     numComp ta op = casting ta $ \case
       Integer -> do
         e1' <- handleExpr Integer e1

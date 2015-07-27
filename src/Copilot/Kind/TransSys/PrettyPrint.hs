@@ -112,10 +112,10 @@ pExpr (Op2 _ op e1 e2) =
 
 pExpr (VarE _ v) = text (varName v)
 
-pOp1 :: Op1 a b -> Doc
+pOp1 :: Op1 a -> Doc
 pOp1 = text . show
 
-pOp2 :: Op2 a b c -> Doc
+pOp2 :: Op2 a b -> Doc
 pOp2 = text . show
 
 --------------------------------------------------------------------------------

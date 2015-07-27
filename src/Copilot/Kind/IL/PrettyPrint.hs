@@ -29,8 +29,9 @@ ppSpec (IL { modelInit, modelRec, properties }) =
   $$ indent (Map.foldrWithKey (\k -> ($$) . ppProp k)
         empty properties )
 
-ppProp :: PropId -> Constraint -> Doc
-ppProp id c = quotes (text id) <+> colon <+> ppExpr c
+ppProp :: PropId -> ([Constraint], Constraint) -> Doc
+ppProp id (as, c) = (foldr (($$) . ppExpr) empty as)
+  $$ quotes (text id) <+> colon <+> ppExpr c
 
 ppSeqDescr :: SeqDescr -> Doc
 ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
@@ -81,10 +82,10 @@ ppSeqIndex (Var i)
 
 ppSeqIndex (Fixed i) = integer i
 
-ppOp1 :: Op1 a b -> Doc
+ppOp1 :: Op1 a -> Doc
 ppOp1 = text . show
 
-ppOp2 :: Op2 a b c -> Doc
+ppOp2 :: Op2 a b -> Doc
 ppOp2 = text . show
 
 --------------------------------------------------------------------------------

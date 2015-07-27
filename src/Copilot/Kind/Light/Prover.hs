@@ -112,7 +112,7 @@ z3 = Backend
   , cmdOpts         = ["-smt2", "-in"]
   , inputTerminator = const $ return ()
   , incremental     = True
-  , logic           = "QF_UFNIRA"
+  , logic           = ""
   , interpret       = SMTLib.interpret
   }
 
@@ -166,10 +166,10 @@ data SolverId = Base | Step
 
 getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint], Bool)
 getModels assumptionIds toCheckIds = do
-  IL {modelInit, modelRec, properties, bounds, inductive} <- spec <$> get
-  let assumptions = selectProps (assumptionIds ++ bounds) properties
-      modelRec'   = modelRec ++ assumptions
-      toCheck     = selectProps toCheckIds properties
+  IL {modelInit, modelRec, properties, inductive} <- spec <$> get
+  let (as, as')       = selectProps assumptionIds properties
+      (as'', toCheck) = selectProps toCheckIds properties
+      modelRec'       = modelRec ++ as ++ as' ++ as''
   return (modelInit, modelRec', toCheck, inductive)
 
 getSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
@@ -287,8 +287,9 @@ induction assumptionIds toCheckIds k = do
         Unknown -> unknown
         Unsat   -> valid ("proved with " ++ proofKind k)
 
-selectProps :: [PropId] -> Map.Map PropId Constraint -> [Constraint]
+selectProps :: [PropId] -> Map.Map PropId ([Constraint], Constraint) -> ([Constraint], [Constraint])
 selectProps propIds properties =
-  [c | (id, c) <- Map.toList properties, id `elem` propIds]
+  (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
+    where squash (a, b) = (concat a, b)
 
 --------------------------------------------------------------------------------
