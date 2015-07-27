@@ -87,12 +87,12 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> r1) else (text (printf "%s [label=\"%s\",color=cyan3, style=filled]\n" (show ii::String) (mkExtTmpTag name tag)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
                   ,i1)
 
-  ExternStruct _ name args _ -> let (r1, i1) = ppUExprL (ii+1) ii bb args in
+  ExternStruct _ name args _ -> let (r1, i1) = ppUExprL (ii+1) ii bb (map snd $args) in
             (text (printf "%s [label=\"externS: %s\",color=dodgerblue2, style=filled]\n" (show ii::String) (name::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> (hcat (r1)),i1)
 
-  GetField _ _ name          -> (text (printf "%s [label=\"field: %s\",color=dodgerblue3, style=filled]\n" (show ii::String) (name::String) )
+  GetField _ _ _ name          -> (text (printf "%s [label=\"field: %s\",color=dodgerblue3, style=filled]\n" (show ii::String) (name::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
 
   Local _ _ name e1 e2       -> let (r1, i1) = ppExprDot (ii+2) (ii+1) bb e1 
