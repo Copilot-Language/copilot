@@ -231,17 +231,18 @@ ppExternalStruct
   where
     --ppStructArgs :: [SExpr] -> Doc
     --ppStructArgs = vcat . map ppStructArg . map (\SExpr { uexpr = u0 } -> u0)
-    ppStructArgs :: [UExpr] -> Doc
+    ppStructArgs :: [(Name, UExpr)] -> Doc
     ppStructArgs = vcat . map ppStructArg
 
-    ppStructArg :: UExpr -> Doc
-    ppStructArg UExpr { uExprType = t1, uExprExpr = e1 } = text (typeSpec (UType t1)) <+>
-      text ( case e1 of
+    ppStructArg :: (Name, UExpr) -> Doc
+    ppStructArg (name, UExpr { uExprType = t1, uExprExpr = e1 }) = text (typeSpec (UType t1)) <+>
+      text name <> text ";"
+      {-text ( case e1 of
           Var _ name -> name
           ExternVar _ name _ -> name
           ExternFun _ name _ _ _ -> name
           ExternStruct _ name _ _ -> name
-          _ -> "") <> text ";"
+          _ -> "") <> text ";"-}
 
 --------------------------------------------------------------------------------
 
