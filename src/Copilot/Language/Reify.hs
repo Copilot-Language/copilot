@@ -198,7 +198,7 @@ mkExpr refMkId refStreams refMap = go
 
       ------------------------------------------------------
 
-      ExternFun cs args interpExpr -> trace (show cs) $ do
+      ExternFun cs args interpExpr -> do
           args' <- mapM mkFunArg args
           w <- case interpExpr of
                  Nothing -> return Nothing
@@ -214,7 +214,7 @@ mkExpr refMkId refStreams refMap = go
       ------------------------------------------------------
 
       ExternStruct cs sargs -> trace (show cs) $ do
-          args' <- mapM (\(name, Arg e) -> mkStrArg (name, Arg e)) sargs
+          args' <- mapM (\(name, Arg e) -> trace (show name) $ mkStrArg (name, Arg e)) sargs
           return $ Core.ExternStruct typeOf cs args' Nothing
 
       ------------------------------------------------------
