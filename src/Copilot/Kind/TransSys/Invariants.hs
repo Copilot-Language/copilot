@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -O0 #-}
 
-module Copilot.Kind.Misc.Invariants
+module Copilot.Kind.TransSys.Invariants
   ( HasInvariants (..)
   , prop
   ) where

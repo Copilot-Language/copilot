@@ -76,14 +76,14 @@ stop s = do
 
 --------------------------------------------------------------------------------
 
-assume :: SmtFormat a => Solver a -> [Constraint] -> IO ()
+assume :: SmtFormat a => Solver a -> [Expr] -> IO ()
 assume s cs = forM_ cs (send s . assert)
 
-entailed :: SmtFormat a => Solver a -> [Constraint] -> IO SatResult
+entailed :: SmtFormat a => Solver a -> [Expr] -> IO SatResult
 entailed s cs = do
   when (incremental $ backend s) $ send s push
   case cs of
-      []  -> putStrLn "Warning: no proposition to prove." >> assume s [Const Bool True]
+      []  -> putStrLn "Warning: no proposition to prove." >> assume s [ConstB True]
       _   -> assume s [foldl1 (Op2 Bool Or) (map (Op1 Bool Not) cs)]
   send s checkSat
   (inputTerminator $ backend s) (inh s)

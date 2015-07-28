@@ -2,7 +2,6 @@
 
 module Copilot.Kind.Light.Backend (SmtFormat(..), Backend(..), SatResult(..)) where
 
-import Copilot.Kind.Misc.Type
 import Copilot.Kind.IL
 
 import System.IO
@@ -12,8 +11,8 @@ class Show a => SmtFormat a where
    pop             :: a
    checkSat        :: a
    setLogic        :: String -> a
-   declFun         :: forall t. String -> Type t -> [U Type] -> a
-   assert          :: Constraint -> a
+   declFun         :: String -> Type -> [Type] -> a
+   assert          :: Expr -> a
 
 data Backend a = Backend
   { name            :: String

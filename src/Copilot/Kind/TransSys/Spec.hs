@@ -3,9 +3,9 @@
 {-# LANGUAGE ExistentialQuantification, GADTs, RankNTypes #-}
 
 module Copilot.Kind.TransSys.Spec
-  ( module Copilot.Kind.Misc.Operators
-  , module Copilot.Kind.Misc.Type
-  , module Copilot.Kind.Misc.Invariants
+  ( module Copilot.Kind.TransSys.Operators
+  , module Copilot.Kind.TransSys.Type
+  , module Copilot.Kind.TransSys.Invariants
   , TransSys (..)
   , Node (..)
   , PropId
@@ -22,9 +22,9 @@ module Copilot.Kind.TransSys.Spec
   , specDependenciesGraph
   , specTopNode ) where
 
-import Copilot.Kind.Misc.Type
-import Copilot.Kind.Misc.Operators
-import Copilot.Kind.Misc.Invariants
+import Copilot.Kind.TransSys.Type
+import Copilot.Kind.TransSys.Operators
+import Copilot.Kind.TransSys.Invariants
 
 import Copilot.Kind.Misc.Utils
 

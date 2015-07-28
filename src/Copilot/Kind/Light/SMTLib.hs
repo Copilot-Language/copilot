@@ -16,10 +16,7 @@ newtype SmtLib = SmtLib (SExpr String)
 instance Show SmtLib where
   show (SmtLib s) = show s
 
-usmtTy :: U Type -> String
-usmtTy (U t) = smtTy t
-
-smtTy :: Type t -> String
+smtTy :: Type -> String
 smtTy Integer = "Int"
 smtTy Real    = "Real"
 smtTy Bool    = "Bool"
@@ -33,7 +30,7 @@ instance SmtFormat SmtLib where
   setLogic "" = SmtLib $ blank
   setLogic l = SmtLib $ node "set-logic" [atom l]
   declFun name retTy args = SmtLib $
-    node "declare-fun" [atom name, (list $ map (atom . usmtTy) args), atom (smtTy retTy)]
+    node "declare-fun" [atom name, (list $ map (atom . smtTy) args), atom (smtTy retTy)]
   assert c = SmtLib $ node "assert" [expr c]
 
 interpret :: String -> Maybe SatResult
@@ -43,19 +40,15 @@ interpret _       = Just Unknown
 
 --------------------------------------------------------------------------------
 
-uexpr :: U Expr -> SExpr String
-uexpr (U e) = expr e
+expr :: Expr -> SExpr String
 
-expr :: Expr t -> SExpr String
-
-expr (ConstI _ v)      = atom (show v)
-expr (Const Integer v) = atom (show v)
-expr (Const Bool    b) = atom (if b then "true" else "false")
-expr (Const Real    v) = atom (show v)
+expr (ConstB v) = atom (if v then "true" else "false")
+expr (ConstI v) = atom (show v)
+expr (ConstR v) = atom (show v)
 
 expr (Ite _ cond e1 e2) = node "ite" [expr cond, expr e1, expr e2]
 
-expr (FunApp _ funName args) = node funName $ map uexpr args
+expr (FunApp _ funName args) = node funName $ map expr args
 
 expr (Op1 _ op e) =
   node smtOp [expr e]
@@ -95,7 +88,7 @@ expr (Op2 _ op e1 e2) =
       Sub  -> "-"
       Mul  -> "*"
       Mod  -> "mod"
-      FDiv -> "/"
+      Fdiv -> "/"
       Pow  -> "^"
 
 expr (SVal _ f ix) = atom $ case ix of

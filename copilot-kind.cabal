@@ -51,9 +51,6 @@ library
                           
   other-modules           : Copilot.Kind.Prover
                           
-                          , Copilot.Kind.CoreUtils.Expr
-                          , Copilot.Kind.CoreUtils.Operators
-                          
                           , Copilot.Kind.IL.PrettyPrint
                           , Copilot.Kind.IL.Spec
                           , Copilot.Kind.IL.Translate
@@ -66,11 +63,7 @@ library
                           , Copilot.Kind.Light.SMT
                           , Copilot.Kind.Light.SMTLib
                           
-                          , Copilot.Kind.Misc.Cast
                           , Copilot.Kind.Misc.Error
-                          , Copilot.Kind.Misc.Invariants
-                          , Copilot.Kind.Misc.Operators
-                          , Copilot.Kind.Misc.Type
                           , Copilot.Kind.Misc.SExpr
                           , Copilot.Kind.Misc.Utils
                           
@@ -79,6 +72,9 @@ library
                           , Copilot.Kind.TransSys.Spec
                           , Copilot.Kind.TransSys.Transform
                           , Copilot.Kind.TransSys.Translate
+                          , Copilot.Kind.TransSys.Invariants
+                          , Copilot.Kind.TransSys.Operators
+                          , Copilot.Kind.TransSys.Type
                           
 
   

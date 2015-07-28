@@ -6,8 +6,6 @@
 module Copilot.Kind.IL.Translate ( translate ) where
 
 import Copilot.Kind.IL.Spec
-import Copilot.Kind.Misc.Cast
-import Copilot.Kind.CoreUtils.Operators
 
 import qualified Copilot.Core as C
 
@@ -19,6 +17,8 @@ import Control.Monad.State
 import Data.Char
 
 import Text.Printf
+
+import GHC.Float (float2Double)
 
 --------------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
   properties <- Map.fromList <$>
     forM specProperties
       (\(C.Property {C.propertyName, C.propertyExpr}) -> do
-        e' <- expr Bool propertyExpr
+        e' <- expr propertyExpr
         propConds <- getLocalConstraints
         return (propertyName, (propConds, e')))
 
@@ -68,159 +68,226 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
     , inductive = not $ null specStreams
     }
 
-bound :: Expr b -> C.Type a -> Trans ()
-bound s t = case typeOf s of
-  Integer -> case t of
-    C.Int8    -> bound' s C.Int8
-    C.Int16   -> bound' s C.Int16
-    C.Int32   -> bound' s C.Int32
-    C.Int64   -> bound' s C.Int64
-    C.Word8   -> bound' s C.Word8
-    C.Word16  -> bound' s C.Word16
-    C.Word32  -> bound' s C.Word32
-    C.Word64  -> bound' s C.Word64
-    _         -> return ()
+bound :: Expr -> C.Type a -> Trans ()
+bound s t = case t of
+  C.Int8    -> bound' C.Int8
+  C.Int16   -> bound' C.Int16
+  C.Int32   -> bound' C.Int32
+  C.Int64   -> bound' C.Int64
+  C.Word8   -> bound' C.Word8
+  C.Word16  -> bound' C.Word16
+  C.Word32  -> bound' C.Word32
+  C.Word64  -> bound' C.Word64
   _         -> return ()
-  where bound' :: (Num b, Ord a, Bounded a) => Expr b -> C.Type a -> Trans ()
-        bound' var t = localConstraint (Op2 Bool And
-            (Op2 Bool Le (Const (typeOf var) $
-              cast (typeOf var) $ toDyn t minBound) var)
-            (Op2 Bool Ge (Const (typeOf var) $
-              cast (typeOf var) $ toDyn t maxBound) var))
+  where bound' :: (Bounded a, Integral a) => C.Type a -> Trans ()
+        bound' t = localConstraint (Op2 Bool And
+            (Op2 Bool Le (trConst t minBound) s)
+            (Op2 Bool Ge (trConst t maxBound) s))
 
-streamInit :: C.Stream -> [Constraint]
+streamInit :: C.Stream -> [Expr]
 streamInit (C.Stream { C.streamId       = id
                      , C.streamBuffer   = b :: [val]
-                     , C.streamExprType = ty }) =
-
+                     , C.streamExprType = t }) =
   zipWith initConstraint [0..] b
-  where
-    initConstraint :: Integer -> val -> Constraint
-    initConstraint p v = casting ty $ \ty' ->
-      Op2 Bool Eq
-        (SVal ty' (ncSeq id) (Fixed p))
-        (Const ty' $ cast ty' $ toDyn ty v)
+  where initConstraint :: Integer -> val -> Expr
+        initConstraint p v = Op2 Bool Eq
+          (SVal (trType t) (ncSeq id) (Fixed p))
+          $ trConst t v
 
-streamRec :: C.Stream -> Trans Constraint
+streamRec :: C.Stream -> Trans Expr
 streamRec (C.Stream { C.streamId       = id
                     , C.streamExpr     = e
                     , C.streamBuffer   = b
-                    , C.streamExprType = ty})
-  = casting ty $ \ty' -> do
-      let s = SVal ty' (ncSeq id) (_n_plus $ length b)
-      bound s ty
-      e' <- expr ty' e
-      return $ Op2 Bool Eq s e'
+                    , C.streamExprType = t })
+  = do
+  let s = SVal (trType t) (ncSeq id) (_n_plus $ length b)
+  bound s t
+  e' <- expr e
+  return $ Op2 Bool Eq s e'
 
 --------------------------------------------------------------------------------
 
-expr :: Type t -> C.Expr a -> Trans (Expr t)
+expr :: C.Expr a -> Trans Expr
 
-expr t (C.Const ct v) = return $ case (t, ct) of
-  (Integer, C.Int8)   -> negifyI t ct v
-  (Integer, C.Int16)  -> negifyI t ct v
-  (Integer, C.Int32)  -> negifyI t ct v
-  (Integer, C.Int64)  -> negifyI t ct v
-  (_, C.Float)        -> negify t ct v
-  (_, C.Double)       -> negify t ct v
-  _                   -> Const t (cast t $ toDyn ct v)
-  where negify :: (Ord a, Num a) => Type b -> C.Type a -> a -> Expr b
-        negify t ct v
-            | v >= 0    = Const t (cast t $ toDyn ct v)
-            | otherwise = Op1 t Neg $ Const t (cast t $ toDyn ct (-v))
-        negifyI :: (Integral a, Integral b) => Type b -> C.Type a -> a -> Expr b
-        negifyI t _ v
-            | v >= 0    = ConstI t $ toInteger v
-            -- TODO(chathhorn): somehow handle this in a cleaner way. Flipping
-            -- the sign can take the value out of the representable range in
-            -- the case of fixed-width ints.
-            | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
+expr (C.Const t v) = return $ trConst t v
 
-expr t (C.Label _ _ e) = expr t e
+expr (C.Label _ _ e) = expr e
 
-expr t (C.Drop _ k id) = return $ SVal t (ncSeq id) (_n_plus k)
+expr (C.Drop t k id) = return $ SVal (trType t) (ncSeq id) (_n_plus k)
 
-expr t (C.Local ta _ name ea eb) = casting ta $ \ta' -> do
-  ea' <- expr ta' ea
-  localConstraint (Op2 Bool Eq (SVal ta' (ncLocal name) _n_) ea')
-  expr t eb
+expr (C.Local ta _ name ea eb) = do
+  ea' <- expr ea
+  localConstraint (Op2 Bool Eq (SVal (trType ta) (ncLocal name) _n_) ea')
+  expr eb
 
-expr t (C.Var _ name) = return $ SVal t (ncLocal name) _n_
+expr (C.Var t name) = return $ SVal (trType t) (ncLocal name) _n_
 
-expr t (C.ExternVar ct name _) = bound s ct >> return s
-  where s = SVal t (ncExternVar name) _n_
+expr (C.ExternVar t name _) = bound s t >> return s
+  where s = SVal (trType t) (ncExternVar name) _n_
 
-expr t (C.ExternFun ct name args _ _) = do
+expr (C.ExternFun t name args _ _) = do
   args' <- mapM trArg args
-  let s = FunApp t (ncExternFun name) args'
-  bound s ct
+  let s = FunApp (trType t) (ncExternFun name) args'
+  bound s t
   return s
-  where trArg (C.UExpr {C.uExprExpr, C.uExprType}) = casting uExprType $ \ta ->
-          U <$> expr ta uExprExpr
+  where trArg (C.UExpr {C.uExprExpr}) = expr uExprExpr
 
 -- Arrays and functions are treated the same way
-expr t (C.ExternArray ta tb name _ ind _ _) =
-  expr t (C.ExternFun tb name [C.UExpr ta ind] Nothing Nothing)
+expr (C.ExternArray ta tb name _ ind _ _) =
+  expr (C.ExternFun tb name [C.UExpr ta ind] Nothing Nothing)
 
-expr t (C.Op1 (C.Sqrt ta) e) = expr t (C.Op2 (C.Pow ta) e (C.Const ta 0.5))
-
-expr t (C.Op1 (C.Sign ta) e) = case ta of
-  C.Int8   -> trSign t ta e
-  C.Int16  -> trSign t ta e
-  C.Int32  -> trSign t ta e
-  C.Int64  -> trSign t ta e
-  C.Float  -> trSign t ta e
-  C.Double -> trSign t ta e
-  _        -> expr t $ C.Const ta 1
-  where trSign :: (Ord t, Num t) => Type t' -> C.Type t -> C.Expr t -> Trans (Expr t')
-        trSign t ta e =
-          expr t (C.Op3 (C.Mux ta)
+expr (C.Op1 (C.Sign ta) e) = case ta of
+  C.Int8   -> trSign ta e
+  C.Int16  -> trSign ta e
+  C.Int32  -> trSign ta e
+  C.Int64  -> trSign ta e
+  C.Float  -> trSign ta e
+  C.Double -> trSign ta e
+  _        -> expr $ C.Const ta 1
+  where trSign :: (Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
+        trSign ta e =
+          expr (C.Op3 (C.Mux ta)
             (C.Op2 (C.Lt ta) e (C.Const ta 0))
             (C.Const ta (-1))
             (C.Op3 (C.Mux ta)
               (C.Op2 (C.Gt ta) e (C.Const ta 0))
               (C.Const ta 1)
               (C.Const ta 0)))
+expr (C.Op1 (C.Sqrt _) e) = do
+  e' <- expr e
+  return $ Op2 Real Pow e' (ConstR 0.5)
+expr (C.Op1 (C.Cast _ _) e) = expr e
+expr (C.Op1 op e) = do
+  e' <- expr e
+  return $ Op1 t' op' e'
+  where (op', t') = trOp1 op
 
-expr t (C.Op1 op e) = handleOp1 t (op, e) expr notHandled Op1
-  where notHandled (UnhandledOp1 opName ta _) = do
-          e' <- U <$> expr ta e
-          return $ FunApp t (ncUnhandledOp opName) [e']
+expr (C.Op2 (C.Ne t) e1 e2) = do
+  e1' <- expr e1
+  e2' <- expr e2
+  return $ Op1 Bool Not (Op2 t' Eq e1' e2')
+  where t' = trType t
 
-expr t (C.Op2 op e1 e2) = handleOp2 t (op, e1, e2) expr notHandled Op2 (Op1 Bool Not)
-  where notHandled (UnhandledOp2 opName ta tb _) = do
-          e1' <- U <$> expr ta e1
-          e2' <- U <$> expr tb e2
-          return $ FunApp t (ncUnhandledOp opName) [e1', e2']
+expr (C.Op2 op e1 e2) = do
+  e1' <- expr e1
+  e2' <- expr e2
+  return $ Op2 t' op' e1' e2'
+  where (op', t') = trOp2 op
 
-expr t (C.Op3 (C.Mux _) cond e1 e2) = do
-  cond' <- expr Bool cond
-  e1'   <- expr t    e1
-  e2'   <- expr t    e2
+expr (C.Op3 (C.Mux t) cond e1 e2) = do
+  cond' <- expr cond
+  e1'   <- expr e1
+  e2'   <- expr e2
   f     <- fresh
-  let s = SVal t f _n_
+  let s = SVal (trType t) f _n_
   localConstraint $ Op2 Bool Or (Op1 Bool Not cond') (Op2 Bool Eq s e1')
   localConstraint $ Op2 Bool Or cond' (Op2 Bool Eq s e2')
   return s
 
+trConst :: C.Type a -> a -> Expr
+trConst t v = case t of
+  C.Bool   -> ConstB v
+  C.Int8   -> negifyI v
+  C.Int16  -> negifyI v
+  C.Int32  -> negifyI v
+  C.Int64  -> negifyI v
+  C.Word8  -> negifyI v
+  C.Word16 -> negifyI v
+  C.Word32 -> negifyI v
+  C.Word64 -> negifyI v
+  C.Float  -> negifyR (float2Double v)
+  C.Double -> negifyR v
+  where negifyR :: Double -> Expr
+        negifyR v
+            | v >= 0    = ConstR v
+            | otherwise = Op1 Real Neg $ ConstR $ negate $ v
+        negifyI :: Integral a => a -> Expr
+        negifyI v
+            | v >= 0    = ConstI $ toInteger v
+            | otherwise = Op1 Integer Neg $ ConstI $ negate $ toInteger v
+
+trOp1 :: C.Op1 a b -> (Op1, Type)
+trOp1 = \case
+  C.Not     -> (Not, Bool)
+  C.Abs t   -> (Abs, trType t)
+  -- C.Sign t  ->
+  -- C.Recip t ->
+  C.Exp t   -> (Exp, trType t)
+  -- C.Sqrt t  ->
+  C.Log t   -> (Log, trType t)
+  C.Sin t   -> (Sin, trType t)
+  C.Tan t   -> (Tan, trType t)
+  C.Cos t   -> (Cos, trType t)
+  C.Asin t  -> (Asin, trType t)
+  C.Atan t  -> (Atan, trType t)
+  C.Acos t  -> (Acos, trType t)
+  C.Sinh t  -> (Sinh, trType t)
+  C.Tanh t  -> (Tanh, trType t)
+  C.Cosh t  -> (Cosh, trType t)
+  C.Asinh t -> (Asinh, trType t)
+  C.Atanh t -> (Atanh, trType t)
+  C.Acosh t -> (Acosh, trType t)
+  -- C.BwNot t ->
+  -- C.Cast t  ->
+  _ -> error "Unsupported unary operator in input." -- TODO(chathhorn)
+
+trOp2 :: C.Op2 a b c -> (Op2, Type)
+trOp2 = \case
+  C.And          -> (And, Bool)
+  C.Or           -> (Or, Bool)
+
+  C.Add t        -> (Add, trType t)
+  C.Sub t        -> (Sub, trType t)
+  C.Mul t        -> (Mul, trType t)
+
+  C.Mod t        -> (Mod, trType t)
+  -- C.Div t        ->
+
+  C.Fdiv t       -> (Fdiv, trType t)
+
+  C.Pow t        -> (Pow, trType t)
+  -- C.Logb t       ->
+
+  C.Eq t         -> (Eq, trType t)
+  -- C.Ne t         ->
+
+  C.Le t         -> (Le, trType t)
+  C.Ge t         -> (Ge, trType t)
+  C.Lt t         -> (Lt, trType t)
+  C.Gt t         -> (Gt, trType t)
+
+  -- C.BwAnd t      ->
+  -- C.BwOr t       ->
+  -- C.BwXor t      ->
+  -- C.BwShiftL t _ ->
+  -- C.BwShiftR t _ ->
+
+  _ -> error "Unsupported binary operator in input." -- TODO(chathhorn)
+
+trType :: C.Type a -> Type
+trType = \case
+  C.Bool   -> Bool
+  C.Int8   -> Integer
+  C.Int16  -> Integer
+  C.Int32  -> Integer
+  C.Int64  -> Integer
+  C.Word8  -> Integer
+  C.Word16 -> Integer
+  C.Word32 -> Integer
+  C.Word64 -> Integer
+  C.Float  -> Real
+  C.Double -> Real
+
 --------------------------------------------------------------------------------
 
-mkVarName :: String -> [U Expr] -> String
-mkVarName name args = name ++ "_" ++ concatMap argToString args
-
-argToString :: U Expr -> String
-argToString (U (Const Integer x)) = show x
-argToString (U (Op2 _ Add e1 e2)) = argToString (U e1) ++ argToString (U e2)
-argToString (U _) = error "translating arg to string (should never happen)"
-
 data TransST = TransST
-  { localConstraints :: [Constraint]
+  { localConstraints :: [Expr]
   , nextFresh        :: Integer
   }
 
 type Trans = State TransST
 
-localConstraint :: Constraint -> Trans ()
+localConstraint :: Expr -> Trans ()
 localConstraint c =
   modify $ \st -> st {localConstraints = c : localConstraints st}
 
@@ -230,7 +297,7 @@ fresh = do
   n <- nextFresh <$> get
   return $ ncFresh n
 
-getLocalConstraints :: Trans [Constraint]
+getLocalConstraints :: Trans [Expr]
 getLocalConstraints = (localConstraints <$> get) <*
   (modify $ \st -> st {localConstraints = []})
 

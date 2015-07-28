@@ -2,7 +2,7 @@
 
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 
-module Copilot.Kind.Misc.Cast
+module Copilot.Kind.TransSys.Cast
   ( Dyn
   , toDyn
   , cast
@@ -18,7 +18,7 @@ import Copilot.Core.Type.Dynamic
 
 import GHC.Float
 
-import qualified Copilot.Kind.Misc.Type as K
+import qualified Copilot.Kind.TransSys.Type as K
 
 --------------------------------------------------------------------------------
 

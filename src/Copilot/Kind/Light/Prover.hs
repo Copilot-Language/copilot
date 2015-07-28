@@ -164,7 +164,7 @@ data ProofState b = ProofState
 data SolverId = Base | Step
   deriving (Show, Ord, Eq)
 
-getModels :: [PropId] -> [PropId] -> ProofScript b ([Constraint], [Constraint], [Constraint], Bool)
+getModels :: [PropId] -> [PropId] -> ProofScript b ([Expr], [Expr], [Expr], Bool)
 getModels assumptionIds toCheckIds = do
   IL {modelInit, modelRec, properties, inductive} <- spec <$> get
   let (as, as')       = selectProps assumptionIds properties
@@ -201,10 +201,10 @@ declVars sid vs = do
   liftIO $ SMT.declVars solver vs
   setSolver sid $ SMT.updateVars solver vs
 
-assume :: SmtFormat b => SolverId -> [Constraint] -> ProofScript b ()
+assume :: SmtFormat b => SolverId -> [Expr] -> ProofScript b ()
 assume sid cs = getSolver sid >>= \s -> liftIO $ SMT.assume s cs
 
-entailed :: SmtFormat b => SolverId -> [Constraint] -> ProofScript b SatResult
+entailed :: SmtFormat b => SolverId -> [Expr] -> ProofScript b SatResult
 entailed sid cs = do
   backend <- backend <$> get
   solver <- getSolver sid
@@ -227,28 +227,26 @@ stopSolvers = do
   solvers <- solvers <$> get
   mapM_ stop (fst <$> Map.toList solvers)
 
-entailment :: SmtFormat b => SolverId -> [Constraint] -> [Constraint] -> ProofScript b SatResult
+entailment :: SmtFormat b => SolverId -> [Expr] -> [Expr] -> ProofScript b SatResult
 entailment sid assumptions props = do
   declVars sid $ nub' $ getVars assumptions ++ getVars props
   assume sid assumptions
   entailed sid props
 
-getVars :: [Constraint] -> [VarDescr]
+getVars :: [Expr] -> [VarDescr]
 getVars = nubBy' (compare `on` varName) . concatMap getExprVars
 
-getExprVars :: Expr a -> [VarDescr]
-getExprVars (Const _ _) = []
-getExprVars (ConstI _ _) = []
+getExprVars :: Expr -> [VarDescr]
+getExprVars (ConstB _) = []
+getExprVars (ConstI _) = []
+getExprVars (ConstR _) = []
 getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
 getExprVars (Op1 _ _ e) = getExprVars e
 getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
 getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t []]
 getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t []]
-getExprVars (FunApp t name args) = [VarDescr name t (map typeOfU args)]
-  ++ concatMap getUExprVars args
-  where
-    getUExprVars (U e) = getExprVars e
-    typeOfU (U e)      = U $ typeOf e
+getExprVars (FunApp t name args) = [VarDescr name t (map typeOf args)]
+  ++ concatMap getExprVars args
 
 unknown :: ProofScript b a
 unknown = mzero
@@ -287,7 +285,7 @@ induction assumptionIds toCheckIds k = do
         Unknown -> unknown
         Unsat   -> valid ("proved with " ++ proofKind k)
 
-selectProps :: [PropId] -> Map.Map PropId ([Constraint], Constraint) -> ([Constraint], [Constraint])
+selectProps :: [PropId] -> Map.Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
     where squash (a, b) = (concat a, b)

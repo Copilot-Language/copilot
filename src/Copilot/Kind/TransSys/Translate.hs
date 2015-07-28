@@ -6,9 +6,8 @@
 module Copilot.Kind.TransSys.Translate ( translate ) where
 
 import Copilot.Kind.TransSys.Spec
-import Copilot.Kind.Misc.Cast
+import Copilot.Kind.TransSys.Cast
 import Copilot.Kind.Misc.Utils
-import Copilot.Kind.CoreUtils.Operators
 
 import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy

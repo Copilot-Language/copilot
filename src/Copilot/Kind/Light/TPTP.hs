@@ -44,20 +44,16 @@ interpret str
 
 --------------------------------------------------------------------------------
 
-uexpr :: U Expr -> TptpExpr
-uexpr (U e) = expr e
+expr :: Expr -> TptpExpr
 
-expr :: Expr t -> TptpExpr
-
-expr (ConstI _ v)      = Atom $ show v
-expr (Const Integer v) = Atom $ show v
-expr (Const Bool b)    = Atom $ if b then "$true" else "$false"
-expr (Const Real v)    = Atom $ show v
+expr (ConstB v) = Atom $ if v then "$true" else "$false"
+expr (ConstI v) = Atom $ show v
+expr (ConstR v) = Atom $ show v
 
 expr (Ite _ cond expr1 expr2) = Bin (Bin (expr cond) "=>" (expr expr1))
   "&" (Bin (Un "~" (expr cond)) "=>" (expr expr2))
 
-expr (FunApp _ funName args) = Fun funName $ map uexpr args
+expr (FunApp _ funName args) = Fun funName $ map expr args
 
 expr (Op1 _ Not e) = Un (showOp1 Not) $ expr e
 expr (Op1 _ Neg e) = Un (showOp1 Neg) $ expr e
@@ -69,7 +65,7 @@ expr (SVal _ f ix) = case ix of
       Fixed i -> Atom $ f ++ "_" ++ show i
       Var off -> Atom $ f ++ "_n" ++ show off
 
-showOp1 :: Op1 a -> String
+showOp1 :: Op1 -> String
 showOp1 = \case
   Not   -> "~"
   Neg   -> "-"
@@ -90,7 +86,7 @@ showOp1 = \case
   Atanh -> "arctanh"
   Acosh -> "arccosh"
 
-showOp2 :: Op2 a b -> String
+showOp2 :: Op2 -> String
 showOp2 = \case
   Eq    -> "="
   Le    -> "<="
@@ -103,7 +99,7 @@ showOp2 = \case
   Sub   -> "-"
   Mul   -> "*"
   Mod   -> "mod"
-  FDiv  -> "/"
+  Fdiv  -> "/"
   Pow   -> "^"
 
 --------------------------------------------------------------------------------

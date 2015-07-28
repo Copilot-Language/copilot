@@ -2,7 +2,7 @@
 
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
-module Copilot.Kind.Misc.Type
+module Copilot.Kind.TransSys.Type
   ( Type (..)
   , U (..)
   , U2 (..)
