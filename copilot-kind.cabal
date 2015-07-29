@@ -54,6 +54,7 @@ library
                           , Copilot.Kind.IL.PrettyPrint
                           , Copilot.Kind.IL.Spec
                           , Copilot.Kind.IL.Translate
+                          , Copilot.Kind.IL.Transform
                           
                           , Copilot.Kind.Kind2.AST
                           , Copilot.Kind.Kind2.Output

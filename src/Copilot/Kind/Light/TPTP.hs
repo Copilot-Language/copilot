@@ -17,12 +17,12 @@ data TptpExpr = Bin TptpExpr String TptpExpr | Un String TptpExpr
               | Atom String | Fun String [TptpExpr]
 
 instance Show Tptp where
-  show (Ax expr) = "fof(formula, axiom, " ++ show expr ++ ")."
+  show (Ax e) = "fof(formula, axiom, " ++ show e ++ ")."
   show Null      = ""
 
 instance Show TptpExpr where
-  show (Bin expr1 op expr2) = "(" ++ show expr1 ++ " " ++ op ++ " " ++ show expr2 ++ ")"
-  show (Un op expr) = "(" ++ op ++ " " ++ show expr ++ ")"
+  show (Bin e1 op e2) = "(" ++ show e1 ++ " " ++ op ++ " " ++ show e2 ++ ")"
+  show (Un op e) = "(" ++ op ++ " " ++ show e ++ ")"
   show (Atom atom) = atom
   show (Fun name args) = name ++ "(" ++ intercalate ", " (map show args) ++ ")"
 
@@ -34,7 +34,7 @@ instance SmtFormat Tptp where
   checkSat = Null
   setLogic = const Null
   declFun = const $ const $ const Null
-  assert c = Ax $ expr c
+  assert c = Ax $ expr $ bsimpl c
 
 interpret :: String -> Maybe SatResult
 interpret str
@@ -50,8 +50,8 @@ expr (ConstB v) = Atom $ if v then "$true" else "$false"
 expr (ConstI v) = Atom $ show v
 expr (ConstR v) = Atom $ show v
 
-expr (Ite _ cond expr1 expr2) = Bin (Bin (expr cond) "=>" (expr expr1))
-  "&" (Bin (Un "~" (expr cond)) "=>" (expr expr2))
+expr (Ite _ cond e1 e2) = Bin (Bin (expr cond) "=>" (expr e1))
+  "&" (Bin (Un "~" (expr cond)) "=>" (expr e2))
 
 expr (FunApp _ funName args) = Fun funName $ map expr args
 
@@ -59,7 +59,7 @@ expr (Op1 _ Not e) = Un (showOp1 Not) $ expr e
 expr (Op1 _ Neg e) = Un (showOp1 Neg) $ expr e
 expr (Op1 _ op e) = Fun (showOp1 op) [expr e]
 
-expr (Op2 _ op expr1 expr2) = Bin (expr expr1) (showOp2 op) (expr expr2)
+expr (Op2 _ op e1 e2) = Bin (expr e1) (showOp2 op) (expr e2)
 
 expr (SVal _ f ix) = case ix of
       Fixed i -> Atom $ f ++ "_" ++ show i
