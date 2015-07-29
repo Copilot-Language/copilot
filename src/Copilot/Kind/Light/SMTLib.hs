@@ -9,6 +9,8 @@ import Copilot.Kind.Light.Backend (SmtFormat (..), SatResult (..))
 import Copilot.Kind.IL
 import Copilot.Kind.Misc.SExpr
 
+import Text.Printf
+
 --------------------------------------------------------------------------------
 
 newtype SmtLib = SmtLib (SExpr String)
@@ -42,9 +44,9 @@ interpret _       = Just Unknown
 
 expr :: Expr -> SExpr String
 
-expr (ConstB v) = atom (if v then "true" else "false")
-expr (ConstI v) = atom (show v)
-expr (ConstR v) = atom (show v)
+expr (ConstB v) = atom $ if v then "true" else "false"
+expr (ConstI v) = atom $ show v
+expr (ConstR v) = atom $ printf "%f" v
 
 expr (Ite _ cond e1 e2) = node "ite" [expr cond, expr e1, expr e2]
 
@@ -92,7 +94,7 @@ expr (Op2 _ op e1 e2) =
       Pow  -> "^"
 
 expr (SVal _ f ix) = atom $ case ix of
-      Fixed i -> f ++ "_" ++ show i
-      Var off -> f ++ "_n" ++ show off
+  Fixed i -> f ++ "_" ++ show i
+  Var off -> f ++ "_n" ++ show off
 
 --------------------------------------------------------------------------------
