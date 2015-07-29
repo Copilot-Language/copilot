@@ -29,10 +29,10 @@ type SeqId    =  String
 type Offset   =  Integer
 
 data SeqIndex = Fixed Integer | Var Offset
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 data Type = Bool | Real | Integer
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 instance Show Type where
   show = \case
@@ -49,7 +49,7 @@ data Expr
   | Op2    Type Op2 Expr Expr
   | SVal   Type SeqId SeqIndex
   | FunApp Type String [Expr]
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 --------------------------------------------------------------------------------
 
@@ -85,11 +85,11 @@ data IL = IL
 
 data Op1 = Not | Neg | Abs | Exp | Sqrt | Log | Sin | Tan | Cos | Asin | Atan
          | Acos | Sinh | Tanh | Cosh | Asinh | Atanh | Acosh
-         deriving (Eq)
+         deriving (Eq, Ord)
 
 data Op2 = Eq | And | Or | Le | Lt | Ge | Gt | Add | Sub | Mul | Mod | Fdiv
          | Pow
-         deriving (Eq)
+         deriving (Eq, Ord)
 
 -------------------------------------------------------------------------------
 

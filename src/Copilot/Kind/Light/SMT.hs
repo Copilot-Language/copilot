@@ -4,7 +4,7 @@
 
 module Copilot.Kind.Light.SMT
   ( Solver
-  , startNewSolver, assume, entailed, stop, declVars, updateVars
+  , startNewSolver, assume, entailed, stop, declVars
   ) where
 
 import Copilot.Kind.IL
@@ -29,6 +29,7 @@ data Solver a = Solver
   , process    :: ProcessHandle
   , debugMode  :: Bool
   , vars       :: Set VarDescr
+  , model      :: Set Expr
   , backend    :: Backend a
   }
 
@@ -64,7 +65,7 @@ startNewSolver :: SmtFormat a => String -> Bool -> Backend a -> IO (Solver a)
 startNewSolver name dbgMode b = do
   (i, o, e, p) <- runInteractiveProcess (cmd b) (cmdOpts b) Nothing Nothing
   hClose e
-  let s = Solver name i o p dbgMode empty b
+  let s = Solver name i o p dbgMode empty empty b
   send s $ setLogic $ logic b
   return s
 
@@ -76,30 +77,33 @@ stop s = do
 
 --------------------------------------------------------------------------------
 
-assume :: SmtFormat a => Solver a -> [Expr] -> IO ()
-assume s cs = forM_ cs (send s . assert)
+assume :: SmtFormat a => Solver a -> [Expr] -> IO (Solver a)
+assume s@(Solver { model }) cs = do
+  let newAxioms = elems $ fromList cs \\ model
+  assume' s newAxioms
+  return s { model = model `union` fromList newAxioms }
+
+assume' :: SmtFormat a => Solver a -> [Expr] -> IO ()
+assume' s cs = forM_ cs (send s . assert)
 
 entailed :: SmtFormat a => Solver a -> [Expr] -> IO SatResult
 entailed s cs = do
   when (incremental $ backend s) $ send s push
   case cs of
-      []  -> putStrLn "Warning: no proposition to prove." >> assume s [ConstB True]
-      _   -> assume s [foldl1 (Op2 Bool Or) (map (Op1 Bool Not) cs)]
+      []  -> putStrLn "Warning: no proposition to prove." >> assume' s [ConstB True]
+      _   -> assume' s [foldl1 (Op2 Bool Or) (map (Op1 Bool Not) cs)]
   send s checkSat
   (inputTerminator $ backend s) (inh s)
 
   when (incremental $ backend s) $ send s pop
   receive s
 
-declVars :: SmtFormat a => Solver a -> [VarDescr] -> IO ()
+declVars :: SmtFormat a => Solver a -> [VarDescr] -> IO (Solver a)
 declVars s@(Solver { vars }) decls = do
   let newVars = elems $ fromList decls \\ vars
   forM_ newVars $ \(VarDescr {varName, varType, args}) ->
     send s $ declFun varName varType args
-
-updateVars :: Solver a -> [VarDescr] -> Solver a
-updateVars s@(Solver { vars }) newVars =
-  s { vars = vars `union` fromList newVars }
+  return s { vars = vars `union` fromList newVars }
 
 --------------------------------------------------------------------------------
 

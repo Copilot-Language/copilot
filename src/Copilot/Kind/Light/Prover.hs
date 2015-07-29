@@ -6,7 +6,7 @@ module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
   , kInduction
-  , yices, dReal, altErgo, metit, z3, cvc4
+  , yices, dReal, altErgo, metit, z3, cvc4, mathsat
   , Backend, SmtFormat
   , SmtLib, Tptp
   ) where
@@ -127,6 +127,17 @@ dReal = Backend
   , interpret       = SMTLib.interpret
   }
 
+mathsat :: Backend SmtLib
+mathsat = Backend
+  { name            = "MathSAT"
+  , cmd             = "mathsat"
+  , cmdOpts         = []
+  , inputTerminator = const $ return ()
+  , incremental     = True
+  , logic           = "QF_NRA"
+  , interpret       = SMTLib.interpret
+  }
+
 -- The argument is the path to the "tptp" subdirectory of the metitarski
 -- install location.
 metit :: String -> Backend Tptp
@@ -197,12 +208,15 @@ startNewSolver sid = do
 
 declVars :: SmtFormat b => SolverId -> [VarDescr] -> ProofScript b ()
 declVars sid vs = do
-  solver <- getSolver sid
-  liftIO $ SMT.declVars solver vs
-  setSolver sid $ SMT.updateVars solver vs
+  s <- getSolver sid
+  s' <- liftIO $ SMT.declVars s vs
+  setSolver sid s'
 
 assume :: SmtFormat b => SolverId -> [Expr] -> ProofScript b ()
-assume sid cs = getSolver sid >>= \s -> liftIO $ SMT.assume s cs
+assume sid cs = do
+  s <- getSolver sid
+  s' <- liftIO $ SMT.assume s cs
+  setSolver sid s'
 
 entailed :: SmtFormat b => SolverId -> [Expr] -> ProofScript b SatResult
 entailed sid cs = do
