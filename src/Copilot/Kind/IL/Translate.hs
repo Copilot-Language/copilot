@@ -15,6 +15,7 @@ import Control.Applicative ((<$>), (<*))
 import Control.Monad.State
 
 import Data.Char
+import Data.List (find)
 
 import Text.Printf
 
@@ -39,8 +40,8 @@ ncExternFun n = "_" ++ n
 ncUnhandledOp :: String -> String
 ncUnhandledOp = id
 
-ncFresh :: Integer -> SeqId
-ncFresh n = "f" ++ show n
+ncMux :: Integer -> SeqId
+ncMux n = "mux" ++ show n
 
 --------------------------------------------------------------------------------
 
@@ -53,12 +54,12 @@ translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
 
   mainConstraints <- mapM streamRec specStreams
 
-  localConstraints <- getLocalConstraints
+  localConstraints <- popLocalConstraints
   properties <- Map.fromList <$>
     forM specProperties
       (\(C.Property {C.propertyName, C.propertyExpr}) -> do
         e' <- expr propertyExpr
-        propConds <- getLocalConstraints
+        propConds <- popLocalConstraints
         return (propertyName, (propConds, e')))
 
   return IL
@@ -178,11 +179,7 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
   cond' <- expr cond
   e1'   <- expr e1
   e2'   <- expr e2
-  f     <- fresh
-  let s = SVal (trType t) f _n_
-  localConstraint $ Op2 Bool Or (Op1 Bool Not cond') (Op2 Bool Eq s e1')
-  localConstraint $ Op2 Bool Or cond' (Op2 Bool Eq s e2')
-  return s
+  newMux cond' (trType t) e1' e2'
 
 trConst :: C.Type a -> a -> Expr
 trConst t v = case t of
@@ -282,8 +279,28 @@ trType = \case
 
 data TransST = TransST
   { localConstraints :: [Expr]
+  , muxes            :: [(Expr, (Expr, Type, Expr, Expr))]
   , nextFresh        :: Integer
   }
+
+newMux :: Expr -> Type -> Expr -> Expr -> Trans Expr
+newMux c t e1 e2 = do
+  ms <- muxes <$> get
+  case find ((==mux) . snd) ms of
+    Nothing -> do
+      f <- fresh
+      let v = SVal t (ncMux f) _n_
+      modify $ \st -> st { muxes = (v, mux) : ms }
+      return v
+    Just (v, _) -> return v
+  where mux = (c, t, e1, e2)
+
+getMuxes :: Trans [Expr]
+getMuxes = muxes <$> get >>= return . concat . (map toConstraints)
+  where toConstraints (v, (c, _, e1, e2)) =
+          [ Op2 Bool Or (Op1 Bool Not c) (Op2 Bool Eq v e1)
+          , Op2 Bool Or c (Op2 Bool Eq v e2)
+          ]
 
 type Trans = State TransST
 
@@ -291,17 +308,17 @@ localConstraint :: Expr -> Trans ()
 localConstraint c =
   modify $ \st -> st {localConstraints = c : localConstraints st}
 
-fresh :: Trans String
+fresh :: Trans Integer
 fresh = do
   modify $ \st -> st {nextFresh = nextFresh st + 1}
-  n <- nextFresh <$> get
-  return $ ncFresh n
+  nextFresh <$> get
 
-getLocalConstraints :: Trans [Expr]
-getLocalConstraints = (localConstraints <$> get) <*
-  (modify $ \st -> st {localConstraints = []})
+popLocalConstraints :: Trans [Expr]
+popLocalConstraints = liftM2 (++) (localConstraints <$> get) getMuxes
+  <* (modify $ \st -> st {localConstraints = [], muxes = []})
+
 
 runTrans :: Trans a -> a
-runTrans m = evalState m $ TransST [] 0
+runTrans m = evalState m $ TransST [] [] 0
 
 --------------------------------------------------------------------------------
