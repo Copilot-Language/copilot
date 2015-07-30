@@ -24,7 +24,7 @@ import Control.Monad.Writer
 
 data Output = Output Status [String]
 
-data Status = Valid | Invalid | Unknown | Error
+data Status = Sat | Valid | Invalid | Unknown | Error
 
 data Feature = GiveCex | HandleAssumptions
 
@@ -84,6 +84,8 @@ prove (execWriter -> actions) spec = do
           prover <- startProver spec
           (Output status infos) <- askProver prover context [propId]
           case status of
+            Sat       -> putStrLn $ propId ++ ": sat "
+                                           ++ "(" ++ intercalate ", " infos ++ ")"
             Valid     -> putStrLn $ propId ++ ": valid "
                                            ++ "(" ++ intercalate ", " infos ++ ")"
             Invalid   -> putStrLn $ propId ++ ": invalid "
@@ -156,6 +158,9 @@ combineOutputs nameL nameR (Output stL msgL) (Output stR msgR) =
 
     combineSt Valid _         = Valid
     combineSt _ Valid         = Valid
+
+    combineSt Sat _           = Sat
+    combineSt _ Sat           = Sat
 
     combineSt Unknown Unknown = Unknown
 

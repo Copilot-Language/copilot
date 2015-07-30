@@ -8,7 +8,6 @@ module Copilot.Kind.Light.SMT
   ) where
 
 import Copilot.Kind.IL
-
 import Copilot.Kind.Light.Backend
 
 import System.IO
@@ -84,7 +83,7 @@ assume s@(Solver { model }) cs = do
   return s { model = model `union` fromList newAxioms }
 
 assume' :: SmtFormat a => Solver a -> [Expr] -> IO ()
-assume' s cs = forM_ cs (send s . assert)
+assume' s cs = forM_ cs (send s . assert . bsimpl)
 
 entailed :: SmtFormat a => Solver a -> [Expr] -> IO SatResult
 entailed s cs = do

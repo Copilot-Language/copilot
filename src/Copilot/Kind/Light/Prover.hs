@@ -5,6 +5,7 @@
 module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
+  , Strategy (..)
   , kInduction
   , yices, dReal, altErgo, metit, z3, cvc4, mathsat
   , Backend, SmtFormat
@@ -25,12 +26,13 @@ import qualified Copilot.Kind.Light.SMTLib as SMTLib
 import qualified Copilot.Kind.Light.TPTP as TPTP
 
 import Control.Applicative ((<$>), (<*))
-import Control.Monad (msum, unless, mzero)
+import Control.Monad (msum, unless, mzero, when)
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Maybe (MaybeT (..))
 
-import Data.Maybe (fromMaybe)
+import Data.Word
+import Data.Maybe (fromJust, fromMaybe)
 import Data.Function (on)
 import Data.Default (Default(..))
 import qualified Data.Map as Map
@@ -41,24 +43,21 @@ import System.IO (hClose)
 --------------------------------------------------------------------------------
 
 data Options = Options
-  { -- The maximum number of steps of the k-induction algorithm the prover runs
-    -- before giving up.
-    maxK    :: Integer
+  -- The maximum number of steps of the k-induction algorithm the prover runs
+  -- before giving up.
+  { strategy :: Strategy
 
-    -- If `onlyBmc` is set to `True`, the prover will only search for
-    -- counterexamples and won't try to prove the properties discharged to it.
-  , onlyBmc :: Bool
-
-    -- If `debug` is set to `True`, the SMTLib/TPTP queries produced by the prover
-    -- are displayed in the standard output.
+  -- If `debug` is set to `True`, the SMTLib/TPTP queries produced by the
+  -- prover are displayed in the standard output.
   , debug   :: Bool
   }
 
+data Strategy = OnlySat | Unbounded | Bounded Word32
+
 instance Default Options where
   def = Options
-    { maxK  = 10
-    , onlyBmc   = False
-    , debug     = False
+    { strategy = Bounded 10
+    , debug    = False
     }
 
 kInduction :: SmtFormat a => Options -> Backend a -> P.Prover
@@ -68,7 +67,7 @@ kInduction options backend = P.Prover
       P.GiveCex -> False
       P.HandleAssumptions -> True
   , P.startProver = return . ProofState options backend Map.empty . translate
-  , P.askProver   = kInduction' (maxK options)
+  , P.askProver   = kInduction' (strategy options)
   , P.closeProver = const $ return ()
   }
 
@@ -145,7 +144,7 @@ metit installDir = Backend
   { name            = "MetiTarski"
   , cmd             = "metit"
   , cmdOpts         =
-      [ "--time", "30"
+      [ "--time", "5"
       , "--autoInclude"
       , "--tptp", installDir
       , "/dev/stdin"
@@ -248,34 +247,59 @@ entailment sid assumptions props = do
   entailed sid props
 
 getVars :: [Expr] -> [VarDescr]
-getVars = nubBy' (compare `on` varName) . concatMap getExprVars
-
-getExprVars :: Expr -> [VarDescr]
-getExprVars (ConstB _) = []
-getExprVars (ConstI _) = []
-getExprVars (ConstR _) = []
-getExprVars (Ite _ e1 e2 e3) = getExprVars e1 ++ getExprVars e2 ++ getExprVars e3
-getExprVars (Op1 _ _ e) = getExprVars e
-getExprVars (Op2 _ _ e1 e2) = getExprVars e1 ++ getExprVars e2
-getExprVars (SVal t seq (Fixed i)) = [VarDescr (seq ++ "_" ++ show i) t []]
-getExprVars (SVal t seq (Var i)) = [VarDescr (seq ++ "_n" ++ show i) t []]
-getExprVars (FunApp t name args) = [VarDescr name t (map typeOf args)]
-  ++ concatMap getExprVars args
+getVars = nubBy' (compare `on` varName) . concatMap getVars'
+  where getVars' :: Expr -> [VarDescr]
+        getVars' = \case
+          ConstB _             -> []
+          ConstI _             -> []
+          ConstR _             -> []
+          Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
+          Op1 _ _ e            -> getVars' e
+          Op2 _ _ e1 e2        -> getVars' e1 ++ getVars' e2
+          SVal t seq (Fixed i) -> [VarDescr (seq ++ "_" ++ show i) t []]
+          SVal t seq (Var i)   -> [VarDescr (seq ++ "_n" ++ show i) t []]
+          FunApp t name args   -> [VarDescr name t (map typeOf args)]
+                                  ++ concatMap getVars' args
 
 unknown :: ProofScript b a
 unknown = mzero
 
+unknown' :: String -> ProofScript b Output
+unknown' msg = return $ Output P.Unknown [msg]
+
 invalid :: String -> ProofScript b Output
 invalid msg = return $ Output P.Invalid [msg]
+
+sat :: String -> ProofScript b Output
+sat msg = return $ Output P.Sat [msg]
 
 valid :: String -> ProofScript b Output
 valid msg = return $ Output P.Valid [msg]
 
-kInduction' :: SmtFormat b => Integer -> ProofState b -> [PropId] -> [PropId] -> IO Output
-kInduction' k s as ps =
-  (fromMaybe (Output P.Unknown ["proof by " ++ proofKind k ++ " failed"]) . fst)
-  <$> runPS (msum (map (induction as ps) $ range k) <* stopSolvers) s
-  where range k = if k >= 0 then [0 .. k] else [0 ..]
+kInduction' :: SmtFormat b => Strategy -> ProofState b -> [PropId] -> [PropId] -> IO Output
+kInduction' strat s as ps = case strat of
+  OnlySat -> (fromJust . fst) <$> runPS ((onlySat as ps) <* stopSolvers) s
+  Bounded k -> kinduct [0..toInteger k]
+  Unbounded -> kinduct [0..]
+  where kinduct ks = (fromMaybe (Output P.Unknown ["proof by k-induction failed"]) . fst)
+                     <$> runPS (msum (map (induction as ps) ks) <* stopSolvers) s
+
+onlySat :: SmtFormat b => [PropId] -> [PropId] -> ProofScript b Output
+onlySat assumptionIds toCheckIds = do
+
+  (modelInit, modelRec, toCheck, inductive) <- getModels assumptionIds toCheckIds
+
+  let base    = map (evalAt (Fixed 0)) modelRec
+      baseInv = map (evalAt (Fixed 0)) toCheck
+
+  when inductive $ liftIO $
+    putStrLn "Warning: OnlySat doesn't really work for inductive props."
+
+  entailment Base (modelInit ++ base) (map (Op1 Bool Not) baseInv) >>= \case
+    Unsat   -> invalid "prop not satisfiable"
+    Unknown -> unknown' "failed to find a satisfying model"
+    Sat     -> sat "prop is satisfiable"
+
 
 induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b Output
 induction assumptionIds toCheckIds k = do
@@ -290,14 +314,14 @@ induction assumptionIds toCheckIds k = do
       stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
 
   entailment Base (modelInit ++ base) baseInv >>= \case
-    Sat     -> invalid ("base case failed for " ++ proofKind k)
+    Sat     -> invalid $ "base case failed for " ++ proofKind k
     Unknown -> unknown
     Unsat   ->
       if not inductive then valid ("proved without induction")
       else entailment Step step stepInv >>= \case
         Sat     -> unknown
         Unknown -> unknown
-        Unsat   -> valid ("proved with " ++ proofKind k)
+        Unsat   -> valid $ "proved with " ++ proofKind k
 
 selectProps :: [PropId] -> Map.Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
