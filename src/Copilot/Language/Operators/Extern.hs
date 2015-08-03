@@ -32,14 +32,17 @@ module Copilot.Language.Operators.Extern
   , externArrayI64
   , externArrayF
   , externArrayD
-  , funArg -- * Deprecated.
   , externStruct
+  , funArg -- * Deprecated.
   ) where
 
 import Copilot.Core (Typed)
 import Copilot.Language.Stream
 import Data.Word
 import Data.Int
+
+import Data.List (find)
+import Data.Maybe (fromMaybe)
 
 type Size = Int
 
@@ -59,9 +62,20 @@ externArray = ExternArray
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
 
-externStruct :: Typed a => String -> [StructArg] -> Maybe (Stream a) -> Stream a
+externStruct :: Typed a => String -> [(String, Arg)] -> Stream a
 externStruct = ExternStruct
 
+{-(#) :: Typed a => Core.StructData -> String -> Stream a
+(Core.StructData {Core.structName = x, Core.structInst = y})#z = getField x z
+  where
+    getField struct_nm field_nm =
+      let test = find (\(Core.StructData name _) -> name == struct_nm) structs in
+      case test of
+        Nothing -> error "No struct named \"" ++ struct_nm ++ "\" in the spec"
+        Just element ->
+          fromMaybe (find (\(Core.SExpr name _) -> name == field_nm) (element Core.structInst))
+            (error "No field by the name of \"" ++ field_nm ++ "\"") element
+-}
 --------------------------------------------------------------------------------
 
 externB   :: String -> Maybe [Bool] -> Stream Bool
