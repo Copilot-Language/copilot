@@ -5,8 +5,7 @@
 module Copilot.Kind.Light.Prover
   ( module Data.Default
   , Options (..)
-  , Strategy (..)
-  , kInduction
+  , kInduction, onlySat
   , yices, dReal, altErgo, metit, z3, cvc4, mathsat
   , Backend, SmtFormat
   , SmtLib, Tptp
@@ -45,20 +44,29 @@ import System.IO (hClose)
 data Options = Options
   -- The maximum number of steps of the k-induction algorithm the prover runs
   -- before giving up.
-  { strategy :: Strategy
+  { maxK :: Word32
 
   -- If `debug` is set to `True`, the SMTLib/TPTP queries produced by the
   -- prover are displayed in the standard output.
   , debug   :: Bool
   }
 
-data Strategy = OnlySat | Unbounded | Bounded Word32
-
 instance Default Options where
   def = Options
-    { strategy = Bounded 10
-    , debug    = False
+    { maxK   = 10
+    , debug  = False
     }
+
+onlySat :: SmtFormat a => Options -> Backend a -> P.Prover
+onlySat options backend = P.Prover
+  { P.proverName  = "OnlySat"
+  , P.hasFeature  = \case
+      P.GiveCex -> False
+      P.HandleAssumptions -> True
+  , P.startProver = return . ProofState options backend Map.empty . translate
+  , P.askProver   = onlySat'
+  , P.closeProver = const $ return ()
+  }
 
 kInduction :: SmtFormat a => Options -> Backend a -> P.Prover
 kInduction options backend = P.Prover
@@ -67,7 +75,7 @@ kInduction options backend = P.Prover
       P.GiveCex -> False
       P.HandleAssumptions -> True
   , P.startProver = return . ProofState options backend Map.empty . translate
-  , P.askProver   = kInduction' (strategy options)
+  , P.askProver   = kInduction' (maxK options)
   , P.closeProver = const $ return ()
   }
 
@@ -276,52 +284,47 @@ sat msg = return $ Output P.Sat [msg]
 valid :: String -> ProofScript b Output
 valid msg = return $ Output P.Valid [msg]
 
-kInduction' :: SmtFormat b => Strategy -> ProofState b -> [PropId] -> [PropId] -> IO Output
-kInduction' strat s as ps = case strat of
-  OnlySat -> (fromJust . fst) <$> runPS ((onlySat as ps) <* stopSolvers) s
-  Bounded k -> kinduct [0..toInteger k]
-  Unbounded -> kinduct [0..]
-  where kinduct ks = (fromMaybe (Output P.Unknown ["proof by k-induction failed"]) . fst)
-                     <$> runPS (msum (map (induction as ps) ks) <* stopSolvers) s
+kInduction' :: SmtFormat b => Word32 -> ProofState b -> [PropId] -> [PropId] -> IO Output
+kInduction' k s as ps = (fromMaybe (Output P.Unknown ["proof by k-induction failed"]) . fst)
+  <$> runPS (msum (map induction [0..toInteger k]) <* stopSolvers) s
+  where
+    induction k = do
+      (modelInit, modelRec, toCheck, inductive) <- getModels as ps
 
-onlySat :: SmtFormat b => [PropId] -> [PropId] -> ProofScript b Output
-onlySat assumptionIds toCheckIds = do
+      let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
+          baseInv = [evalAt (Fixed k) m | m <- toCheck]
 
-  (modelInit, modelRec, toCheck, inductive) <- getModels assumptionIds toCheckIds
+      let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k + 1]]
+                    ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k]]
+          stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
 
-  let base    = map (evalAt (Fixed 0)) modelRec
-      baseInv = map (evalAt (Fixed 0)) toCheck
-
-  when inductive $ liftIO $
-    putStrLn "Warning: OnlySat doesn't really work for inductive props."
-
-  entailment Base (modelInit ++ base) (map (Op1 Bool Not) baseInv) >>= \case
-    Unsat   -> invalid "prop not satisfiable"
-    Unknown -> unknown' "failed to find a satisfying model"
-    Sat     -> sat "prop is satisfiable"
-
-
-induction :: SmtFormat b => [PropId] -> [PropId] -> Integer -> ProofScript b Output
-induction assumptionIds toCheckIds k = do
-
-  (modelInit, modelRec, toCheck, inductive) <- getModels assumptionIds toCheckIds
-
-  let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]
-      baseInv = [evalAt (Fixed k) m | m <- toCheck]
-
-  let step    = [evalAt (_n_plus i) m | m <- modelRec, i <- [0 .. k + 1]]
-                ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k]]
-      stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
-
-  entailment Base (modelInit ++ base) baseInv >>= \case
-    Sat     -> invalid $ "base case failed for " ++ proofKind k
-    Unknown -> unknown
-    Unsat   ->
-      if not inductive then valid ("proved without induction")
-      else entailment Step step stepInv >>= \case
-        Sat     -> unknown
+      entailment Base (modelInit ++ base) baseInv >>= \case
+        Sat     -> invalid $ "base case failed for " ++ proofKind k
         Unknown -> unknown
-        Unsat   -> valid $ "proved with " ++ proofKind k
+        Unsat   ->
+          if not inductive then valid ("proved without induction")
+          else entailment Step step stepInv >>= \case
+            Sat     -> unknown
+            Unknown -> unknown
+            Unsat   -> valid $ "proved with " ++ proofKind k
+
+
+onlySat' :: SmtFormat b => ProofState b -> [PropId] -> [PropId] -> IO Output
+onlySat' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
+  where
+    script  = do
+      (modelInit, modelRec, toCheck, inductive) <- getModels as ps
+
+      let base    = map (evalAt (Fixed 0)) modelRec
+          baseInv = map (evalAt (Fixed 0)) toCheck
+
+      when inductive $ liftIO $
+        putStrLn "Warning: OnlySat doesn't really work with induction."
+
+      entailment Base (modelInit ++ base) (map (Op1 Bool Not) baseInv) >>= \case
+        Unsat   -> invalid "prop not satisfiable"
+        Unknown -> unknown' "failed to find a satisfying model"
+        Sat     -> sat "prop is satisfiable"
 
 selectProps :: [PropId] -> Map.Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
