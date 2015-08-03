@@ -18,6 +18,7 @@ module Copilot.Language
   , module Copilot.Language.Operators.Eq
   , module Copilot.Language.Operators.Extern
   , module Copilot.Language.Operators.Local
+  , module Copilot.Language.Operators.Label
   , module Copilot.Language.Operators.Integral
   , module Copilot.Language.Operators.Mux
   , module Copilot.Language.Operators.Ord
@@ -46,6 +47,7 @@ import Copilot.Language.Operators.Eq
 import Copilot.Language.Operators.Extern
 import Copilot.Language.Operators.Integral
 import Copilot.Language.Operators.Local
+import Copilot.Language.Operators.Label
 import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal

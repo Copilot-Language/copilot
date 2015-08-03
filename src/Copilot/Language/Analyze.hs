@@ -16,7 +16,7 @@ module Copilot.Language.Analyze
 
 import Copilot.Core (DropIdx)
 import qualified Copilot.Core as C
-import Copilot.Language.Stream (Stream (..), Arg (..))
+import Copilot.Language.Stream (Stream (..), Arg (..), StructArg (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
 
@@ -38,7 +38,7 @@ data AnalyzeException
   | DropMaxViolation
   | NestedExternFun
   | NestedArray
-  | TooMuchRecussion
+  | TooMuchRecursion
   | DifferentTypes String
   | Redeclared String
   | BadNumberOfArgs String
@@ -104,13 +104,14 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 data SeenExtern = NoExtern
                 | SeenFun
                 | SeenArr
+                -- | SeenStruct
 
 --------------------------------------------------------------------------------
 
 analyzeExpr :: IORef Env -> Stream a -> IO ()
 analyzeExpr refStreams s = do
   b <- mapCheck refStreams
-  when b (throw TooMuchRecussion)
+  when b (throw TooMuchRecursion)
   go NoExtern M.empty s
 
   where
@@ -139,6 +140,17 @@ analyzeExpr refStreams s = do
                                  NoExtern -> go SeenArr nodes' idx
                                  SeenFun  -> throw NestedExternFun
                                  SeenArr  -> throw NestedArray
+      {-ExternStruct _ sargs me ->
+        checkInterp >> checkArgs
+        where
+          checkInterp = case me of
+                          Nothing -> return ()
+                          Just e -> go seenExt nodes' e
+          checkArgs = case seenExt of
+                        NoExtern
+                        SeenFun
+                        SeenArr
+                        SeenExtern-}
       Local e f           -> go seenExt nodes' e >> 
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -148,6 +160,7 @@ analyzeExpr refStreams s = do
       Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >> 
                              go seenExt nodes' e2 >> 
                              go seenExt nodes' e3
+      Label _ e           -> go seenExt nodes' e
 
 --------------------------------------------------------------------------------
 
@@ -194,39 +207,51 @@ analyzeDrop _ _                            = throw DropAppliedToNonAppend
 -- typed arguments.
 --------------------------------------------------------------------------------
 
--- An environment to store external variables, arrays, and functions, so that we
+-- An environment to store external variables, arrays, functions and structs, so that we
 -- can check types in the expression---e.g., if we declare the same external to
 -- have two different types.
 data ExternEnv = ExternEnv
   { externVarEnv  :: [(String, C.SimpleType)]
   , externArrEnv  :: [(String, C.SimpleType)]
   , externFunEnv  :: [(String, C.SimpleType)] 
-  , externFunArgs :: [(String, [C.SimpleType])] 
+  , externFunArgs :: [(String, [C.SimpleType])]
+  , externStructEnv  :: [(String, C.SimpleType)]
+  , externStructArgs :: [(String, [(String, C.SimpleType)])]
   }
 
 --------------------------------------------------------------------------------
 
--- Make sure external variables, functions, and arrays are correctly typed.
+-- Make sure external variables, functions, arrays, and structs are correctly typed.
 
 analyzeExts :: ExternEnv -> IO ()
 analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
                       , externFunEnv  = funs 
-                      , externFunArgs = args }
+                      , externFunArgs = args
+                      , externStructEnv  = structs
+                      , externStructArgs = struct_args }
     = do
     -- symbol names redeclared?
     findDups vars arrs
     findDups vars funs
+    --findDups vars struct_args
+    findDups vars structs
     findDups arrs funs
+    --findDups arrs struct_args
+    findDups arrs structs
+    --findDups funs struct_args
+    findDups funs structs
     -- conflicting types?
     conflictingTypes vars
     conflictingTypes arrs
     conflictingTypes funs
     -- symbol names given different number of args and right types?
     funcArgCheck args
+    --funcArgCheck struct_args
+    structArgCheck struct_args
   
   where
-  findDups :: [(String, C.SimpleType)] -> [(String, C.SimpleType)] -> IO ()
+  findDups :: [(String, a)] -> [(String, b)] -> IO ()
   findDups ls0 ls1 = mapM_ (\(name,_) -> dup name) ls0
     where
     dup nm = mapM_ ( \(name',_) -> if name' == nm 
@@ -260,6 +285,9 @@ analyzeExts ExternEnv { externVarEnv  = vars
                else throw (BadFunctionArgType name)
         else throw (BadNumberOfArgs name) 
 
+  structArgCheck :: [(String, [(String, C.SimpleType)])] -> IO ()
+  structArgCheck ls = foldr (\sarg' _ -> findDups sarg' sarg') (return ()) $ map snd ls
+
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
 
@@ -274,7 +302,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 specExts :: IORef Env -> Spec -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
-           (ExternEnv [] [] [] []) 
+           (ExternEnv [] [] [] [] [] []) 
            (triggers $ runSpec spec)
   foldM observerExts env (observers $ runSpec spec) 
 
@@ -291,7 +319,7 @@ specExts refStreams spec = do
 collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
 collectExts refStreams stream_ env_ = do
   b <- mapCheck refStreams
-  when b (throw TooMuchRecussion)
+  when b (throw TooMuchRecursion)
   go M.empty env_ stream_
 
   where
@@ -326,6 +354,17 @@ collectExts refStreams stream_ env_ = do
         let arr = ( name, getSimpleType stream )
         return env' { externArrEnv = arr : externArrEnv env' }
 
+      ExternStruct name sargs me -> do
+        env' <- case me of
+                  Nothing -> return env
+                  Just e -> go nodes env e
+        env'' <- foldM (\env'' (StructArg { arg' = Arg arg_ }) -> go nodes env'' arg_)
+                  env' sargs
+        let argTypes = map (\(StructArg { name_ = n, arg' = Arg arg_ }) -> (n, getSimpleType arg_)) sargs
+        let struct = (name, C.SStruct)
+        return env'' { externStructEnv = struct : externStructEnv env''
+                     , externStructArgs = (name, argTypes) : externStructArgs env'' }
+
       Local e _              -> go nodes env e 
       Var _                  -> return env
       Op1 _ e                -> go nodes env e 
@@ -334,6 +373,7 @@ collectExts refStreams stream_ env_ = do
       Op3 _ e1 e2 e3         -> do env' <- go nodes env e1  
                                    env'' <- go nodes env' e2 
                                    go nodes env'' e3 
+      Label _ e              -> go nodes env e 
 
 --------------------------------------------------------------------------------
 
