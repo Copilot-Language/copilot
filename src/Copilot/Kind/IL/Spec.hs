@@ -29,7 +29,7 @@ type SeqId    =  String
 type Offset   =  Integer
 
 data SeqIndex = Fixed Integer | Var Offset
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 data Type = Bool | Real | Integer
   deriving (Eq, Ord)
@@ -49,7 +49,7 @@ data Expr
   | Op2    Type Op2 Expr Expr
   | SVal   Type SeqId SeqIndex
   | FunApp Type String [Expr]
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 --------------------------------------------------------------------------------
 

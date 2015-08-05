@@ -34,6 +34,7 @@ import Data.Word
 import Data.Maybe (fromJust, fromMaybe)
 import Data.Function (on)
 import Data.Default (Default(..))
+import Data.Map (Map)
 import qualified Data.Map as Map
 import Copilot.Kind.Misc.Utils
 
@@ -53,8 +54,8 @@ data Options = Options
 
 instance Default Options where
   def = Options
-    { maxK   = 10
-    , debug  = False
+    { maxK  = 10
+    , debug = False
     }
 
 onlySat :: SmtFormat a => Options -> Backend a -> P.Prover
@@ -175,7 +176,7 @@ runPS ps = runStateT (runMaybeT ps)
 data ProofState b = ProofState
   { options :: Options
   , backend :: Backend b
-  , solvers :: Map.Map SolverId (SMT.Solver b)
+  , solvers :: Map SolverId (SMT.Solver b)
   , spec    :: IL
   }
 
@@ -209,9 +210,9 @@ startNewSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 startNewSolver sid = do
   opts <- options <$> get
   backend <- backend <$> get
-  solver <- liftIO $ SMT.startNewSolver (show sid) (debug opts) backend
-  setSolver sid solver
-  return solver
+  s <- liftIO $ SMT.startNewSolver (show sid) (debug opts) backend
+  setSolver sid s
+  return s
 
 declVars :: SmtFormat b => SolverId -> [VarDescr] -> ProofScript b ()
 declVars sid vs = do
@@ -228,15 +229,15 @@ assume sid cs = do
 entailed :: SmtFormat b => SolverId -> [Expr] -> ProofScript b SatResult
 entailed sid cs = do
   backend <- backend <$> get
-  solver <- getSolver sid
-  result <- liftIO $ SMT.entailed solver cs
+  s <- getSolver sid
+  result <- liftIO $ SMT.entailed s cs
   unless (incremental backend) $ stop sid
   return result
 
 stop :: SmtFormat b => SolverId -> ProofScript b ()
-stop id = do
-  s <- getSolver id
-  deleteSolver id
+stop sid = do
+  s <- getSolver sid
+  deleteSolver sid
   liftIO $ SMT.stop s
 
 proofKind :: Integer -> String
@@ -326,7 +327,7 @@ onlySat' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
         Unknown -> unknown' "failed to find a satisfying model"
         Sat     -> sat "prop is satisfiable"
 
-selectProps :: [PropId] -> Map.Map PropId ([Expr], Expr) -> ([Expr], [Expr])
+selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
     where squash (a, b) = (concat a, b)
