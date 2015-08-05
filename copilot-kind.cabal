@@ -39,7 +39,9 @@ library
                           , xml
                           , random
                           , transformers
-                          
+                          , smtlib2
+                          , ansi-terminal
+
   exposed-modules         : Copilot.Kind
                           , Copilot.Kind.Lib
                           , Copilot.Kind.Light
@@ -47,6 +49,7 @@ library
                           , Copilot.Kind.IL
                           , Copilot.Kind.TransSys
                           , Copilot.Kind.Light.Prover
+                          , Copilot.Kind.Light.Z3Prover
                           , Copilot.Kind.Kind2.Prover
                           
   other-modules           : Copilot.Kind.Prover
