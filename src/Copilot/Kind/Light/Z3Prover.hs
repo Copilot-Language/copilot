@@ -190,9 +190,9 @@ entailment sid assumptions props = do
     (transB (foldl' (Op2 Bool Or) (ConstB False) $ map (Op1 Bool Not) props) >>= lift . assert) vs'
 
   res <- if hasSomeReal props
-    then liftIO $ performSMT s $ checkSat' Nothing (CheckSatLimits (Just 5000) Nothing)
-    else liftIO $ performSMT s $ checkSat' (Just (UsingParams (CustomTactic "qfnra-nlsat") []))
+    then liftIO $ performSMT s $ checkSat' (Just (UsingParams (CustomTactic "qfnra-nlsat") []))
          (CheckSatLimits (Just 5000) Nothing)
+    else liftIO $ performSMT s $ checkSat' Nothing (CheckSatLimits (Just 5000) Nothing)
 
   when (res == Sat) $ void $ liftIO $ performSMT s $ getModel
   liftIO $ performSMT s $ pop
@@ -200,7 +200,7 @@ entailment sid assumptions props = do
   return res
 
 -- TODO
-hasSomeReal _ = False
+hasSomeReal _ = True
 
 unknown :: ProofScript a
 unknown = mzero
