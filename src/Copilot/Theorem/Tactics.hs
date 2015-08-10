@@ -18,7 +18,7 @@ assume :: PropRef a -> Proof a
 assume (PropRef p) = Proof $ tell [Assume p]
 
 admit :: Proof a
-admit = Proof $ tell [Admit p]
+admit = Proof $ tell [Admit]
 
 trigArith :: Proof Universal
 trigArith = SMT.onlyValidity def SMT.dReal
