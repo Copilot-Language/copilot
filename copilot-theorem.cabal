@@ -1,0 +1,86 @@
+cabal-version             : >= 1.10
+name                      : copilot-theorem
+description:
+
+  Some tools to prove properties on Copilot programs with k-induction model
+  checking.
+  
+version                   : 0.1
+license                   : BSD3
+license-file              : LICENSE
+maintainer                : jonathan.laurent@ens.fr
+stability                 : Experimental
+category                  : Language, Embedded
+build-type                : Simple
+extra-source-files        : README.md
+
+author                    : Jonathan Laurent
+
+library
+  default-language        : Haskell2010
+  hs-source-dirs          : src
+
+  ghc-options             : -Wall -fwarn-tabs 
+                            -fno-warn-name-shadowing
+                            -fno-warn-unused-binds
+                            -fno-warn-missing-signatures
+
+  build-depends           : base >= 4.3
+                          , copilot-core
+                          , mtl
+                          , containers
+                          , pretty
+                          , process
+                          , directory
+                          , parsec
+                          , data-default
+                          , bimap
+                          , xml
+                          , random
+                          , transformers
+                          , smtlib2
+                          , ansi-terminal
+
+  exposed-modules         : Copilot.Theorem
+                          , Copilot.Theorem.Prove
+                          , Copilot.Theorem.Light
+                          , Copilot.Theorem.Kind2
+                          , Copilot.Theorem.IL
+                          , Copilot.Theorem.TransSys
+                          , Copilot.Theorem.Light.Prover
+                          , Copilot.Theorem.Light.Z3Prover
+                          , Copilot.Theorem.Kind2.Prover
+                          
+  other-modules           : Copilot.Theorem.Tactics
+                          
+                          , Copilot.Theorem.IL.PrettyPrint
+                          , Copilot.Theorem.IL.Spec
+                          , Copilot.Theorem.IL.Translate
+                          , Copilot.Theorem.IL.Transform
+                          
+                          , Copilot.Theorem.Kind2.AST
+                          , Copilot.Theorem.Kind2.Output
+                          , Copilot.Theorem.Kind2.PrettyPrint
+                          , Copilot.Theorem.Kind2.Translate
+                          
+                          , Copilot.Theorem.Light.SMT
+                          , Copilot.Theorem.Light.SMTLib
+                          , Copilot.Theorem.Light.TPTP
+                          , Copilot.Theorem.Light.Backend
+                          
+                          , Copilot.Theorem.Misc.Error
+                          , Copilot.Theorem.Misc.SExpr
+                          , Copilot.Theorem.Misc.Utils
+                          
+                          , Copilot.Theorem.TransSys.Cast
+                          , Copilot.Theorem.TransSys.PrettyPrint
+                          , Copilot.Theorem.TransSys.Renaming
+                          , Copilot.Theorem.TransSys.Spec
+                          , Copilot.Theorem.TransSys.Transform
+                          , Copilot.Theorem.TransSys.Translate
+                          , Copilot.Theorem.TransSys.Invariants
+                          , Copilot.Theorem.TransSys.Operators
+                          , Copilot.Theorem.TransSys.Type
+                          
+
+  

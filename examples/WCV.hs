@@ -7,8 +7,10 @@ import Copilot.Language
 
 import Prelude ()
 
-import Copilot.Kind.Light.Prover
-import Copilot.Kind.Prover
+import Copilot.Theorem
+
+import qualified Copilot.Language.Operators.Propositional as P
+-- import Copilot.Theorem.Prover
 
 dthr    = externD "dthr" Nothing
 tthr    = externD "tthr" Nothing
@@ -35,11 +37,11 @@ s = (sx, sy)
 -- Vector stuff --
 ------------------
 
-(<*>) :: Vect2 -> Vect2 -> Stream Double
-(<*>) (x1, y1) (x2, y2) = (x1 * x2) + (y1 * y2)
+(|*|) :: Vect2 -> Vect2 -> Stream Double
+(|*|) (x1, y1) (x2, y2) = (x1 * x2) + (y1 * y2)
 
 sq :: Vect2 -> Stream Double
-sq x = x <*> x
+sq x = x |*| x
 
 norm :: Vect2 -> Stream Double
 norm = sqrt . sq
@@ -48,8 +50,7 @@ det :: Vect2 -> Vect2 -> Stream Double
 det (x1, y1) (x2, y2) = (x1 * y2) - (x2 * y1)
 
 (~=) :: Stream Double -> Stream Double -> Stream Bool
-a ~= b = (abs (a - b)) < epsilon
-epsilon = 0.001
+a ~= b = (abs (a - b)) < 0.001
 
 neg :: Vect2 -> Vect2
 neg (x, y) = (negate x, negate y)
@@ -59,25 +60,25 @@ neg (x, y) = (negate x, negate y)
 --------------------
 
 tau :: Vect2 -> Vect2 -> Stream Double
-tau s v = mux (s <*> v < 0) ((-(sq s)) / (s <*> v)) (-1)
+tau s v = mux (s |*| v < 0) ((-(sq s)) / (s |*| v)) (-1)
 
 tcpa :: Vect2 -> Vect2 -> Stream Double
-tcpa s v@(vx, vy) = mux (vx ~= 0 && vy ~= 0) 0 (-(s <*> v)/(sq v))
+tcpa s v@(vx, vy) = mux (vx ~= 0 && vy ~= 0) 0 (-(s |*| v)/(sq v))
 
 taumod :: Vect2 -> Vect2 -> Stream Double
-taumod s v = mux (s <*> v < 0) ((dthr * dthr - (sq s))/(s <*> v)) (-1)
+taumod s v = mux (s |*| v < 0) ((dthr * dthr - (sq s))/(s |*| v)) (-1)
 
 tep :: Vect2 -> Vect2 -> Stream Double
-tep s v = mux ((s <*> v < 0) && ((delta s v dthr) >= 0))
+tep s v = mux ((s |*| v < 0) && ((delta s v dthr) >= 0))
   (theta s v dthr (-1))
   (-1)
 
 delta :: Vect2 -> Vect2 -> Stream Double -> Stream Double
-delta s v d = d**2 * (sq v) - (det s v)**2
+delta s v d = (d*d) * (sq v) - ((det s v)*(det s v))
 -- Here the formula says : (s . orth v)^2 which is the same as det(s,v)^2
 
 theta :: Vect2 -> Vect2 -> Stream Double -> Stream Double -> Stream Double
-theta s v d e = (-(s <*> v) + e * (sqrt $ delta s v d)) / (sq v)
+theta s v d e = (-(s |*| v) + e * (sqrt $ delta s v d)) / (sq v)
 
 --------------------------
 -- Some tools for times --
@@ -113,80 +114,96 @@ horizontalWCV tvar s v =
 -- Locally convex --
 --------------------
 
+t1 :: Stream Double
 t1 = externD "t1" Nothing
+
+t2 :: Stream Double
 t2 = externD "t2" Nothing
+
+t3 :: Stream Double
 t3 = externD "t3" Nothing
 
-lc :: (Vect2 -> Vect2 -> Stream Double) -> Stream Bool
-lc tvar = (0 <= t1 && t1 <= t2 && t2 <= t3)
-   ==> not ((wcv tvar (sx + t1*vx, sy + t1*vy) (sz + t1*vz) v vz)
-   &&  (not $ wcv tvar (sx + t2*vx, sy + t2*vy) (sz + t2*vz) v vz)
-   &&  (wcv tvar (sx + t3*vx, sy + t3*vy) (sz + t3*vz) v vz))
+locallyConvex :: (Vect2 -> Vect2 -> Stream Double) -> Stream Bool
+locallyConvex tvar = (0 <= t1 && t1 <= t2 && t2 <= t3)
+   ==> not ( (wcv tvar (sx + t1*vx, sy + t1*vy) (sz + t1*vz) v vz)
+      &&  (not $ wcv tvar (sx + t2*vx, sy + t2*vy) (sz + t2*vz) v vz)
+      &&  (wcv tvar (sx + t3*vx, sy + t3*vy) (sz + t3*vz) v vz))
 
 ----------
--- Spec --
+-- Specs --
 ----------
 
-spec :: Spec
-spec = do
-  -------------------------
-  -- Horizontal symmetry --
-  -------------------------
-  prop "1a" $ (tau s v)      ~= (tau (neg s) (neg v))
-  prop "1b" $ (tcpa s v)   ~= (tcpa (neg s) (neg v))
-  prop "1c" $ (taumod s v) ~= (taumod (neg s) (neg v))
-  prop "1d" $ (tep s v)    ~= (tep (neg s) (neg v))
+-------------------------
+-- Horizontal symmetry --
+-------------------------
+horizSymmetry :: Spec
+horizSymmetry = do
+  theorem_ "1a" (forall $ (tau s v)    ~= (tau (neg s) (neg v)))     arith
+  theorem_ "1b" (forall $ (tcpa s v)   ~= (tcpa (neg s) (neg v)))    arith
+  theorem_ "1c" (forall $ (taumod s v) ~= (taumod (neg s) (neg v)))  arith
+  theorem_ "1d" (forall $ (tep s v)    ~= (tep (neg s) (neg v)))     arith
 
-  -------------------------
-  -- Horizontal ordering --
-  -------------------------
-  prop "2a" $ ((s <*> v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
-    ==> ((tep s v) <= (taumod s v))
-  prop "2b" $ ((s <*> v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
-    ==> ((taumod s v) <= (tcpa s v))
-  prop "2c" $ ((s <*> v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
-    ==> ((tcpa s v) <= (tau s v))
+-------------------------
+-- Horizontal ordering --
+-------------------------
+horizOrdering :: Spec
+horizOrdering = do
+  theorem_ "2a" (forall $ ((s |*| v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
+    ==> ((tep s v) <= (taumod s v)))
+    arith
+  theorem_ "2b" (forall $ ((s |*| v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
+    ==> ((taumod s v) <= (tcpa s v)))
+    arith
+  theorem_ "2c" (forall $ ((s |*| v) < 0 && (norm s) > dthr && (dcpa s v) <= dthr)
+    ==> ((tcpa s v) <= (tau s v)))
+    arith
 
-  --------------
-  -- Symmetry --
-  --------------
-  prop "3a" $ (wcv tau s sz v vz) == (wcv tau (neg s) (-sz) (neg v) (-vz))
-  prop "3b" $ (wcv tcpa s sz v vz) == (wcv tcpa (neg s) (-sz) (neg v) (-vz))
-  prop "3c" $ (wcv taumod s sz v vz) == (wcv taumod (neg s) (-sz) (neg v) (-vz))
-  prop "3d" $ (wcv tep s sz v vz) == (wcv tep (neg s) (-sz) (neg v) (-vz))
+--------------
+-- Symmetry --
+--------------
+symmetry :: Spec
+symmetry = do
+  theorem_ "3a" (forall $ (wcv tau s sz v vz)    == (wcv tau (neg s) (-sz) (neg v) (-vz)))
+    arith
+  theorem_ "3b" (forall $ (wcv tcpa s sz v vz)   == (wcv tcpa (neg s) (-sz) (neg v) (-vz)))
+    arith
+  theorem_ "3c" (forall $ (wcv taumod s sz v vz) == (wcv taumod (neg s) (-sz) (neg v) (-vz)))
+    arith
+  theorem_ "3d" (forall $ (wcv tep s sz v vz)    == (wcv tep (neg s) (-sz) (neg v) (-vz)))
+    arith
 
-  ---------------
-  -- Inclusion --
-  ---------------
-  prop "4i"   $ (wcv tau s sz v vz)    ==> (wcv tcpa s sz v vz)
-  prop "4ii"  $ (wcv tcpa s sz v vz)   ==> (wcv taumod s sz v vz)
-  prop "4iii" $ (wcv taumod s sz v vz) ==> (wcv tep s sz v vz)
+---------------
+-- Inclusion --
+---------------
+inclusion :: Spec
+inclusion = do
+  theorem_ "4i"   (forall $ (wcv tau s sz v vz)    ==> (wcv tcpa s sz v vz))
+    arith
+  theorem_ "4ii"  (forall $ (wcv tcpa s sz v vz)   ==> (wcv taumod s sz v vz ))
+    arith
+  theorem_ "4iii" (forall $ (wcv taumod s sz v vz) ==> (wcv tep s sz v vz))
+    arith
 
-  ---------------------
-  -- Local convexity --
-  ---------------------
-  prop "5a" $ lc tcpa
-  prop "5b" $ lc taumod
-  prop "5c" $ lc tep
+---------------------
+-- Local convexity --
+---------------------
+localConvexity :: Spec
+localConvexity = do
+  theorem_ "5a" (forall $ locallyConvex tcpa)        arith
+  theorem_ "5b" (forall $ locallyConvex taumod)      arith
+  theorem_ "5c" (forall $ locallyConvex tep)         arith
 
   -- Invalid, but satisfiable.
-  prop "bad_6" $ lc tau
+  theorem_ "6"  (P.not (forall $ locallyConvex tau)) arithSat
 
-  -- Invalid, but satisfiable.
-  prop "6" $ not $ lc tau
+x :: Stream Double
+x = externD "x" Nothing
+
+y :: Stream Double
+y = externD "y" Nothing
 
 --------------------------------------------------------------------------------
 
-checkProp p backend = reify spec >>= prove (check (induct backend) p)
-
-checkSat p backend = reify spec >>= prove (check (sat backend) p)
-
-induct :: SmtFormat a => Backend a -> Prover
-induct = kInduction (def {maxK = 0, debug = True})
-
-sat :: SmtFormat a => Backend a -> Prover
-sat = onlySat (def {debug = True})
-
-kinduct :: SmtFormat a => Backend a -> Prover
-kinduct = kInduction (def {debug = True})
+arith    = onlyValidity def { nraNLSat = True, debug = False }
+arithSat = onlySat      def { nraNLSat = True, debug = False }
 
