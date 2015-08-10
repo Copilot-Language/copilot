@@ -38,7 +38,6 @@ exprInst t =
     C.Word8  -> ExprInst ; C.Word16 -> ExprInst
     C.Word32 -> ExprInst ; C.Word64 -> ExprInst
     C.Float  -> ExprInst ; C.Double -> ExprInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -53,7 +52,6 @@ assignInst t =
     C.Word8  -> AssignInst ; C.Word16 -> AssignInst
     C.Word32 -> AssignInst ; C.Word64 -> AssignInst
     C.Float  -> AssignInst ; C.Double -> AssignInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -68,7 +66,6 @@ eqEInst t =
     C.Word8  -> EqEInst ; C.Word16 -> EqEInst
     C.Word32 -> EqEInst ; C.Word64 -> EqEInst
     C.Float  -> EqEInst ; C.Double -> EqEInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -83,7 +80,6 @@ ordEInst t =
     C.Word8  -> OrdEInst ; C.Word16 -> OrdEInst
     C.Word32 -> OrdEInst ; C.Word64 -> OrdEInst
     C.Float  -> OrdEInst ; C.Double -> OrdEInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -98,7 +94,6 @@ numEInst t =
     C.Word8  -> NumEInst ; C.Word16 -> NumEInst
     C.Word32 -> NumEInst ; C.Word64 -> NumEInst
     C.Float  -> NumEInst ; C.Double -> NumEInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -114,7 +109,6 @@ integralEInst t =
     C.Word32 -> IntegralEInst ; C.Word64 -> IntegralEInst
     C.Float  -> badInst
     C.Double -> badInst 
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
 
@@ -145,6 +139,5 @@ bitsEInst t =
     C.Word64 -> BitsEInst
     C.Float  -> badInst
     C.Double -> badInst
-    C.Struct -> badInst
 
 --------------------------------------------------------------------------------
