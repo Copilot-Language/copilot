@@ -38,10 +38,12 @@ library
                , mtl >= 2.0 && < 3
                , ghc-prim >= 0.2
                , copilot-core >= 0.1
+               , copilot-theorem >= 0.1
   exposed-modules: Copilot
                  , Copilot.Language
                  , Copilot.Language.Operators.BitWise
                  , Copilot.Language.Operators.Boolean
+                 , Copilot.Language.Operators.Propositional
                  , Copilot.Language.Operators.Cast
                  , Copilot.Language.Operators.Constant
                  , Copilot.Language.Operators.Eq

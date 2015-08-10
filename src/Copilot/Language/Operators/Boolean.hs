@@ -4,7 +4,7 @@
 
 -- | Boolean operators.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Trustworthy, FlexibleInstances #-}
 
 module Copilot.Language.Operators.Boolean
   ( (&&)
@@ -21,6 +21,8 @@ import Copilot.Language.Prelude
 import Copilot.Language.Operators.Constant (constant)
 import Copilot.Language.Stream
 import qualified Prelude as P
+
+import Copilot.Language.Spec (Prop (..) )
 
 --------------------------------------------------------------------------------
 

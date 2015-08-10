@@ -7,6 +7,7 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Copilot.Language.Spec
   ( Spec
@@ -20,9 +21,17 @@ module Copilot.Language.Spec
   , trigger
   , arg
   , Property (..)
-  , prop
+  , Prop (..)
+  , prop, prop_
   , properties
+  , theorem, theorem_
+  , theorems
+  , forall, exists
+  , extractProp
+  , Universal, Existential
   ) where
+
+import Prelude hiding (not)
 
 import Control.Monad.Writer
 import Data.List (foldl')
@@ -33,6 +42,8 @@ import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 
+import Copilot.Theorem.Prove
+
 --------------------------------------------------------------------------------
 
 type Spec = Writer [SpecItem] ()
@@ -40,25 +51,25 @@ type Spec = Writer [SpecItem] ()
 --------------------------------------------------------------------------------
 
 runSpec :: Spec -> [SpecItem]
-runSpec = execWriter 
+runSpec = execWriter
 
 --------------------------------------------------------------------------------
 
 observers :: [SpecItem] -> [Observer]
-observers = 
+observers =
   foldl' lets' []
   where
   lets' ls e =
-    case e of 
+    case e of
       ObserverItem l -> l : ls
       _              -> ls
 
 triggers :: [SpecItem] -> [Trigger]
-triggers = 
+triggers =
   foldl' triggers' []
   where
   triggers' ls e =
-    case e of 
+    case e of
       TriggerItem t -> t : ls
       _             -> ls
 
@@ -71,27 +82,27 @@ properties =
       PropertyItem p -> p : ls
       _              -> ls
 
+theorems :: [SpecItem] -> [(Property, UProof)]
+theorems =
+  foldl' theorems' []
+  where
+  theorems' ls e =
+    case e of
+      TheoremItem p -> p : ls
+      _              -> ls
+
 --------------------------------------------------------------------------------
 
 data SpecItem
   = ObserverItem Observer
   | TriggerItem  Trigger
   | PropertyItem Property
+  | TheoremItem (Property, UProof)
 
 --------------------------------------------------------------------------------
 
 data Observer where
   Observer :: Typed a => String -> Stream a -> Observer
-
---------------------------------------------------------------------------------
-
-data Property where
-  Property :: String -> Stream Bool -> Property
-
---------------------------------------------------------------------------------
-
-prop :: String -> Stream Bool -> Spec
-prop name e = tell [PropertyItem $ Property name e]
 
 --------------------------------------------------------------------------------
 
@@ -107,6 +118,45 @@ data Trigger where
 
 trigger :: String -> Stream Bool -> [Arg] -> Spec
 trigger name e args = tell [TriggerItem $ Trigger name e args]
+
+--------------------------------------------------------------------------------
+
+data Property where
+  Property :: String -> Stream Bool -> Property
+
+--------------------------------------------------------------------------------
+
+data Prop a where
+  Forall :: Stream Bool -> Prop Universal
+  Exists :: Stream Bool -> Prop Existential
+
+forall :: Stream Bool -> Prop Universal
+forall = Forall
+
+exists :: Stream Bool -> Prop Existential
+exists = Exists
+
+extractProp :: Prop a -> Stream Bool
+extractProp (Forall p) = p
+extractProp (Exists p) = p
+
+--------------------------------------------------------------------------------
+
+prop_ :: String -> Prop a -> Spec
+prop_ name e = tell [PropertyItem $ Property name (extractProp e)]
+
+prop :: String -> Prop a -> Writer [SpecItem] (PropRef a)
+prop name e = tell [PropertyItem $ Property name (extractProp e)]
+  >> return (PropRef name)
+
+--------------------------------------------------------------------------------
+
+theorem_ :: String -> Prop a -> Proof a -> Spec
+theorem_ name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
+
+theorem :: String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
+theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
+  >> return (PropRef name)
 
 --------------------------------------------------------------------------------
 
