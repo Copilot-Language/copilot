@@ -22,8 +22,6 @@ import Copilot.Language.Operators.Constant (constant)
 import Copilot.Language.Stream
 import qualified Prelude as P
 
-import Copilot.Language.Spec (Prop (..) )
-
 --------------------------------------------------------------------------------
 
 true :: Stream Bool

@@ -41,9 +41,6 @@ import Copilot.Language.Stream
 import Data.Word
 import Data.Int
 
-import Data.List (find)
-import Data.Maybe (fromMaybe)
-
 type Size = Int
 
 --------------------------------------------------------------------------------
@@ -54,7 +51,7 @@ extern = Extern
 externFun :: Typed a => String -> [Arg] -> Maybe (Stream a) -> Stream a
 externFun = ExternFun
 
-externArray :: (Typed a, Typed b, Integral a) 
+externArray :: (Typed a, Typed b, Integral a)
             => String -> Stream a -> Size -> Maybe [[b]] -> Stream b
 externArray = ExternArray
 
@@ -79,9 +76,9 @@ externStruct = ExternStruct
 --------------------------------------------------------------------------------
 
 externB   :: String -> Maybe [Bool] -> Stream Bool
-externB   = extern 
+externB   = extern
 externW8  :: String -> Maybe [Word8] -> Stream Word8
-externW8  = extern 
+externW8  = extern
 externW16 :: String -> Maybe [Word16] -> Stream Word16
 externW16 = extern
 externW32 :: String -> Maybe [Word32] -> Stream Word32
@@ -103,47 +100,47 @@ externD   = extern
 
 --------------------------------------------------------------------------------
 
-externArrayB   :: (Typed a, Integral a) 
-               => String -> Stream a -> Size 
+externArrayB   :: (Typed a, Integral a)
+               => String -> Stream a -> Size
                          -> Maybe [[Bool]] -> Stream Bool
-externArrayB   = externArray 
-externArrayW8  :: (Typed a, Integral a) 
-               => String -> Stream a -> Size 
+externArrayB   = externArray
+externArrayW8  :: (Typed a, Integral a)
+               => String -> Stream a -> Size
                          -> Maybe [[Word8]] -> Stream Word8
-externArrayW8  = externArray 
+externArrayW8  = externArray
 externArrayW16 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Word16]] -> Stream Word16
 externArrayW16 = externArray
 externArrayW32 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Word32]] -> Stream Word32
 externArrayW32 = externArray
 externArrayW64 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Word64]] -> Stream Word64
 externArrayW64 = externArray
 externArrayI8  :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Int8]] -> Stream Int8
 externArrayI8  = externArray
 externArrayI16 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Int16]] -> Stream Int16
 externArrayI16 = externArray
 externArrayI32 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Int32]] -> Stream Int32
 externArrayI32 = externArray
 externArrayI64 :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Int64]] -> Stream Int64
 externArrayI64 = externArray
 externArrayF   :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Float]] -> Stream Float
 externArrayF   = externArray
 externArrayD   :: (Typed a, Integral a)
-               => String -> Stream a -> Size 
+               => String -> Stream a -> Size
                          -> Maybe [[Double]] -> Stream Double
 externArrayD   = externArray
