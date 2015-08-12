@@ -30,10 +30,6 @@ instance (Typed a, Bits a) => Bits (Stream a) where
   rotate       = P.error "tbd: rotate"
   bitSize      = P.error "tbd: bitSize"
   isSigned     = P.error "tbd: issigned"
-  bitSizeMaybe = P.error "tbd: bitSizeMaybe"
-  testBit      = P.error "tbd: testBit"
-  bit          = P.error "tbd: bit"
-  popCount     = P.error "tbd: popCount"
 
 -- Avoid redefinition of the Operators.Boolean xor
 (.^.) :: Bits a => a -> a -> a
