@@ -19,3 +19,6 @@
 [submodule "lib/copilot-discussion"]
 	path = lib/copilot-discussion
 	url = https://github.com/Copilot-Language/copilot-discussion.git
+[submodule "lib/copilot-theorem"]
+	path = lib/copilot-theorem
+	url = https://github.com/Copilot-Language/copilot-theorem
