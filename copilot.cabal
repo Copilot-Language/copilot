@@ -39,13 +39,13 @@ library
     build-depends:
                        base >= 4.0 && < 5
                      , copilot-core >= 2.1.2
+                     , copilot-theorem >= 0.1
                      , copilot-language >= 2.1.2
                      , copilot-libraries >= 2.1.1
                      , copilot-sbv >= 0.6
                      , copilot-cbmc >= 2.1.2
                      , copilot-c99 >= 2.1.2
 
---                     , copilot-cbmc
     exposed-modules: Language.Copilot
 
 executable copilot-regression
@@ -56,6 +56,7 @@ executable copilot-regression
   build-depends:
                      base >= 4.0 && < 5
                    , copilot-core >= 2.1.2
+                   , copilot-theorem >= 0.1
                    , copilot-language >= 2.1.2
                    , copilot-libraries >= 2.1.1
                    , copilot-sbv >= 0.6

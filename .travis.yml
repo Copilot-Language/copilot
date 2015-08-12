@@ -20,8 +20,6 @@ before_install:
   - git clone --depth 1 https://github.com/LeventErkok/sbv
   - cd sbv && cabal install --only-dependencies && cabal configure && cabal build && cabal install
   - cd ..
-  - git submodule init
-  - git submodule update
 
 install:
   - make test
