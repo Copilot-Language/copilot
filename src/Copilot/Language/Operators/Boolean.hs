@@ -4,7 +4,7 @@
 
 -- | Boolean operators.
 
-{-# LANGUAGE Trustworthy, FlexibleInstances #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Language.Operators.Boolean
   ( (&&)

@@ -54,8 +54,7 @@ reify spec = do
         , Core.specProperties = coreProperties }
         --, Core.specStructs    = coreStructs }
 
-  -- TODO(chathhorn): proof failure.
-  results <- sequence $ zipWith (prove cspec) (map (\(Property n _,_) -> n) thms) (map snd thms)
+  results <- sequence $ zipWith (prove cspec) (map (\(Property n _,_) -> n) thms) $ map snd thms
   unless (and results) $ putStrLn "Warning: failed to check some proofs."
 
   return cspec
