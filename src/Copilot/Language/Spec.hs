@@ -10,22 +10,18 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Copilot.Language.Spec
-  ( Spec
+  ( Spec, Spec'
   , runSpec
   , SpecItem
   , Observer (..)
-  , observer
-  , observers
+  , observer, observers
   , Trigger (..)
-  , triggers
-  , trigger
+  , trigger, triggers
   , arg
   , Property (..)
   , Prop (..)
-  , prop
-  , properties
-  , theorem
-  , theorems
+  , prop, properties
+  , theorem, theorems
   , forall, exists
   , extractProp
   , Universal, Existential
@@ -47,10 +43,11 @@ import Copilot.Theorem.Prove
 --------------------------------------------------------------------------------
 
 type Spec = Writer [SpecItem] ()
+type Spec' a = Writer [SpecItem] a
 
 --------------------------------------------------------------------------------
 
-runSpec :: Spec -> [SpecItem]
+runSpec :: Spec' a -> [SpecItem]
 runSpec = execWriter
 
 --------------------------------------------------------------------------------

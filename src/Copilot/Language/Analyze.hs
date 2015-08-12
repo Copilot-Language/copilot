@@ -80,7 +80,7 @@ type Env = Map ()
 
 --------------------------------------------------------------------------------
 
-analyze :: Spec -> IO ()
+analyze :: Spec' a -> IO ()
 analyze spec = do
   refStreams <- newIORef M.empty
   mapM_ (analyzeTrigger  refStreams) (triggers  $ runSpec spec)
@@ -309,7 +309,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 
 --------------------------------------------------------------------------------
 
-specExts :: IORef Env -> Spec -> IO ExternEnv
+specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
            (ExternEnv [] [] [] [] [] [])

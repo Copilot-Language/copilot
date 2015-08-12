@@ -30,7 +30,7 @@ import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM, unless)
 --------------------------------------------------------------------------------
 
-reify :: Spec -> IO Core.Spec
+reify :: Spec' a -> IO Core.Spec
 reify spec = do
   analyze spec
   let trigs = triggers   $ runSpec spec
