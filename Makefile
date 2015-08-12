@@ -1,5 +1,6 @@
 PACKAGE= \
   copilot-core \
+  copilot-theorem \
   copilot-language \
   copilot-libraries \
   copilot-sbv \
