@@ -7,3 +7,6 @@ before_install:
   - git clone --depth 1 https://github.com/Copilot-Language/copilot-core
   - cd copilot-core && cabal install --only-dependencies && cabal configure && cabal build && cabal install
   - cd ..
+  - git clone --depth 1 https://github.com/Copilot-Language/copilot-theorem
+  - cd copilot-theorem && cabal install --only-dependencies && cabal configure && cabal build && cabal install
+  - cd ..
