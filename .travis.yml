@@ -17,9 +17,6 @@ before_install:
   - cabal --version
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
-  - git clone --depth 1 https://github.com/LeventErkok/sbv
-  - cd sbv && cabal install --only-dependencies && cabal configure && cabal build && cabal install
-  - cd ..
 
 install:
   - make test
