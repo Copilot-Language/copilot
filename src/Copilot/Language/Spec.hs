@@ -22,9 +22,9 @@ module Copilot.Language.Spec
   , arg
   , Property (..)
   , Prop (..)
-  , prop, prop_
+  , prop
   , properties
-  , theorem, theorem_
+  , theorem
   , theorems
   , forall, exists
   , extractProp
@@ -142,17 +142,11 @@ extractProp (Exists p) = p
 
 --------------------------------------------------------------------------------
 
-prop_ :: String -> Prop a -> Spec
-prop_ name e = tell [PropertyItem $ Property name (extractProp e)]
-
 prop :: String -> Prop a -> Writer [SpecItem] (PropRef a)
 prop name e = tell [PropertyItem $ Property name (extractProp e)]
   >> return (PropRef name)
 
 --------------------------------------------------------------------------------
-
-theorem_ :: String -> Prop a -> Proof a -> Spec
-theorem_ name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
 
 theorem :: String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
 theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]

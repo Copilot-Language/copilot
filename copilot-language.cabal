@@ -67,7 +67,7 @@ library
     -fwarn-tabs
     -auto-all
     -caf-all
-    -Wall
+    -W
 
     -fpackage-trust
     -- Trusted packages:

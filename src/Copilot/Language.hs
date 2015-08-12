@@ -30,8 +30,8 @@ module Copilot.Language
   , observer
   , trigger
   , arg
-  , prop, prop_
-  , theorem, theorem_
+  , prop
+  , theorem
   , forall, exists
   , prettyPrint
   ) where
