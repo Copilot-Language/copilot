@@ -49,8 +49,8 @@ ppType = text . show
 
 ppExpr :: Expr -> Doc
 ppExpr (ConstB v) = text . show $ v
-ppExpr (ConstI v) = text . show $ v
 ppExpr (ConstR v) = text . show $ v
+ppExpr (ConstI _ v) = text . show $ v
 
 ppExpr (Ite _ c e1 e2) =
   text "if" <+> ppExpr c

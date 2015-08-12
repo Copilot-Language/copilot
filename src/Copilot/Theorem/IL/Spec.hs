@@ -26,24 +26,31 @@ import Data.Function (on)
 
 type SeqId    =  String
 
-type Offset   =  Integer
-
-data SeqIndex = Fixed Integer | Var Offset
+data SeqIndex = Fixed Integer | Var Integer
   deriving (Eq, Ord, Show)
 
-data Type = Bool | Real | Integer
+data Type = Bool  | Real
+  | SBV8 | SBV16 | SBV32 | SBV64
+  | BV8  | BV16 | BV32 | BV64
   deriving (Eq, Ord)
 
 instance Show Type where
   show = \case
-    Bool    -> "Bool"
-    Real    -> "Real"
-    Integer -> "Int"
+    Bool  -> "Bool"
+    Real  -> "Real"
+    SBV8  -> "SBV8"
+    SBV16 -> "SBV16"
+    SBV32 -> "SBV32"
+    SBV64 -> "SBV64"
+    BV8   -> "BV8"
+    BV16  -> "BV16"
+    BV32  -> "BV32"
+    BV64  -> "BV64"
 
 data Expr
   = ConstB Bool
   | ConstR Double
-  | ConstI Integer
+  | ConstI Type Integer
   | Ite    Type Expr Expr Expr
   | Op1    Type Op1 Expr
   | Op2    Type Op2 Expr Expr
@@ -87,8 +94,7 @@ data Op1 = Not | Neg | Abs | Exp | Sqrt | Log | Sin | Tan | Cos | Asin | Atan
          | Acos | Sinh | Tanh | Cosh | Asinh | Atanh | Acosh
          deriving (Eq, Ord)
 
-data Op2 = Eq | And | Or | Le | Lt | Ge | Gt | Add | Sub | Mul | Mod | Fdiv
-         | Pow
+data Op2 = Eq | And | Or | Le | Lt | Ge | Gt | Add | Sub | Mul | Mod | Fdiv | Pow
          deriving (Eq, Ord)
 
 -------------------------------------------------------------------------------
@@ -142,12 +148,12 @@ typeOf :: Expr -> Type
 typeOf e = case e of
   ConstB _       -> Bool
   ConstR _       -> Real
-  ConstI _       -> Integer
-  Ite    t _ _ _   -> t
-  Op1    t _ _     -> t
-  Op2    t _ _ _   -> t
-  SVal   t _ _     -> t
-  FunApp t _ _     -> t
+  ConstI t _     -> t
+  Ite    t _ _ _ -> t
+  Op1    t _ _   -> t
+  Op2    t _ _ _ -> t
+  SVal   t _ _   -> t
+  FunApp t _ _   -> t
 
 _n_ :: SeqIndex
 _n_ = Var 0
@@ -156,9 +162,9 @@ _n_plus :: (Integral a) => a -> SeqIndex
 _n_plus d = Var (toInteger d)
 
 evalAt :: SeqIndex -> Expr -> Expr
-evalAt _ (ConstB e) = ConstB e
-evalAt _ (ConstR e) = ConstR e
-evalAt _ (ConstI e) = ConstI e
+evalAt _ e@(ConstB _) = e
+evalAt _ e@(ConstR _) = e
+evalAt _ e@(ConstI _ _) = e
 evalAt i (Op1 t op e) = Op1 t op (evalAt i e)
 evalAt i (Op2 t op e1 e2) = Op2 t op (evalAt i e1) (evalAt i e2)
 evalAt i (Ite t c e1 e2) = Ite t (evalAt i c) (evalAt i e1) (evalAt i e2)

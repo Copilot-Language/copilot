@@ -19,9 +19,9 @@ instance Show SmtLib where
   show (SmtLib s) = show s
 
 smtTy :: Type -> String
-smtTy Integer = "Int"
-smtTy Real    = "Real"
 smtTy Bool    = "Bool"
+smtTy Real    = "Real"
+smtTy _       = "Int"
 
 --------------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ interpret _       = Just Unknown
 expr :: Expr -> SExpr String
 
 expr (ConstB v) = atom $ if v then "true" else "false"
-expr (ConstI v) = atom $ show v
+expr (ConstI _ v) = atom $ show v
 expr (ConstR v) = atom $ printf "%f" v
 
 expr (Ite _ cond e1 e2) = node "ite" [expr cond, expr e1, expr e2]

@@ -24,6 +24,7 @@ library
                             -fno-warn-name-shadowing
                             -fno-warn-unused-binds
                             -fno-warn-missing-signatures
+                            -fcontext-stack=100
 
   build-depends           : base >= 4.3
                           , copilot-core

@@ -191,7 +191,7 @@ entailment sid assumptions props = do
   setVars sid vs'
   liftIO $ performSMT s $ push
   _ <- liftIO $ performSMT s $ runStateT
-    (transB (foldl' (Op2 Bool Or) (ConstB False) $ map (Op1 Bool Not) props) >>= lift . assert) vs'
+    (transB (bsimpl (foldl' (Op2 Bool Or) (ConstB False) $ map (Op1 Bool Not) props)) >>= lift . assert) vs'
 
   opts <- options <$> get
   res <- if nraNLSat opts
@@ -286,27 +286,36 @@ selectProps propIds properties =
 type Trans = StateT TransState SMT
 
 data TransState = TransState
-  { intVars :: Map String (SMTExpr Integer)
-  , ratVars :: Map String (SMTExpr Rational)
+  { bv8Vars  :: Map String (SMTExpr BV8)
+  , bv16Vars :: Map String (SMTExpr BV16)
+  , bv32Vars :: Map String (SMTExpr BV32)
+  , bv64Vars :: Map String (SMTExpr BV64)
+  , ratVars  :: Map String (SMTExpr Rational)
   }
 
-noVars = TransState Map.empty Map.empty
+noVars = TransState Map.empty Map.empty Map.empty Map.empty Map.empty
 
-getIntVar v = do
-  vs <- intVars <$> get
+getRatVar  :: String -> Trans (SMTExpr Rational)
+getRatVar  = getVar ratVars  (\v s -> s {ratVars  = v})
+
+getBV8Var  :: String -> Trans (SMTExpr BV8)
+getBV8Var  = getVar bv8Vars  (\v s -> s {bv8Vars  = v})
+
+getBV16Var :: String -> Trans (SMTExpr BV16)
+getBV16Var = getVar bv16Vars (\v s -> s {bv16Vars = v})
+
+getBV32Var :: String -> Trans (SMTExpr BV32)
+getBV32Var = getVar bv32Vars (\v s -> s {bv32Vars = v})
+
+getBV64Var :: String -> Trans (SMTExpr BV64)
+getBV64Var = getVar bv64Vars (\v s -> s {bv64Vars = v})
+
+getVar proj mod v = do
+  vs <- proj <$> get
   case Map.lookup v vs of
     Nothing -> do
       newVar <- lift $ varNamed v
-      modify (\s -> s {intVars = Map.insert v newVar (intVars s)})
-      return newVar
-    Just x -> return x
-
-getRatVar v = do
-  vs <- ratVars <$> get
-  case Map.lookup v vs of
-    Nothing -> do
-      newVar <- lift $ varNamed v
-      modify (\s -> s {ratVars = Map.insert v newVar (ratVars s)})
+      modify $ mod $ Map.insert v newVar vs
       return newVar
     Just x -> return x
 
@@ -330,25 +339,61 @@ transB = \case
     return $ e1' .||. e2'
 
   Op2 _ Eq e1 e2 -> case typeOf e1 of
-    Integer -> trans2I e1 e2 (.==.)
-    Real -> trans2R e1 e2 (.==.)
     Bool -> trans2B e1 e2 (.==.)
+    Real -> trans2R e1 e2 (.==.)
+    BV8  -> trans2BV8 e1 e2 (.==.)
+    BV16  -> trans2BV16 e1 e2 (.==.)
+    BV32  -> trans2BV32 e1 e2 (.==.)
+    BV64  -> trans2BV64 e1 e2 (.==.)
+    SBV8  -> trans2BV8 e1 e2 (.==.)
+    SBV16  -> trans2BV16 e1 e2 (.==.)
+    SBV32  -> trans2BV32 e1 e2 (.==.)
+    SBV64  -> trans2BV64 e1 e2 (.==.)
+    _ -> undefined
 
   Op2 _ Le e1 e2 -> case typeOf e1 of
-    Integer -> trans2I e1 e2 (.<=.)
     Real -> trans2R e1 e2 (.<=.)
+    BV8  -> trans2BV8 e1 e2 bvule
+    BV16  -> trans2BV16 e1 e2 bvule
+    BV32  -> trans2BV32 e1 e2 bvule
+    BV64  -> trans2BV64 e1 e2 bvule
+    SBV8  -> trans2BV8 e1 e2 bvsle
+    SBV16  -> trans2BV16 e1 e2 bvsle
+    SBV32  -> trans2BV32 e1 e2 bvsle
+    SBV64  -> trans2BV64 e1 e2 bvsle
     _ -> undefined
   Op2 _ Ge e1 e2 -> case typeOf e1 of
-    Integer -> trans2I e1 e2 (.>=.)
     Real -> trans2R e1 e2 (.>=.)
+    BV8  -> trans2BV8 e1 e2 bvuge
+    BV16  -> trans2BV16 e1 e2 bvuge
+    BV32  -> trans2BV32 e1 e2 bvuge
+    BV64  -> trans2BV64 e1 e2 bvuge
+    SBV8  -> trans2BV8 e1 e2 bvsge
+    SBV16  -> trans2BV16 e1 e2 bvsge
+    SBV32  -> trans2BV32 e1 e2 bvsge
+    SBV64  -> trans2BV64 e1 e2 bvsge
     _ -> undefined
   Op2 _ Lt e1 e2 -> case typeOf e1 of
-    Integer -> trans2I e1 e2 (.<.)
     Real -> trans2R e1 e2 (.<.)
+    BV8  -> trans2BV8 e1 e2 bvult
+    BV16  -> trans2BV16 e1 e2 bvult
+    BV32  -> trans2BV32 e1 e2 bvult
+    BV64  -> trans2BV64 e1 e2 bvult
+    SBV8  -> trans2BV8 e1 e2 bvslt
+    SBV16  -> trans2BV16 e1 e2 bvslt
+    SBV32  -> trans2BV32 e1 e2 bvslt
+    SBV64  -> trans2BV64 e1 e2 bvslt
     _ -> undefined
   Op2 _ Gt e1 e2 -> case typeOf e1 of
-    Integer -> trans2I e1 e2 (.>.)
     Real -> trans2R e1 e2 (.>.)
+    BV8  -> trans2BV8 e1 e2 bvugt
+    BV16  -> trans2BV16 e1 e2 bvugt
+    BV32  -> trans2BV32 e1 e2 bvugt
+    BV64  -> trans2BV64 e1 e2 bvugt
+    SBV8  -> trans2BV8 e1 e2 bvsgt
+    SBV16  -> trans2BV16 e1 e2 bvsgt
+    SBV32  -> trans2BV32 e1 e2 bvsgt
+    SBV64  -> trans2BV64 e1 e2 bvsgt
     _ -> undefined
 
   e -> error $ "Encountered unhandled expression:" ++ show e
@@ -379,37 +424,102 @@ transR = \case
 
   e -> error $ "Encountered unhandled expression:" ++ show e
 
-transI :: Expr -> Trans (SMTExpr Integer)
-transI = \case
-  ConstI n -> return $ constant n
+-- TODO(chathhorn): bleghh
+transBV8 :: Expr -> Trans (SMTExpr BV8)
+transBV8 = \case
+  ConstI _ n -> return $ constant $ BitVector n
   Ite _ c e1 e2   -> do
     c' <- transB c
-    trans2I e1 e2 (ite c')
+    trans2BV8 e1 e2 (ite c')
 
-  Op1 _ Neg e     -> transI e >>=  return . (app neg)
-  Op1 _ Abs e     -> transI e >>= return . (app SMTAbs)
+  Op1 _ Abs e     -> transBV8 e >>= return . abs
+  Op1 _ Neg e     -> transBV8 e >>= return . negate
+  Op2 _ Add e1 e2 -> trans2BV8 e1 e2 (+)
+  Op2 _ Sub e1 e2 -> trans2BV8 e1 e2 (-)
+  Op2 _ Mul e1 e2 -> trans2BV8 e1 e2 (*)
+  SVal _ s i -> getBV8Var $ ncVar s i
 
-  Op2 _ Add e1 e2 -> trans2I e1 e2 $ \x y -> app plus [x, y]
-  Op2 _ Sub e1 e2 -> trans2I e1 e2 $ \x y -> app minus (x, y)
-  Op2 _ Mul e1 e2 -> trans2I e1 e2 $ \x y -> app mult [x, y]
+  e -> error $ "Encountered unhandled expression (BV8):" ++ show e
 
-  SVal _ s i -> getIntVar $ ncVar s i
+transBV16 :: Expr -> Trans (SMTExpr BV16)
+transBV16 = \case
+  ConstI _ n -> return $ constant $ BitVector n
+  Ite _ c e1 e2   -> do
+    c' <- transB c
+    trans2BV16 e1 e2 (ite c')
 
-  e -> error $ "Encountered unhandled expression:" ++ show e
+  Op1 _ Abs e     -> transBV16 e >>= return . abs
+  Op1 _ Neg e     -> transBV16 e >>= return . negate
+  Op2 _ Add e1 e2 -> trans2BV16 e1 e2 (+)
+  Op2 _ Sub e1 e2 -> trans2BV16 e1 e2 (-)
+  Op2 _ Mul e1 e2 -> trans2BV16 e1 e2 (*)
+  SVal _ s i -> getBV16Var $ ncVar s i
 
-trans2I :: Expr -> Expr -> (SMTExpr Integer -> SMTExpr Integer -> SMTExpr b) -> Trans (SMTExpr b)
-trans2I e1 e2 f = do
-  e1' <- transI e1
-  e2' <- transI e2
+  e -> error $ "Encountered unhandled expression (BV16):" ++ show e
+
+transBV32 :: Expr -> Trans (SMTExpr BV32)
+transBV32 = \case
+  ConstI _ n -> return $ constant $ BitVector n
+  Ite _ c e1 e2   -> do
+    c' <- transB c
+    trans2BV32 e1 e2 (ite c')
+
+  Op1 _ Abs e     -> transBV32 e >>= return . abs
+  Op1 _ Neg e     -> transBV32 e >>= return . negate
+  Op2 _ Add e1 e2 -> trans2BV32 e1 e2 (+)
+  Op2 _ Sub e1 e2 -> trans2BV32 e1 e2 (-)
+  Op2 _ Mul e1 e2 -> trans2BV32 e1 e2 (*)
+  SVal _ s i -> getBV32Var $ ncVar s i
+
+  e -> error $ "Encountered unhandled expression (BV32):" ++ show e
+
+transBV64 :: Expr -> Trans (SMTExpr BV64)
+transBV64 = \case
+  ConstI _ n -> return $ constant $ BitVector n
+  Ite _ c e1 e2   -> do
+    c' <- transB c
+    trans2BV64 e1 e2 (ite c')
+
+  Op1 _ Abs e     -> transBV64 e >>= return . abs
+  Op1 _ Neg e     -> transBV64 e >>= return . negate
+  Op2 _ Add e1 e2 -> trans2BV64 e1 e2 (+)
+  Op2 _ Sub e1 e2 -> trans2BV64 e1 e2 (-)
+  Op2 _ Mul e1 e2 -> trans2BV64 e1 e2 (*)
+  SVal _ s i -> getBV64Var $ ncVar s i
+
+  e -> error $ "Encountered unhandled expression (BV64):" ++ show e
+
+trans2BV8 :: Expr -> Expr -> (SMTExpr BV8 -> SMTExpr BV8 -> SMTExpr a) -> Trans (SMTExpr a)
+trans2BV8 e1 e2 f = do
+  e1' <- transBV8 e1
+  e2' <- transBV8 e2
   return $ f e1' e2'
 
-trans2R :: Expr -> Expr -> (SMTExpr Rational -> SMTExpr Rational -> SMTExpr b) -> Trans (SMTExpr b)
+trans2BV16 :: Expr -> Expr -> (SMTExpr BV16 -> SMTExpr BV16 -> SMTExpr a) -> Trans (SMTExpr a)
+trans2BV16 e1 e2 f = do
+  e1' <- transBV16 e1
+  e2' <- transBV16 e2
+  return $ f e1' e2'
+
+trans2BV32 :: Expr -> Expr -> (SMTExpr BV32 -> SMTExpr BV32 -> SMTExpr a) -> Trans (SMTExpr a)
+trans2BV32 e1 e2 f = do
+  e1' <- transBV32 e1
+  e2' <- transBV32 e2
+  return $ f e1' e2'
+
+trans2BV64 :: Expr -> Expr -> (SMTExpr BV64 -> SMTExpr BV64 -> SMTExpr a) -> Trans (SMTExpr a)
+trans2BV64 e1 e2 f = do
+  e1' <- transBV64 e1
+  e2' <- transBV64 e2
+  return $ f e1' e2'
+
+trans2R :: Expr -> Expr -> (SMTExpr Rational -> SMTExpr Rational -> SMTExpr a) -> Trans (SMTExpr a)
 trans2R e1 e2 f = do
   e1' <- transR e1
   e2' <- transR e2
   return $ f e1' e2'
 
-trans2B :: Expr -> Expr -> (SMTExpr Bool -> SMTExpr Bool -> SMTExpr b) -> Trans (SMTExpr b)
+trans2B :: Expr -> Expr -> (SMTExpr Bool -> SMTExpr Bool -> SMTExpr a) -> Trans (SMTExpr a)
 trans2B e1 e2 f = do
   e1' <- transB e1
   e2' <- transB e2

@@ -264,7 +264,7 @@ getVars = nubBy' (compare `on` varName) . concatMap getVars'
   where getVars' :: Expr -> [VarDescr]
         getVars' = \case
           ConstB _             -> []
-          ConstI _             -> []
+          ConstI _ _           -> []
           ConstR _             -> []
           Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
           Op1 _ _ e            -> getVars' e

@@ -184,24 +184,24 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
 trConst :: C.Type a -> a -> Expr
 trConst t v = case t of
   C.Bool   -> ConstB v
-  C.Int8   -> negifyI v
-  C.Int16  -> negifyI v
-  C.Int32  -> negifyI v
-  C.Int64  -> negifyI v
-  C.Word8  -> negifyI v
-  C.Word16 -> negifyI v
-  C.Word32 -> negifyI v
-  C.Word64 -> negifyI v
   C.Float  -> negifyR (float2Double v)
   C.Double -> negifyR v
+  t@C.Int8   -> negifyI v (trType t)
+  t@C.Int16  -> negifyI v (trType t)
+  t@C.Int32  -> negifyI v (trType t)
+  t@C.Int64  -> negifyI v (trType t)
+  t@C.Word8  -> negifyI v (trType t)
+  t@C.Word16 -> negifyI v (trType t)
+  t@C.Word32 -> negifyI v (trType t)
+  t@C.Word64 -> negifyI v (trType t)
   where negifyR :: Double -> Expr
         negifyR v
-            | v >= 0    = ConstR v
-            | otherwise = Op1 Real Neg $ ConstR $ negate $ v
-        negifyI :: Integral a => a -> Expr
-        negifyI v
-            | v >= 0    = ConstI $ toInteger v
-            | otherwise = Op1 Integer Neg $ ConstI $ negate $ toInteger v
+          | v >= 0    = ConstR v
+          | otherwise = Op1 Real Neg $ ConstR $ negate $ v
+        negifyI :: Integral a => a -> Type -> Expr
+        negifyI v t
+          | v >= 0    = ConstI t $ toInteger v
+          | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
 
 trOp1 :: C.Op1 a b -> (Op1, Type)
 trOp1 = \case
@@ -264,14 +264,14 @@ trOp2 = \case
 trType :: C.Type a -> Type
 trType = \case
   C.Bool   -> Bool
-  C.Int8   -> Integer
-  C.Int16  -> Integer
-  C.Int32  -> Integer
-  C.Int64  -> Integer
-  C.Word8  -> Integer
-  C.Word16 -> Integer
-  C.Word32 -> Integer
-  C.Word64 -> Integer
+  C.Int8   -> SBV8
+  C.Int16  -> SBV16
+  C.Int32  -> SBV32
+  C.Int64  -> SBV64
+  C.Word8  -> BV8
+  C.Word16 -> BV16
+  C.Word32 -> BV32
+  C.Word64 -> BV64
   C.Float  -> Real
   C.Double -> Real
 
@@ -304,19 +304,18 @@ getMuxes = muxes <$> get >>= return . concat . (map toConstraints)
 
 type Trans = State TransST
 
-localConstraint :: Expr -> Trans ()
-localConstraint c =
-  modify $ \st -> st {localConstraints = c : localConstraints st}
-
 fresh :: Trans Integer
 fresh = do
   modify $ \st -> st {nextFresh = nextFresh st + 1}
   nextFresh <$> get
 
+localConstraint :: Expr -> Trans ()
+localConstraint c =
+  modify $ \st -> st {localConstraints = c : localConstraints st}
+
 popLocalConstraints :: Trans [Expr]
 popLocalConstraints = liftM2 (++) (localConstraints <$> get) getMuxes
   <* (modify $ \st -> st {localConstraints = [], muxes = []})
-
 
 runTrans :: Trans a -> a
 runTrans m = evalState m $ TransST [] [] 0
