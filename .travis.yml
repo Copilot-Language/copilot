@@ -24,7 +24,7 @@ before_install:
   - cd ..
 
 install:
-  - cabal install --only-dependencies --enable-tests --enable-benchmarks
+  - cabal install --allow-newer --only-dependencies --enable-tests --enable-benchmarks
 
 # Here starts the actual work to be performed for the package under test; any
 # command which exits with a non-zero exit code causes the build to fail.
