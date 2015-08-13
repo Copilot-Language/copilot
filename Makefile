@@ -6,7 +6,8 @@ PACKAGE= \
   copilot-sbv \
   copilot-c99 \
   copilot-cbmc \
-	sbv
+  smtlib2 \
+  sbv
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
@@ -19,6 +20,7 @@ cabal.sandbox.config:
 .PHONY: build
 build: cabal.sandbox.config
 	git clone --depth 1 https://github.com/LeventErkok/sbv lib/sbv
+	git clone --depth 1 https://github.com/hguenther/smtlib2 lib/smtlib2
 	cabal sandbox add-source $(PACKAGEDIR)
 	cabal install --dependencies-only
 
