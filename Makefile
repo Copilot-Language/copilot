@@ -7,7 +7,7 @@ PACKAGE= \
   copilot-c99 \
   copilot-cbmc \
   sbv \
-  smtlib2 \
+  smtlib2
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
