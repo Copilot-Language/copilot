@@ -19,12 +19,15 @@ before_install:
   - cabal --version
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
+  - git clone --depth 1 https://github.com/hguenther/smtlib2
+  - cd smtlib2 && cabal install --allow-newer --only-dependencies && cabal configure && cabal build && cabal install
+  - cd ..
   - git clone --depth 1 https://github.com/Copilot-Language/copilot-core
   - cd copilot-core && cabal install --only-dependencies && cabal configure && cabal build && cabal install
   - cd ..
 
 install:
-  - cabal install --allow-newer --only-dependencies --enable-tests --enable-benchmarks
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks
 
 # Here starts the actual work to be performed for the package under test; any
 # command which exits with a non-zero exit code causes the build to fail.
