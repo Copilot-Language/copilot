@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes, NamedFieldPuns, ViewPatterns,
-             ScopedTypeVariables, GADTs #-}
+             ScopedTypeVariables, GADTs, FlexibleContexts #-}
 
 module Copilot.Theorem.TransSys.Translate ( translate ) where
 

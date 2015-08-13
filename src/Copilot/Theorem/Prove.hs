@@ -17,7 +17,8 @@ module Copilot.Theorem.Prove
 import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
-import Control.Applicative (liftA2)
+import Control.Applicative (liftA2, Applicative(..))
+import Control.Monad (liftM, ap)
 import Control.Monad.Writer
 
 --------------------------------------------------------------------------------
@@ -54,6 +55,13 @@ type UProof = Writer [Action] ()
 
 data ProofScheme a b where
   Proof :: Writer [Action] b -> ProofScheme a b
+
+instance Functor (ProofScheme a) where
+  fmap = liftM
+
+instance Applicative (ProofScheme a) where
+  pure = return
+  (<*>) = ap
 
 instance Monad (ProofScheme a) where
   (Proof p) >>= f = Proof $ p >>= (\a -> case f a of Proof p -> p)
