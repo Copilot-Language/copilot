@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs,
-    MultiParamTypeClasses #-}
+    MultiParamTypeClasses, FlexibleContexts #-}
 
 module Copilot.Theorem.Light.Z3Prover
   ( module Data.Default
