@@ -2,9 +2,9 @@
 
 {-# LANGUAGE GADTs, LambdaCase #-}
 
-module Copilot.Theorem.Light.TPTP (Tptp, interpret) where
+module Copilot.Theorem.Prover.TPTP (Tptp, interpret) where
 
-import Copilot.Theorem.Light.Backend (SmtFormat (..), SatResult (..))
+import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
 import Copilot.Theorem.IL
 
 import Data.List

@@ -2,9 +2,9 @@
 
 {-# LANGUAGE GADTs, FlexibleInstances #-}
 
-module Copilot.Theorem.Light.SMTLib (SmtLib, interpret) where
+module Copilot.Theorem.Prover.SMTLib (SmtLib, interpret) where
 
-import Copilot.Theorem.Light.Backend (SmtFormat (..), SatResult (..))
+import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
 
 import Copilot.Theorem.IL
 import Copilot.Theorem.Misc.SExpr

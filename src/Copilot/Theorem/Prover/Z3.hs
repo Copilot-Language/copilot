@@ -3,10 +3,10 @@
 {-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs,
     MultiParamTypeClasses, FlexibleContexts #-}
 
-module Copilot.Theorem.Light.Z3Prover
+module Copilot.Theorem.Prover.Z3
   ( module Data.Default
   , Options (..)
-  , kInduction, onlySat, onlyValidity
+  , induction, kInduction, onlySat, onlyValidity
   )
 where
 
@@ -44,7 +44,7 @@ import Control.Monad.Trans
 
 --------------------------------------------------------------------------------
 
-type Solver = SMTConnection (DebugBackend SMTPipe)
+-- | Tactics
 
 data Options = Options
   { nraNLSat :: Bool
@@ -67,26 +67,34 @@ instance Default Options where
     }
 
 onlySat :: Options -> Proof Existential
-onlySat options = check P.Prover
+onlySat opts = check P.Prover
   { P.proverName  = "OnlySat"
-  , P.startProver = return . ProofState options Map.empty Map.empty Map.empty . translate
+  , P.startProver = return . ProofState opts Map.empty Map.empty Map.empty . translate
   , P.askProver   = onlySat'
   , P.closeProver = const $ return ()
   }
 
 onlyValidity :: Options -> Proof Universal
-onlyValidity options = check P.Prover
+onlyValidity opts = check P.Prover
   { P.proverName  = "OnlyValidity"
-  , P.startProver = return . ProofState options Map.empty Map.empty Map.empty . translate
+  , P.startProver = return . ProofState opts Map.empty Map.empty Map.empty . translate
   , P.askProver   = onlyValidity'
   , P.closeProver = const $ return ()
   }
 
+induction :: Options -> Proof Universal
+induction opts = check P.Prover
+  { P.proverName  = "Induction"
+  , P.startProver = return . ProofState opts Map.empty Map.empty Map.empty . translate
+  , P.askProver   = kInduction' 0 0
+  , P.closeProver = const $ return ()
+  }
+
 kInduction :: Options -> Proof Universal
-kInduction options = check P.Prover
-  { P.proverName  = "k-induction"
-  , P.startProver = return . ProofState options Map.empty Map.empty Map.empty . translate
-  , P.askProver   = kInduction' (startK options) (maxK options)
+kInduction opts = check P.Prover
+  { P.proverName  = "K-Induction"
+  , P.startProver = return . ProofState opts Map.empty Map.empty Map.empty . translate
+  , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }
 
@@ -94,17 +102,19 @@ kInduction options = check P.Prover
 
 -- | Checks the Copilot specification with k-induction
 
+type Solver = SMTConnection (DebugBackend SMTPipe)
+
 type ProofScript = MaybeT (StateT ProofState IO)
 
 runPS :: ProofScript a -> ProofState -> IO (Maybe a, ProofState)
 runPS ps = runStateT (runMaybeT ps)
 
 data ProofState = ProofState
-  { options :: Options
-  , solvers :: Map SolverId Solver
-  , vars    :: Map SolverId TransState
-  , assumps :: Map SolverId (Set Expr)
-  , spec    :: IL
+  { options  :: Options
+  , solvers  :: Map SolverId Solver
+  , vars     :: Map SolverId TransState
+  , assumps  :: Map SolverId (Set Expr)
+  , spec     :: IL
   }
 
 data SolverId = Base | Step
@@ -159,8 +169,8 @@ deleteSolver sid =
 startNewSolver :: SolverId -> ProofScript Solver
 startNewSolver sid = do
   pipe <- liftIO $ createSMTPipe "z3" ["-smt2", "-in"]
-  opts <- options <$> get
-  s <- liftIO $ open (namedDebugBackend (show sid) (not $ debug opts) pipe)
+  dbg <- (options <$> get >>= return . debug)
+  s <- liftIO $ open (namedDebugBackend (show sid) (not dbg) pipe)
   setSolver sid s
   return s
 
@@ -193,8 +203,8 @@ entailment sid assumptions props = do
   _ <- liftIO $ performSMT s $ runStateT
     (transB (bsimpl (foldl' (Op2 Bool Or) (ConstB False) $ map (Op1 Bool Not) props)) >>= lift . assert) vs'
 
-  opts <- options <$> get
-  res <- if nraNLSat opts
+  nraNL <- (options <$> get >>= return . nraNLSat)
+  res <- if nraNL
     then liftIO $ performSMT s $ checkSat' (Just (UsingParams (CustomTactic "qfnra-nlsat") []))
          (CheckSatLimits (Just 5000) Nothing)
     else liftIO $ performSMT s $ checkSat' Nothing (CheckSatLimits (Just 5000) Nothing)
@@ -283,6 +293,8 @@ selectProps propIds properties =
 
 --------------------------------------------------------------------------------
 
+-- | This is all very ugly. It might make better sense to go straight from Core to SMTExpr, or maybe use SBV instead.
+
 type Trans = StateT TransState SMT
 
 data TransState = TransState
@@ -349,7 +361,6 @@ transB = \case
     SBV16  -> trans2BV16 e1 e2 (.==.)
     SBV32  -> trans2BV32 e1 e2 (.==.)
     SBV64  -> trans2BV64 e1 e2 (.==.)
-    _ -> undefined
 
   Op2 _ Le e1 e2 -> case typeOf e1 of
     Real -> trans2R e1 e2 (.<=.)

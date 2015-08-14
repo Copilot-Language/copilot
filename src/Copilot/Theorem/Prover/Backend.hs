@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Copilot.Theorem.Light.Backend (SmtFormat(..), Backend(..), SatResult(..)) where
+module Copilot.Theorem.Prover.Backend (SmtFormat(..), Backend(..), SatResult(..)) where
 
 import Copilot.Theorem.IL
 

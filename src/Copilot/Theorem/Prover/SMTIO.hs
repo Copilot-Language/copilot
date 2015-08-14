@@ -2,13 +2,13 @@
 
 {-# LANGUAGE LambdaCase, NamedFieldPuns, RankNTypes, ViewPatterns #-}
 
-module Copilot.Theorem.Light.SMT
+module Copilot.Theorem.Prover.SMTIO
   ( Solver
   , startNewSolver, assume, entailed, stop, declVars
   ) where
 
 import Copilot.Theorem.IL
-import Copilot.Theorem.Light.Backend
+import Copilot.Theorem.Prover.Backend
 
 import System.IO
 import System.Process

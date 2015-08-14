@@ -44,16 +44,14 @@ library
 
   exposed-modules         : Copilot.Theorem
                           , Copilot.Theorem.Prove
-                          , Copilot.Theorem.Light
                           , Copilot.Theorem.Kind2
-                          , Copilot.Theorem.IL
-                          , Copilot.Theorem.TransSys
-                          , Copilot.Theorem.Light.Prover
-                          , Copilot.Theorem.Light.Z3Prover
+                          , Copilot.Theorem.Prover.SMT
+                          , Copilot.Theorem.Prover.Z3
                           , Copilot.Theorem.Kind2.Prover
                           
   other-modules           : Copilot.Theorem.Tactics
                           
+                          , Copilot.Theorem.IL
                           , Copilot.Theorem.IL.PrettyPrint
                           , Copilot.Theorem.IL.Spec
                           , Copilot.Theorem.IL.Translate
@@ -64,15 +62,16 @@ library
                           , Copilot.Theorem.Kind2.PrettyPrint
                           , Copilot.Theorem.Kind2.Translate
                           
-                          , Copilot.Theorem.Light.SMT
-                          , Copilot.Theorem.Light.SMTLib
-                          , Copilot.Theorem.Light.TPTP
-                          , Copilot.Theorem.Light.Backend
+                          , Copilot.Theorem.Prover.SMTIO
+                          , Copilot.Theorem.Prover.SMTLib
+                          , Copilot.Theorem.Prover.TPTP
+                          , Copilot.Theorem.Prover.Backend
                           
                           , Copilot.Theorem.Misc.Error
                           , Copilot.Theorem.Misc.SExpr
                           , Copilot.Theorem.Misc.Utils
                           
+                          , Copilot.Theorem.TransSys
                           , Copilot.Theorem.TransSys.Cast
                           , Copilot.Theorem.TransSys.PrettyPrint
                           , Copilot.Theorem.TransSys.Renaming

@@ -2,10 +2,10 @@
 
 {-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs #-}
 
-module Copilot.Theorem.Light.Prover
+module Copilot.Theorem.Prover.SMT
   ( module Data.Default
   , Options (..)
-  , kInduction, onlySat, onlyValidity
+  , induction, kInduction, onlySat, onlyValidity
   , yices, dReal, altErgo, metit, z3, cvc4, mathsat
   , Backend, SmtFormat
   , SmtLib, Tptp
@@ -16,16 +16,16 @@ import Copilot.Theorem.IL
 import Copilot.Theorem.Prove (Output (..), check, Proof, Universal, Existential)
 import qualified Copilot.Theorem.Prove as P
 
-import Copilot.Theorem.Light.Backend
-import qualified Copilot.Theorem.Light.SMT as SMT
+import Copilot.Theorem.Prover.Backend
+import qualified Copilot.Theorem.Prover.SMTIO as SMT
 
-import Copilot.Theorem.Light.SMTLib (SmtLib)
-import Copilot.Theorem.Light.TPTP (Tptp)
-import qualified Copilot.Theorem.Light.SMTLib as SMTLib
-import qualified Copilot.Theorem.Light.TPTP as TPTP
+import Copilot.Theorem.Prover.SMTLib (SmtLib)
+import Copilot.Theorem.Prover.TPTP (Tptp)
+import qualified Copilot.Theorem.Prover.SMTLib as SMTLib
+import qualified Copilot.Theorem.Prover.TPTP as TPTP
 
 import Control.Applicative ((<$>), (<*))
-import Control.Monad (msum, unless, mzero, when)
+import Control.Monad (msum, unless, mzero)
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Maybe (MaybeT (..))
@@ -41,6 +41,8 @@ import Copilot.Theorem.Misc.Utils
 import System.IO (hClose)
 
 --------------------------------------------------------------------------------
+
+-- | Tactics
 
 data Options = Options
   { startK :: Word32
@@ -61,28 +63,40 @@ instance Default Options where
     }
 
 onlySat :: SmtFormat a => Options -> Backend a -> Proof Existential
-onlySat options backend = check P.Prover
+onlySat opts backend = check P.Prover
   { P.proverName  = "OnlySat"
-  , P.startProver = return . ProofState options backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translate
   , P.askProver   = onlySat'
   , P.closeProver = const $ return ()
   }
 
 onlyValidity :: SmtFormat a => Options -> Backend a -> Proof Universal
-onlyValidity options backend = check P.Prover
+onlyValidity opts backend = check P.Prover
   { P.proverName  = "OnlyValidity"
-  , P.startProver = return . ProofState options backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translate
   , P.askProver   = onlyValidity'
   , P.closeProver = const $ return ()
   }
 
-kInduction :: SmtFormat a => Options -> Backend a -> Proof Universal
-kInduction options backend = check P.Prover
-  { P.proverName  = "k-induction"
-  , P.startProver = return . ProofState options backend Map.empty . translate
-  , P.askProver   = kInduction' (startK options) (maxK options)
+induction :: SmtFormat a => Options -> Backend a -> Proof Universal
+induction opts backend = check P.Prover
+  { P.proverName  = "Induction"
+  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.askProver   = kInduction' 0 0
   , P.closeProver = const $ return ()
   }
+
+kInduction :: SmtFormat a => Options -> Backend a -> Proof Universal
+kInduction opts backend = check P.Prover
+  { P.proverName  = "K-Induction"
+  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.askProver   = kInduction' (startK opts) (maxK opts)
+  , P.closeProver = const $ return ()
+  }
+
+-------------------------------------------------------------------------------
+
+-- | Backends
 
 yices :: Backend SmtLib
 yices = Backend
@@ -212,9 +226,9 @@ deleteSolver sid =
 
 startNewSolver :: SmtFormat b => SolverId -> ProofScript b (SMT.Solver b)
 startNewSolver sid = do
-  opts <- options <$> get
+  dbg <- (options <$> get >>= return . debug)
   backend <- backend <$> get
-  s <- liftIO $ SMT.startNewSolver (show sid) (debug opts) backend
+  s <- liftIO $ SMT.startNewSolver (show sid) dbg backend
   setSolver sid s
   return s
 
