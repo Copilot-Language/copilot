@@ -2,15 +2,17 @@
 
 {-# LANGUAGE RebindableSyntax, ScopedTypeVariables #-}
 
-module BoyerMoore (spec, scheme) where
+module BoyerMoore where
 
 import Prelude ()
 import Control.Monad (forM_)
 
-import Language.Copilot hiding (length)
-import Copilot.Kind
-import Copilot.Kind.Light
-import Copilot.Kind.Lib (arbitraryCst)
+import Copilot.Language hiding (length)
+import Copilot.Theorem
+import Copilot.Theorem.Prover.Z3
+
+import Copilot.Core.Type
+import Copilot.Core.Type.Uninitialized
 
 import qualified Prelude   as P
 import qualified Data.List as L
@@ -19,6 +21,15 @@ import qualified Data.List as L
 
 length :: [a] -> Stream Word8
 length l = constant (fromInteger $ L.genericLength l)
+
+arbitraryCst :: forall a . (Typed a) => String -> Stream a
+arbitraryCst s = c
+  where
+    t :: Stream Word8
+    t = [0] ++ (1 + t)
+    i :: Stream a
+    i = extern s Nothing
+    c = if t == 0 then i else [uninitialized (typeOf :: Type a)] ++ c
 
 --------------------------------------------------------------------------------
 
@@ -46,19 +57,16 @@ okWith a l maj = (a /= maj) ==> ((2 * count a l) <= length l)
 
 --------------------------------------------------------------------------------
 
-spec :: Spec
 spec = do
   forM_ (zip [1..] ss) $ \(k :: Int, s) ->
     observer ((P.++) "s" (show k)) s
   observer "maj" maj
 
-  prop "OK" (okWith (arbitraryCst "n") ss maj)
-  prop "i1" (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
-  prop "r1" (maj == 1)
+  i1 <- prop "i1" (forall $ s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
+  theorem "r1" (forall $ maj == 1) $ assume i1 >> induct
+  theorem "OK" (forall $ okWith (arbitraryCst "n") ss maj) induct
 
   where
-
-    s1 :: Stream Word8
     s1 = externW8 "s1" (Just $ repeat 1)
     s2 = externW8 "s2" (Just $ repeat 3)
     s3 = externW8 "s3" (Just $ repeat 1)
@@ -72,8 +80,6 @@ spec = do
 
 --------------------------------------------------------------------------------
 
-scheme prover = do
-  check prover "OK"
-  assuming ["i1"] $ check prover "r1"
+induct :: Proof Universal
+induct = induction def { nraNLSat = False, debug = False }
 
---------------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 {-# LANGUAGE RebindableSyntax #-}
 
-module Grey (spec, scheme) where
+module Grey where
 
 import Prelude ()
-import Language.Copilot
-import Copilot.Kind
+import Copilot.Language
 
-import Copilot.Kind.Light
+import Copilot.Theorem
+import Copilot.Theorem.Prover.Z3
 
 intCounter :: Stream Bool -> Stream Word64
 intCounter reset = time
@@ -21,10 +21,9 @@ greyTick reset = a && b
     a = (not reset) && ([False] ++ not b)
     b = (not reset) && ([False] ++ a)
 
-spec :: Spec
 spec = do
-  prop "iResetOk"   (r ==> (ic == 0))
-  prop "eqCounters" (it == gt)
+  theorem "iResetOk"   (forall $ r ==> (ic == 0)) induct
+  theorem "eqCounters" (forall $ it == gt) $ kinduct 3
 
   where
     ic = intCounter r
@@ -32,8 +31,8 @@ spec = do
     gt = greyTick r
     r  = extern "reset" Nothing
 
-scheme prover = do
-  check prover "iResetOk"
-  check prover "eqCounters"
+induct :: Proof Universal
+induct = induction def { nraNLSat = False, debug = False }
 
-
+kinduct :: Word32 -> Proof Universal
+kinduct k = kInduction def { nraNLSat = False, startK = k, maxK = k, debug = False }

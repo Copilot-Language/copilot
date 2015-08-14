@@ -3,23 +3,34 @@
 
 module SerialBoyerMoore where
 
-import Copilot.Kind.Light.Prover
-
 import Prelude ()
-import Language.Copilot hiding (majority)
-import Copilot.Kind
-import Copilot.Kind.Lib (forAllCst, existsCst)
+import Copilot.Language
+
+import Copilot.Theorem
+import Copilot.Theorem.Prover.Z3
 
 --------------------------------------------------------------------------------
 
-allowed :: [Word8]
+conj :: [Stream Bool] -> Stream Bool
+conj = foldl (&&) true
+
+disj :: [Stream Bool] -> Stream Bool
+disj = foldl (||) false
+
+forAllCst :: Typed a => [a] -> (Stream a -> Stream Bool) -> Stream Bool
+forAllCst l f = conj $ map (f . constant) l
+
+existsCst :: Typed a => [a] -> (Stream a -> Stream Bool) -> Stream Bool
+existsCst l f = disj $ map (f . constant) l
+
+allowed :: [Word64]
 allowed = [1, 2]
 
-majority :: Stream Word8 -> (Stream Word8, Stream Word8, Stream Bool)
+majority :: Stream Word64 -> (Stream Word64, Stream Word64, Stream Bool)
 majority l = (p, s, j)
   where
     p  = [0] ++ if s <= 0 then l else p
-    s  = [0] ++ if p == l || s <= 0 then s + 1 else s - 1
+    s  = [0] ++ if (p == l) || (s <= 0) then s + 1 else s - 1
 
     k  = [0] ++ (1 + k)
 
@@ -38,15 +49,18 @@ spec = do
   observer "s" s
   observer "j" j
 
-  prop "J"  j
-  prop "inRange" (existsCst allowed $ \a -> input == a)
+  inRange <- prop "inRange" (forall $ input < 3)
+  theorem "J"  (forall j) $ assume inRange >> induct
 
   where
-    input = externW8 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
+    input = externW64 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
     (p, s, j) = majority input
 
 
-scheme prover = do
-  assuming ["inRange"] $ check prover "J"
-
 --------------------------------------------------------------------------------
+
+induct :: Proof Universal
+induct = induction def { nraNLSat = False, debug = False }
+
+kinduct :: Word32 -> Proof Universal
+kinduct k = kInduction def { nraNLSat = False, startK = k, maxK = k, debug = False }

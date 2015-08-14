@@ -4,14 +4,14 @@ module Incr where
 
 import Prelude ()
 import Language.Copilot
-import Copilot.Kind
 
-import Copilot.Kind.Light.Prover
+import Copilot.Theorem
+import Copilot.Theorem.Prover.Z3
 
 spec :: Spec
 spec = do
-  prop "gt1" (x > 1)
-  prop "neq0" (x /= 0)
+  prop "gt1" (exists $ x < 1)
+  prop "neq0" (exists $ x == 0)
 
   where
     x :: Stream Word8
