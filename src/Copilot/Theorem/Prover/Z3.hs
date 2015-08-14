@@ -298,17 +298,18 @@ selectProps propIds properties =
 type Trans = StateT TransState SMT
 
 data TransState = TransState
-  { bv8Vars  :: Map String (SMTExpr BV8)
+  { boolVars :: Map String (SMTExpr Bool)
+  , bv8Vars  :: Map String (SMTExpr BV8)
   , bv16Vars :: Map String (SMTExpr BV16)
   , bv32Vars :: Map String (SMTExpr BV32)
   , bv64Vars :: Map String (SMTExpr BV64)
   , ratVars  :: Map String (SMTExpr Rational)
   }
 
-noVars = TransState Map.empty Map.empty Map.empty Map.empty Map.empty
+noVars = TransState Map.empty Map.empty Map.empty Map.empty Map.empty Map.empty
 
-getRatVar  :: String -> Trans (SMTExpr Rational)
-getRatVar  = getVar ratVars  (\v s -> s {ratVars  = v})
+getBoolVar :: String -> Trans (SMTExpr Bool)
+getBoolVar = getVar boolVars (\v s -> s {boolVars  = v})
 
 getBV8Var  :: String -> Trans (SMTExpr BV8)
 getBV8Var  = getVar bv8Vars  (\v s -> s {bv8Vars  = v})
@@ -321,6 +322,9 @@ getBV32Var = getVar bv32Vars (\v s -> s {bv32Vars = v})
 
 getBV64Var :: String -> Trans (SMTExpr BV64)
 getBV64Var = getVar bv64Vars (\v s -> s {bv64Vars = v})
+
+getRatVar  :: String -> Trans (SMTExpr Rational)
+getRatVar  = getVar ratVars  (\v s -> s {ratVars  = v})
 
 getVar proj mod v = do
   vs <- proj <$> get
@@ -407,7 +411,9 @@ transB = \case
     SBV64  -> trans2BV64 e1 e2 bvsgt
     _ -> undefined
 
-  e -> error $ "Encountered unhandled expression:" ++ show e
+  SVal _ s i -> getBoolVar $ ncVar s i
+
+  e -> error $ "Encountered unhandled expression (Bool): " ++ show e
 
 ncVar s (Fixed i) = s ++ "_" ++ show i
 ncVar s (Var   i) = s ++ "_n" ++ show i
@@ -433,7 +439,7 @@ transR = \case
 
   SVal _ s i -> getRatVar $ ncVar s i
 
-  e -> error $ "Encountered unhandled expression:" ++ show e
+  e -> error $ "Encountered unhandled expression (Rat): " ++ show e
 
 -- TODO(chathhorn): bleghh
 transBV8 :: Expr -> Trans (SMTExpr BV8)
@@ -450,7 +456,7 @@ transBV8 = \case
   Op2 _ Mul e1 e2 -> trans2BV8 e1 e2 (*)
   SVal _ s i -> getBV8Var $ ncVar s i
 
-  e -> error $ "Encountered unhandled expression (BV8):" ++ show e
+  e -> error $ "Encountered unhandled expression (BV8): " ++ show e
 
 transBV16 :: Expr -> Trans (SMTExpr BV16)
 transBV16 = \case
@@ -466,7 +472,7 @@ transBV16 = \case
   Op2 _ Mul e1 e2 -> trans2BV16 e1 e2 (*)
   SVal _ s i -> getBV16Var $ ncVar s i
 
-  e -> error $ "Encountered unhandled expression (BV16):" ++ show e
+  e -> error $ "Encountered unhandled expression (BV16): " ++ show e
 
 transBV32 :: Expr -> Trans (SMTExpr BV32)
 transBV32 = \case
@@ -482,7 +488,7 @@ transBV32 = \case
   Op2 _ Mul e1 e2 -> trans2BV32 e1 e2 (*)
   SVal _ s i -> getBV32Var $ ncVar s i
 
-  e -> error $ "Encountered unhandled expression (BV32):" ++ show e
+  e -> error $ "Encountered unhandled expression (BV32): " ++ show e
 
 transBV64 :: Expr -> Trans (SMTExpr BV64)
 transBV64 = \case
@@ -498,7 +504,7 @@ transBV64 = \case
   Op2 _ Mul e1 e2 -> trans2BV64 e1 e2 (*)
   SVal _ s i -> getBV64Var $ ncVar s i
 
-  e -> error $ "Encountered unhandled expression (BV64):" ++ show e
+  e -> error $ "Encountered unhandled expression (BV64): " ++ show e
 
 trans2BV8 :: Expr -> Expr -> (SMTExpr BV8 -> SMTExpr BV8 -> SMTExpr a) -> Trans (SMTExpr a)
 trans2BV8 e1 e2 f = do

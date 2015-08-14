@@ -245,7 +245,7 @@ trOp2 = \case
   C.Pow t        -> (Pow, trType t)
   -- C.Logb t       ->
 
-  C.Eq t         -> (Eq, trType t)
+  C.Eq t         -> (Eq, Bool)
   -- C.Ne t         ->
 
   C.Le t         -> (Le, trType t)
