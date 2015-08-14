@@ -30,7 +30,9 @@ spec = do
   -- dReal/metit fails this one.
   -- theorem "dist_eq"     (forall $ d1 ~= d2)
   --   $ assume bounds >> arith
-  theorem_ "sin_cos"     (forall $ ((sin x) ** 2 + (cos x) ** 2) ~= 1)
+  theorem_ "2sin"           (forall $ (2 * (sin x)) <= 3)
+    $ assume bounds >> arith
+  theorem_ "sin_cos"        (forall $ ((sin x) ** 2 + (cos x) ** 2) ~= 1)
     $ assume bounds >> arith
   theorem_ "sin_cos_pi"     ( forall $ ((sin x) ** 2 + (cos $ x + pi) ** 2) ~= 1)
     $ assume bounds >> arith
@@ -39,8 +41,6 @@ spec = do
   theorem_ "cos_2pi"        ( forall $ (cos x) ~= (cos $ x + 2 * pi))
     $ assume bounds >> arith
   theorem_ "sin_eq_cos_pi2" ( forall $ (sin x) ~= (cos $ x - (pi/2)))
-    $ assume bounds >> arith
-  theorem_ "x^2_1"          ( forall $ (x ** 2 + y + 1) >= (x + y))
     $ assume bounds >> arith
   theorem_ "x^2_2"          ( forall $ (x ** 2 + 1) >= x)
     $ assume bounds >> arith
