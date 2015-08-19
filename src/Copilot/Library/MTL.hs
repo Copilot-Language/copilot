@@ -99,20 +99,16 @@ since l u clk dist s0 s1 = res clk s0 s1 ((u `P.div` dist) + 1)
 -- or s0 has a true sample at some time t' with t <= t' < t + d
 release :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-release l u clk dist s0 s1 = res clk s1 iter
+release l u clk dist s0 s1 = res' clk s1 $ (u `P.div` dist) + 1
   where
   mins = clk + (constant l)
   maxes = clk + (constant u)
-  iter = (u `P.div` dist) + 1
-  res _ _ 0 = true
-  res c s k = 
-    mux (mins > c || c > maxes || s)
-      (nextRes c s k)
-      (res' clk s0 (iter - k) c)
-  nextRes c s k = res (drop 1 c) (drop 1 s) (k - 1)
-  res' _ _ 0 _ = false
-  res' c s k upl = (c < upl && s) || (nextRes' c s k upl)
-  nextRes' c s k upl = res' (drop 1 c) (drop 1 s) (k - 1) upl
+  res _ _ _ 0 = true
+  res c s s' k = 
+    s || ((mins > c || c > maxes || s') && (nextRes c s s' k))
+  res' c s' k =
+    (mins > c || c > maxes || s') && (res (drop 1 c) s0 (drop 1 s') (k - 1))
+  nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Trigger: True at time t iff for all d with l <= d <= u where there
 -- is a sample at time (t - d), s1 is true at time (t - d),
@@ -159,20 +155,14 @@ matchingSince l u clk dist s0 s1 = since l u clk dist s0 (s0 && s1)
 -- s1 or s0 needing to hold at time (t + d) instead of just s1
 matchingRelease :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-matchingRelease l u clk dist s0 s1 = res clk s0 s1 iter
+matchingRelease l u clk dist s0 s1 = res clk s0 s1 $ (u `P.div` dist) + 1
   where
   mins = clk + (constant l)
   maxes = clk + (constant u)
-  iter = (u `P.div` dist) + 1
   res _ _ _ 0 = true
   res c s s' k = 
-    mux (mins > c || c > maxes || s' || s)
-      (nextRes c s s' k)
-      (res' clk s0 (iter - k) c)
+    s || ((mins > c || c > maxes || s') && (nextRes c s s' k))
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
-  res' _ _ 0 _ = false
-  res' c s k upl = (c < upl && s) || (nextRes' c s k upl)
-  nextRes' c s k upl = res' (drop 1 c) (drop 1 s) (k - 1) upl
 
 -- Matching Trigger: Same semantics as Trigger, except with
 -- s1 or s0 needing to hold at time (t - d) instead of just s1
