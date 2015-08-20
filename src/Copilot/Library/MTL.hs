@@ -99,15 +99,15 @@ since l u clk dist s0 s1 = res clk s0 s1 $ (u `P.div` dist) + 1
 -- or s0 has a true sample at some time t' with t <= t' < t + d
 release :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-release l u clk dist s0 s1 = res' clk s1 $ (u `P.div` dist) + 1
+release l u clk dist s0 s1 =
+  (mins > clk || clk > maxes || s1) &&
+  (res (drop 1 clk) s0 (drop 1 s1) $ u `P.div` dist)
   where
   mins = clk + (constant l)
   maxes = clk + (constant u)
   res _ _ _ 0 = true
   res c s s' k =
     s || ((mins > c || c > maxes || s') && nextRes c s s' k)
-  res' c s' k = (mins > c || c > maxes || s') &&
-                (res (drop 1 c) s0 (drop 1 s') (k - 1))
   nextRes c s s' k = res (drop 1 c) (drop 1 s) (drop 1 s') (k - 1)
 
 -- Trigger: True at time t iff for all d with l <= d <= u where there
@@ -115,15 +115,15 @@ release l u clk dist s0 s1 = res' clk s1 $ (u `P.div` dist) + 1
 -- or s0 has a true sample at some time t' with t - d < t' <= t 
 trigger :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool -> Stream Bool
-trigger l u clk dist s0 s1 = res' clk s1 $ (u `P.div` dist) + 1
+trigger l u clk dist s0 s1 =
+  (mins > clk || clk > maxes || s1) &&
+  (res ([0] ++ clk) s0 ([True] ++ s1) $ u `P.div` dist)
   where
   mins = clk - (constant u)
   maxes = clk - (constant l)
   res _ _ _ 0 = true
   res c s s' k =
     s || ((mins > c || c > maxes || s') && nextRes c s s' k)
-  res' c s' k = (mins > c || c > maxes || s') &&
-                (res ([0] ++ c) s0 ([True] ++ s') (k - 1))
   nextRes c s s' k = res ([0] ++ c) ([False] ++ s) ([True] ++ s') (k - 1)
 
 -- Matching Variants
