@@ -4,8 +4,8 @@ description:
 
   Some tools to prove properties on Copilot programs with k-induction model
   checking.
-  
-version                   : 0.1
+
+version                   : 0.2
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : jonathan.laurent@ens.fr
@@ -27,7 +27,7 @@ library
                             -fcontext-stack=100
 
   build-depends           : base >= 4.3
-                          , copilot-core
+                          , copilot-core == 2.2.0
                           , mtl
                           , containers
                           , pretty
@@ -39,7 +39,7 @@ library
                           , xml
                           , random
                           , transformers
-                          , smtlib2
+                          , smtlib2 >= 0.2
                           , ansi-terminal
 
   exposed-modules         : Copilot.Theorem
