@@ -39,7 +39,7 @@ Optionally, you may which also to install
   that translates to [SBV](http://hackage.haskell.org/package/sbv), using its
   code generator to generate hard real-time C code as well.  The ad
 
-* [copilot-discussion](https://github.com/leepike/copilot-discussion)
+* [copilot-discussion](https://github.com/Copilot-Language/copilot-discussion)
   Contains a tutorial, todos, and other items regarding the Copilot system.
 
 **Sources** for each package are available on Github as well.  Just go to
@@ -70,7 +70,7 @@ Installation
 
 * From GitHub:
 
-           git clone https://github.com/leepike/Copilot.git
+           git clone https://github.com/Copilot-Language/Copilot.git
            git submodule update --init
            make test
 

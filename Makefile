@@ -11,8 +11,7 @@ PACKAGE= \
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
-default:
-	build
+default: build
 
 cabal.sandbox.config:
 	cabal sandbox init
