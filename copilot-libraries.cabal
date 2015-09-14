@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-libraries
-version:             2.1.1
+version:             2.2.0
 synopsis:            Libraries for the Copilot language.
 description:
   Libraries for the Copilot language.
@@ -37,7 +37,7 @@ library
     array,
     base >= 4.0 && <= 5.0,
     containers,
-    copilot-language,
+    copilot-language == 2.2.0,
     parsec >= 2.0,
     mtl >= 2.0
 
