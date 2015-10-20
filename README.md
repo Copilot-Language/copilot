@@ -1,12 +1,12 @@
-[![Build Status](https://travis-ci.org/Copilot-Language/copilot-kind.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-kind)
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot-theorem.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-theorem)
 
-# Copilot Kind
+# Copilot Theorem
 
 Highly automated proof techniques are a necessary step for the widespread
 adoption of formal methods in the software industry. Moreover, it could provide
 a partial answer to one of its main issue which is scalability.
 
-*copilot-kind* is a Copilot library aimed at checking automatically some safety
+*copilot-theorem* is a Copilot library aimed at checking automatically some safety
 properties on Copilot programs. It includes :
 
 * A general interface for *provers* and a *proof scheme* mechanism aimed at
@@ -26,7 +26,7 @@ properties on Copilot programs. It includes :
 
 ### Installation instructions
 
-*copilot-kind* needs the following dependencies to be installed :
+*copilot-theorem* needs the following dependencies to be installed :
 
 * The *copilot-core* and *copilot-language* Haskell libraries
 * The *Yices2* SMT-solver : `yices-smt2` must be in your `$PATH`
@@ -35,18 +35,18 @@ properties on Copilot programs. It includes :
 
 To build it, just clone this repository and use `cabal install`. You will find
 some examples in the `examples` folder, which can be built with `cabal install`
-too, producing an executable `copilot-kind-example` in your `.cabal/bin`
+too, producing an executable `copilot-theorem-example` in your `.cabal/bin`
 folder.
 
 ### First steps
 
-*copilot-kind* is aimed at checking **safety properties** on Copilot programs.
+*copilot-theorem* is aimed at checking **safety properties** on Copilot programs.
 Intuitively, a safety property is a property which express the idea that
 *nothing bad can happen*. In particular, any invalid safety property can be
 disproved by a finite execution trace of the program called a
 **counterexample**. Safety properties are often opposed to **liveness**
 properties, which express the idea that *something good will eventually
-happen*. The latters are out of the scope of *copilot-kind*.
+happen*. The latters are out of the scope of *copilot-theorem*.
 
 Safety properties are simply expressed with standard boolean streams. In
 addition to triggers and observers declarations, it is possible to bind a
@@ -64,11 +64,11 @@ spec = do
 ```
 
 Let's say we want to check that `gt0` holds. For this, we use the `prove ::
-Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Kind`.
+Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Theorem`.
 This function takes three arguments :
 
 * The prover we want to use. For now, two provers are available, exported by
-  the `Copilot.Kind.Light` and `Copilot.Kind.Kind2` module.
+  the `Copilot.Theorem.Light` and `Copilot.Theorem.Kind2` module.
 * A *proof scheme*, which is a sequence of instructions like *check*, *assume*,
   *assert*...
 * The Copilot specification
@@ -84,7 +84,7 @@ configuration.
 
 ### The Prover interface
 
-The `Copilot.Kind.Prover` defines a general interface for provers. Therefore,
+The `Copilot.Theorem.Prover` defines a general interface for provers. Therefore,
 it is really easy to add a new prover by creating a new object of type
 `Prover`. The latter is defined like this :
 
@@ -146,7 +146,7 @@ the property `"gt0"` is inductive (1-inductive) but the property `"neq0"` is
 not.
 
 
-The *light prover* is defined in `Copilot.Kind.Light`. This module exports the
+The *light prover* is defined in `Copilot.Theorem.Light`. This module exports the
 `lightProver :: Options -> Prover` function which builds a prover from a record
 of type `Options` :
 
@@ -184,7 +184,7 @@ The *Kind2* prover uses the model checker with the same name, from Iowa
 university. It translates the Copilot specification into a *modular transition
 system* (the Kind2 native format) and then calls the `kind2` executable.
 
-It is provided by the `Copilot.Kind.Kind2` module, which exports a `kind2Prover
+It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prover
 :: Options -> Prover` where the `Options` type is defined as
 
 ```haskell
@@ -272,7 +272,7 @@ These examples include :
 
 ### An introduction to SMT-based model checking
 
-An introduction to the model-checking techniques used by *copilot-kind* can be
+An introduction to the model-checking techniques used by *copilot-theorem* can be
 found in the `doc` folder of this repository. It consists in a self sufficient
 set of slides. You can find some additional readings in the *References*
 section.
@@ -297,13 +297,7 @@ available :
   *nodes*, each node exporting and importing variables. The *Kind2 prover* uses
   this format, which can be easily translated into the  native format.
 
-**Cnub** is a simplified representation of a Copilot program where only the
-informations useful for SMT-based model checking are kept. For now, it is not
-used by the two standard provers but it could be used in the future as an
-intermediate step in the translation from `Copilot.Spec` to `IL.Spec` or
-`TransSys.Spec`.
-
-For each of these formats, there is a folder in `src/Copilot/Kind` which
+For each of these formats, there is a folder in `src/Copilot/Theorem` which
 contains at least
 * `Spec.hs` where the format is defined
 * `PrettyPrint.hs` for pretty printing (useful for debugging)
@@ -378,18 +372,17 @@ PROPS
 Note that the names of the streams are lost in the Copilot *reification
 process* [7] and so we have no way to keep them.
 
-
 #### Types
 
 In these three formats, GADTs are used to statically ensure a part of the
 type-corectness of the specification, in the same spirit it is done in the
-other Copilot libraries. *copilot-kind* handles only three types which are
+other Copilot libraries. *copilot-theorem* handles only three types which are
 `Integer`, `Real` and `Bool` and which are handled by the SMTLib standard.
-*copilot-kind* works with *pure* reals and integers. Thus, it is unsafe in the
+*copilot-theorem* works with *pure* reals and integers. Thus, it is unsafe in the
 sense it ignores integer overflow problems and the loss of precision due to
 floating point arithmetic.
 
-The rules of translation between Copilot types and *copilot-kind* types are
+The rules of translation between Copilot types and *copilot-theorem* types are
 defined in `Misc/Cast`.
 
 #### Operators
@@ -400,7 +393,7 @@ operators are used in the Copilot program, they are handled using
 non-determinism or uninterpreted functions.
 
 The file `CoreUtils/Operators` contains helper functions to translate Copilot
-operators into *copilot-kind* operators.
+operators into *copilot-theorem* operators.
 
 
 #### The Light prover
@@ -619,9 +612,9 @@ the `Kind2.toKind2` function takes a `Style` argument which can take the value
 `Inlined` or `Modular`. The only difference is that in the first case, a call
 to `removeCycles` is replaced by a call to `inline`.
 
-### Limitations of copilot-kind
+### Limitations of copilot-theorem
 
-Now, we will discuss some limitations of the *copilot-kind* tool. These
+Now, we will discuss some limitations of the *copilot-theorem* tool. These
 limitations are organized in two categories : the limitations related to the
 Copilot language itself and its implementation, and the limitations related to
 the model-checking techniques we are using.
@@ -680,7 +673,7 @@ made in this area in a near future.
 A workaround to this problem would be to write kind of an interactive mode
 where the user is invited to provide some additional lemmas when automatic
 techniques fail. Another solution would be to make the properties being checked
-quasi-inductive by hand. In this case, *copilot-kind* is still a useful tool
+quasi-inductive by hand. In this case, *copilot-theorem* is still a useful tool
 (especially for finding bugs) but the verification of a program can be long and
 requires a high level of technicity.
 
@@ -742,7 +735,7 @@ is hard to follow in our case because of
 * The inlining policy of the reification process. This point is related to the
   previous one.
 
-Once again, *copilot-kind* is still a very useful tool, especially for
+Once again, *copilot-theorem* is still a very useful tool, especially for
 debugging purposes. However, we don't think it is adapted to write and check a
 complete specification for large scale programs.
 
@@ -757,7 +750,7 @@ in the Kind2 SMT solver.
 
 Counterexamples are not displayed with the Kind2 prover because Kind2 doesn't
 support XML output of counterexamples. If the last feature is provided, it
-should be easy to implement counterexamples displaying in *copilot-kind*. For
+should be easy to implement counterexamples displaying in *copilot-theorem*. For
 this, we recommend to keep some informations about *observers* in
 `TransSys.Spec` and to add one variable per observer in the Kind2 output file.
 
