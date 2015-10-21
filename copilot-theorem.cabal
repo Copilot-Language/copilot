@@ -39,7 +39,7 @@ library
                           , xml
                           , random
                           , transformers
-                          , smtlib2 >= 0.2
+                          , smtlib2 >= 0.3
                           , ansi-terminal
 
   exposed-modules         : Copilot.Theorem
