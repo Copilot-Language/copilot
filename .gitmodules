@@ -22,9 +22,3 @@
 [submodule "lib/copilot-theorem"]
 	path = lib/copilot-theorem
 	url = https://github.com/Copilot-Language/copilot-theorem
-[submodule "lib/sbv"]
-	path = lib/sbv
-	url = https://github.com/LeventErkok/sbv
-[submodule "lib/smtlib2"]
-	path = lib/smtlib2
-	url = https://github.com/hguenther/smtlib2
