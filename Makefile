@@ -5,9 +5,7 @@ PACKAGE= \
   copilot-libraries \
   copilot-sbv \
   copilot-c99 \
-  copilot-cbmc \
-  sbv \
-  smtlib2
+  copilot-cbmc
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
