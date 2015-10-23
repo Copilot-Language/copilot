@@ -37,8 +37,8 @@ library
                , data-reify >= 0.6
                , mtl >= 2.0 && < 3
                , ghc-prim >= 0.2
-               , copilot-core == 2.2.0
-               , copilot-theorem == 0.2
+               , copilot-core >= 2.2.0
+               , copilot-theorem >= 2.0
   exposed-modules: Copilot
                  , Copilot.Language
                  , Copilot.Language.Operators.BitWise
