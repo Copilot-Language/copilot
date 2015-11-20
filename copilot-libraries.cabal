@@ -12,13 +12,13 @@ description:
   <https://github.com/leepike/copilot-discussion>.
   .
   Examples are available at
-  <https://github.com/leepike/Copilot/tree/master/Examples>.
+  <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
 
 license:             BSD3
 license-file:        LICENSE
 author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
                      Nis Nordby Wegmann
-homepage:            https://github.com/leepike/copilot-libraries
+homepage:            https://github.com/Copilot-Language/copilot-libraries
 maintainer:          leepike@gmail.com
 stability:           Experimental
 category:            Language, Embedded
@@ -26,7 +26,7 @@ build-type:          Simple
 
 source-repository head
     type:       git
-    location:   git://github.com/leepike/copilot-libraries.git
+    location:   git://github.com/Copilot-Language/copilot-libraries.git
 
 library
   default-language: Haskell2010
