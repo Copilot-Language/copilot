@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: Utils
 -- Description: Utility bounded-list functions (e.g., folds, scans, etc.)
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -13,7 +13,7 @@ module Copilot.Library.Utils
          -- ** Scans
          nscanl, nscanr, nscanl1, nscanr1,
          -- ** Indexing
-         case', (!!)) 
+         case', (!!))
 where
 
 import Copilot.Language
@@ -83,11 +83,9 @@ case' predicates alternatives =
                    P.++ "greater by one than the length of predicates list"
   in case'' predicates alternatives
 
-
 -- | Index.  WARNING: Very expensive!  Consider using this only for very short
 -- lists.
-(!!) :: ( Typed a, Integral a )
-        => [ Stream a ] -> Stream a -> Stream a
+(!!) :: (Typed a, Eq b, Num b, Typed b) => [Stream a] -> Stream b -> Stream a
 ls !! n = let indices      = map
                              ( constant . fromIntegral )
                              [ 0 .. P.length ls - 1 ]
@@ -96,10 +94,10 @@ ls !! n = let indices      = map
                 ( i : is )
                 ( x : xs ) = mux ( i == n ) x ( select is xs )
                              -- should not happen
-              select _ []  = badUsage ("in (!!) defined in Utils.hs " P.++ 
+              select _ []  = badUsage ("in (!!) defined in Utils.hs " P.++
                                "in copilot-libraries")
           in if null ls then
-               badUsage ("in (!!) defined in Utils.hs " P.++ 
+               badUsage ("in (!!) defined in Utils.hs " P.++
                             "indexing the empty list with !! is not defined")
              else
                select indices ls
