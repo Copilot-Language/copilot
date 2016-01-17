@@ -207,8 +207,6 @@ expr t (C.ExternFun _ _ _ _ _) = newUnconstrainedVar t
 
 expr t (C.ExternArray _ _ _ _ _ _ _) = newUnconstrainedVar t
 
-expr t (C.ExternMatrix _ _ _ _ _ _ _ _ _) = newUnconstrainedVar t
-
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
   newNode <- getFreshNodeName
