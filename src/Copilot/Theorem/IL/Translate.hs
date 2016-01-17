@@ -137,12 +137,6 @@ expr (C.ExternFun t name args _ _) = do
 expr (C.ExternArray ta tb name _ ind _ _) =
   expr (C.ExternFun tb name [C.UExpr ta ind] Nothing Nothing)
 
---------------------------------------------------------------
----not sure about this--
-expr (C.ExternMatrix ta tb name _ _ indr indc _ _) =
-  expr (C.ExternFun tb name [C.UExpr ta indr, C.UExpr ta indc] Nothing Nothing)
---------------------------------------------------------------
-
 expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Int8   -> trSign ta e
   C.Int16  -> trSign ta e
