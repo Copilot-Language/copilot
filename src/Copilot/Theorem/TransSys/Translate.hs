@@ -203,9 +203,11 @@ expr t (C.Op2 op e1 e2) = handleOp2
     notHandled (UnhandledOp2 _opName _ta _tb _tc) =
       newUnconstrainedVar t
 
-expr t (C.ExternFun _ta _name _args _ _mtag) = newUnconstrainedVar t
+expr t (C.ExternFun _ _ _ _ _) = newUnconstrainedVar t
 
-expr t (C.ExternArray _ _tb _name _ _ind _ _) = newUnconstrainedVar t
+expr t (C.ExternArray _ _ _ _ _ _ _) = newUnconstrainedVar t
+
+expr t (C.ExternMatrix _ _ _ _ _ _ _ _ _) = newUnconstrainedVar t
 
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
