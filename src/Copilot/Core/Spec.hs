@@ -16,11 +16,6 @@ module Copilot.Core.Spec
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type, Typed)
---import Data.BitArray
-
---------------------------------------------------------------------------------
-
---type StructInfo = [(Name, Int)]
 
 --------------------------------------------------------------------------------
 
@@ -71,6 +66,5 @@ data Spec = Spec
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
   , specProperties   :: [Property] }
-  --, specStructs      :: [StructData] }
 
 --------------------------------------------------------------------------------

@@ -4,14 +4,14 @@
 
 {-# LANGUAGE Safe #-}
 
-module Copilot.Core.Error 
+module Copilot.Core.Error
   ( impossible
   , badUsage ) where
 
 impossible :: String -> String -> a
-impossible function package = 
-  error $ "\"Impossible\" error in function " 
-    ++ function ++ ", in package " ++ package 
+impossible function package =
+  error $ "\"Impossible\" error in function "
+    ++ function ++ ", in package " ++ package
     ++ ".  Please email Lee Pike at <lee pike @ gmail . com> " ++
        "(remove spaces) or file a bug report on github.com."
 

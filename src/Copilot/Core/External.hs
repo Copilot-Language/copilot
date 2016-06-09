@@ -68,7 +68,7 @@ externVarsExpr e0 = case e0 of
   Op3 _ e1 e2 e3            -> externVarsExpr e1 `append`
                                externVarsExpr e2 `append`
                                externVarsExpr e3
-  Label t s e               -> externVarsExpr e
+  Label _ _ e               -> externVarsExpr e
 
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
@@ -85,7 +85,7 @@ externArraysExpr e0 = case e0 of
   Local _ _ _ e1 e2               -> externArraysExpr e1 `append` externArraysExpr e2
   Var _ _                         -> empty
   ExternVar _ _ _                 -> empty
-  ExternArray t1 t2  name 
+  ExternArray t1 t2  name
               size idx _ tag      -> singleton (ExtArray name t2 idx t1 size tag)
   ExternFun _ _ ues _ _           -> concat (map externArraysUExpr ues)
   ExternStruct _ _ _ _            -> empty
@@ -95,7 +95,7 @@ externArraysExpr e0 = case e0 of
   Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
                                      externArraysExpr e2 `append`
                                      externArraysExpr e3
-  Label t s e                     -> externArraysExpr e
+  Label _ _ e                     -> externArraysExpr e
 
 externArraysUExpr :: UExpr -> DList ExtArray
 externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
@@ -121,7 +121,7 @@ externFunsExpr e0 = case e0 of
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
                                  externFunsExpr e2 `append`
                                  externFunsExpr e3
-  Label t s e                 -> externFunsExpr e
+  Label _ _ e                 -> externFunsExpr e
 
 externFunsUExpr :: UExpr -> DList ExtFun
 externFunsUExpr UExpr { uExprExpr = e } = externFunsExpr e
@@ -141,22 +141,13 @@ externStructsExpr e0 = case e0 of
   ExternVar   _ _ _               -> empty
   ExternArray _ _ _ _ _ _ _       -> empty
   ExternFun   _ _ _ _ _           -> empty
-  ExternStruct _ name ses tag     -> {-if t == Struct then -}singleton (ExtStruct name ses tag){- else empty-}
-                                      --concat . map externStructsUExpr ues
+  ExternStruct _ name ses tag     -> singleton (ExtStruct name ses tag)
                       -- all expressions in a struct are typed
   GetField _ _ _ _                -> empty
   Op1   _ _                       -> empty
   Op2   _ _ _                     -> empty
   Op3   _ _ _ _                   -> empty
-  Label t s e                     -> externStructsExpr e
-{-externStructsUExpr :: UExpr -> DList ExtStruct
-externStructsUExpr UExpr { uExprExpr = e } =
-  case e of
-    ExternVar _ _ _           -> externVarsExpr e
-    ExternArray _ _ _ _ _ _ _ -> externArraysExpr e
-    ExternFun _ _ _ _ _       -> externFunsExpr e
-    ExternStruct _ _ _        -> externStructsExpr e
-    _                         -> empty-}
+  Label _ _ e                     -> externStructsExpr e
 
 --------------------------------------------------------------------------------
 
@@ -167,7 +158,7 @@ all f spec =
   concat (fmap allObserver (specObservers spec))
 
   where
-  
+
   allStream
     Stream { streamExpr = e } = f e
 
@@ -178,9 +169,6 @@ all f spec =
 
   allUExpr
     (UExpr _ e1) = f e1
-
-{-  allSExpr
-    (SExpr _ (u)) = allUExpr u-}
 
   allObserver
     Observer { observerExpr = e } = f e

@@ -4,7 +4,7 @@
 
 -- | An tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE Trustworthy #-} -- Because of Data.Map (Containers)
+{-# LANGUAGE Safe #-}
 
 module Copilot.Core.Interpret.Render
   ( renderAsTable
@@ -64,7 +64,7 @@ unfold r =
 step :: ExecTrace -> (Doc, Maybe ExecTrace)
 step ExecTrace
        { interpTriggers  = trigs
-       } = 
+       } =
   if M.null trigs then (empty, Nothing)
     else (foldl' ($$) empty (text "#" : ppTriggerOutputs), tails)
 
@@ -72,10 +72,10 @@ step ExecTrace
 
   ppTriggerOutputs :: [Doc]
   ppTriggerOutputs =
-      catMaybes 
-    . fmap ppTriggerOutput 
-    . M.assocs 
-    . fmap head 
+      catMaybes
+    . fmap ppTriggerOutput
+    . M.assocs
+    . fmap head
     $ trigs
 
   ppTriggerOutput :: (String, Maybe [Output]) -> Maybe Doc

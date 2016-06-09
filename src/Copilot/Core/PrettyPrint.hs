@@ -31,12 +31,12 @@ ppExpr e0 = case e0 of
   Drop _ 0 id                -> strmName id
   Drop _ i id                -> text "drop" <+> text (show i) <+> strmName id
   ExternVar _ name _         -> text "Ext_" <> (text name)
-  ExternFun _ name args _ _  -> 
-    text "Extf_" <> (text name) <> lparen <> 
+  ExternFun _ name args _ _  ->
+    text "Extf_" <> (text name) <> lparen <>
          (hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
-  ExternArray _ _ name 
-              _ idx _ _      -> text "Exta_" <> (text name) <> lbrack 
+  ExternArray _ _ name
+              _ idx _ _      -> text "Exta_" <> (text name) <> lbrack
                                   <> ppExpr idx <> rbrack
   ExternStruct _ name args _ -> text "struct" <+> doubleQuotes (text name <> lbrace
                                     <> vcat (punctuate (semi <> space) (map ppSExpr $ args)) <> rbrace)
@@ -47,7 +47,7 @@ ppExpr e0 = case e0 of
   Op1 op e                   -> ppOp1 op (ppExpr e)
   Op2 op e1 e2               -> ppOp2 op (ppExpr e1) (ppExpr e2)
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
-  Label t s e                -> text "label "<>doubleQuotes (text s) <+> (ppExpr e)
+  Label _ s e                -> text "label "<> doubleQuotes (text s) <+> (ppExpr e)
 
 ppSExpr :: (Name, UExpr) -> Doc
 ppSExpr (_, UExpr { uExprExpr = e0 }) = ppExpr e0
@@ -112,7 +112,7 @@ ppOp3 op = case op of
     text "else" <+> doc3 <> text ")"
 
 --------------------------------------------------------------------------------
-  
+
 ppInfix :: String -> Doc -> Doc -> Doc
 ppInfix cs doc1 doc2 = parens $ doc1 <+> text cs <+> doc2
 
@@ -130,10 +130,10 @@ ppStream
     , streamExprType = t
     }
       = (parens . text . showType) t
-          <+> strmName id 
+          <+> strmName id
     <+> text "="
     <+> text ("["
-              ++ ( concat $ intersperse "," 
+              ++ ( concat $ intersperse ","
                               $ map (showWithType Haskell t) buffer )
               ++ "]")
     <+> text "++"
@@ -151,7 +151,7 @@ ppTrigger
   <+> text "="
   <+> ppExpr e
   <+> lbrack
-  $$  (nest 2 $ vcat (punctuate comma $ 
+  $$  (nest 2 $ vcat (punctuate comma $
                           map (\a -> text "arg" <+> ppUExpr a) args))
   $$  nest 2 rbrack
 

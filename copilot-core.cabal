@@ -41,15 +41,11 @@ library
     -caf-all
     -fno-warn-orphans
 
-    --enable-library-profiling
-
-    -- -fpackage-trust
-    -- -- Trusted packages
-    -- -trust base
-    -- -trust random
-    -- -trust array
-    -- -trust dlist
-    -- -trust containers
+    -fpackage-trust
+    -trust=array
+    -trust=base
+    -trust=containers
+    -trust=random
 
   build-depends:
     containers >= 0.4,

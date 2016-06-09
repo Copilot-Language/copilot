@@ -22,7 +22,7 @@
 -- and the pretty-printer
 -- ("Copilot.Core.PrettyPrint").
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Core
   ( module Copilot.Core.Error

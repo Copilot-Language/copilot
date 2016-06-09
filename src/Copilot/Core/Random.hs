@@ -9,10 +9,8 @@
 
 module Copilot.Core.Random
   ( randomSpec ) where
---  , randomExtVals 
 
-import Copilot.Core 
---import Copilot.Core.Interpret.Eval (Env)
+import Copilot.Core
 import Copilot.Core.Random.Gen
 import Copilot.Core.Random.Weights
 import Copilot.Core.Type.Dynamic
@@ -38,7 +36,7 @@ genSpec rnds = do
   ss          <- genStreamInfo's
   extVars     <- genExtVars
   streams     <- runReaderT (mapM (genStream ss) ss) extVars
-  triggers    <- 
+  triggers    <-
     runReaderT (mapM (genTrigger ss) (map mkTriggerName [0..numTriggers-1]))
                extVars
   return Spec { specStreams    = streams
@@ -58,8 +56,8 @@ genSpec rnds = do
     mapM genExtVar lst
     where
     genExtVar :: Int -> Gen DynExtVar
-    genExtVar i = do 
-      ws <- weights                 
+    genExtVar i = do
+      ws <- weights
       WrapType t <- genType ws
       evalExpr <- randomReplicate rnds t
       let expr = ExternVar t ("ext" ++ show i) (Just evalExpr)
@@ -128,12 +126,12 @@ genStream ss
   StreamInfo
     { streamInfoId         = id
     , streamInfoType       = t
-    , streamInfoBufferSize = k } 
+    , streamInfoBufferSize = k }
   = do
   xs <- lift $ replicateM k (randomFromType t)
   extVars <- ask
   w  <- lift $ genExpr extVars ss t
-  return 
+  return
       Stream
         { streamId       = id
         , streamBuffer   = xs
@@ -174,32 +172,32 @@ genExpr extVars ss t = do
   ws <- weights
   if dp >= maxExprDepth ws
     then freq (terminalLst ws)
-    else freq $ 
+    else freq $
       terminalLst ws ++
       [ (op1Freq   ws, genOp1)
       , (op2Freq   ws, genOp2)
       , (op3Freq   ws, genOp3) ]
 
   where
-  terminalLst ws = 
+  terminalLst ws =
     (extVarFreq' ws, genExtVar) : [ (constFreq ws, genConst)
-                                  , (dropFreq  ws, genDrop) ] 
+                                  , (dropFreq  ws, genDrop) ]
 
   extVarFreq' ws = if null typedExtVars then 0 else extVarFreq ws
-  
+
   genExtVar = do
     let vars = typedExtVars
     r <- choose (0, length vars - 1)
     return (vars !! r)
 
   typedExtVars = foldl' typedExtVar [] extVars
-    where typedExtVar vars dyn = 
+    where typedExtVar vars dyn =
             case fromDynF t dyn of
                    Nothing   -> vars
                    Just expr -> expr:vars
 
-  genConst = do 
-    x <- randomFromType t 
+  genConst = do
+    x <- randomFromType t
     return $ Const t x
 
   genDrop = do
@@ -213,7 +211,7 @@ genExpr extVars ss t = do
                                     _      -> False
       in  elements (filter p ss)
 
-  genOp3 = incDepth (genOp3Mux extVars ss t)    
+  genOp3 = incDepth (genOp3Mux extVars ss t)
 
   genOp1 = incDepth $ case t of
     Bool   -> genOp1Bool extVars ss
@@ -231,7 +229,7 @@ genExpr extVars ss t = do
   genOp2 = incDepth $ case t of
     Bool    -> oneOf [ genOp2Bool extVars ss
                      , genOp2Eq extVars ss
-                     , genOp2Ord extVars ss 
+                     , genOp2Ord extVars ss
                      ]
     Int8    -> intOrWord NumWit IntegralWit
     Int16   -> intOrWord NumWit IntegralWit
@@ -247,14 +245,14 @@ genExpr extVars ss t = do
     where
     floatOrDouble numWit = oneOf [ genOp2Num extVars ss t numWit ]
 
-    intOrWord numWit integralWit = do 
-      ws <- weights 
-      if divModFreq ws 
+    intOrWord numWit integralWit = do
+      ws <- weights
+      if divModFreq ws
         then oneOf $ num ++ [ genOp2Integral extVars ss t integralWit ]
         else oneOf num
-      where 
+      where
       num = [ genOp2Num extVars ss t numWit ]
-      
+
 
 --------------------------------------------------------------------------------
 
@@ -285,9 +283,9 @@ genOp2Eq extVars ss = do
   return $ Op2 opw ew1 ew2
 
 genOp2Ord :: [DynExtVar] -> [StreamInfo] -> Gen (Expr Bool)
-genOp2Ord extVars ss = 
+genOp2Ord extVars ss =
   let ss' = findStreamOmittingType Bool in
-  if (null ss') then genExpr extVars ss Bool 
+  if (null ss') then genExpr extVars ss Bool
     else do
       WrapType t <- genTypeFromStreamInfo's ss'
       ew1 <- genExpr extVars ss t
@@ -299,7 +297,7 @@ genOp2Ord extVars ss =
       return $ Op2 opw ew1 ew2
   where
   findStreamOmittingType :: Type a -> [StreamInfo]
-  findStreamOmittingType t0 = 
+  findStreamOmittingType t0 =
     let p (StreamInfo _ t1 _) = case t0 =~= t1 of
                                   Just _ -> True
                                   _      -> False
@@ -314,7 +312,7 @@ genOp2Num extVars ss t NumWit = do
                   , (Mul t) ]
   return $ Op2 opw ew1 ew2
 
-genOp2Integral :: 
+genOp2Integral ::
   [DynExtVar] -> [StreamInfo] -> Type a -> IntegralWit a -> Gen (Expr a)
 genOp2Integral extVars ss t IntegralWit = do
   ew1 <- genExpr extVars ss t
@@ -334,55 +332,3 @@ data NumWit a = Num a => NumWit
 
 data IntegralWit a = Integral a => IntegralWit
 
---------------------------------------------------------------------------------
-
--- randomExtVals :: Int -> Spec -> Weights -> StdGen -> ExtEnv
--- randomExtVals rnds spec = runGen env 0
---   where env = do vars <- extVals rnds spec
---                  return ExtEnv { varEnv = vars
---                                , arrEnv = []
--- --                               , funcEnv = []
---                                }
-
---------------------------------------------------------------------------------
-
--- Extract the external variables, returning randomly-generated lists for their
--- values.
--- extVals :: Int -> Spec -> Gen (Env Name)
--- extVals rnds Spec { specStreams = strms
---                   , specTriggers = triggers } 
---   = 
---   let vars = nubBy (\a b -> fst a == fst b) $ 
---                concatMap strmExts strms ++ 
---                concatMap triggerExts triggers  in
---   mapM randomLst vars
-
---   where 
---   randomLst :: (Name, UType) -> Gen (Name, DynamicF [] Type)
---   randomLst (nm, UType { uTypeType = t }) = do
---     rnd <- randomReplicate rnds t
---     return $ (nm, toDynF t rnd)
-
---   strmExts Stream { streamExpr = expr } = extsFromExpr expr
-
---   triggerExts Trigger { triggerGuard = grd
---                       , triggerArgs = args } = 
---     extsFromExpr grd ++ concatMap getExpr args
---       where getExpr UExpr { uExprExpr = expr } = extsFromExpr expr
-  
---   extsFromExpr :: Expr a -> [(Name, UType)]
---   extsFromExpr expr =
---     case expr of
---       Const _ _                  -> []
---       Drop _ _ _                 -> []
---       Local _ _ _ e1 e2          -> extsFromExpr e1 ++ extsFromExpr e2
---       Var _ _                    -> []
---       ExternVar t name _         -> [(name, UType { uTypeType = t })]
---       ExternFun _ _ _ _ _        -> []
---       ExternArray _ _ _ _ _ _ _  -> []
---       Op1 _ e                    -> extsFromExpr e
---       Op2 _ e1 e2                -> extsFromExpr e1 ++ extsFromExpr e2
---       Op3 _ e1 e2 e3             -> extsFromExpr e1 ++ extsFromExpr e2
---                                       ++ extsFromExpr e3
-
---------------------------------------------------------------------------------

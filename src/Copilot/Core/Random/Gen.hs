@@ -92,7 +92,7 @@ randomFromType t =
     n <- choose (toInteger mn, toInteger mx)
     return (fromInteger n `asTypeOf` mn)
 
-  genFractional :: (Random a, Fractional a) => Gen a
+  genFractional :: Random a => Gen a
   genFractional = do
     g <- stdGen
     return $ fst (random g)
@@ -112,7 +112,7 @@ choose rng = do
   return $ fst (randomR rng g)
 
 oneOf :: [Gen a] -> Gen a
-oneOf [] = impossible "oneof" "copilot-core" 
+oneOf [] = impossible "oneof" "copilot-core"
 oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 
 -- | Takes a list of pairs (weight, Gen), and choose the Gen based on the
@@ -120,17 +120,17 @@ oneOf gs = choose (0,length gs - 1) >>= (gs !!)
 -- choose c between 1 and the total.  Now recurse down the list, choosing an
 -- item only when c <= weight.  If not, subtract the current weight from c.
 freq :: [(Int, Gen a)] -> Gen a
-freq [] = impossible "feq" "copilot-core" 
+freq [] = impossible "feq" "copilot-core"
 freq xs0 = choose (1, tot) >>= (`pick` xs0)
   where
   tot = sum (map fst xs0)
   pick n ((k,x):xs)
     | n <= k    = x
     | otherwise = pick (n-k) xs
-  pick _ _  = impossible "pick" "copilot-core" 
+  pick _ _  = impossible "pick" "copilot-core"
 
 elements :: [a] -> Gen a
-elements [] = impossible "elements" "copilot-core" 
+elements [] = impossible "elements" "copilot-core"
 elements xs = (xs !!) `fmap` choose (0, length xs - 1)
 
 --------------------------------------------------------------------------------

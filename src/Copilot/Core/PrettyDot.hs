@@ -19,47 +19,11 @@ import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
 import Text.Printf
 
-
-
-mkVar :: String -> Id -> String
-mkVar str id = str ++ show id
-
-mkTmpStVar :: Id -> String
-mkTmpStVar = mkVar "tmp_"
-
-mkUpdateStFn :: Id -> String
-mkUpdateStFn = mkVar "update_state_" 
-
-mkQueueVar :: Id -> String
-mkQueueVar = mkVar "queue_" 
-
-mkQueuePtrVar :: Id -> String
-mkQueuePtrVar = mkVar "ptr_" 
-
 mkExtTmpVar :: String -> String
 mkExtTmpVar = ("ext_" ++)
 
 mkExtTmpTag :: String -> Maybe Tag -> String
 mkExtTmpTag name tag = "ext_" ++ name ++ "_" ++ show (tagExtract tag)
-
-mkExtArrFn :: String -> String
-mkExtArrFn = (++) "ext_arr_"
-
-mkExtFunArgFn :: Int -> String -> Maybe Tag -> String
-mkExtFunArgFn i nm tag = 
-  "ext_" ++ nm ++ "_" ++ show (tagExtract tag) ++ "_arg" ++ show i
-
-mkObserverFn :: String -> String
-mkObserverFn = ("observer_" ++)
-
-mkTriggerGuardFn :: String -> String
-mkTriggerGuardFn = ("trigger_guard_" ++)
-
-mkTriggerArgFn :: Int -> String -> String
-mkTriggerArgFn i nm = "trigger_" ++ nm ++ "_arg_" ++ show i
-
-mkArgIdx :: [a] -> [(Int, a)]
-mkArgIdx args = zip [0,1 ..] args
 
 tagExtract :: Maybe Tag -> Tag
 tagExtract Nothing = impossible "tagExtract" "copilot-sbv"
@@ -81,8 +45,8 @@ ppExprDot ii pere bb e0 = case e0 of
             (if bb then (text (printf "%s [label=\"externF: %s\",color=cyan4, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> (hcat (r1))) else (text (printf "%s [label=\"%s\",color=cyan4, style=filled]\n" (show ii::String) (mkExtTmpTag name tag))<> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
                   ,i1)
-  ExternArray _ _ name 
-              _ idx _ tag       -> let (r1,i1) = ppExprDot (ii+1) ii bb idx 
+  ExternArray _ _ name
+              _ idx _ tag       -> let (r1,i1) = ppExprDot (ii+1) ii bb idx
            in (if bb then (text (printf "%s [label=\"externA: %s\",color=cyan3, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1) else (text (printf "%s [label=\"%s\",color=cyan3, style=filled]\n" (show ii::String) (mkExtTmpTag name tag)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
                   ,i1)
@@ -95,7 +59,7 @@ ppExprDot ii pere bb e0 = case e0 of
   GetField _ _ _ name          -> (text (printf "%s [label=\"field: %s\",color=dodgerblue3, style=filled]\n" (show ii::String) (name::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
 
-  Local _ _ name e1 e2       -> let (r1, i1) = ppExprDot (ii+2) (ii+1) bb e1 
+  Local _ _ name e1 e2       -> let (r1, i1) = ppExprDot (ii+2) (ii+1) bb e1
                                 in let (r2, i2) = ppExprDot (i1) ii bb e2
                                 in (text (printf "%s [label=\"local:\",color=blue, style=filled]\n" (show ii::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
@@ -107,27 +71,27 @@ ppExprDot ii pere bb e0 = case e0 of
   Var _ name                 -> (text (printf "%s [label=\"var: %s\",color=blue, style=filled]\n" (show ii::String) (name::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
 
-  Op1 op e                   -> let (r1,i1) = ppExprDot (ii+1) ii bb e 
+  Op1 op e                   -> let (r1,i1) = ppExprDot (ii+1) ii bb e
            in (text (printf "%s [label=\"op1: %s\",color=green4, style=filled]\n" (show ii::String) (ppOp1 op::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1,i1)
 
-  Op2 op e1 e2               -> let (r1,i1) = ppExprDot (ii+1) ii bb e1 
-                                in let (r2,i2) = ppExprDot i1 ii bb e2 
+  Op2 op e1 e2               -> let (r1,i1) = ppExprDot (ii+1) ii bb e1
+                                in let (r2,i2) = ppExprDot i1 ii bb e2
            in (text (printf "%s [label=\"op2: %s\",color=green4, style=filled]\n" (show ii::String) (ppOp2 op::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1
                   <> r2 ,i2)
-  Op3 op e1 e2 e3            -> let (r1,i1) = ppExprDot (ii+1) ii bb e1 
-                                in let (r2,i2) = ppExprDot i1 ii bb e2 
-                                in let (r3,i3) = ppExprDot i2 ii bb e3 
+  Op3 op e1 e2 e3            -> let (r1,i1) = ppExprDot (ii+1) ii bb e1
+                                in let (r2,i2) = ppExprDot i1 ii bb e2
+                                in let (r3,i3) = ppExprDot i2 ii bb e3
            in (text (printf "%s [label=\"op3: %s\",color=green4, style=filled]\n" (show ii::String) (ppOp3 op::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1
-                  <> r2 
+                  <> r2
                   <> r3 ,i3)
 
-  Label t s e                -> let (r1,i1) = ppExprDot (ii+1) ii bb e 
+  Label _ s e                -> let (r1,i1) = ppExprDot (ii+1) ii bb e
            in (text (printf "%s [label=\"label: %s\",color=plum, style=filled]\n" (show ii::String) (s::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1,i1)
@@ -182,12 +146,10 @@ ppOp2 op = case op of
   BwXor    _   -> "^"
   BwShiftL _ _ -> "<<"
   BwShiftR _ _ -> ">>"
-  --GetField _ _ -> "."
 
 ppOp3 :: Op3 a b c d -> String
 ppOp3 op = case op of
   Mux _    -> "mux"
-
 
 --------------------------------------------------------------------------------
 
@@ -199,7 +161,7 @@ ppStream i
     , streamExpr     = e
     , streamExprType = t
     }
-      = 
+      =
   (text (printf "%s [label=\"stream: %s\ntype: %s\",color=mediumblue, style=filled]\n" (show i::String) (show id::String) (showType t::String))
     <> text (printf "%s [label=\"++\",color=yellow, style=filled]\n" ((show $ i+1)::String))
     <> text (printf "%s -> %s\n" (show i::String) ((show $ i+1)::String))
@@ -223,12 +185,12 @@ ppTrigger i
   <> text (printf "%s -> %s\n" (show i::String) (show i1::String))
   <>  (vcat (r2))
   ,i2)
-  where 
+  where
     (r1, i1) = ppExprDot (i+2) (i+1) True e
     (r2, i2) = ppUExprL (i1+1) (i1) True args
 
 ppUExprL :: Int -> Int -> Bool -> [UExpr] -> ([Doc], Int)
-ppUExprL i pere bb [] = ([], i)
+ppUExprL i _ _ [] = ([], i)
 
 ppUExprL i pere bb (a:b) = ((r1:r2), i2)
   where
@@ -242,7 +204,7 @@ ppObserver i
   Observer
     { observerName     = name
     , observerExpr     = e }
-  =     
+  =
   (text (printf "%s [label=\"observer: \n%s\",color=mediumblue, style=filled]\n" (show i::String) name::String)
   <> r1, i1)
   where (r1, i1) = ppExprDot (i+1) i True e
@@ -253,11 +215,10 @@ ppProperty i
   Property
     { propertyName     = name
     , propertyExpr     = e }
-  =   
+  =
   (text (printf "%s [label=\"property: \n%s\",color=mediumblue, style=filled]\n" (show i::String) name::String)
   <> r1, i1)
   where (r1, i1) = ppExprDot (i+1) i True e
-
 
 --------------------------------------------------------------------------------
 
@@ -305,10 +266,8 @@ ppPropertyL i (a:b) = ((s1$$s2),(i2))
 
 --------------------------------------------------------------------------------
 
-
-
 ppSpecDot :: Int -> Spec -> (Doc, Int)
-ppSpecDot i spec = 
+ppSpecDot i spec =
   ((aa $$ cs $$ ds $$ es $$ fs $$ bb),i4)
   where
     aa = text "digraph G {\nnode [shape=box]\n"
@@ -323,13 +282,13 @@ ppSpecDot i spec =
 -- | Pretty-prints a Copilot expression.
 prettyPrintExprDot :: Bool -> Expr a -> String
 prettyPrintExprDot bb s = render rr
-  where 
-    (r1,i1) = (ppExprDot 1 0 bb s)
-    rr = (text "digraph G {\nnode [shape=box]\n" $$ (text (printf "%s [label=\"file: \n?????\",color=red, style=filled]\n" (show 0))) <> r1 $$ text "\n}\n")
+  where
+    (r1, _) = ppExprDot 1 0 bb s
+    rr = text "digraph G {\nnode [shape=box]\n" $$ (text "0 [label=\"file: \n?????\",color=red, style=filled]\n") <> r1 $$ text "\n}\n"
 
 -- | Pretty-prints a Copilot specification.
 prettyPrintDot :: Spec -> String
 prettyPrintDot s = render r1
-  where (r1,i1) = (ppSpecDot 0 s)
+  where (r1, _) = ppSpecDot 0 s
 
 --------------------------------------------------------------------------------

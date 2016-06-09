@@ -39,11 +39,11 @@ data Weights = Weights
   , word32Freq   :: Int
   , word64Freq   :: Int
   , floatFreq    :: Int
-  , doubleFreq   :: Int 
+  , doubleFreq   :: Int
   , divModFreq   :: Bool }
 
 simpleWeights :: Weights
-simpleWeights = Weights 
+simpleWeights = Weights
   { maxExprDepth = 10
   , maxBuffSize  = 8
   , maxTriggers  = 5
@@ -71,5 +71,5 @@ simpleWeights = Weights
   , word32Freq   = 1
   , word64Freq   = 1
   , floatFreq    = 1
-  , doubleFreq   = 1 
+  , doubleFreq   = 1
   , divModFreq   = True }

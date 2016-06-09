@@ -12,9 +12,7 @@ module Copilot.Core.StructMarshal
 import Copilot.Core.Expr as E
 import Copilot.Core.Type (Type, Typed)
 import Copilot.Core.Spec
---import Data.BitArray
 import Data.Vector.Unboxed hiding (foldr)
---import Data.Serialize
 
 --------------------------------------------------------------------------------
 
@@ -22,11 +20,6 @@ import Data.Vector.Unboxed hiding (foldr)
 marshalFields :: [Type] -> Vector
 marshalFields fields =
   foldr cons empty fields
-
--- | Convert Bit Vector to Struct
-{-demarshalFields :: Vector -> [UExpr]
-demarshalFields struct =
-  let -}
 
 -- | Get Struct Field from Bit Vector
 demarshalField :: Vector -> Type -> Int -> UExpr

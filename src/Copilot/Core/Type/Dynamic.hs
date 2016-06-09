@@ -34,7 +34,7 @@ data Dynamic :: (* -> *) -> * where
 data DynamicF :: (* -> *) -> (* -> *) -> * where
   DynamicF :: f a -> t a -> DynamicF f t
 
-toDyn :: EqualType t => t a -> a -> Dynamic t
+toDyn :: t a -> a -> Dynamic t
 toDyn t x = Dynamic x t
 
 fromDyn :: EqualType t => t a -> Dynamic t -> Maybe a
@@ -43,7 +43,7 @@ fromDyn t1 (Dynamic x t2) =
     Just Refl -> return x
     Nothing   -> Nothing
 
-toDynF :: EqualType t => t a -> f a -> DynamicF f t
+toDynF :: t a -> f a -> DynamicF f t
 toDynF t fx = DynamicF fx t
 
 fromDynF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)

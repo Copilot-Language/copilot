@@ -4,12 +4,12 @@
 
 -- | A tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE Trustworthy #-} -- Because of Data.Map (Containers)
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
 
 module Copilot.Core.Interpret.Eval
   ( --ExtEnv (..)
-    Env 
+    Env
   , Output
   , ExecTrace (..)
   , eval
@@ -35,7 +35,7 @@ import Data.Typeable
 data InterpException
   = -- NoValues Name
 --  | BadType Name
-    ArrayWrongSize Name Int 
+    ArrayWrongSize Name Int
   | ArrayIdxOutofBounds Name Int Int
   | DivideByZero
   | NotEnoughValues Name Int
@@ -52,17 +52,17 @@ instance Show InterpException where
 
   -- -- Should always be caught by Analyze.hs in copilot-language.
   -- show (BadType name)                                                          =
-  --   badUsage $ "you probably gave the wrong type for external element " 
+  --   badUsage $ "you probably gave the wrong type for external element "
   --     ++ name ++ ".  Recheck your types and re-evaluate."
   ---------------------------------------
   show (ArrayWrongSize name expectedSize)                                      =
-    badUsage $ "in the environment for external array " ++ name 
-      ++ ", we expect a list of length " ++ show expectedSize 
+    badUsage $ "in the environment for external array " ++ name
+      ++ ", we expect a list of length " ++ show expectedSize
       ++ ", but the length of the array you supplied is of a different length."
   ---------------------------------------
   show (ArrayIdxOutofBounds name index size)                                   =
-    badUsage $ "in the environment for external array " ++ name 
-      ++ ", you gave an index of " ++ show index 
+    badUsage $ "in the environment for external array " ++ name
+      ++ ", you gave an index of " ++ show index
       ++ " where the size of the array is " ++ show size ++ "; the size must "
       ++ " be strictly greater than the index."
   ---------------------------------------
@@ -87,12 +87,12 @@ instance Exception InterpException
 type Env nm = [(nm, DynamicF [] Type)]
 
 -- -- | External arrays environment.
--- type ArrEnv = [(Name, [DynamicF [] Type])] 
+-- type ArrEnv = [(Name, [DynamicF [] Type])]
 
 -- -- | Environment for simulation.
 -- data ExtEnv = ExtEnv { varEnv  :: Env Name
---                      , arrEnv  :: ArrEnv 
--- --                     , funcEnv :: [(Name, Spec)] 
+--                      , arrEnv  :: ArrEnv
+-- --                     , funcEnv :: [(Name, Spec)]
 --                      }
 
 --------------------------------------------------------------------------------
@@ -138,11 +138,11 @@ eval showType k spec =
 
   let strms = evalStreams k (specStreams spec) initStrms      in
 
-  let trigs = map (evalTrigger showType k strms) 
+  let trigs = map (evalTrigger showType k strms)
                   (specTriggers spec)                         in
 
-  let obsvs = map (evalObserver showType k strms) 
-                  (specObservers spec)                        in 
+  let obsvs = map (evalObserver showType k strms)
+                  (specObservers spec)                        in
 
   strms `seq` ExecTrace
                 { interpTriggers  = M.fromList $
@@ -157,17 +157,17 @@ type LocalEnv = [(Name, Dynamic Type)]
 
 evalExpr_ :: Int -> Expr a -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 locs strms = case e0 of
-  Const _ x                          -> x 
-  Drop t i id                        -> 
+  Const _ x                          -> x
+  Drop t i id                        ->
     let Just xs = lookup id strms >>= fromDynF t in
     reverse xs !! (fromIntegral i + k)
-  Local t1 _ name e1 e2              -> 
+  Local t1 _ name e1 e2              ->
     let x     = evalExpr_ k e1 locs strms in
     let locs' = (name, toDyn t1 x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2  locs' strms
   Var t name                         -> fromJust $ lookup name locs >>= fromDyn t
   ExternVar _ name xs                -> evalExternVar k name xs
-  ExternFun _ name _ expr _          -> --evalFunc k t name expr 
+  ExternFun _ name _ expr _          -> --evalFunc k t name expr
     case expr of
       Nothing -> throw (NoExtsInterp name)
       Just e  -> evalExpr_ k e locs strms
@@ -175,32 +175,32 @@ evalExpr_ k e0 locs strms = case e0 of
     where evalIdx = evalExpr_ k idx locs strms
   ExternStruct _ _ _ _   -> error "unimplemented"
   GetField _ _ _ _       -> error "unimplemented"
-  Op1 op e1                          -> 
-    let ev1 = evalExpr_ k e1 locs strms in 
+  Op1 op e1                          ->
+    let ev1 = evalExpr_ k e1 locs strms in
     let op1 = evalOp1 op                in
-    ev1 `seq` op1 `seq` op1 ev1               
-  Op2 op e1 e2                       -> 
-    let ev1 = evalExpr_ k e1 locs strms in 
-    let ev2 = evalExpr_ k e2 locs strms in 
+    ev1 `seq` op1 `seq` op1 ev1
+  Op2 op e1 e2                       ->
+    let ev1 = evalExpr_ k e1 locs strms in
+    let ev2 = evalExpr_ k e2 locs strms in
     let op2 = evalOp2 op                in
     ev1 `seq` ev2 `seq` op2 `seq` op2 ev1 ev2
-  Op3 op e1 e2 e3                    -> 
-    let ev1 = evalExpr_ k e1 locs strms in 
-    let ev2 = evalExpr_ k e2 locs strms in 
-    let ev3 = evalExpr_ k e3 locs strms in 
+  Op3 op e1 e2 e3                    ->
+    let ev1 = evalExpr_ k e1 locs strms in
+    let ev2 = evalExpr_ k e2 locs strms in
+    let ev3 = evalExpr_ k e3 locs strms in
     let op3 = evalOp3 op                in
     ev1 `seq` ev2 `seq` ev3 `seq` op3 `seq` op3 ev1 ev2 ev3
-  Label t s e1                         -> 
+  Label _ _ e1                         ->
     let ev1 = evalExpr_ k e1 locs strms in
     ev1
 
 --------------------------------------------------------------------------------
 
 evalExternVar :: Int -> Name -> Maybe [a] -> a
-evalExternVar k name exts = 
+evalExternVar k name exts =
   case exts of
     Nothing -> throw (NoExtsInterp name)
-    Just xs -> 
+    Just xs ->
       case safeIndex k xs of
         Nothing -> throw (NotEnoughValues name k)
         Just x  -> x
@@ -208,8 +208,8 @@ evalExternVar k name exts =
 --------------------------------------------------------------------------------
 
 -- evalFunc :: Int -> Type a -> Name -> Expr a -> ExtEnv -> a
--- evalFunc k t name expr exts  = 
---   evalExpr k expr 
+-- evalFunc k t name expr exts  =
+--   evalExpr k expr
 
 --   case lookup name (funcEnv exts) of
 --     Nothing -> throw (NoValues name)
@@ -217,37 +217,37 @@ evalExternVar k name exts =
 --     -- We created this spec in Interpreter.hs, copilot-language, so it should
 --     -- contain no triggers and exactly one observer.
 --     Just Spec { specStreams   = specStrms
---               , specObservers = obsLs }  -> 
+--               , specObservers = obsLs }  ->
 --      let initStrms = map initStrm specStrms             in
 --      let strms = evalStreams k exts specStrms initStrms in
 --      case obsLs of
 --        [Observer { observerExpr     = expr_
---                  , observerExprType = t1 }] -> 
+--                  , observerExprType = t1 }] ->
 --          let dyn = toDynF t1 expr_ in
 --            case fromDynF t dyn of
 --              Nothing    -> throw (BadType name)
 --              Just expr  -> evalExpr_ k expr exts [] strms
---        _ -> throw (BadType name) 
+--        _ -> throw (BadType name)
 
 --------------------------------------------------------------------------------
 
 evalArray :: Integral b => Int -> Name -> b -> Maybe [[a]] -> Int -> a
 evalArray k name idx exts size =
-  case exts of 
+  case exts of
     Nothing -> throw (NoExtsInterp name)
-    Just xs -> 
+    Just xs ->
       case safeIndex k xs of
         Nothing  -> throw (NotEnoughValues name k)
         Just arr -> -- convoluted form in case the array is env of infinite
                     -- length.
-                    if    length (take size arr) == size  
+                    if    length (take size arr) == size
                        && length (take (size+1) arr) == size
                       then case safeIndex (fromIntegral idx) arr of
                              Nothing -> throw (ArrayIdxOutofBounds
                                                  name (fromIntegral idx) size)
                              Just x  -> x
                       else throw (ArrayWrongSize name size)
-  
+
 --------------------------------------------------------------------------------
 
 evalOp1 :: Op1 a b -> (a -> b)
@@ -272,7 +272,7 @@ evalOp1 op = case op of
   Atanh _    -> P.atanh
   Acosh _    -> P.acosh
   BwNot _    -> complement
-  Cast _ _   -> P.fromIntegral 
+  Cast _ _   -> P.fromIntegral
 
 --------------------------------------------------------------------------------
 
@@ -320,14 +320,14 @@ initStrm Stream { streamId       = id
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
 evalStreams :: Int -> [Stream] -> Env Id -> Env Id
-evalStreams top specStrms initStrms = 
-  evalStreams_ 0 initStrms 
-  where 
+evalStreams top specStrms initStrms =
+  evalStreams_ 0 initStrms
+  where
   evalStreams_ :: Int -> Env Id -> Env Id
   evalStreams_ k strms | k == top  = strms
-  evalStreams_ k strms | otherwise = 
-    evalStreams_ (k+1) $! strms_ 
-    where 
+  evalStreams_ k strms | otherwise =
+    evalStreams_ (k+1) $! strms_
+    where
     strms_ = map evalStream specStrms
     evalStream Stream { streamId       = id
                       , streamExpr     = e
@@ -339,13 +339,13 @@ evalStreams top specStrms initStrms =
 
 --------------------------------------------------------------------------------
 
-evalTrigger :: 
+evalTrigger ::
   ShowType -> Int -> Env Id -> Trigger -> [Maybe [Output]]
 evalTrigger showType k strms
   Trigger
     { triggerGuard = e
     , triggerArgs  = args
-    } = map tag (zip bs vs) 
+    } = map tag (zip bs vs)
 
   where
   tag :: (Bool, a) -> Maybe a
@@ -376,7 +376,7 @@ evalObserver showType k strms
 --------------------------------------------------------------------------------
 
 evalExprs_ :: Int -> Expr a -> Env Id -> [a]
-evalExprs_ k e strms = 
+evalExprs_ k e strms =
   map (\i -> evalExpr_ i e [] strms) [0..(k-1)]
 
 --------------------------------------------------------------------------------
