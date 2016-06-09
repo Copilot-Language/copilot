@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}

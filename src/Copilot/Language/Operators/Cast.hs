@@ -4,7 +4,7 @@
 
 -- | Type-safe casting operators.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Copilot.Language.Operators.Cast

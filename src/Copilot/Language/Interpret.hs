@@ -2,13 +2,13 @@
 
 -- | The interpreter.
 
-{-# LANGUAGE Trustworthy #-} -- Copilot Core uses Data.Map in Containers.
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, FlexibleInstances #-}
 
 module Copilot.Language.Interpret
   ( --Input
     csv
-  , interpret 
+  , interpret
 --  , var
 --  , array
 --  , func
@@ -52,7 +52,7 @@ csv i spec = do
 
 --------------------------------------------------------------------------------
 
--- | Much slower, but pretty-printed interpreter output.  
+-- | Much slower, but pretty-printed interpreter output.
 interpret :: Integer -> Spec -> IO ()
 interpret = interpret' I.Table
 
@@ -72,23 +72,23 @@ interpret' format i spec = do
   -- -- We do the two folds below over the data type separately, since one
   -- -- component is monadic.
   -- funcExts :: IO [(Name, C.Spec)]
-  -- funcExts = 
+  -- funcExts =
   --   let (names, specs) = unzip $ foldl' envf [] inputs in
   --   do ss <- sequence specs
   --      return $ zip names ss
   --   where
   --   envf :: [(Name, IO C.Spec)] -> Input -> [(Name, IO C.Spec)]
-  --   envf acc (Func name strm) = 
+  --   envf acc (Func name strm) =
   --     (name, reify $ observer name strm) : acc
   --   envf acc _ = acc
 
   -- varArrExts :: ExtEnv
   -- varArrExts = foldl' env (ExtEnv [] []) inputs
-  --   where 
+  --   where
   --   env :: ExtEnv -> Input -> ExtEnv
-  --   env acc (Var name xs) = 
-  --     acc { varEnv = (name, toDynF typeOf xs) : varEnv acc } 
-  --   env acc (Arr name xs) = 
+  --   env acc (Var name xs) =
+  --     acc { varEnv = (name, toDynF typeOf xs) : varEnv acc }
+  --   env acc (Arr name xs) =
   --     acc { arrEnv = (name, map (toDynF typeOf) xs) : arrEnv acc }
 --    env acc _ = acc
 

@@ -4,7 +4,7 @@
 
 -- | Stream construction.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Temporal
   ( (++)

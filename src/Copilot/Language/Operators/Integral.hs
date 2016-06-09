@@ -4,7 +4,7 @@
 
 -- | Integral class operators.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Integral
   ( div
@@ -35,7 +35,7 @@ _         `mod` (Const 0) = Core.badUsage "in mod: division by zero."
 (Const x) `mod` (Const y) = Const (x `P.mod` y)
 x `mod` y = Op2 (Core.Mod typeOf) x y
 
-(^) :: (Typed a, Typed b, P.Num a, B.Bits a, P.Integral b) 
+(^) :: (Typed a, Typed b, P.Num a, B.Bits a, P.Integral b)
     => Stream a -> Stream b -> Stream a
 (Const 0) ^ (Const 0)  = Const 1
 (Const 0) ^ x          = Op3 (Core.Mux typeOf) (Op2 (Core.Eq typeOf) x 0) (1) (0)

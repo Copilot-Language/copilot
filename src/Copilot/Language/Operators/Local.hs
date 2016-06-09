@@ -4,7 +4,7 @@
 
 -- | Let expressions.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Local
   ( local

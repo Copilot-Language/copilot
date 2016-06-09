@@ -4,7 +4,7 @@
 
 -- | Constants.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Constant
   ( constant
@@ -37,7 +37,7 @@ constant = Const
 constB   :: Bool -> Stream Bool
 constB   = constant
 constW8  :: Word8 -> Stream Word8
-constW8  = constant 
+constW8  = constant
 constW16 :: Word16 -> Stream Word16
 constW16 = constant
 constW32 :: Word32 -> Stream Word32
