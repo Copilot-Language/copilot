@@ -4,7 +4,7 @@
 
 -- | if-then-else.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Mux
   ( mux

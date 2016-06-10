@@ -70,9 +70,9 @@ library
     -Wall
 
     -fpackage-trust
-    -- Trusted packages:
+    -trust=array
     -trust=base
     -trust=containers
-    -trust=array
+    -trust=copilot-core
 
 

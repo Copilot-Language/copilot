@@ -4,7 +4,7 @@
 
 -- | Equality operator.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Eq
   ( (==)

@@ -4,7 +4,8 @@
 
 -- | Bitwise operators.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Copilot.Language.Operators.BitWise
@@ -29,7 +30,11 @@ instance (Typed a, Bits a) => Bits (Stream a) where
   shiftR       = P.error "shiftR undefined, for right-shifting use .>>."
   rotate       = P.error "tbd: rotate"
   bitSize      = P.error "tbd: bitSize"
+  bitSizeMaybe = P.error "tbd: bitSizeMaybe"
   isSigned     = P.error "tbd: issigned"
+  testBit      = P.error "tbd: testBit"
+  bit          = P.error "tbd: bit"
+  popCount     = P.error "tbd: popCount"
 
 -- Avoid redefinition of the Operators.Boolean xor
 (.^.) :: Bits a => a -> a -> a

@@ -4,14 +4,14 @@
 
 -- | Abstract syntax for streams and operators.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Language.Stream
-  ( Stream (..) 
-  , Arg (..) 
+  ( Stream (..)
+  , Arg (..)
   , StructArg (..)
   ) where
 
@@ -24,14 +24,14 @@ import qualified Prelude as P
 --------------------------------------------------------------------------------
 
 data Stream :: * -> * where
-  Append      :: Typed a 
+  Append      :: Typed a
               => [a] -> Maybe (Stream Bool) -> Stream a -> Stream a
   Const       :: Typed a => a -> Stream a
   Drop        :: Typed a
               => Int -> Stream a -> Stream a
   Extern      :: Typed a
               => String -> Maybe [a] -> Stream a
-  ExternFun   :: Typed a 
+  ExternFun   :: Typed a
               => String -> [Arg] -> Maybe (Stream a) -> Stream a
   ExternArray :: (Typed a, Typed b, Integral a)
               => String -> Stream a -> Int -> Maybe [[b]] -> Stream b
@@ -39,9 +39,9 @@ data Stream :: * -> * where
               => String -> [(String, Arg)] -> Stream a
   GetField    :: (Typed a, Typed b)
               => Stream a -> String -> Stream b
-  Local       :: (Typed a, Typed b) 
+  Local       :: (Typed a, Typed b)
               => Stream a -> (Stream a -> Stream b) -> Stream b
-  Var         :: Typed a 
+  Var         :: Typed a
               => String -> Stream a
   Op1         :: (Typed a, Typed b)
               => Core.Op1 a b -> Stream a -> Stream b
@@ -103,7 +103,7 @@ instance (Typed a, P.Eq a, Num a) => Num (Stream a) where
 -- XXX we may not want to precompute these if they're constants if someone is
 -- relying on certain floating-point behavior.
 instance (Typed a, P.Eq a, Fractional a) => Fractional (Stream a) where
-  (/)                     = Op2 (Core.Fdiv typeOf) 
+  (/)                     = Op2 (Core.Fdiv typeOf)
 
   recip (Const x)         = Const (recip x)
   recip x                 = Op1 (Core.Recip typeOf) x

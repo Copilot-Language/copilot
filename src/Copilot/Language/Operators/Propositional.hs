@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Trustworthy, FlexibleInstances, GADTs, MultiParamTypeClasses #-}
+{-# LANGUAGE Safe, FlexibleInstances, GADTs, MultiParamTypeClasses #-}
 
 module Copilot.Language.Operators.Propositional (not) where
 

@@ -4,7 +4,7 @@
 
 -- | External variables, arrays, and functions.
 
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Operators.Extern
   ( extern
