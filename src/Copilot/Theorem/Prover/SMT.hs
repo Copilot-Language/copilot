@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Theorem.Prover.SMT
   ( module Data.Default
@@ -24,7 +25,6 @@ import Copilot.Theorem.Prover.TPTP (Tptp)
 import qualified Copilot.Theorem.Prover.SMTLib as SMTLib
 import qualified Copilot.Theorem.Prover.TPTP as TPTP
 
-import Control.Applicative ((<$>), (<*))
 import Control.Monad (msum, unless, mzero)
 import Control.Monad.State (StateT, runStateT, lift, get, modify)
 import Control.Monad.IO.Class (liftIO)
@@ -65,7 +65,7 @@ instance Default Options where
 onlySat :: SmtFormat a => Options -> Backend a -> Proof Existential
 onlySat opts backend = check P.Prover
   { P.proverName  = "OnlySat"
-  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translateWithBounds
   , P.askProver   = onlySat'
   , P.closeProver = const $ return ()
   }
@@ -73,7 +73,7 @@ onlySat opts backend = check P.Prover
 onlyValidity :: SmtFormat a => Options -> Backend a -> Proof Universal
 onlyValidity opts backend = check P.Prover
   { P.proverName  = "OnlyValidity"
-  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translateWithBounds
   , P.askProver   = onlyValidity'
   , P.closeProver = const $ return ()
   }
@@ -81,7 +81,7 @@ onlyValidity opts backend = check P.Prover
 induction :: SmtFormat a => Options -> Backend a -> Proof Universal
 induction opts backend = check P.Prover
   { P.proverName  = "Induction"
-  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translateWithBounds
   , P.askProver   = kInduction' 0 0
   , P.closeProver = const $ return ()
   }
@@ -89,7 +89,7 @@ induction opts backend = check P.Prover
 kInduction :: SmtFormat a => Options -> Backend a -> Proof Universal
 kInduction opts backend = check P.Prover
   { P.proverName  = "K-Induction"
-  , P.startProver = return . ProofState opts backend Map.empty . translate
+  , P.startProver = return . ProofState opts backend Map.empty . translateWithBounds
   , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }

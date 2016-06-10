@@ -2,11 +2,12 @@
 
 module Grey where
 
-import Prelude ()
 import Copilot.Language
-
 import Copilot.Theorem
 import Copilot.Theorem.Prover.Z3
+
+import Prelude ()
+import Data.String (fromString)
 
 intCounter :: Stream Bool -> Stream Word64
 intCounter reset = time

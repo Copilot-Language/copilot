@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Cast
   ( Dyn

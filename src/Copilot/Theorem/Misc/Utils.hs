@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.Misc.Utils
  ( isSublistOf, nub', nubBy', nubEq
  , openTempFile

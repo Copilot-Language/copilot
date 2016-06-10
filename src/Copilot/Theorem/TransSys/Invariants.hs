@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -O0 #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Invariants
   ( HasInvariants (..)

@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.Prover.Backend (SmtFormat(..), Backend(..), SatResult(..)) where
 

@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Copilot.Theorem.Kind2.Prover
   ( module Data.Default

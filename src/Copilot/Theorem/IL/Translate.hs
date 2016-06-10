@@ -2,8 +2,9 @@
 
 {-# LANGUAGE RankNTypes, NamedFieldPuns, ScopedTypeVariables, GADTs,
              LambdaCase #-}
+{-# LANGUAGE Safe #-}
 
-module Copilot.Theorem.IL.Translate ( translate ) where
+module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
 
 import Copilot.Theorem.IL.Spec
 
@@ -11,7 +12,6 @@ import qualified Copilot.Core as C
 
 import qualified Data.Map.Strict as Map
 
-import Control.Applicative ((<$>), (<*))
 import Control.Monad.State
 
 import Data.Char
@@ -48,7 +48,13 @@ ncMux n = "mux" ++ show n
 -- | Translates a Copilot specification to an IL specification
 
 translate :: C.Spec -> IL
-translate (C.Spec {C.specStreams, C.specProperties}) = runTrans $ do
+translate = translate' False
+
+translateWithBounds :: C.Spec -> IL
+translateWithBounds = translate' True
+
+translate' :: Bool -> C.Spec -> IL
+translate' b (C.Spec {C.specStreams, C.specProperties}) = runTrans b $ do
 
   let modelInit = concatMap streamInit specStreams
 
@@ -81,7 +87,9 @@ bound s t = case t of
   C.Word64  -> bound' C.Word64
   _         -> return ()
   where bound' :: (Bounded a, Integral a) => C.Type a -> Trans ()
-        bound' t = localConstraint (Op2 Bool And
+        bound' t = do
+          b <- addBounds <$> get
+          when b $ localConstraint (Op2 Bool And
             (Op2 Bool Le (trConst t minBound) s)
             (Op2 Bool Ge (trConst t maxBound) s))
 
@@ -181,6 +189,9 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
   e2'   <- expr e2
   newMux cond' (trType t) e1' e2'
 
+expr (C.ExternStruct _ _ _ _) = undefined
+expr (C.GetField _ _ _ _) = undefined
+
 trConst :: C.Type a -> a -> Expr
 trConst t v = case t of
   C.Bool   -> ConstB v
@@ -245,7 +256,7 @@ trOp2 = \case
   C.Pow t        -> (Pow, trType t)
   -- C.Logb t       ->
 
-  C.Eq t         -> (Eq, Bool)
+  C.Eq _         -> (Eq, Bool)
   -- C.Ne t         ->
 
   C.Le t         -> (Le, trType t)
@@ -281,6 +292,7 @@ data TransST = TransST
   { localConstraints :: [Expr]
   , muxes            :: [(Expr, (Expr, Type, Expr, Expr))]
   , nextFresh        :: Integer
+  , addBounds        :: Bool
   }
 
 newMux :: Expr -> Type -> Expr -> Expr -> Trans Expr
@@ -317,8 +329,8 @@ popLocalConstraints :: Trans [Expr]
 popLocalConstraints = liftM2 (++) (localConstraints <$> get) getMuxes
   <* (modify $ \st -> st {localConstraints = [], muxes = []})
 
-runTrans :: Trans a -> a
-runTrans m = evalState m $ TransST [] [] 0
+runTrans :: Bool -> Trans a -> a
+runTrans b m = evalState m $ TransST [] [] 0 b
 
 --------------------------------------------------------------------------------
 

@@ -1,6 +1,7 @@
 ---------------------------------------------------------------------------------
 
 {-# LANGUAGE NamedFieldPuns, GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.IL.PrettyPrint (prettyPrint, printConstraint) where
 

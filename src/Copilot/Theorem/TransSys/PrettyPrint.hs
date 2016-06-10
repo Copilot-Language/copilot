@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE NamedFieldPuns, GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.PrettyPrint ( prettyPrint ) where
 

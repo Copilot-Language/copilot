@@ -2,6 +2,7 @@
 
 {-# LANGUAGE RankNTypes, NamedFieldPuns, ViewPatterns,
              ScopedTypeVariables, GADTs, FlexibleContexts #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Translate ( translate ) where
 
@@ -9,7 +10,6 @@ import Copilot.Theorem.TransSys.Spec
 import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.Misc.Utils
 
-import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 
 import Data.Char (isNumber)
@@ -206,6 +206,10 @@ expr t (C.Op2 op e1 e2) = handleOp2
 expr t (C.ExternFun _ _ _ _ _) = newUnconstrainedVar t
 
 expr t (C.ExternArray _ _ _ _ _ _ _) = newUnconstrainedVar t
+
+expr t (C.ExternStruct _ _ _ _) = newUnconstrainedVar t
+
+expr t (C.GetField _ _ _ _) = undefined
 
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do

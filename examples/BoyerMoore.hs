@@ -4,15 +4,16 @@
 
 module BoyerMoore where
 
-import Prelude ()
-import Control.Monad (forM_)
-
 import Copilot.Language hiding (length)
 import Copilot.Theorem
 import Copilot.Theorem.Prover.Z3
 
 import Copilot.Core.Type
 import Copilot.Core.Type.Uninitialized
+
+import Prelude ()
+import Control.Monad (forM_)
+import Data.String (fromString)
 
 import qualified Prelude   as P
 import qualified Data.List as L

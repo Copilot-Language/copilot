@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes, ViewPatterns, NamedFieldPuns, GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.Kind2.Translate
   ( toKind2

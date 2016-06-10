@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.TransSys (module X) where
 
 import Copilot.Theorem.TransSys.Spec as X

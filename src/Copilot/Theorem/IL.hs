@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.IL (module X) where
 
 import Copilot.Theorem.IL.Spec as X

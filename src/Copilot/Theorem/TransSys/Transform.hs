@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Transform
   ( mergeNodes

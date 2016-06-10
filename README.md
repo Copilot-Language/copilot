@@ -7,7 +7,7 @@ adoption of formal methods in the software industry. Moreover, it could provide
 a partial answer to one of its main issue which is scalability.
 
 *copilot-theorem* is a Copilot library aimed at checking automatically some safety
-properties on Copilot programs. It includes :
+properties on Copilot programs. It includes:
 
 * A general interface for *provers* and a *proof scheme* mechanism aimed at
   splitting the task of proving a complex property into checking a sequence of
@@ -26,12 +26,12 @@ properties on Copilot programs. It includes :
 
 ### Installation instructions
 
-*copilot-theorem* needs the following dependencies to be installed :
+*copilot-theorem* needs the following dependencies to be installed:
 
 * The *copilot-core* and *copilot-language* Haskell libraries
-* The *Yices2* SMT-solver : `yices-smt2` must be in your `$PATH`
-* The *Z3* SMT-solver : `z3` must be in your `$PATH`
-* The *Kind2* model checker : `kind2` must be in your `$PATH`
+* The *Yices2* SMT-solver: `yices-smt2` must be in your `$PATH`
+* The *Z3* SMT-solver: `z3` must be in your `$PATH`
+* The *Kind2* model checker: `kind2` must be in your `$PATH`
 
 To build it, just clone this repository and use `cabal install`. You will find
 some examples in the `examples` folder, which can be built with `cabal install`
@@ -53,7 +53,7 @@ addition to triggers and observers declarations, it is possible to bind a
 boolean stream to a property name with the `prop` construct in the
 specification.
 
-For instance, here is a straightforward specification declaring one property :
+For instance, here is a straightforward specification declaring one property:
 
 ```haskell
 spec :: Spec
@@ -65,7 +65,7 @@ spec = do
 
 Let's say we want to check that `gt0` holds. For this, we use the `prove ::
 Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Theorem`.
-This function takes three arguments :
+This function takes three arguments:
 
 * The prover we want to use. For now, two provers are available, exported by
   the `Copilot.Theorem.Light` and `Copilot.Theorem.Kind2` module.
@@ -86,7 +86,7 @@ configuration.
 
 The `Copilot.Theorem.Prover` defines a general interface for provers. Therefore,
 it is really easy to add a new prover by creating a new object of type
-`Prover`. The latter is defined like this :
+`Prover`. The latter is defined like this:
 
 ```haskell
 data Cex = Cex
@@ -120,13 +120,13 @@ argument
 
 and checks if the assumptions logically entail the conclusion.
 
-Two provers are provided by default : `Light` and `Kind2`.
+Two provers are provided by default: `Light` and `Kind2`.
 
 #### The light prover
 
 The *light prover* is a really simple prover which uses the Yices SMT solver
 with the `QF_UFLIA` theory and is limited to prove *k-inductive* properties,
-that is properties such that there exists some *k* such that :
+that is properties such that there exists some *k* such that:
 
 * The property holds during the first *k* steps of the algorithm.
 * From the hypothesis the property has held during *k* consecutive steps, we
@@ -166,7 +166,7 @@ Here,
 * If `debugMode` is set to `True`, the SMTLib queries produced by the prover
   are displayed in the standard output.
 
-`Options` is an instance of the `Data.Default` typeclass :
+`Options` is an instance of the `Data.Default` typeclass:
 
 ```haskell
 instance Default Options where
@@ -202,7 +202,7 @@ precise* output. It would be interesting to implement other merging behaviours
 in the future. For instance, a *lazy* one such that C launches B only if A has
 returns *unknown* or *error*.
 
-As an example, the following prover is used in `Driver.hs` :
+As an example, the following prover is used in `Driver.hs`:
 
 ```haskell
 prover =
@@ -215,7 +215,7 @@ later.
 
 ### Proof schemes
 
-Let's consider again this example :
+Let's consider again this example:
 
 ```haskell
 spec :: Spec
@@ -235,7 +235,7 @@ deduce our main goal from this. For this, we use the proof scheme
 assert "gt0" >> check "neq0"
 ```
 instead of just `check "neq0"`. A proof scheme is chain of primitives schemes
-glued by the `>>` operator. For now, the available primitives are :
+glued by the `>>` operator. For now, the available primitives are:
 
 * `check "prop"` checks whether or not a given property is true in the current
   context.
@@ -256,7 +256,7 @@ function to run any example. Each other example file exports a specification
 `spec` and a proof scheme `scheme`. You can change the example being run just
 by changing one *import* directive in `Driver.hs`.
 
-These examples include :
+These examples include:
 
 * `Incr.hs` : a straightforward example in the style of the previous one.
 * `Grey.hs` : an example where two different implementations of a periodical
@@ -277,21 +277,21 @@ found in the `doc` folder of this repository. It consists in a self sufficient
 set of slides. You can find some additional readings in the *References*
 section.
 
-### Architecture of copilot-kind
+### Architecture of copilot-theorem
 
 #### An overview of the proving process
 
 Each prover first translates the Copilot specification into an intermediate
 representation best suited for model checking. Two representations are
-available :
+available:
 
-* The **IL** format : a Copilot program is translated into a list of
+* The **IL** format: a Copilot program is translated into a list of
   quantifier-free equations over integer sequences, implicitly universally
   quantified by a free variable *n*. Each sequence roughly corresponds to a
   stream. This format is the one used in G. Hagen's thesis [4]. The *light
   prover* works with this format.
 
-* The **TransSys** format : a Copilot program is *flattened* and translated
+* The **TransSys** format: a Copilot program is *flattened* and translated
   into a *state transition system* [1]. Moreover, in order to keep some
   structure in this representation, the variables of this system are grouped by
   *nodes*, each node exporting and importing variables. The *Kind2 prover* uses
@@ -308,7 +308,7 @@ respectively in `Misc.Type` and `Misc.Operator`.
 
 ##### An example
 
-The following program :
+The following program:
 
 ```haskell
 spec = do
@@ -319,7 +319,7 @@ spec = do
     fib = [1, 1] ++ (fib + drop 1 fib)
 ```
 
-can be translated into this IL specification :
+can be translated into this IL specification:
 
 ```
 SEQUENCES
@@ -336,7 +336,7 @@ PROPERTIES
     'pos' : s0[n] > 0
 ```
 
-or this modular transition system :
+or this modular transition system:
 
 ```
 NODE 's0' DEPENDS ON []
@@ -399,9 +399,9 @@ operators into *copilot-theorem* operators.
 #### The Light prover
 
 As said in the tutorial, the *light prover* is a simple tool implementing the
-basic *k-induction* algorithm [1]. The `Light` directory contains three files :
+basic *k-induction* algorithm [1]. The `Light` directory contains three files:
 
-* `Prover.hs` : the prover and the *k-induction* algorithm are implemented in
+* `Prover.hs`: the prover and the *k-induction* algorithm are implemented in
   this file.
 * `SMT.hs` contains some functions to interact with the Yices SMT provers.
 * `SMTLib.hs` is a set of functions to output SMTLib directives. It uses the
@@ -417,16 +417,16 @@ that the `++` operator only occurs at the top of a stream definition.
 Therefore, each stream definition directly gives us a recurrence equation and
 initial conditions for the associated sequence.
 
-The translation process mostly :
+The translation process mostly:
 
-* onverts the types and operators, using uninterpreted functions to handle
+* converts the types and operators, using uninterpreted functions to handle
   non-linear operators and external functions.
 * creates a sequence for each stream, local stream ands external stream.
 
 The reader is invited to use the *light prover* on the examples with `debugMode
 = true`, in order to have a look at the SMTLib code produced. For instance, if
 we check the property `"pos"` on the previous example involving the Fibonacci
-sequence, we get :
+sequence, we get:
 
 ```
 <step>  (set-logic QF_UFLIA)
@@ -468,7 +468,7 @@ this process.
 ##### Modular transition systems
 
 Let's look at the definition of a *modular transition systems*, in the
-`TransSys.Spec` module :
+`TransSys.Spec` module:
 
 ```haskell
 type NodeId = String
@@ -513,7 +513,7 @@ A transition system (`Spec` type) is mostly made of a list of nodes. A *node*
 is just a set of variables living in a local namespace and corresponding to the
 `Var` type. The `ExtVar` type is used to identify a variable in the global
 namespace by specifying both a node name and a variable. A node contains two
-types of variables :
+types of variables:
 
 * Some variables imported from other nodes. The structure `nodeImportedVars`
   binds each imported variable to its local name. The set of nodes from which a
@@ -534,12 +534,12 @@ associated to a node. The most significant task of this translation process is
 to *flatten* the copilot specification so the value of all streams at time *n*
 only depends on the values of all the streams at time *n - 1*, which is not the
 case in the `Fib` example shown earlier. This is done by a simple program
-transformation which turns this :
+transformation which turns this:
 
 ```haskell
 fib = [1, 1] ++ (fib + drop 1 fib)
 ```
-into this :
+into this:
 
 ```haskell
 fib0 = [1] ++ fib1
@@ -607,7 +607,7 @@ inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
 
 which discards all the structure of a *modular transition system* and turns it
 into a *non-modular transition system* with only one node. In fact, when
-translating a copilot specification to a kind2 file, two styles are available :
+translating a copilot specification to a kind2 file, two styles are available:
 the `Kind2.toKind2` function takes a `Style` argument which can take the value
 `Inlined` or `Modular`. The only difference is that in the first case, a call
 to `removeCycles` is replaced by a call to `inline`.
@@ -615,7 +615,7 @@ to `removeCycles` is replaced by a call to `inline`.
 ### Limitations of copilot-theorem
 
 Now, we will discuss some limitations of the *copilot-theorem* tool. These
-limitations are organized in two categories : the limitations related to the
+limitations are organized in two categories: the limitations related to the
 Copilot language itself and its implementation, and the limitations related to
 the model-checking techniques we are using.
 
@@ -625,7 +625,7 @@ The reification process used to build the `Core.Spec` object looses many
 informations about the structure of the original Copilot program. In fact, a
 stream is kept in the reified program only if it is recursively defined.
 Otherwise, all its occurences will be inlined. Moreover, let's look at the
-`intCounter` function defined in the example `Grey.hs` :
+`intCounter` function defined in the example `Grey.hs`:
 
 ```haskell
 intCounter :: Stream Bool -> Stream Word64
@@ -638,7 +638,7 @@ intCounter reset = time
 If *n* counters are created with this function, the same code will be inlined
 *n* times and the structure of the original code will be lost.
 
-There are many problems with this :
+There are many problems with this:
 
 * It makes some optimizations of the model-checking based on a static analysis
   of the program more difficult (for instance *structural abstraction* - see
@@ -679,7 +679,7 @@ requires a high level of technicity.
 
 ##### Limitations related to the SMT solvers
 
-The use of SMT solvers introduces two kind of limitations :
+The use of SMT solvers introduces two kind of limitations:
 
 1. We are limited by the computing power needed by the SMT solvers
 2. SMT solvers can't handle quantifiers efficiently
@@ -710,7 +710,7 @@ inductive and not the property specialized for a given constant stream. That's
 why we have no other solution than replacing universal quantification by
 *bounded* universal quantification by assuming all the elements of the input
 stream are in the finite list `allowed` and using the function `forAllCst`
-defined in `Copilot.Kind.Lib` :
+defined in `Copilot.Kind.Lib`:
 
 ```haskell
 conj :: [Stream Bool] -> Stream Bool
@@ -730,7 +730,7 @@ writing a specification for each of its functions. This very natural approach
 is hard to follow in our case because of
 
 * The difficulty to deal with universal quantification.
-* The lack of *true* functions in Copilot : the latter offers metaprogramming
+* The lack of *true* functions in Copilot: the latter offers metaprogramming
   facilities but no concept of functions like *Lustre* does with its *nodes*).
 * The inlining policy of the reification process. This point is related to the
   previous one.
@@ -824,7 +824,7 @@ an *IL* specification.
 
 To be honest, I'm not sure producing a modular *Kind2* output is worth the
 complexity added. It's especially true at the time I write this in the sense
-that :
+that:
 
 * Each predicate introduced is used only one time (which is true because
   copilot doesn't handle functions or parametrized streams like Lustre does and
@@ -843,7 +843,7 @@ per node.
 
 ## References
 
-1. *An insight into An insight into SMT-based model checking techniques for
+1. *An insight into SMT-based model checking techniques for
    formal software verification of synchronous dataflow programs*, talk,
    Jonathan Laurent  (see the `doc` folder of this repository)
 
@@ -853,7 +853,7 @@ per node.
 3. *SMT-based Unbounded Model Checking with IC3 and Approximate Quantifier
    Elimination*, C. Sticksel, C. Tinelli
 
-4. *Verifying safety properties of Lustre programs : an SMT-based approach*,
+4. *Verifying safety properties of Lustre programs: an SMT-based approach*,
    PhD thesis, G. Hagen
 
 5. *Understanding IC3*, Aaron R. Bradley

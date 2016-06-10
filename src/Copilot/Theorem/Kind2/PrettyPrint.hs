@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.Kind2.PrettyPrint ( prettyPrint ) where
 
 import Copilot.Theorem.Misc.SExpr

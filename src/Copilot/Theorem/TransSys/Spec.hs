@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification, GADTs, RankNTypes #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Spec
   ( module Copilot.Theorem.TransSys.Operators
@@ -32,7 +33,7 @@ import Control.Applicative (liftA2)
 import Control.Monad (foldM, guard)
 
 import Data.Maybe
-import Data.Monoid (Monoid, (<>), mempty, mconcat)
+import Data.Monoid ((<>))
 import Data.Map (Map)
 import Data.Set (Set, isSubsetOf, member)
 import Data.Bimap (Bimap)

@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Type
   ( Type (..)

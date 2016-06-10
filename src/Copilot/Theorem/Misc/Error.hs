@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.Misc.Error
   ( badUse
   , impossible

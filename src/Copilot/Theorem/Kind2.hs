@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE Safe #-}
+
 module Copilot.Theorem.Kind2 (module X) where
 
 import Copilot.Theorem.Kind2.AST as X

@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.IL.Transform ( bsimpl ) where
 

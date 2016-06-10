@@ -2,6 +2,7 @@
 
 {-# LANGUAGE GADTs, ExistentialQuantification, LambdaCase, ScopedTypeVariables,
              RankNTypes #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.TransSys.Operators where
 
@@ -10,8 +11,6 @@ import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.TransSys.Type
 
 import Copilot.Theorem.Misc.Error as Err
-
-import Control.Applicative ((<$>))
 
 --------------------------------------------------------------------------------
 

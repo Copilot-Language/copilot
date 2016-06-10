@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs, FlexibleInstances #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.Prover.SMTLib (SmtLib, interpret) where
 

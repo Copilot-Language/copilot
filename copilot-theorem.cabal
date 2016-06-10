@@ -27,6 +27,17 @@ library
                             -fno-warn-missing-signatures
                             -fcontext-stack=100
 
+                            -fpackage-trust
+                            -trust=array
+                            -trust=base
+                            -trust=containers
+                            -trust=copilot-core
+                            -trust=directory
+                            -trust=exceptions
+                            -trust=process
+                            -trust=random
+                            -trust=unix
+
   build-depends           : base >= 4.0 && < 5
                           , copilot-core == 2.2.0
                           , mtl
@@ -49,29 +60,29 @@ library
                           , Copilot.Theorem.Prover.SMT
                           , Copilot.Theorem.Prover.Z3
                           , Copilot.Theorem.Kind2.Prover
-                          
+
   other-modules           : Copilot.Theorem.Tactics
-                          
+
                           , Copilot.Theorem.IL
                           , Copilot.Theorem.IL.PrettyPrint
                           , Copilot.Theorem.IL.Spec
                           , Copilot.Theorem.IL.Translate
                           , Copilot.Theorem.IL.Transform
-                          
+
                           , Copilot.Theorem.Kind2.AST
                           , Copilot.Theorem.Kind2.Output
                           , Copilot.Theorem.Kind2.PrettyPrint
                           , Copilot.Theorem.Kind2.Translate
-                          
+
                           , Copilot.Theorem.Prover.SMTIO
                           , Copilot.Theorem.Prover.SMTLib
                           , Copilot.Theorem.Prover.TPTP
                           , Copilot.Theorem.Prover.Backend
-                          
+
                           , Copilot.Theorem.Misc.Error
                           , Copilot.Theorem.Misc.SExpr
                           , Copilot.Theorem.Misc.Utils
-                          
+
                           , Copilot.Theorem.TransSys
                           , Copilot.Theorem.TransSys.Cast
                           , Copilot.Theorem.TransSys.PrettyPrint
@@ -82,6 +93,3 @@ library
                           , Copilot.Theorem.TransSys.Invariants
                           , Copilot.Theorem.TransSys.Operators
                           , Copilot.Theorem.TransSys.Type
-                          
-
-  

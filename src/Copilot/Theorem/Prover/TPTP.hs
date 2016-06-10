@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs, LambdaCase #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.Prover.TPTP (Tptp, interpret) where
 

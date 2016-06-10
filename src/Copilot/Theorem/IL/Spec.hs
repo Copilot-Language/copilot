@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification, GADTs, LambdaCase #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Theorem.IL.Spec
   ( Type (..)
