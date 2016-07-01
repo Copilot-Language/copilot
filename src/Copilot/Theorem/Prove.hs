@@ -13,6 +13,7 @@ module Copilot.Theorem.Prove
   , Universal, Existential
   , check
   , prove
+  , combine
   ) where
 
 import qualified Copilot.Core as Core
@@ -64,12 +65,12 @@ instance Applicative (ProofScheme a) where
   (<*>) = ap
 
 instance Monad (ProofScheme a) where
-  (Proof p) >>= f = Proof $ p >>= (\a -> case f a of Proof p -> p)
+  (Proof p) >>= f = Proof $ p >>= (\a -> case f a of Proof p' -> p')
   return a = Proof (return a)
 
 data Action where
-  Check  :: Prover   -> Action
-  Assume :: PropId   -> Action
+  Check  :: Prover -> Action
+  Assume :: PropId -> Action
   Admit  :: Action
 
 --------------------------------------------------------------------------------
@@ -109,9 +110,9 @@ prove spec propId (execWriter -> actions) = do
               putStrLn $ propId ++ ": unknown " ++ "(" ++ intercalate ", " infos ++ ")"
               processActions context nextActions
 
-        Assume propId -> do
-          putStrLn $ propId ++ ": assumption"
-          processActions (propId : context) nextActions
+        Assume propId' -> do
+          putStrLn $ propId' ++ ": assumption"
+          processActions (propId' : context) nextActions
 
         Admit -> do
           putStrLn $ propId ++ ": admitted"
@@ -148,6 +149,7 @@ combine
       closeProverR stR
   }
 
+combineOutputs :: [Char] -> [Char] -> Output -> Output -> Output
 combineOutputs nameL nameR (Output stL msgL) (Output stR msgR) =
   Output (combineSt stL stR) infos
 
