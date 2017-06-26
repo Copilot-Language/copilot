@@ -4,7 +4,7 @@
 # test only against the last release in a major GHC version. Feel free to omit
 # lines listings versions you don't need/want testing for.
 env:
-  - CABALVER=1.22 GHCVER=7.10.1
+  - CABALVER=1.22 GHCVER=8.0.2
   - CABALVER=1.22 GHCVER=7.10.2
 # - CABALVER=head GHCVER=head   # see section about GHC HEAD snapshots
 
