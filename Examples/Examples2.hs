@@ -71,4 +71,5 @@ spec = do
 examples2 :: IO ()
 examples2 = do
 --  reify fibSpec >>= S.compile S.defaultParams
-  reify spec >>= S.compile S.defaultParams 
+--  reify spec >>= S.compile S.defaultParams 
+  reify spec >>= S.compile (S.Params { S.prefix = Just "secondexamplespec" })

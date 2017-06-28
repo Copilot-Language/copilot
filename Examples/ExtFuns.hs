@@ -53,8 +53,8 @@ spec = trigger "trigger" true [ arg func0
 extFuns :: IO ()
 extFuns = do
    interpret 10 spec
-   reify spec >>= C.compile C.defaultParams 
-   reify spec >>= S.compile S.defaultParams 
+---   reify spec >>= C.compile C.defaultParams 
+   reify spec >>= S.compile (S.Params { S.prefix = Just "externFunSpec" })
 
 
 --------------------------------------------------------------------------------
