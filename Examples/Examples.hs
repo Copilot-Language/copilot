@@ -99,11 +99,18 @@ sumExterns =
       ex2 = extern "e2" (Just e2)
   in  ex1 + ex2
 
+latch :: Stream Bool -> Stream Bool
+latch x = y
+  where 
+  y = if x then not z else z
+  z = [False] ++ y
+
 --- Some infinite lists for simulating external variables:
 e1, e2 :: [Word64]
 e1 = [0..]
 e2 = 5 : 4 : e2
-
+a :: Stream Bool
+a = [False, False, True, True ] ++ a
 --------------------------------------------------------------------------------
 
 --
@@ -155,4 +162,7 @@ examples = do
   reify spec >>= 
     C.genCBMC C.defaultParams {C.numIterations = 20}
 
+test :: Spec
+test = do
+  observer "obs" (latch a)
 --------------------------------------------------------------------------------
