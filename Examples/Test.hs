@@ -117,6 +117,13 @@ runTests = do
 cbmcName :: String
 cbmcName = "cbmc_driver.c"
 
+exam2Name :: String
+exam2Name = "secondexamplespec_copilot-sbv-codegen"
+
+examsbvName :: String
+examsbvName = "externFunSpec_copilot-sbv-codegen"
+
+
 atomCBMC :: String
 atomCBMC = M.appendPrefix M.atomPrefix C99.c99DirName
 
@@ -158,5 +165,12 @@ cleanup = do
 
   b4 <- doesDirectoryExist sbvCBMC
   when b4 (removeDirectoryRecursive sbvCBMC)
+
+  b5 <- doesDirectoryExist exam2Name
+  when b5 (removeDirectoryRecursive  exam2Name)
+  
+
+  b6 <- doesDirectoryExist examsbvName
+  when b6 (removeDirectoryRecursive  examsbvName)
 
 --------------------------------------------------------------------------------
