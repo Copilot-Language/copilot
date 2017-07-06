@@ -142,6 +142,13 @@ spec = do
 
     observer "i" (odd nats)
 
+spec1 :: Spec 
+spec1 = do
+  trigger "f" (even nats) [arg fib, arg (nats * nats)]
+  trigger "g" (fib < 10) []
+  let x = externW64 "x" (Just [1..])
+  trigger "h" (x<10) [arg x]
+
 examples :: IO ()
 examples = do
   putStrLn "PrettyPrinter:"
