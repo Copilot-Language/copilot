@@ -5,6 +5,8 @@ module Copilot.Backend.C.Tmp where
 -- All temporary stuff, that needs some final location / implementation
 
 import Copilot.Core
+import Language.C99.AST as C
+import Language.C99.Util
 
 -- TODO: find better solution to fix this problem
 deop :: Op1 a b -> (Type a,Type b)
@@ -48,31 +50,44 @@ opname1 op = case op of
   Asinh _  -> "asinh"
   Atanh _  -> "atanh"
   Acosh _  -> "acosh"
-  BwNot _  -> "~"
+  BwNot _  -> "bnot"
   Cast _ _ -> "(cast)"
 
 
 opname2 :: Op2 a b c -> String
 opname2 op = case op of
-  And          ->  "&&"
-  Or           ->  "||"
-  Add      _   ->  "+"
-  Sub      _   ->  "-"
-  Mul      _   ->  "*"
+  And          ->  "and"
+  Or           ->  "or"
+  Add      _   ->  "plus"
+  Sub      _   ->  "min"
+  Mul      _   ->  "mult"
   Div      _   ->  "div"
   Mod      _   ->  "mod"
-  Fdiv     _   ->  "/"
-  Pow      _   ->  "**"
-  Logb     _   ->  "logBase"
-  Eq       _   ->  "=="
-  Ne       _   ->  "/="
-  Le       _   ->  "<="
-  Ge       _   ->  ">="
-  Lt       _   ->  "<"
-  Gt       _   ->  ">"
-  BwAnd    _   ->  "&"
-  BwOr     _   ->  "|"
-  BwXor    _   ->  "^"
-  BwShiftL _ _ ->  "<<"
-  BwShiftR _ _ ->  ">>"
+  Fdiv     _   ->  "fdiv"
+  Pow      _   ->  "pow"
+  Logb     _   ->  "logb"
+  Eq       _   ->  "Eq"
+  Ne       _   ->  "NEq"
+  Le       _   ->  "LE"
+  Ge       _   ->  "GE"
+  Lt       _   ->  "LT"
+  Gt       _   ->  "GT"
+  BwAnd    _   ->  "BAnd"
+  BwOr     _   ->  "BOR"
+  BwXor    _   ->  "BXOR"
+  BwShiftL _ _ ->  "LS"
+  BwShiftR _ _ ->  "RS"
 
+
+var n = EIdent $ ident n
+
+funcall :: String -> [C.Expr] -> C.Expr
+funcall n es = EFunCall (EIdent $ ident n) (args es) where
+  args [] = Nothing
+  args (x:[]) = Just $ AELBase x
+  args (x:xs) = Just $ foldl (\xs x -> AELCons xs x) (AELBase x) xs
+
+constint x = EConst $ cint (fromIntegral x)
+constword x = EConst $ cuint (fromIntegral x)
+constfloat x = EConst $ cfloat (fromIntegral x)
+constbool b = EConst $ cbool b

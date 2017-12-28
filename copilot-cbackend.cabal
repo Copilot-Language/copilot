@@ -36,5 +36,6 @@ library
   ghc-prof-options        : -auto-all -caf-all
   build-depends           : base >= 4.3 && < 5
                           , copilot-core == 3.0
+                          , language-c99
   exposed-modules         : Copilot.Backend.C
                           , Copilot.Backend.C.Normalize

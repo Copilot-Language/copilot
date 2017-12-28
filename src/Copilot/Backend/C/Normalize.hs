@@ -56,8 +56,8 @@ normalize s = evalState (normalize' s) [] where
       return $ Local ty ty' n e' (Op1 op (Var ty n))
 
     Op2 op e1 e2 -> do
-      n1 <- fresh ("lhs"++(opname2 op))
-      n2 <- fresh ("rhs"++(opname2 op))
+      n1 <- fresh ((opname2 op)++"L")
+      n2 <- fresh ((opname2 op)++"R")
       e1' <- normexpr e1
       e2' <- normexpr e2
       let (ty,ty',ty'') = deop2 op
