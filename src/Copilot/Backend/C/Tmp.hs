@@ -91,3 +91,9 @@ constint x = EConst $ cint (fromIntegral x)
 constword x = EConst $ cuint (fromIntegral x)
 constfloat x = EConst $ cfloat (fromIntegral x)
 constbool b = EConst $ cbool b
+
+
+
+fundef :: String -> DeclnSpecs -> CompoundStmt -> FunDef
+fundef n ds body = FD ds dr Nothing body where
+  dr = Dr Nothing (DDIdent $ ident n)

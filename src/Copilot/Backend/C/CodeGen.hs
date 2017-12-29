@@ -5,10 +5,38 @@ module Copilot.Backend.C.CodeGen
   ) where
 
 import Copilot.Core as CP
+import Copilot.Core.PrettyPrint
+
+import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
+import Copilot.Backend.C.Examples
+
+import Language.Copilot (reify)
 
 import Language.C99.AST as C
 import Language.C99.Util
+import Language.C99.Pretty
+
+import Control.Monad.State ( State
+                           , put
+                           , get
+                           , runState
+                           , execState
+                           )
+import Text.PrettyPrint (render)
+
+-- Used to describe the environment within a block
+data FunEnv = FunEnv
+  { vars  :: [Decln]
+  }
+
+data ProgEnv = ProgEnv
+  { streams     :: [Decln]
+  , generators  :: [FunDef]
+  , triggers    :: [Stmt]
+  }
+emptyProgenv = ProgEnv [] [] []
+
 
 recip_def :: FunDef
 recip_def = FD float name args body where
@@ -83,4 +111,111 @@ op3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 op3 op = case op of
   Mux _   -> ECond
 
-compile = undefined
+cexpr :: CP.Expr a -> State FunEnv C.Expr
+cexpr (Const Int8 x) = return $ constint x
+cexpr (Const Int16 x) = return $ constint x
+cexpr (Const Int32 x) = return $ constint x
+cexpr (Const Int64 x) = return $ constint x
+cexpr (Const Word8 x) = return $ constword x
+cexpr (Const Word16 x) = return $ constword x
+cexpr (Const Word32 x) = return $ constword x
+cexpr (Const Word64 x) = return $ constword x
+cexpr (Const Bool b) = return $ constbool b
+cexpr (Local ty1 ty2 n e1 e2) = do
+  e1' <- cexpr e1
+  FunEnv vars <- get
+  put $ FunEnv $ vars ++ [vardef (ty2type ty1) [declr' (ident n) e1']]
+  e2' <- cexpr e2
+  return e2'
+cexpr (Var ty n)   = return $ var n
+cexpr (Drop ty 0 id) = return $ var ("s"++show id)
+cexpr (Drop ty n id) = return $ funcall ("s"++show id++"_gen") [EAdd (var "t") (constint n) ]
+cexpr (ExternVar ty n args) = do
+  FunEnv vars <- get
+  put $ FunEnv $ vars ++ [vardef (ty2type ty) [declr (ident (n++"_ext"))]]
+  return $ var n
+cexpr (Op1 op e)   = do
+  e' <- cexpr e
+  return $ op1 op e'
+cexpr (Op2 op e1 e2) = do
+  e1' <- cexpr e1
+  e2' <- cexpr e2
+  return $ op2 op e1' e2'
+cexpr (Op3 op e1 e2 e3) = do
+  e1' <- cexpr e1
+  e2' <- cexpr e2
+  e3' <- cexpr e3
+  return $ op3 op e1' e2' e3'
+
+putstream :: Decln -> State ProgEnv ()
+putstream s = do  env <- get
+                  put $ env { streams = streams env ++ [s] }
+
+putgen :: FunDef -> State ProgEnv ()
+putgen g = do env <- get
+              put $ env { generators = generators env ++ [g] }
+
+puttrig :: Stmt -> State ProgEnv ()
+puttrig t = do  env <- get
+                put $ env { triggers = triggers env ++ [t] }
+
+{- Generate global variable and generator of stream -}
+streamcode :: Stream -> State ProgEnv ()
+streamcode (Stream id buff expr ty) = do
+  let cty = ty2type ty
+      name = "s" ++ show id
+      genname = name ++ "_gen"
+      globvar = vardef (static $ cty) [declr $ ident name]
+      generator = fundef genname cty body
+      body = CS $ (map BIDecln locvars) ++
+                [ BIStmt $ SJump $ JSReturn $ Just expr' ]
+
+      (expr',FunEnv locvars) = runState (cexpr expr) (FunEnv [])
+  putstream globvar
+  putgen generator
+
+triggercode :: Trigger -> State ProgEnv ()
+triggercode (Trigger name guard args) = do
+  let (guard',FunEnv locvars) = runState (cexpr guard) (FunEnv [])
+      trigcode = SSelect $ SSIf guard' body
+      body = C.SExpr $ ES $ Just $ funcall ("a"++name) args'
+
+      args' = map (fst.f) args where
+        f (UExpr _ uexpr) = runState (cexpr uexpr) (FunEnv [])
+  puttrig trigcode
+
+{- Take a spec and generate all declarations and functions -}
+codegen :: Spec -> State ProgEnv ()
+codegen s = do
+  let streams = specStreams s
+      triggers = specTriggers s
+      observers = specObservers s
+      props = specProperties s
+  mapM_ streamcode streams
+  mapM_ triggercode triggers
+
+step_def ts = fundef "step" void body where
+  body = CS $ map BIStmt ts
+
+{- Currently a function to test compilation -}
+compile :: Spec -> IO ()
+compile s = do
+  let s' = normalize s
+  putStrLn $ prettyPrint s
+  putStrLn dots
+  putStrLn $ render $ pretty (compile' s)
+  putStrLn line
+  --putStrLn $ prettyPrint s'
+  putStrLn dots
+  --putStrLn $ render $ pretty (compile' s')
+  where
+    compile' :: Spec -> TransUnit
+    compile' s = TransUnit (vars ++ gens ++ [step]) where
+      vars = map EDDecln (streams defs)
+      gens = map EDFunDef (generators defs)
+      step = EDFunDef $ step_def (triggers defs)
+
+      defs = execState (codegen s) emptyProgenv
+
+    dots = ". . . . . . . . . ."
+    line = "-------------------"
