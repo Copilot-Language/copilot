@@ -22,6 +22,7 @@ import Control.Monad.State ( State
                            , get
                            , runState
                            , execState
+                           , evalState
                            )
 import Text.PrettyPrint (render)
 
@@ -29,13 +30,22 @@ import Text.PrettyPrint (render)
 data FunEnv = FunEnv
   { vars  :: [Decln]
   }
+emptyFunEnv = FunEnv []
 
 data ProgEnv = ProgEnv
   { streams     :: [Decln]
   , generators  :: [FunDef]
   , triggers    :: [Stmt]
   }
-emptyProgenv = ProgEnv [] [] []
+emptyProgEnv = ProgEnv [] [] []
+
+putstream :: Decln -> State ProgEnv ()
+putstream s = do  env <- get
+                  put $ env { streams = streams env ++ [s] }
+
+putgen :: FunDef -> State ProgEnv ()
+putgen g = do env <- get
+              put $ env { generators = generators env ++ [g] }
 
 
 recip_def :: FunDef
@@ -130,10 +140,7 @@ cexpr (Local ty1 ty2 n e1 e2) = do
 cexpr (Var ty n)   = return $ var n
 cexpr (Drop ty 0 id) = return $ var ("s"++show id)
 cexpr (Drop ty n id) = return $ funcall ("s"++show id++"_gen") [EAdd (var "t") (constint n) ]
-cexpr (ExternVar ty n args) = do
-  FunEnv vars <- get
-  put $ FunEnv $ vars ++ [vardef (ty2type ty) [declr (ident (n++"_ext"))]]
-  return $ var n
+cexpr (ExternVar ty n args) = do return $ var n
 cexpr (Op1 op e)   = do
   e' <- cexpr e
   return $ op1 op e'
@@ -147,17 +154,6 @@ cexpr (Op3 op e1 e2 e3) = do
   e3' <- cexpr e3
   return $ op3 op e1' e2' e3'
 
-putstream :: Decln -> State ProgEnv ()
-putstream s = do  env <- get
-                  put $ env { streams = streams env ++ [s] }
-
-putgen :: FunDef -> State ProgEnv ()
-putgen g = do env <- get
-              put $ env { generators = generators env ++ [g] }
-
-puttrig :: Stmt -> State ProgEnv ()
-puttrig t = do  env <- get
-                put $ env { triggers = triggers env ++ [t] }
 
 {- Generate global variable and generator of stream -}
 streamcode :: Stream -> State ProgEnv ()
@@ -170,19 +166,19 @@ streamcode (Stream id buff expr ty) = do
       body = CS $ (map BIDecln locvars) ++
                 [ BIStmt $ SJump $ JSReturn $ Just expr' ]
 
-      (expr',FunEnv locvars) = runState (cexpr expr) (FunEnv [])
+      (expr',FunEnv locvars) = runState (cexpr expr) emptyFunEnv
   putstream globvar
   putgen generator
 
-triggercode :: Trigger -> State ProgEnv ()
+--triggercode :: Trigger -> State ProgEnv ()
+triggercode :: Trigger -> State FunEnv Stmt
 triggercode (Trigger name guard args) = do
-  let (guard',FunEnv locvars) = runState (cexpr guard) (FunEnv [])
+  let f (UExpr _ uexpr) = cexpr uexpr
+  args' <- mapM f args
+  let (guard',FunEnv locvars) = runState (cexpr guard) emptyFunEnv
       trigcode = SSelect $ SSIf guard' body
-      body = C.SExpr $ ES $ Just $ funcall ("a"++name) args'
-
-      args' = map (fst.f) args where
-        f (UExpr _ uexpr) = runState (cexpr uexpr) (FunEnv [])
-  puttrig trigcode
+      body = C.SExpr $ ES $ Just $ funcall name args'
+  return $ trigcode
 
 {- Take a spec and generate all declarations and functions -}
 codegen :: Spec -> State ProgEnv ()
@@ -192,10 +188,17 @@ codegen s = do
       observers = specObservers s
       props = specProperties s
   mapM_ streamcode streams
-  mapM_ triggercode triggers
+  putgen (step_def triggers)
 
-step_def ts = fundef "step" void body where
-  body = CS $ map BIStmt ts
+step_def :: [Trigger] -> FunDef
+step_def ts = evalState (step_def' ts) emptyFunEnv where
+  step_def' :: [Trigger] -> State FunEnv FunDef
+  step_def' ts = do
+    stmts <- mapM triggercode ts
+    FunEnv vars <- get
+    let body = CS $ (map BIDecln vars) ++ (map BIStmt stmts)
+    return $ fundef "step" void body
+
 
 {- Currently a function to test compilation -}
 compile :: Spec -> IO ()
@@ -206,16 +209,15 @@ compile s = do
   putStrLn $ render $ pretty (compile' s)
   putStrLn line
   --putStrLn $ prettyPrint s'
-  putStrLn dots
-  --putStrLn $ render $ pretty (compile' s')
+  --putStrLn dots
+  putStrLn $ render $ pretty (compile' s')
   where
     compile' :: Spec -> TransUnit
-    compile' s = TransUnit (vars ++ gens ++ [step]) where
+    compile' s = TransUnit (vars ++ gens) where
       vars = map EDDecln (streams defs)
       gens = map EDFunDef (generators defs)
-      step = EDFunDef $ step_def (triggers defs)
 
-      defs = execState (codegen s) emptyProgenv
+      defs = execState (codegen s) emptyProgEnv
 
     dots = ". . . . . . . . . ."
     line = "-------------------"
