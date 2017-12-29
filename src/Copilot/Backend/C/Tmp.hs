@@ -13,15 +13,59 @@ deop :: Op1 a b -> (Type a,Type b)
 deop op = let bi x = (x,x) in case op of
   Not     -> bi Bool
   Abs ty  -> bi ty
-  Exp ty  -> bi ty
-  -- TODO
+  Sign ty -> bi ty
+
+  Recip ty -> bi ty
+
+  Exp ty   -> bi ty
+  Sqrt ty  -> bi ty
+  Log ty   -> bi ty
+  Sin ty   -> bi ty
+  Tan ty   -> bi ty
+  Cos ty   -> bi ty
+  Asin ty  -> bi ty
+  Atan ty  -> bi ty
+  Acos ty  -> bi ty
+  Sinh ty  -> bi ty
+  Tanh ty  -> bi ty
+  Cosh ty  -> bi ty
+  Asinh ty -> bi ty
+  Atanh ty -> bi ty
+  Acosh ty -> bi ty
+
+  BwNot ty -> bi ty
+
+  Cast ty1 ty2  -> (ty1, ty2)
 
 deop2 :: Op2 a b c -> (Type a, Type b, Type c)
 deop2 op = let tri x = (x,x,x) in case op of
   And     -> tri Bool
   Or      -> tri Bool
   Add ty  -> tri ty
-  -- TODO
+  Sub ty  -> tri ty
+  Mul ty  -> tri ty
+
+  Mod ty  -> tri ty
+  Div ty  -> tri ty
+
+  Fdiv ty -> tri ty
+
+  Pow ty  -> tri ty
+  Logb ty -> tri ty
+
+  Eq ty   -> (ty, ty, Bool)
+  Ne ty   ->(ty, ty, Bool)
+
+  Le ty   -> (ty, ty, Bool)
+  Ge ty   -> (ty, ty, Bool)
+  Lt ty   -> (ty, ty, Bool)
+  Gt ty   -> (ty, ty, Bool)
+
+  BwAnd ty    -> tri ty
+  BwOr ty     -> tri ty
+  BwXor ty    -> tri ty
+  BwShiftL ty1 ty2  -> (ty1, ty2, ty1)
+  BwShiftR ty1 ty2  -> (ty1, ty2, ty1)
 
 deop3 :: Op3 a b c d -> (Type a, Type b, Type c, Type d)
 deop3 (Mux ty) = (Bool, ty, ty, ty)
