@@ -175,8 +175,8 @@ triggercode :: Trigger -> State FunEnv Stmt
 triggercode (Trigger name guard args) = do
   let f (UExpr _ uexpr) = cexpr uexpr
   args' <- mapM f args
-  let (guard',FunEnv locvars) = runState (cexpr guard) emptyFunEnv
-      trigcode = SSelect $ SSIf guard' body
+  guard' <- cexpr guard
+  let trigcode = SSelect $ SSIf guard' body
       body = C.SExpr $ ES $ Just $ funcall name args'
   return $ trigcode
 
