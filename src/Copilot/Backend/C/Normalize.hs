@@ -44,7 +44,7 @@ normalize s = evalState (normalize' s) [] where
       e1' <- normexpr e1
       e2' <- normexpr e2
       n' <- fresh n
-      return $ Local ty1 ty2 n e1' e2'
+      return $ Local ty1 ty2 n' e1' e2'
 
     -- TODO
     ExternFun ty n ues me mt -> undefined
