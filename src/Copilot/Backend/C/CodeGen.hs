@@ -199,15 +199,21 @@ codegen s = do
       observers = specObservers s
       props = specProperties s
   mapM_ streamcode streams
-  putgen (step_def triggers)
+  putgen (step_def streams triggers)
 
-step_def :: [Trigger] -> FunDef
-step_def ts = evalState (step_def' ts) emptyFunEnv where
-  step_def' :: [Trigger] -> State FunEnv FunDef
-  step_def' ts = do
+step_def :: [Stream] -> [Trigger] -> FunDef
+step_def ss ts = evalState step_def' emptyFunEnv where
+  streamgens = map f ss where
+    f (Stream id _ _ _) = "s" ++ show id
+
+  step_def' :: State FunEnv FunDef
+  step_def' = do
     stmts <- mapM triggercode ts
     FunEnv vars <- get
-    let body = CS $ (map BIDecln vars) ++ (map BIStmt stmts)
+    let assign var e = BIStmt $ C.SExpr $ ES $ Just $ EAssign AAssign var e
+        body = CS $  (map BIDecln vars)
+                  ++ (map (\s -> assign (var s) (funcall (s++"_gen") [var "t"])) streamgens)
+                  ++ (map BIStmt stmts)
     return $ fundef "step" void body
 
 
