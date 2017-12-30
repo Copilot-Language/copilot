@@ -133,8 +133,10 @@ funcall n es = EFunCall (EIdent $ ident n) (args es) where
 
 constint x = EConst $ cint (fromIntegral x)
 constword x = EConst $ cuint (fromIntegral x)
-constfloat x = EConst $ cfloat (fromIntegral x)
-constbool b = EConst $ cbool b
+constfloat x = EConst $ cfloat x
+constdouble x = EConst $ cdouble x
+constbool True = EConst $ CEnum (ident "true")
+constbool False = EConst $ CEnum (ident "false")
 
 
 

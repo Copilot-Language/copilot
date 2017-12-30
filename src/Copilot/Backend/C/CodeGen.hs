@@ -121,16 +121,22 @@ op3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 op3 op = case op of
   Mux _   -> ECond
 
+
+constty :: Type a -> a -> C.Expr
+constty Int8    = constint
+constty Int16   = constint
+constty Int32   = constint
+constty Int64   = constint
+constty Word8   = constword
+constty Word16  = constword
+constty Word32  = constword
+constty Word64  = constword
+constty Bool    = constbool
+constty Float   = constfloat
+constty Double  = constdouble
+
 cexpr :: CP.Expr a -> State FunEnv C.Expr
-cexpr (Const Int8 x) = return $ constint x
-cexpr (Const Int16 x) = return $ constint x
-cexpr (Const Int32 x) = return $ constint x
-cexpr (Const Int64 x) = return $ constint x
-cexpr (Const Word8 x) = return $ constword x
-cexpr (Const Word16 x) = return $ constword x
-cexpr (Const Word32 x) = return $ constword x
-cexpr (Const Word64 x) = return $ constword x
-cexpr (Const Bool b) = return $ constbool b
+cexpr (Const ty x) = return $ constty ty x
 cexpr (Local ty1 ty2 n e1 e2) = do
   e1' <- cexpr e1
   FunEnv vars <- get
@@ -163,8 +169,13 @@ streamcode (Stream id buff expr ty) = do
       genname = name ++ "_gen"
       globvar = vardef (static $ cty) [declr $ ident name]
       generator = fundef genname cty body
-      body = CS $ (map BIDecln locvars) ++
-                [ BIStmt $ SJump $ JSReturn $ Just expr' ]
+      body = CS $ (map BIDecln locvars) ++ [BIStmt switch]
+
+      defcase = BIStmt $ SLabeled $ LSDefault $ SJump $ JSReturn $ Just expr'
+
+      switch = SSelect $ SSSwitch (var "t") (SCompound $ CS (cases ++ [defcase]))
+      cases = map f (zip [0..] buff) where
+        f (t, e) = BIStmt $ SLabeled $ LSCase (constint t) (SJump $ JSReturn $ Just (constty ty e))
 
       (expr',FunEnv locvars) = runState (cexpr expr) emptyFunEnv
   putstream globvar
