@@ -144,7 +144,7 @@ cexpr (Local ty1 ty2 n e1 e2) = do
   e2' <- cexpr e2
   return e2'
 cexpr (Var ty n)   = return $ var n
-cexpr (Drop ty 0 id) = return $ var ("s"++show id)
+cexpr (Drop ty 0 id) = return $ funcall ("s"++show id++"_gen") [var "t"]
 cexpr (Drop ty n id) = return $ funcall ("s"++show id++"_gen") [EAdd (var "t") (constint n) ]
 cexpr (ExternVar ty n args) = do return $ var n
 cexpr (Op1 op e)   = do
