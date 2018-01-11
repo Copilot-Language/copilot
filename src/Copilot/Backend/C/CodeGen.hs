@@ -2,6 +2,7 @@
 
 module Copilot.Backend.C.CodeGen
   ( compile
+  , testcompile
   ) where
 
 import Copilot.Core as CP hiding (SExpr)
@@ -185,8 +186,9 @@ streamgen ss (Stream id buff expr ty) = fundef name (static $ cty) [] body  wher
 
   (e, env) = runState (cexpr expr) emptyFunState
   s (i,n) = (findstream i ss,n)
-  body = CS $ concatMap (streambuff.s) (ids env) ++
-    [BIStmt $ SJump $ JSReturn $ Just e]
+  body = CS $ stmts env
+            ++ concatMap (streambuff.s) (ids env)
+            ++ [BIStmt $ SJump $ JSReturn $ Just e]
 
 
 {- Write code that reads from buffer -}
@@ -218,8 +220,9 @@ guardgen ss (Trigger name guard args) = fundef funname (static $ bool) [] body w
 
   (e, env) = runState (cexpr guard) emptyFunState
   s (i,n) = (findstream i ss,n)
-  body = CS $ concatMap (streambuff.s) (ids env) ++
-    [BIStmt $ SJump $ JSReturn $ Just e]
+  body = CS $ stmts env
+            ++ concatMap (streambuff.s) (ids env)
+            ++ [BIStmt $ SJump $ JSReturn $ Just e]
 
 
 {- Write arg functions for trigger -}
@@ -231,8 +234,9 @@ argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
 
     (uexpr', env) = runState (cexpr uexpr) emptyFunState
     s (i,n) = (findstream i ss,n)
-    body = CS $ concatMap (streambuff.s) (ids env) ++
-      [BIStmt $ SJump $ JSReturn $ Just uexpr']
+    body = CS $ stmts env
+              ++ concatMap (streambuff.s) (ids env)
+              ++ [BIStmt $ SJump $ JSReturn $ Just uexpr']
 
 
 {- Write step() function -}
