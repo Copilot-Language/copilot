@@ -241,13 +241,23 @@ argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
 {- Write step() function -}
 step :: [Stream] -> [Trigger] -> FunDef
 step ss ts = fundef "step" (static $ void) [] body where
-  body = CS $ assigns ++ conds ++ ptrs
+  body = CS $ assigns ++ buffers ++ conds ++ ptrs
 
   {- Update stream values -}
   assigns = map genassign ss
   genassign (Stream id _ _ _) = stmt where
     name = "s" ++ show id
     stmt = BIStmt $ assign (EIdent $ ident name) (funcall (name ++ "_gen") [])
+
+  {- Update buffers -}
+  buffers = map updatebuff ss
+  updatebuff (Stream id _ _ _) = stmt where
+    base = "s" ++ show id
+    --var = "s" ++ show id
+    ptr = base ++ "_ptr"
+    buffname = base ++ "_buff"
+    idxbuff = EIndex (EIdent $ ident buffname) (EIdent $ ident ptr)
+    stmt = BIStmt $ assign idxbuff (var base)
 
   {- Check triggers -}
   conds = map triggercond ts
