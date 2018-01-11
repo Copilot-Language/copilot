@@ -186,8 +186,8 @@ streamgen ss (Stream id buff expr ty) = fundef name (static $ cty) [] body  wher
 
   (e, env) = runState (cexpr expr) emptyFunState
   s (i,n) = (findstream i ss,n)
-  body = CS $ stmts env
-            ++ concatMap (streambuff.s) (ids env)
+  body = CS $ concatMap (streambuff.s) (ids env)
+            ++ stmts env
             ++ [BIStmt $ SJump $ JSReturn $ Just e]
 
 
@@ -220,8 +220,8 @@ guardgen ss (Trigger name guard args) = fundef funname (static $ bool) [] body w
 
   (e, env) = runState (cexpr guard) emptyFunState
   s (i,n) = (findstream i ss,n)
-  body = CS $ stmts env
-            ++ concatMap (streambuff.s) (ids env)
+  body = CS $ concatMap (streambuff.s) (ids env)
+            ++ stmts env
             ++ [BIStmt $ SJump $ JSReturn $ Just e]
 
 
@@ -234,8 +234,8 @@ argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
 
     (uexpr', env) = runState (cexpr uexpr) emptyFunState
     s (i,n) = (findstream i ss,n)
-    body = CS $ stmts env
-              ++ concatMap (streambuff.s) (ids env)
+    body = CS $ concatMap (streambuff.s) (ids env)
+              ++ stmts env
               ++ [BIStmt $ SJump $ JSReturn $ Just uexpr']
 
 
