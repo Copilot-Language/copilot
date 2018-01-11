@@ -39,3 +39,4 @@ library
                           , language-c99
   exposed-modules         : Copilot.Backend.C
                           , Copilot.Backend.C.Normalize
+                          , Copilot.Backend.C.Codegen

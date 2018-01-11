@@ -10,8 +10,6 @@ import Copilot.Core.PrettyPrint
 import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
 
-import Language.Copilot (reify)
-
 import Language.C99.AST as C
 import Language.C99.Util
 import Language.C99.Pretty
