@@ -9,7 +9,6 @@ import Copilot.Core.PrettyPrint
 
 import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
-import Copilot.Backend.C.Examples
 
 import Language.Copilot (reify)
 
@@ -312,24 +311,34 @@ streamvars (Stream id buff _ ty) = do
   putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
 
 
-{- Currently a function to test compilation -}
-compile :: Spec -> IO ()
-compile s = do
+{- A function to test compilation -}
+testcompile :: Spec -> IO ()
+testcompile s = do
   let s' = normalize s
   putStrLn $ prettyPrint s
   putStrLn dots
-  putStrLn $ render $ pretty (compile' s)
+  compile s
   putStrLn line
   putStrLn $ prettyPrint s'
   putStrLn dots
-  putStrLn $ render $ pretty (compile' s')
+  compile s'
   where
-    compile' :: Spec -> TransUnit
-    compile' s = TransUnit (vars' ++ funcs') where
-      vars' = map EDDecln (vars defs)
-      funcs' = map EDFunDef (funcs defs)
-
-      defs = execState (codegen s) emptyProgState
-
     dots = ". . . . . . . . . ."
     line = "-------------------"
+
+{- Compile function, currently prints to stdout -}
+compile :: Spec -> IO ()
+compile s = do
+    putStrLn $ unlines headers
+    putStrLn $ render $ pretty (compile' s)
+    where
+      headers = [ "#include <stdio.h>"
+                , "#include <stdbool.h>"
+                ]
+
+      compile' :: Spec -> TransUnit
+      compile' s = TransUnit (vars' ++ funcs') where
+        vars' = map EDDecln (vars defs)
+        funcs' = map EDFunDef (funcs defs)
+
+        defs = execState (codegen s) emptyProgState
