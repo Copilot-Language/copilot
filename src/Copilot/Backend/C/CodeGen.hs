@@ -9,6 +9,7 @@ import Copilot.Core.PrettyPrint
 
 import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
+import Copilot.Backend.C.Examples
 
 import Language.Copilot (reify)
 
@@ -224,6 +225,19 @@ guardgen ss (Trigger name guard args) = fundef funname (static $ bool) [] body w
     [BIStmt $ SJump $ JSReturn $ Just e]
 
 
+{- Write arg functions for trigger -}
+argsgen :: [Stream] -> Trigger -> [FunDef]
+argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
+  arggen (UExpr ty uexpr) n = fundef funname (static $ cty) [] body where
+    cty = ty2type ty
+    funname = name ++ "_arg" ++ show n
+
+    (uexpr', env) = runState (cexpr uexpr) emptyFunState
+    s (i,n) = (findstream i ss,n)
+    body = CS $ concatMap (streambuff.s) (ids env) ++
+      [BIStmt $ SJump $ JSReturn $ Just uexpr']
+
+
 {- Write step() function -}
 step :: [Stream] -> [Trigger] -> FunDef
 step ss ts = fundef "step" (static $ void) [] body where
@@ -237,8 +251,12 @@ step ss ts = fundef "step" (static $ void) [] body where
 
   {- Check triggers -}
   conds = map triggercond ts
-  triggercond (Trigger n _ _) = BIStmt $ SSelect $ SSIf (funcall n' []) (SExpr $ ES $ Just $ funcall n []) where
+  triggercond (Trigger n _ args) = BIStmt $ SSelect $ SSIf cond call where
     n' = n ++ "_guard"
+    cond = funcall n' []
+    args' = map argcall (take (length args) [0..])
+    argcall i = funcall (n ++ "_arg" ++ (show i)) []
+    call = SExpr $ ES $ Just $ funcall n args'
 
   {- Update pointers -}
   ptrs = concatMap ptrinc ss
@@ -262,10 +280,12 @@ codegen s = do
 
       sf = map (streamgen streams) streams
       tf = map (guardgen streams) triggers
+      af = map (argsgen streams) triggers
 
   {- Write buffer and pointer declrations -}
   mapM putfunc sf
   mapM putfunc tf
+  mapM putfunc (concat af)
   putfunc (step streams triggers)
   mapM_ streamvars streams
 
