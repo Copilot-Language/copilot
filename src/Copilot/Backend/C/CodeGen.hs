@@ -59,14 +59,14 @@ putfunc f = do  env <- get
 
 ty2type :: Type a -> DeclnSpecs
 ty2type ty = case ty of
-  Int8    -> typedefty "int8_t"
-  Int16   -> typedefty "int16_t"
-  Int32   -> typedefty "int32_t"
-  Int64   -> typedefty "int64_t"
-  Word8   -> typedefty "uint8_t"
-  Word16  -> typedefty "uint16_t"
-  Word32  -> typedefty "uint32_t"
-  Word64  -> typedefty "uint64_t"
+  Int8    -> typedefty "__int8_t"
+  Int16   -> typedefty "__int16_t"
+  Int32   -> typedefty "__int32_t"
+  Int64   -> typedefty "__int64_t"
+  Word8   -> typedefty "__uint8_t"
+  Word16  -> typedefty "__uint16_t"
+  Word32  -> typedefty "__uint32_t"
+  Word64  -> typedefty "__uint64_t"
   Float   -> float
   Double  -> double
   Bool    -> typedefty "bool"
