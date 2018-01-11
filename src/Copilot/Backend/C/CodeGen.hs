@@ -241,7 +241,7 @@ argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
 {- Write step() function -}
 step :: [Stream] -> [Trigger] -> FunDef
 step ss ts = fundef "step" (static $ void) [] body where
-  body = CS $ assigns ++ buffers ++ conds ++ ptrs
+  body = CS $ conds ++ assigns ++ buffers ++ ptrs
 
   {- Update stream values -}
   assigns = map genassign ss
