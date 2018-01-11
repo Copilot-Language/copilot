@@ -4,9 +4,12 @@ module Copilot.Backend.C.Tmp where
 
 -- All temporary stuff, that needs some final location / implementation
 
-import Copilot.Core
+import Copilot.Core hiding (SExpr)
 import Language.C99.AST as C
 import Language.C99.Util
+
+import Data.Maybe (fromJust)
+import Data.List  (find)
 
 -- TODO: find better solution to fix this problem
 deop :: Op1 a b -> (Type a,Type b)
@@ -140,6 +143,32 @@ constbool False = EConst $ CEnum (ident "false")
 
 
 
+size_t = typedefty "size_t"
+
+
 fundef :: String -> DeclnSpecs -> CompoundStmt -> FunDef
 fundef n ds body = FD ds dr Nothing body where
   dr = Dr Nothing (DDIdent $ ident n)
+
+
+
+
+
+-- TODO
+findstream :: Id -> [Stream] -> Stream
+findstream id ss = fromJust $ find eq ss where
+  eq s@(Stream id' _ _ _) = id == id'
+
+-- Assign a variable
+-- TODO
+assign var e = SExpr $ ES $ Just $ EAssign AAssign var e
+
+
+-- TODO
+ddarray :: String -> [C.Expr] -> InitDeclr
+ddarray n xs = IDInit varn (vals xs) where
+  varn = Dr Nothing (DDArray1 (DDIdent $ ident n) Nothing Nothing)
+  vals (x:[]) = IArray (InitLBase Nothing (IExpr x))
+  vals (x:xs) = IArray (foldl val base xs) where
+    base = InitLBase Nothing (IExpr x)
+    val xs x = InitLCons xs Nothing (IExpr x)
