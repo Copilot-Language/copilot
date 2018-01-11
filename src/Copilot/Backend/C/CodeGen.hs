@@ -55,14 +55,6 @@ putfunc :: FunDef -> State ProgEnv ()
 putfunc f = do  env <- get
                 put $ env { funcs = funcs env ++ [f] }
 
--- TODO
-recip_def :: FunDef
-recip_def = FD float name args body where
-  name = Dr Nothing (DDIdent $ ident "recip")
-  args = Just $ funarg float "e"
-  body = CS [ BIStmt $ SJump $ JSReturn $ Just $ EDiv (constint 1) (var "e") ]
-
-funarg ty name = DnLBase (Dn ty (Just $ IDLBase $ IDDeclr $ (Dr Nothing (DDIdent $ ident name))))
 
 ty2type :: Type a -> DeclnSpecs
 ty2type ty = case ty of
@@ -83,7 +75,7 @@ op1 op e = case op of
   Not     -> EUn UNot e
   Abs _   -> funcall "abs" [e]
   Sign _  -> funcall "sign" [e] -- TODO implement function
-  Recip _ -> funcall "recip" [e]
+  Recip _ -> EDiv (constint 1) (var "e")
   Exp _   -> funcall "exp" [e]
   Sqrt _  -> funcall "sqrt" [e]
   Log _   -> funcall "log" [e]
@@ -188,7 +180,7 @@ cexpr (Op3 op e1 e2 e3) = do
 
 {- Write function to generate a stream -}
 streamgen :: [Stream] -> Stream -> FunDef
-streamgen ss (Stream id buff expr ty) = fundef name (static $ cty) body  where
+streamgen ss (Stream id buff expr ty) = fundef name (static $ cty) [] body  where
   base = "s" ++ show id
   name = base ++ "_gen"
   cty = ty2type ty
@@ -223,7 +215,7 @@ streambuff ((Stream id buff _ ty),drop) = body where
 
 {- Write function for guard of trigger -}
 guardgen :: [Stream] -> Trigger -> FunDef
-guardgen ss (Trigger name guard args) = fundef funname (static $ bool) body where
+guardgen ss (Trigger name guard args) = fundef funname (static $ bool) [] body where
   funname = name ++ "_guard"
 
   (e, env) = runState (cexpr guard) emptyFunState
@@ -234,7 +226,7 @@ guardgen ss (Trigger name guard args) = fundef funname (static $ bool) body wher
 
 {- Write step() function -}
 step :: [Stream] -> [Trigger] -> FunDef
-step ss ts = fundef "step" (static $ void) body where
+step ss ts = fundef "step" (static $ void) [] body where
   body = CS $ assigns ++ conds ++ ptrs
 
   {- Update stream values -}

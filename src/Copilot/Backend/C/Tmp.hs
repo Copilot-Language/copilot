@@ -146,10 +146,14 @@ constbool False = EConst $ CEnum (ident "false")
 size_t = typedefty "size_t"
 
 
-fundef :: String -> DeclnSpecs -> CompoundStmt -> FunDef
-fundef n ds body = FD ds dr Nothing body where
+fundef :: String -> DeclnSpecs -> [Decln] -> CompoundStmt -> FunDef
+fundef n ds args body = FD ds dr (args' args) body where
   dr = Dr Nothing (DDIdent $ ident n)
+  args' [] = Nothing
+  args' [x] = Just $ DnLBase x
+  args' (x:xs)  = Just $ foldl (\xs x -> DnLCons xs x) (DnLBase x) xs
 
+funarg ty name = Dn ty (Just $ IDLBase $ IDDeclr $ (Dr Nothing (DDIdent $ ident name)))
 
 
 
