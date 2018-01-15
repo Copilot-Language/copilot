@@ -35,12 +35,6 @@ ppExpr e0 = case e0 of
     text "Extf_" <> (text name) <> lparen <>
          (hcat (punctuate (comma <> space) (map ppUExpr args))
        <> rparen)
-  ExternArray _ _ name
-              _ idx _ _      -> text "Exta_" <> (text name) <> lbrack
-                                  <> ppExpr idx <> rbrack
-  ExternStruct _ name args _ -> text "struct" <+> doubleQuotes (text name <> lbrace
-                                    <> vcat (punctuate (semi <> space) (map ppSExpr $ args)) <> rbrace)
-  GetField _ _ _ name        -> text "field" <+> doubleQuotes (text name)
   Local _ _ name e1 e2       -> text "local" <+> doubleQuotes (text name) <+> equals
                                           <+> ppExpr e1 $$ text "in" <+> ppExpr e2
   Var _ name                 -> text "var" <+> doubleQuotes (text name)
@@ -48,9 +42,6 @@ ppExpr e0 = case e0 of
   Op2 op e1 e2               -> ppOp2 op (ppExpr e1) (ppExpr e2)
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
   Label _ s e                -> text "label "<> doubleQuotes (text s) <+> (ppExpr e)
-
-ppSExpr :: (Name, UExpr) -> Doc
-ppSExpr (_, UExpr { uExprExpr = e0 }) = ppExpr e0
 
 ppUExpr :: UExpr -> Doc
 ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0

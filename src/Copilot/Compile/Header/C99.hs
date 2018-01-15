@@ -49,17 +49,9 @@ c99Header prefix spec = render $ vcat $
   , text ""
   , ppTriggerPrototypes prefix (specTriggers spec)
   , text ""
-  , text "/* External structs (must be defined by user): */"
-  , text ""
-  , ppExternalStructs (externStructs spec)
-  , text ""
   , text "/* External variables (must be defined by user): */"
   , text ""
   , ppExternalVariables (externVars spec)
-  , text ""
-  , text "/* External arrays (must be defined by user): */"
-  , text ""
-  , ppExternalArrays (externArrays spec)
   , text ""
   , text "/* External functions (must be defined by user): */"
   , text ""
@@ -129,25 +121,6 @@ ppExternalVariable
 
 --------------------------------------------------------------------------------
 
-ppExternalArrays :: [ExtArray] -> Doc
-ppExternalArrays = vcat . map ppExternalArray . nubBy eq
-  where
-  eq ExtArray { externArrayName = name1 } ExtArray { externArrayName = name2 } =
-    name1 == name2
-
-ppExternalArray :: ExtArray -> Doc
-ppExternalArray
-  ExtArray
-    { externArrayName     = name
-    , externArrayElemType = t
-    , externArraySize     = size }
-  =
-        text "extern" <+> text (typeSpec (UType t))
-        <+> text name <> lbrack <> int size <> rbrack
-        <> text ";"
-
---------------------------------------------------------------------------------
-
 ppExternalFunctions :: [ExtFun] -> Doc
 ppExternalFunctions = vcat . map ppExternalFunction . nubBy eq
   where
@@ -169,29 +142,6 @@ ppExternalFunction
 
   ppArg :: UExpr -> Doc
   ppArg UExpr { uExprType = t1 } = text (typeSpec (UType t1))
-
---------------------------------------------------------------------------------
-
-ppExternalStructs :: [ExtStruct] -> Doc
-ppExternalStructs = vcat . map ppExternalStruct . nubBy eq
-  where
-    eq ExtStruct { externStructName = name1 } ExtStruct { externStructName = name2 } =
-      name1 == name2
-
-ppExternalStruct :: ExtStruct -> Doc
-ppExternalStruct
-  ExtStruct
-  { externStructName  = name
-  , externStructArgs  = args } =
-      hang (hang (text "struct" <+> text name <+> text "{") 1 (nest 1 (ppStructArgs args))) 1 (text "};")
-
-  where
-    ppStructArgs :: [(Name, UExpr)] -> Doc
-    ppStructArgs = vcat . map ppStructArg
-
-    ppStructArg :: (Name, UExpr) -> Doc
-    ppStructArg (name', UExpr { uExprType = t1 }) = text (typeSpec (UType t1)) <+>
-      text name' <> text ";"
 
 --------------------------------------------------------------------------------
 

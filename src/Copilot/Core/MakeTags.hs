@@ -91,12 +91,6 @@ mkTagsProps = mapM mkTagsProp
           e' <- mkTagsExpr (propertyExpr p)
           return $ p { propertyExpr = e' }
 
-mkTagsSExpr :: (Name, UExpr) -> State Int (Name, UExpr)
-mkTagsSExpr (name, UExpr { uExprExpr = e, uExprType = t }) =
-  do
-    e' <- mkTagsExpr e
-    return (name, UExpr { uExprExpr = e', uExprType = t })
-
 mkTagsUExpr :: UExpr -> State Int UExpr
 mkTagsUExpr UExpr { uExprExpr = e, uExprType = t } =
   do
@@ -113,14 +107,6 @@ mkTagsExpr e0 = case e0 of
   ExternFun t name args expr _   -> do args' <- mapM mkTagsUExpr args
                                        k <- next
                                        return $ ExternFun t name args' expr (Just k)
-  ExternArray t1 t2 name
-              size idx e _       -> do idx' <- mkTagsExpr idx
-                                       k <- next
-                                       return $ ExternArray t1 t2 name size idx' e (Just k)
-  ExternStruct t name sargs _    -> do args' <- mapM mkTagsSExpr sargs
-                                       k <- next
-                                       return $ ExternStruct t name args' (Just k)
-  GetField ts tf id name         -> return $ GetField ts tf id name
   Op1 op e                       -> liftM  (Op1 op) (mkTagsExpr e)
   Op2 op e1 e2                   -> liftM2 (Op2 op) (mkTagsExpr e1) (mkTagsExpr e2)
   Op3 op e1 e2 e3                -> liftM3 (Op3 op) (mkTagsExpr e1) (mkTagsExpr e2) (mkTagsExpr e3)

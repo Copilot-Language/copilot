@@ -171,10 +171,6 @@ evalExpr_ k e0 locs strms = case e0 of
     case expr of
       Nothing -> throw (NoExtsInterp name)
       Just e  -> evalExpr_ k e locs strms
-  ExternArray _ _ name size idx xs _ -> evalArray k name evalIdx xs size
-    where evalIdx = evalExpr_ k idx locs strms
-  ExternStruct _ _ _ _   -> error "unimplemented"
-  GetField _ _ _ _       -> error "unimplemented"
   Op1 op e1                          ->
     let ev1 = evalExpr_ k e1 locs strms in
     let op1 = evalOp1 op                in
@@ -228,25 +224,6 @@ evalExternVar k name exts =
 --              Nothing    -> throw (BadType name)
 --              Just expr  -> evalExpr_ k expr exts [] strms
 --        _ -> throw (BadType name)
-
---------------------------------------------------------------------------------
-
-evalArray :: Integral b => Int -> Name -> b -> Maybe [[a]] -> Int -> a
-evalArray k name idx exts size =
-  case exts of
-    Nothing -> throw (NoExtsInterp name)
-    Just xs ->
-      case safeIndex k xs of
-        Nothing  -> throw (NotEnoughValues name k)
-        Just arr -> -- convoluted form in case the array is env of infinite
-                    -- length.
-                    if    length (take size arr) == size
-                       && length (take (size+1) arr) == size
-                      then case safeIndex (fromIntegral idx) arr of
-                             Nothing -> throw (ArrayIdxOutofBounds
-                                                 name (fromIntegral idx) size)
-                             Just x  -> x
-                      else throw (ArrayWrongSize name size)
 
 --------------------------------------------------------------------------------
 

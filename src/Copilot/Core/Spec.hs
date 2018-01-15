@@ -11,7 +11,6 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
-  , StructData (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
@@ -48,13 +47,6 @@ data Trigger = Trigger
 data Property = Property
   { propertyName     :: Name
   , propertyExpr     :: Expr Bool }
-
---------------------------------------------------------------------------------
-
--- | Struct representation as a bit array.
-data StructData = StructData
-  { structName       :: Name
-  , structFields     :: [(Name, UExpr)] }
 
 --------------------------------------------------------------------------------
 

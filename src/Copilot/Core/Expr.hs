@@ -10,7 +10,6 @@ module Copilot.Core.Expr
   , Name
   , Expr (..)
   , UExpr (..)
-  , SExpr (..)
   , DropIdx
   , Tag
   ) where
@@ -49,10 +48,6 @@ data Expr a where
   ExternVar    :: Type a -> Name -> Maybe [a] -> Expr a
   ExternFun    :: Type a -> Name -> [UExpr] -> Maybe (Expr a)
                -> Maybe Tag -> Expr a
-  ExternArray  :: Integral a => Type a -> Type b -> Name -> Int -> Expr a
-               -> Maybe [[b]] -> Maybe Tag -> Expr b
-  ExternStruct :: Type a -> Name -> [(Name, UExpr)] -> Maybe Tag -> Expr a
-  GetField     :: Type a -> Type b -> Expr a -> Name -> Expr b
   Op1          :: Op1 a b -> Expr a -> Expr b
   Op2          :: Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d
@@ -64,6 +59,3 @@ data Expr a where
 data UExpr = forall a. UExpr
   { uExprType :: Type a
   , uExprExpr :: Expr a }
-
--- | An expression for Struct args
-data SExpr = SExpr { sname :: String, uexpr :: UExpr }
