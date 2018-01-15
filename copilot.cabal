@@ -45,6 +45,7 @@ library
                      , copilot-sbv >= 2.2.1
                      , copilot-cbmc >= 2.2.1
                      , copilot-c99 >= 2.2.1
+                     , copilot-cbackend >= 3.0
 
     exposed-modules: Language.Copilot
 
