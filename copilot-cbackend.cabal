@@ -37,6 +37,8 @@ library
   build-depends           : base >= 4.3 && < 5
                           , copilot-core == 3.0
                           , language-c99
+                          , mtl >= 2.2.1
+                          , pretty >= 1.1.3.3
   exposed-modules         : Copilot.Backend.C
                           , Copilot.Backend.C.Normalize
                           , Copilot.Backend.C.CodeGen
