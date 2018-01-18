@@ -30,6 +30,7 @@ data Type :: * -> * where
   Word64  :: Type Word64
   Float   :: Type Float
   Double  :: Type Double
+  Array   :: (Typed t) => Type t -> Type [t]
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -43,22 +44,40 @@ instance EqualType Type where
   (=~=) Word64 Word64 = Just Refl
   (=~=) Float  Float  = Just Refl
   (=~=) Double Double = Just Refl
+  (=~=) (Array t1) (Array t2) | Just Refl <- t1 =~= t2 = Just Refl
+                              | otherwise              = Nothing
   (=~=) _ _ = Nothing
 
 --------------------------------------------------------------------------------
 
-data SimpleType = SBool
-                | SInt8
-                | SInt16
-                | SInt32
-                | SInt64
-                | SWord8
-                | SWord16
-                | SWord32
-                | SWord64
-                | SFloat
-                | SDouble
-  deriving Eq
+data SimpleType where
+  SBool   :: SimpleType
+  SInt8   :: SimpleType
+  SInt16  :: SimpleType
+  SInt32  :: SimpleType
+  SInt64  :: SimpleType
+  SWord8  :: SimpleType
+  SWord16 :: SimpleType
+  SWord32 :: SimpleType
+  SWord64 :: SimpleType
+  SFloat  :: SimpleType
+  SDouble :: SimpleType
+  SArray  :: Type t -> SimpleType
+
+-- This instance is necessary, otherwise the type of SArray can't be inferred
+instance Eq SimpleType where
+  SBool   == SBool    = True
+  SInt8   == SInt8    = True
+  SInt16  == SInt16   = True
+  SInt32  == SInt32   = True
+  SInt64  == SInt64   = True
+  SWord8  == SWord8   = True
+  SWord16 == SWord16  = True
+  SWord32 == SWord32  = True
+  SWord64 == SWord64  = True
+  (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
+                             | otherwise              = False
+  _ == _ = False
 
 --------------------------------------------------------------------------------
 
@@ -101,6 +120,9 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
+instance Typed a => Typed [a] where
+  typeOf               = Array typeOf
+  simpleType (Array t) = SArray t
 
 --------------------------------------------------------------------------------
 
