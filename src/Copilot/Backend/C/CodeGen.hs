@@ -205,13 +205,16 @@ streambuff ((Stream id buff _ ty),drop) = body where
   buffname = base ++ "_buff"
 
   body =  [ BIDecln $ vardef cty [declr (ident val)]
-          , BIStmt $ SCompound $ CS
-            [ BIDecln $ vardef size_t [declr' (ident dropped) (EAdd (var ptr) (constint drop))]
-            , BIDecln $ vardef size_t [declr' (ident idx) (EMod (var dropped) (constint buffsize))]
-            , BIStmt $ assign (EIdent $ ident val) (EIndex (EIdent $ ident buffname) (var idx))
+          , BIStmt $ SCompound $ CS $ idxcode ++ [
+              BIStmt $ assign (EIdent $ ident val) (EIndex (EIdent $ ident buffname) (var idx))
             ]
           ]
 
+  idxcode = case drop of
+    0 -> [ BIDecln $ vardef size_t [declr' (ident idx) (var ptr)] ]
+    _ -> [ BIDecln $ vardef size_t [declr' (ident dropped) (EAdd (var ptr) (constint drop))]
+         , BIDecln $ vardef size_t [declr' (ident idx) (EMod (var dropped) (constint buffsize))]
+         ]
 
 {- Write function for guard of trigger -}
 guardgen :: [Stream] -> Trigger -> FunDef
