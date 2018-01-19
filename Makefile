@@ -3,9 +3,6 @@ PACKAGE= \
   copilot-theorem \
   copilot-language \
   copilot-libraries \
-  copilot-sbv \
-  copilot-c99 \
-  copilot-cbmc \
   copilot-cbackend
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
@@ -25,8 +22,8 @@ build: cabal.sandbox.config
 
 .PHONY: test
 test: build
-	cabal run copilot-regression
-	cabal run copilot-c99-qc
+	#cabal run copilot-regression
+	#cabal run copilot-c99-qc
 
 .PHONY: veryclean
 veryclean:
