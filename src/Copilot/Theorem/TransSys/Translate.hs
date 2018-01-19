@@ -37,7 +37,6 @@ ncLocal s     = "l" ++ dropWhile (not . isNumber) s
 
 ncExternVarNode name = "ext-" ++ name
 ncExternFunNode name = "fun-" ++ name
-ncExternArrNode name = "arr-" ++ name
 
 ncImported :: NodeId -> String -> String
 ncImported n s = n ++ ncSep ++ s
@@ -204,12 +203,6 @@ expr t (C.Op2 op e1 e2) = handleOp2
       newUnconstrainedVar t
 
 expr t (C.ExternFun _ _ _ _ _) = newUnconstrainedVar t
-
-expr t (C.ExternArray _ _ _ _ _ _ _) = newUnconstrainedVar t
-
-expr t (C.ExternStruct _ _ _ _) = newUnconstrainedVar t
-
-expr t (C.GetField _ _ _ _) = undefined
 
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
