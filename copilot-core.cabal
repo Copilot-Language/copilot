@@ -74,6 +74,7 @@ library
     Copilot.Core.Random.Gen
     Copilot.Core.Random.Weights
     Copilot.Core.Type
+    Copilot.Core.Type.Array
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
     Copilot.Core.Type.Eq

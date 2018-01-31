@@ -12,7 +12,7 @@ module Copilot.Core.Locals
   , locals
   ) where
 
-import Copilot.Core
+import Copilot.Core hiding (toList)
 import Data.DList (DList, empty, singleton, append, concat, toList)
 import Data.List (nubBy)
 import Prelude hiding (concat, foldr)
