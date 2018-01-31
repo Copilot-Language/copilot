@@ -169,9 +169,9 @@ assign var e = SExpr $ ES $ Just $ EAssign AAssign var e
 
 
 -- TODO
-ddarray :: String -> [C.Expr] -> InitDeclr
-ddarray n xs = IDInit varn (vals xs) where
-  varn = Dr Nothing (DDArray1 (DDIdent $ ident n) Nothing Nothing)
+ddarray :: DirectDeclr -> [C.Expr] -> InitDeclr
+ddarray dd xs = IDInit varn (vals xs) where
+  varn = Dr Nothing (DDArray1 dd Nothing Nothing)
   vals (x:[]) = IArray (InitLBase Nothing (IExpr x))
   vals (x:xs) = IArray (foldl val base xs) where
     base = InitLBase Nothing (IExpr x)

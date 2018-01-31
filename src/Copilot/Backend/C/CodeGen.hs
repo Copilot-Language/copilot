@@ -57,17 +57,18 @@ putfunc f = do  env <- get
 
 ty2type :: Type a -> DeclnSpecs
 ty2type ty = case ty of
-  Int8    -> typedefty "__int8_t"
-  Int16   -> typedefty "__int16_t"
-  Int32   -> typedefty "__int32_t"
-  Int64   -> typedefty "__int64_t"
-  Word8   -> typedefty "__uint8_t"
-  Word16  -> typedefty "__uint16_t"
-  Word32  -> typedefty "__uint32_t"
-  Word64  -> typedefty "__uint64_t"
-  Float   -> float
-  Double  -> double
-  Bool    -> typedefty "bool"
+  Int8      -> typedefty "__int8_t"
+  Int16     -> typedefty "__int16_t"
+  Int32     -> typedefty "__int32_t"
+  Int64     -> typedefty "__int64_t"
+  Word8     -> typedefty "__uint8_t"
+  Word16    -> typedefty "__uint16_t"
+  Word32    -> typedefty "__uint32_t"
+  Word64    -> typedefty "__uint64_t"
+  Float     -> float
+  Double    -> double
+  Bool      -> typedefty "bool"
+  Array tya -> ty2type tya
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of
@@ -159,7 +160,10 @@ cexpr (Drop ty n id) = do
   put $ env { ids = (ids env) `union` [(id, n)] }
   return $ var val
 
-cexpr (ExternVar ty n args) = do return $ var n
+cexpr (ExternVar ty n args) = do
+  case ty of
+    Array aty -> return $ var ("EXARRAY TODO" ++ n) -- TODO
+    otherwise -> return $ var n
 
 cexpr (Op1 op e) = do
   e' <- cexpr e
@@ -179,17 +183,20 @@ cexpr (Op3 op e1 e2 e3) = do
 
 {- Write function to generate a stream -}
 streamgen :: [Stream] -> Stream -> FunDef
-streamgen ss (Stream id buff expr ty) = fundef name (static $ cty) [] body  where
+streamgen ss (Stream id buff expr ty) = FD (static $ cty) dr Nothing body where
   base = "s" ++ show id
   name = base ++ "_gen"
   cty = ty2type ty
+
+  dr = case ty of
+    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident name)
+    _       -> Dr Nothing (DDIdent $ ident name)
 
   (e, env) = runState (cexpr expr) emptyFunState
   s (i,n) = (findstream i ss,n)
   body = CS $ concatMap (streambuff.s) (ids env)
             ++ stmts env
             ++ [BIStmt $ SJump $ JSReturn $ Just e]
-
 
 {- Write code that reads from buffer -}
 streambuff :: (Stream, Word32) -> [BlockItem]
@@ -204,11 +211,15 @@ streambuff ((Stream id buff _ ty),drop) = body where
   idx = "idx"
   buffname = base ++ "_buff"
 
-  body =  [ BIDecln $ vardef cty [declr (ident val)]
+  body =  [ declcode
           , BIStmt $ SCompound $ CS $ idxcode ++ [
               BIStmt $ assign (EIdent $ ident val) (EIndex (EIdent $ ident buffname) (var idx))
             ]
           ]
+
+  declcode = case ty of
+    Array _ -> BIDecln $ vardef cty [IDDeclr $ Dr (Just $ PBase Nothing) (DDIdent $ ident val)]
+    _       -> BIDecln $ vardef cty [declr (ident val)]
 
   idxcode = case drop of
     0 -> [ BIDecln $ vardef size_t [declr' (ident idx) (var ptr)] ]
@@ -231,9 +242,14 @@ guardgen ss (Trigger name guard args) = fundef funname (static $ bool) [] body w
 {- Write arg functions for trigger -}
 argsgen :: [Stream] -> Trigger -> [FunDef]
 argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
-  arggen (UExpr ty uexpr) n = fundef funname (static $ cty) [] body where
+  --arggen (UExpr ty uexpr) n = fundef funname (static $ cty) [] body where
+  arggen (UExpr ty uexpr) n = FD (static $ cty) dr Nothing body where
     cty = ty2type ty
     funname = name ++ "_arg" ++ show n
+
+    dr = case ty of
+      Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
+      _       -> Dr Nothing (DDIdent $ ident funname)
 
     (uexpr', env) = runState (cexpr uexpr) emptyFunState
     s (i,n) = (findstream i ss,n)
@@ -245,7 +261,7 @@ argsgen ss (Trigger name _ args) = map (uncurry $ arggen) (zip args [0..]) where
 {- Write step() function -}
 step :: [Stream] -> [Trigger] -> FunDef
 step ss ts = fundef "step" (static $ void) [] body where
-  body = CS $ conds ++ assigns ++ buffers ++ ptrs
+  body = CS $ conds ++ assigns ++ tmparrays ++ buffers ++ ptrs
 
   {- Update stream values -}
   assigns = map genassign ss
@@ -253,15 +269,34 @@ step ss ts = fundef "step" (static $ void) [] body where
     name = "s" ++ show id
     stmt = BIStmt $ assign (EIdent $ ident name) (funcall (name ++ "_gen") [])
 
+  {- Copy array values to tmp -}
+  tmparrays = concatMap tmparray ss
+  tmparray :: Stream -> [BlockItem]
+  tmparray (Stream id buff _ ty) =
+    case ty of
+      Array tya ->
+        [ BIDecln $ vardef (ty2type tya) [
+          IDDeclr $ Dr Nothing (DDArray1 (DDIdent $ ident tmp) Nothing (Just $ constty Int8 (fromIntegral l)))
+          ]
+        , BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [var tmp, var base, ESizeof (var tmp)]
+        ] where
+        base = "s" ++ show id
+        tmp = base ++ "_tmp"
+        l = sizeOf $ head buff
+      otherwise -> []
+
   {- Update buffers -}
   buffers = map updatebuff ss
-  updatebuff (Stream id _ _ _) = stmt where
+  updatebuff (Stream id buff _ ty) = stmt where
     base = "s" ++ show id
-    --var = "s" ++ show id
     ptr = base ++ "_ptr"
     buffname = base ++ "_buff"
+    tmp = base ++ "_tmp"
     idxbuff = EIndex (EIdent $ ident buffname) (EIdent $ ident ptr)
-    stmt = BIStmt $ assign idxbuff (var base)
+    stmt = case ty of -- TODO: clean
+      Array tya -> BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [idxbuff, var tmp, size] where
+          size = ESizeof (EIndex (EIdent $ ident buffname) (constty Int32 0))
+      otherwise -> BIStmt $ assign idxbuff (var base)
 
   {- Check triggers -}
   conds = map triggercond ts
@@ -311,10 +346,46 @@ streamvars (Stream id buff _ ty) = do
       s     = "s" ++ show id
       cty   = ty2type ty
       buff' = map (constty ty) buff
-  putglobvar $ vardef cty    [declr' (ident s) (constty ty (head buff))]
-  putglobvar $ vardef cty    [ddarray name buff']
-  putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+  case ty of
+    Array tya -> do
+      putglobvar $ vardef cty    [arrdeclr name buff]
+      putglobvar $ vardef cty    [IDInit
+                                    (Dr (Just $ PBase Nothing) (DDIdent (ident s)))
+                                    (IExpr $ EIndex (EIdent $ ident name) (constty Int32 0)) -- TODO: clean
+                                 ]
+      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
 
+    otherwise -> let dd = DDIdent $ ident name in do
+      putglobvar $ vardef cty    [ddarray dd buff']
+      putglobvar $ vardef cty    [declr' (ident s) (constty ty (head buff))]
+      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+
+
+-- TODO: make code cleaner
+arrdeclr :: Typed a => String -> [Array i a] -> InitDeclr
+arrdeclr n xs = IDInit (Dr Nothing dd) (IArray $ arrlit xs) where
+  dd' = Dr Nothing (DDArray1 (DDIdent $ ident n) Nothing bufflength)
+  dd = DDArray1 (DDDeclr dd') Nothing arrlength
+
+  bufflength = Just $ constty Int32 (fromIntegral $ length xs)
+  arrlength = Just $ constty Int32 (fromIntegral $ length $ CP.toList $ head xs)
+
+  arrlit :: Typed a => [Array i a] -> InitList
+  arrlit as = initlist initls where
+    initls :: [Init]
+    initls = map (IArray . initlist . init') as
+
+{- Create init from array -}
+init' :: Typed a => Array i a -> [Init]
+init' xs = map f (CP.toList xs) where
+  f x = IExpr $ constty typeOf x
+
+-- TODO move to other file
+{- Create InitList from list of Inits -}
+initlist :: [Init] -> InitList
+initlist (i:is) = foldl cons base is where
+  base = InitLBase Nothing i
+  cons xs x = InitLCons xs Nothing x
 
 {- A function to test compilation -}
 testcompile :: Spec -> IO ()
@@ -339,6 +410,8 @@ compile s = do
     where
       headers = [ "#include <stdio.h>"
                 , "#include <stdbool.h>"
+                , "#include <string.h>"
+                , "#include <stdint.h>"
                 ]
 
       compile' :: Spec -> TransUnit
