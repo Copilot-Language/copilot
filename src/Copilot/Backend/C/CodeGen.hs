@@ -11,7 +11,7 @@ import Copilot.Core.PrettyPrint
 import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
 
-import Language.C99.AST as C
+import Language.C99.AST as C hiding (Struct)
 import Language.C99.Util
 import Language.C99.Pretty
 
@@ -69,6 +69,7 @@ ty2type ty = case ty of
   Double    -> double
   Bool      -> typedefty "bool"
   Array tya -> ty2type tya
+  Struct s  -> typedefty $ typename s -- TODO struct instead of typedef?
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of
@@ -134,8 +135,6 @@ constty Word64  = constword
 constty Bool    = constbool
 constty Float   = constfloat
 constty Double  = constdouble
-
-
 
 
 {- Translate to a C-expression -}
@@ -282,7 +281,7 @@ step ss ts = fundef "step" (static $ void) [] body where
         ] where
         base = "s" ++ show id
         tmp = base ++ "_tmp"
-        l = sizeOf $ head buff
+        l = length $ indices $ dim $ head buff
       otherwise -> []
 
   {- Update buffers -}
@@ -340,7 +339,7 @@ codegen s = do
 
 
 streamvars :: Stream -> State ProgEnv ()
-streamvars (Stream id buff _ ty) = do
+streamvars ss@(Stream id buff _ ty) = do
   let name  = "s" ++ show id ++ "_buff"
       ptr   = "s" ++ show id ++ "_ptr"
       s     = "s" ++ show id
@@ -348,17 +347,54 @@ streamvars (Stream id buff _ ty) = do
       buff' = map (constty ty) buff
   case ty of
     Array tya -> do
-      putglobvar $ vardef cty    [arrdeclr name buff]
+      putglobvar $ vardef cty    [initval name ty buff]
       putglobvar $ vardef cty    [IDInit
                                     (Dr (Just $ PBase Nothing) (DDIdent (ident s)))
                                     (IExpr $ EIndex (EIdent $ ident name) (constty Int32 0)) -- TODO: clean
                                  ]
       putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
 
+    Struct _ -> do
+      putglobvar $ vardef cty    [initval name ty buff]
+      putglobvar $ vardef cty    [IDInit
+                                    (Dr Nothing (DDIdent (ident s)))
+                                    (IArray $ initlist (init'' $ head buff)) -- TODO: clean
+                                 ]
+      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+
     otherwise -> let dd = DDIdent $ ident name in do
-      putglobvar $ vardef cty    [ddarray dd buff']
+      putglobvar $ vardef cty    [initval name ty buff]
       putglobvar $ vardef cty    [declr' (ident s) (constty ty (head buff))]
       putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+
+
+-- TODO remove
+initval :: String -> Type a -> [a] -> InitDeclr
+initval name ty buff = let
+  in case ty of
+    Array tya -> arrdeclr name buff
+    Struct s  -> structdeclr name buff
+    otherwise -> ddarray (DDIdent $ ident name) (map (constty ty) buff)
+
+
+-- TODO: make code cleaner!!!
+structdeclr :: (Struct a) => String -> [a] -> InitDeclr
+structdeclr n xs = IDInit (Dr Nothing dd) (IArray $ structlit xs) where
+  dd = DDArray1 (DDIdent $ ident n) Nothing arrlength
+
+  bufflength = Just $ constty Int32 (fromIntegral $ length xs)
+  first = head xs
+  arrlength = Just $ constty Int32 (fromIntegral $ length $ toValues first)
+
+  structlit :: Struct a => [a] -> InitList
+  structlit as = initlist initls where
+    initls :: [Init]
+    initls = map (IArray . initlist . init'') as
+
+{- Create init from struct -}
+init'' :: Struct a => a -> [Init]
+init'' xs = map f (toValues xs) where
+  f (V ty n v) = IExpr $ constty ty v
 
 
 -- TODO: make code cleaner
