@@ -12,6 +12,9 @@ module Copilot.Core.Type
   , Typed (..)
   , UType (..)
   , SimpleType (..)
+  , Struct (..)
+  , Value (..)
+  , ArrayItem
   ) where
 
 import Data.Int
@@ -19,6 +22,19 @@ import Data.Word
 import Copilot.Core.Type.Equality
 import Copilot.Core.Type.Array
 
+-- TODO: preferably move Struct to own file
+data Value    = forall a. (Typed a, Show a) => V (Type a) String a
+type Values a = [Value]
+
+type Typename a = String
+
+instance Show Value where
+  show (V _ n a) = "V " ++ show n ++ " " ++ show a
+
+class Typed a => Struct a where
+  typename    :: a -> Typename a
+  toValues    :: a -> Values a
+  fromValues  :: Values a -> a
 
 {- Class and instances of elements that are allowed in arrays -}
 class Typed t => ArrayItem t
@@ -47,6 +63,7 @@ data Type :: * -> * where
   Float   :: Type Float
   Double  :: Type Double
   Array   :: (ArrayItem t, Index i) => Type t -> Type (Array i t)
+  Struct  :: (Typed a, Struct a) => a -> Type a
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -62,6 +79,7 @@ instance EqualType Type where
   (=~=) Double Double = Just Refl
   {-(=~=) (Array t1) (Array t2) | Just Refl <- t1 =~= t2 = Just Refl
                               | otherwise              = Nothing-}
+  (=~=) (Struct _) (Struct _) = typeOf =~= typeOf
   (=~=) _ _ = Nothing
 
 --------------------------------------------------------------------------------
@@ -79,6 +97,7 @@ data SimpleType where
   SFloat  :: SimpleType
   SDouble :: SimpleType
   SArray  :: Type t -> SimpleType
+  SStruct :: SimpleType
 
 {- This instance is necessary, otherwise the type of SArray can't be inferred -}
 instance Eq SimpleType where
@@ -93,6 +112,7 @@ instance Eq SimpleType where
   SWord64 == SWord64  = True
   (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
                              | otherwise              = False
+  SStruct == SStruct  = True
   _ == _ = False
 
 --------------------------------------------------------------------------------
@@ -100,58 +120,46 @@ instance Eq SimpleType where
 class Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
-  sizeOf     :: a -> Int
+  simpleType _ = SStruct
 
 --------------------------------------------------------------------------------
 
 instance Typed Bool   where
   typeOf       = Bool
   simpleType _ = SBool
-  sizeOf _     = 1
 instance Typed Int8   where
   typeOf       = Int8
   simpleType _ = SBool
-  sizeOf _     = 1
 instance Typed Int16  where
   typeOf       = Int16
   simpleType _ = SInt16
-  sizeOf _     = 1
 instance Typed Int32  where
   typeOf       = Int32
   simpleType _ = SInt32
-  sizeOf _     = 1
 instance Typed Int64  where
   typeOf       = Int64
   simpleType _ = SInt64
-  sizeOf _     = 1
 instance Typed Word8  where
   typeOf       = Word8
   simpleType _ = SWord8
-  sizeOf _     = 1
 instance Typed Word16 where
   typeOf       = Word16
   simpleType _ = SWord16
-  sizeOf _     = 1
 instance Typed Word32 where
   typeOf       = Word32
   simpleType _ = SWord32
-  sizeOf _     = 1
 instance Typed Word64 where
   typeOf       = Word64
   simpleType _ = SWord64
-  sizeOf _     = 1
 instance Typed Float  where
   typeOf       = Float
   simpleType _ = SFloat
-  sizeOf _     = 1
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
-  sizeOf _     = 1
 instance (Index i, ArrayItem t) => Typed (Array i t) where
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
-  sizeOf a              = length $ indices $ dim a
 
 --------------------------------------------------------------------------------
 
