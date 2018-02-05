@@ -159,10 +159,7 @@ cexpr (Drop ty n id) = do
   put $ env { ids = (ids env) `union` [(id, n)] }
   return $ var val
 
-cexpr (ExternVar ty n args) = do
-  case ty of
-    Array aty -> return $ var ("EXARRAY TODO" ++ n) -- TODO
-    otherwise -> return $ var n
+cexpr (ExternVar ty n args) = return $ var n
 
 cexpr (Op1 op e) = do
   e' <- cexpr e
