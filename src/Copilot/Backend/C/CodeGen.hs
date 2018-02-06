@@ -12,7 +12,7 @@ import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
 
 import Language.C99.AST as C hiding (Struct)
-import Language.C99.Util
+import Language.C99.Util hiding (vardef, declr, declr')
 import Language.C99.Pretty
 
 import Control.Monad.State ( State
@@ -145,7 +145,7 @@ cexpr (Local ty1 ty2 n e1 e2) = do
   let cty = ty2type ty1
   e1' <- cexpr e1
   env <- get
-  let decln = BIDecln $ vardef cty [declr' (ident n) e1']
+  let decln = BIDecln $ vardef cty [declr n (Just $ IExpr e1')]
   put $ env { stmts = (stmts env) ++ [decln] }
   e2' <- cexpr e2
   return e2'
@@ -215,12 +215,12 @@ streambuff ((Stream id buff _ ty),drop) = body where
 
   declcode = case ty of
     Array _ -> BIDecln $ vardef cty [IDDeclr $ Dr (Just $ PBase Nothing) (DDIdent $ ident val)]
-    _       -> BIDecln $ vardef cty [declr (ident val)]
+    _       -> BIDecln $ vardef cty [declr val Nothing]
 
   idxcode = case drop of
-    0 -> [ BIDecln $ vardef size_t [declr' (ident idx) (var ptr)] ]
-    _ -> [ BIDecln $ vardef size_t [declr' (ident dropped) (EAdd (var ptr) (constint drop))]
-         , BIDecln $ vardef size_t [declr' (ident idx) (EMod (var dropped) (constint buffsize))]
+    0 -> [ BIDecln $ vardef size_t [declr idx (Just $ IExpr $ var ptr)] ]
+    _ -> [ BIDecln $ vardef size_t [declr dropped (Just $ IExpr $ EAdd (var ptr) (constint drop))]
+         , BIDecln $ vardef size_t [declr idx (Just $ IExpr $ EMod (var dropped) (constint buffsize))]
          ]
 
 {- Write function for guard of trigger -}
@@ -335,90 +335,91 @@ codegen s = do
   mapM_ streamvars streams
 
 
+{- Generate global variables for this stream: sX_buff, sX and sX_ptr -}
 streamvars :: Stream -> State ProgEnv ()
-streamvars ss@(Stream id buff _ ty) = do
-  let name  = "s" ++ show id ++ "_buff"
-      ptr   = "s" ++ show id ++ "_ptr"
-      s     = "s" ++ show id
-      cty   = ty2type ty
-      buff' = map (constty ty) buff
+streamvars (Stream id buff _ ty) = do
+  let base = "s" ++ show id
+      name = base ++ "_buff"
+      ptr  = base ++ "_ptr"
+      cty  = ty2type ty
   case ty of
-    Array tya -> do
-      putglobvar $ vardef cty    [initval name ty buff]
-      putglobvar $ vardef cty    [IDInit
-                                    (Dr (Just $ PBase Nothing) (DDIdent (ident s)))
-                                    (IExpr $ EIndex (EIdent $ ident name) (constty Int32 0)) -- TODO: clean
-                                 ]
-      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+    Array _ -> do
+      let l = [length buff, (length.indices.dim) (head buff)]
+      putglobvar $ vardef cty     [arrdeclr name l (initvals ty buff)]
+      putglobvar $ vardef cty     [ptrdeclr base  (Just $ IExpr $ index name (constint 0))]
+      putglobvar $ vardef size_t  [declr ptr      (Just $ IExpr $ constint 0)]
 
     Struct _ -> do
-      putglobvar $ vardef cty    [initval name ty buff]
-      putglobvar $ vardef cty    [IDInit
-                                    (Dr Nothing (DDIdent (ident s)))
-                                    (IArray $ initlist (init'' $ head buff)) -- TODO: clean
-                                 ]
-      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+      let l = [length buff]
+      putglobvar $ vardef cty     [arrdeclr name l (initvals ty buff)]
+      putglobvar $ vardef cty     [declr base (Just $ initval ty (head buff))]
+      putglobvar $ vardef size_t  [declr ptr  (Just $ IExpr (constint 0))]
 
-    otherwise -> let dd = DDIdent $ ident name in do
-      putglobvar $ vardef cty    [initval name ty buff]
-      putglobvar $ vardef cty    [declr' (ident s) (constty ty (head buff))]
-      putglobvar $ vardef size_t [declr' (ident ptr) (constint 0)]
+    otherwise -> do
+      putglobvar $ vardef cty     [declr name (Just $ initvals ty buff)]
+      putglobvar $ vardef cty     [declr base (Just $ initvals ty [head buff])]
+      putglobvar $ vardef size_t  [declr ptr  (Just $ IExpr (constint 0))]
 
+index :: String -> C.Expr -> C.Expr
+index arr e = EIndex (EIdent $ ident arr) e
 
--- TODO remove
-initval :: String -> Type a -> [a] -> InitDeclr
-initval name ty buff = let
-  in case ty of
-    Array tya -> arrdeclr name buff
-    Struct s  -> structdeclr name buff
-    otherwise -> ddarray (DDIdent $ ident name) (map (constty ty) buff)
+{- Take a type and a value, and return a literal data init -}
+initval :: Type a -> a -> Init
+initval ty x = case ty of
+  Array _   -> IArray $ initlist $ arraydata x
+  Struct _  -> IArray $ initlist $ structdata x
+  otherwise -> IExpr $ constty ty x
 
+{- Take a type and a list of values to construct init data of stream -}
+initvals :: Type a -> [a] -> Init
+initvals ty xs = IArray $ initlist $ map (initval ty) xs
 
--- TODO: make code cleaner!!!
-structdeclr :: (Struct a) => String -> [a] -> InitDeclr
-structdeclr n xs = IDInit (Dr Nothing dd) (IArray $ structlit xs) where
-  dd = DDArray1 (DDIdent $ ident n) Nothing arrlength
+{- Create init data for struct -}
+structdata :: Struct a => a -> [Init]
+structdata xs = map f (toValues xs) where
+  f (V ty n v) = case ty of
+    Array _   -> IArray $ initlist $ arraydata v
+    otherwise -> IExpr $ constty ty v
 
-  bufflength = Just $ constty Int32 (fromIntegral $ length xs)
-  first = head xs
-  arrlength = Just $ constty Int32 (fromIntegral $ length $ toValues first)
-
-  structlit :: Struct a => [a] -> InitList
-  structlit as = initlist initls where
-    initls :: [Init]
-    initls = map (IArray . initlist . init'') as
-
-{- Create init from struct -}
-init'' :: Struct a => a -> [Init]
-init'' xs = map f (toValues xs) where
-  f (V ty n v) = IExpr $ constty ty v
-
-
--- TODO: make code cleaner
-arrdeclr :: Typed a => String -> [Array i a] -> InitDeclr
-arrdeclr n xs = IDInit (Dr Nothing dd) (IArray $ arrlit xs) where
-  dd' = Dr Nothing (DDArray1 (DDIdent $ ident n) Nothing bufflength)
-  dd = DDArray1 (DDDeclr dd') Nothing arrlength
-
-  bufflength = Just $ constty Int32 (fromIntegral $ length xs)
-  arrlength = Just $ constty Int32 (fromIntegral $ length $ CP.toList $ head xs)
-
-  arrlit :: Typed a => [Array i a] -> InitList
-  arrlit as = initlist initls where
-    initls :: [Init]
-    initls = map (IArray . initlist . init') as
-
-{- Create init from array -}
-init' :: Typed a => Array i a -> [Init]
-init' xs = map f (CP.toList xs) where
+{- Create init data for array -}
+arraydata :: Typed a => Array i a -> [Init]
+arraydata xs = map f (CP.toList xs) where
   f x = IExpr $ constty typeOf x
 
--- TODO move to other file
 {- Create InitList from list of Inits -}
 initlist :: [Init] -> InitList
 initlist (i:is) = foldl cons base is where
   base = InitLBase Nothing i
   cons xs x = InitLCons xs Nothing x
+
+
+
+
+
+{- TODO: move these functions -}
+ptrdeclr :: String -> Maybe Init -> InitDeclr
+ptrdeclr n = _declr n (Just (PBase Nothing))
+
+declr :: String -> Maybe Init -> InitDeclr
+declr n = _declr n Nothing
+
+_declr :: String -> Maybe Ptr -> Maybe Init -> InitDeclr
+_declr n ptr Nothing  = IDDeclr (Dr ptr (DDIdent $ ident n))
+_declr n ptr (Just i) = IDInit  (Dr ptr (DDIdent $ ident n)) i
+
+arrdeclr :: String -> [Int] -> Init -> InitDeclr
+arrdeclr name (l:ls) init = IDInit (Dr Nothing dds) init where
+  dds = foldl cons base ls
+  base = DDArray1 (DDIdent $ ident name) Nothing (len l)
+  cons xs l = DDArray1 xs Nothing (len l)
+  len n = Just $ constty Int32 (fromIntegral n)
+
+vardef :: DeclnSpecs -> [InitDeclr] -> Decln
+vardef ds []       = Dn ds Nothing
+vardef ds (i:ids)  = Dn ds dl where
+  dl = Just $ foldl IDLCons (IDLBase i) ids
+
+
 
 {- A function to test compilation -}
 testcompile :: Spec -> IO ()
