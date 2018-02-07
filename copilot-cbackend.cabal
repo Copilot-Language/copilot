@@ -42,4 +42,7 @@ library
   exposed-modules         : Copilot.Backend.C
                           , Copilot.Backend.C.Normalize
                           , Copilot.Backend.C.CodeGen
+                          , Copilot.Backend.C.Translation
+                          , Copilot.Backend.C.Compile
+                          , Copilot.Backend.C.Util
                           , Copilot.Backend.C.Tmp

@@ -1,28 +1,21 @@
 {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 
-module Copilot.Backend.C.CodeGen
-  ( compile
-  , testcompile
-  ) where
+module Copilot.Backend.C.CodeGen where
 
 import Copilot.Core as CP hiding (SExpr)
-import Copilot.Core.PrettyPrint
 
-import Copilot.Backend.C.Normalize
 import Copilot.Backend.C.Tmp
+import Copilot.Backend.C.Util
+import Copilot.Backend.C.Translation
 
 import Language.C99.AST as C hiding (Struct)
 import Language.C99.Util hiding (vardef, declr, declr')
-import Language.C99.Pretty
 
 import Control.Monad.State ( State
                            , put
                            , get
                            , runState
-                           , execState
-                           , evalState
                            )
-import Text.PrettyPrint (render)
 import Data.List  (union)
 
 
@@ -55,91 +48,8 @@ putfunc f = do  env <- get
                 put $ env { funcs = funcs env ++ [f] }
 
 
-ty2type :: Type a -> DeclnSpecs
-ty2type ty = case ty of
-  Int8      -> typedefty "int8_t"
-  Int16     -> typedefty "int16_t"
-  Int32     -> typedefty "int32_t"
-  Int64     -> typedefty "int64_t"
-  Word8     -> typedefty "uint8_t"
-  Word16    -> typedefty "uint16_t"
-  Word32    -> typedefty "uint32_t"
-  Word64    -> typedefty "uint64_t"
-  Float     -> float
-  Double    -> double
-  Bool      -> typedefty "bool"
-  Array tya -> ty2type tya
-  Struct s  -> case typename s of
-    TyTypedef n -> typedefty n
-    TyStruct n  -> struct n
 
-op1 :: Op1 a b -> C.Expr -> C.Expr
-op1 op e = case op of
-  Not     -> EUn UNot e
-  Abs _   -> funcall "abs" [e]
-  Sign _  -> funcall "sign" [e] -- TODO implement function
-  Recip _ -> EDiv (constint 1) (var "e")
-  Exp _   -> funcall "exp" [e]
-  Sqrt _  -> funcall "sqrt" [e]
-  Log _   -> funcall "log" [e]
-  Sin _   -> funcall "sin" [e]
-  Cos _   -> funcall "cos" [e]
-  Asin _  -> funcall "asin" [e]
-  Atan _  -> funcall "atan" [e]
-  Acos _  -> funcall "acos" [e]
-  Sinh _  -> funcall "sinh" [e]
-  Tanh _  -> funcall "tanh" [e]
-  Cosh _  -> funcall "cosh" [e]
-  Asinh _ -> funcall "asinh" [e]
-  Atanh _ -> funcall "atanh" [e]
-  Acosh _ -> funcall "acosh" [e]
-  BwNot _ -> EUn UBNot e
-  Cast ty _ -> undefined -- TODO
-
-op2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
-op2 op = case op of
-  And     -> ELAnd
-  Or      -> ELOr
-  Add _  -> EAdd
-  Sub _  -> ESub
-  Mul _  -> EMult
-  Mod _  -> EMod
-  Div _  -> EDiv
-  Fdiv _ -> EDiv
-  Pow _  -> \b n -> funcall "pow" [b, n]
-  Logb _ -> undefined -- TODO
-  Eq _   -> EEq
-  Ne _   -> ENEq
-  Le _   -> ELE
-  Ge  _  -> EGE
-  Lt   _ -> ELT
-  Gt _   -> EGT
-  BwAnd _   -> EAnd
-  BwOr _    -> EOr
-  BwXor _   -> EXor
-  BwShiftL _ _ -> EShiftL
-  BwShiftR _ _ -> EShiftR
-
-op3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
-op3 op = case op of
-  Mux _   -> ECond
-
-
-constty :: Type a -> a -> C.Expr
-constty Int8    = constint
-constty Int16   = constint
-constty Int32   = constint
-constty Int64   = constint
-constty Word8   = constword
-constty Word16  = constword
-constty Word32  = constword
-constty Word64  = constword
-constty Bool    = constbool
-constty Float   = constfloat
-constty Double  = constdouble
-
-
-{- Translate to a C-expression -}
+{- Translate Copilot expression to a C-expression -}
 cexpr :: CP.Expr a -> FunState C.Expr
 cexpr (Const ty x) = return $ constty ty x
 
@@ -177,6 +87,7 @@ cexpr (Op3 op e1 e2 e3) = do
   e2' <- cexpr e2
   e3' <- cexpr e3
   return $ op3 op e1' e2' e3'
+
 
 
 {- Write function to generate a stream -}
@@ -393,66 +304,3 @@ initlist :: [Init] -> InitList
 initlist (i:is) = foldl cons base is where
   base = InitLBase Nothing i
   cons xs x = InitLCons xs Nothing x
-
-
-
-
-
-{- TODO: move these functions -}
-ptrdeclr :: String -> Maybe Init -> InitDeclr
-ptrdeclr n = _declr n (Just (PBase Nothing))
-
-declr :: String -> Maybe Init -> InitDeclr
-declr n = _declr n Nothing
-
-_declr :: String -> Maybe Ptr -> Maybe Init -> InitDeclr
-_declr n ptr Nothing  = IDDeclr (Dr ptr (DDIdent $ ident n))
-_declr n ptr (Just i) = IDInit  (Dr ptr (DDIdent $ ident n)) i
-
-arrdeclr :: String -> [Int] -> Init -> InitDeclr
-arrdeclr name (l:ls) init = IDInit (Dr Nothing dds) init where
-  dds = foldl cons base ls
-  base = DDArray1 (DDIdent $ ident name) Nothing (len l)
-  cons xs l = DDArray1 xs Nothing (len l)
-  len n = Just $ constty Int32 (fromIntegral n)
-
-vardef :: DeclnSpecs -> [InitDeclr] -> Decln
-vardef ds []       = Dn ds Nothing
-vardef ds (i:ids)  = Dn ds dl where
-  dl = Just $ foldl IDLCons (IDLBase i) ids
-
-
-
-{- A function to test compilation -}
-testcompile :: Spec -> IO ()
-testcompile s = do
-  let s' = normalize s
-  putStrLn $ prettyPrint s
-  putStrLn dots
-  compile s
-  putStrLn line
-  putStrLn $ prettyPrint s'
-  putStrLn dots
-  compile s'
-  where
-    dots = ". . . . . . . . . ."
-    line = "-------------------"
-
-{- Compile function, currently prints to stdout -}
-compile :: Spec -> IO ()
-compile s = do
-    putStrLn $ unlines headers
-    putStrLn $ render $ pretty (compile' s)
-    where
-      headers = [ "#include <stdio.h>"
-                , "#include <stdbool.h>"
-                , "#include <string.h>"
-                , "#include <stdint.h>"
-                ]
-
-      compile' :: Spec -> TransUnit
-      compile' s = TransUnit (vars' ++ funcs') where
-        vars' = map EDDecln (vars defs)
-        funcs' = map EDFunDef (funcs defs)
-
-        defs = execState (codegen s) emptyProgState
