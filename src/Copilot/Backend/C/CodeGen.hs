@@ -69,7 +69,9 @@ ty2type ty = case ty of
   Double    -> double
   Bool      -> typedefty "bool"
   Array tya -> ty2type tya
-  Struct s  -> typedefty $ typename s -- TODO struct instead of typedef?
+  Struct s  -> case typename s of
+    TyTypedef n -> typedefty n
+    TyStruct n  -> struct n
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of
