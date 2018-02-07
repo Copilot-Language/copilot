@@ -15,6 +15,7 @@ module Copilot.Core.Type
   , Struct (..)
   , Value (..)
   , ArrayItem
+  , Typename (..)
   ) where
 
 import Data.Int
@@ -26,7 +27,8 @@ import Copilot.Core.Type.Array
 data Value    = forall a. (Typed a, Show a) => V (Type a) String a
 type Values a = [Value]
 
-type Typename a = String
+data Typename a = TyTypedef String
+                | TyStruct String
 
 instance Show Value where
   show (V _ n a) = "V " ++ show n ++ " " ++ show a
