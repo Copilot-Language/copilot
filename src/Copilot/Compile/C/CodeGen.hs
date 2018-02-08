@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 
-module Copilot.Backend.C.CodeGen where
+module Copilot.Compile.C.CodeGen where
 
 import Copilot.Core as CP hiding (SExpr)
 
-import Copilot.Backend.C.Tmp
-import Copilot.Backend.C.Util
-import Copilot.Backend.C.Translation
+import Copilot.Compile.C.Tmp
+import Copilot.Compile.C.Util
+import Copilot.Compile.C.Translation
 
 import Language.C99.AST as C hiding (Struct)
 import Language.C99.Util hiding (vardef, declr, declr')

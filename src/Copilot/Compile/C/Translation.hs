@@ -2,9 +2,9 @@
 
 {- File containing functions that translates simple expressions to C. -}
 
-module Copilot.Backend.C.Translation where
+module Copilot.Compile.C.Translation where
 
-import Copilot.Backend.C.Tmp
+import Copilot.Compile.C.Tmp
 
 import Copilot.Core as CP
 import Language.C99.AST as C hiding (Struct)

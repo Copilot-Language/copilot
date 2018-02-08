@@ -39,10 +39,10 @@ library
                           , language-c99
                           , mtl >= 2.2.1
                           , pretty >= 1.1.3.3
-  exposed-modules         : Copilot.Backend.C
-                          , Copilot.Backend.C.Normalize
-                          , Copilot.Backend.C.CodeGen
-                          , Copilot.Backend.C.Translation
-                          , Copilot.Backend.C.Compile
-                          , Copilot.Backend.C.Util
-                          , Copilot.Backend.C.Tmp
+  exposed-modules         : Copilot.Compile.C
+                          , Copilot.Compile.C.Normalize
+                          , Copilot.Compile.C.CodeGen
+                          , Copilot.Compile.C.Translation
+                          , Copilot.Compile.C.Compile
+                          , Copilot.Compile.C.Util
+                          , Copilot.Compile.C.Tmp

@@ -1,9 +1,9 @@
-module Copilot.Backend.C.Normalize
+module Copilot.Compile.C.Normalize
   ( normalize
   ) where
 
 import Copilot.Core
-import Copilot.Backend.C.Tmp
+import Copilot.Compile.C.Tmp
 
 import Control.Monad.State
 

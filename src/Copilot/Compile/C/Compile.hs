@@ -1,7 +1,7 @@
-module Copilot.Backend.C.Compile where
+module Copilot.Compile.C.Compile where
 
-import Copilot.Backend.C.CodeGen
-import Copilot.Backend.C.Normalize
+import Copilot.Compile.C.CodeGen
+import Copilot.Compile.C.Normalize
 
 import Copilot.Core (Spec)
 import Copilot.Core.PrettyPrint

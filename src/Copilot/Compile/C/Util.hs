@@ -1,6 +1,6 @@
-module Copilot.Backend.C.Util where
+module Copilot.Compile.C.Util where
 
-import Copilot.Backend.C.Translation
+import Copilot.Compile.C.Translation
 
 import Copilot.Core
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module Copilot.Backend.C.Tmp where
+module Copilot.Compile.C.Tmp where
 
 -- All temporary stuff, that needs some final location / implementation
 
