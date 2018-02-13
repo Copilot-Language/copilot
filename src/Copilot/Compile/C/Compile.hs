@@ -47,4 +47,4 @@ compile s = do
         vars' = map EDDecln (vars defs)
         funcs' = map EDFunDef (funcs defs)
 
-        defs = execState (codegen s) emptyProgState
+        defs = codegen s
