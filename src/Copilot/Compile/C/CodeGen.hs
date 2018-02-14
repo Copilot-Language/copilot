@@ -53,10 +53,17 @@ emptyFunState = FunEnv { stmts = []
                        , ids   = []
                        }
 
+data Generator = Generator
+  { genBuff   :: String
+  , genVal    :: String
+  , genFunc   :: String
+  , genStream :: Stream
+  }
+
 {- Abstract program, used to gather information -}
 data AProgram = AProgram
   { streams     :: [Stream]
-  , generators  :: [(String, Stream)]
+  , generators  :: [Generator]
   , trigguards  :: [(String, Trigger)]
   , trigargs    :: [(String, UExpr)]
   , externals   :: [(String, UType)]
@@ -120,8 +127,13 @@ gather spec = AProgram  { streams     = streams
   streams = specStreams spec
   triggers = specTriggers spec
 
-  genname :: Stream -> (String, Stream)
-  genname s   = ("s" ++ show (streamId s) ++ "_gen", s)
+  genname :: Stream -> Generator
+  genname s = Generator { genVal  = basename
+                        , genBuff = basename ++ "_buff"
+                        , genFunc = basename ++ "_gen"
+                        , genStream = s
+                        } where
+    basename = "s" ++ show (streamId s)
 
   guardname :: Trigger -> (String, Trigger)
   guardname t = (triggerName t ++ "_guard", t)
@@ -149,7 +161,7 @@ gather spec = AProgram  { streams     = streams
 
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
-reify ap = Program  { funcs = concat $  [ map (uncurry (streamgen ss)) gens
+reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (uncurry (guardgen ss)) guards
                                         , map (uncurry (arggen ss)) args
                                         ]
@@ -162,12 +174,13 @@ reify ap = Program  { funcs = concat $  [ map (uncurry (streamgen ss)) gens
   exts   = externals ap
 
 {- Create a function that generates the stream -}
-streamgen :: [Stream] -> String -> Stream -> FunDef
-streamgen ss funname (Stream _ buff expr t) = FD (static $ cty) dr Nothing body where
-  cty = ty2type t
-  dr = case t of
-    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
-    _       -> Dr Nothing (DDIdent $ ident funname)
+streamgen :: [Stream] -> Generator -> FunDef
+streamgen ss (Generator _ _ func (Stream _ _ expr ty)) = fd where
+  fd = FD (static $ cty) dr Nothing body
+  cty = ty2type ty
+  dr = case ty of
+    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident func)
+    _       -> Dr Nothing (DDIdent $ ident func)
   body = fungen ss expr
 
 {- Write function for the guard of a trigger -}
