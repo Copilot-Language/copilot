@@ -103,8 +103,8 @@ cexpr (Local ty1 ty2 n e1 e2) = do
 cexpr (Var ty n)   = return $ var n
 
 cexpr (Drop ty n id) = do
-  let basename = "s" ++ show id
-      val = basename ++ "_val"
+  let basename = basevar id
+      val = locvar basename
   env <- get
   put $ env { ids = (ids env) `union` [(id, n)] }
   return $ var val
@@ -141,11 +141,11 @@ gather spec = AProgram  { streams     = streams
   genname :: Stream -> Generator
   genname s = Generator { genVal    = basename
                         , genBuff   = basename ++ "_buff"
-                        , genIndex  = basename ++ "_idx"
+                        , genIndex  = idxvar basename
                         , genFunc   = basename ++ "_gen"
                         , genStream = s
                         } where
-    basename = "s" ++ show (streamId s)
+    basename = basevar (streamId s)
 
   guardname :: Trigger -> Guard
   guardname t = Guard { guardName    = triggerName t ++ "_guard"
@@ -253,10 +253,10 @@ fungen ss expr = body where
 streambuff :: (Stream, Word32) -> State [Decln] [BlockItem]
 streambuff (Stream i buff _ ty, drop) = do
   let cty = ty2type ty
-      basename = "s" ++ show i
+      basename = basevar i
 
-      loc = basename ++ "_loc"
-      ptr = basename ++ "_ptr"
+      loc = locvar basename
+      ptr = idxvar basename
       buffname = basename ++ "_buff"
       idx = "idx"
       dropped = "dropped"

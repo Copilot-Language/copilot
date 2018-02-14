@@ -70,3 +70,12 @@ initlist (i:is) = foldl cons base is where
   base = InitLBase Nothing i
   cons xs x = InitLCons xs Nothing x
 
+
+basevar :: Id -> String
+basevar i = "s" ++ show i
+
+locvar :: String -> String
+locvar base = base ++ "_loc"
+
+idxvar :: String -> String
+idxvar base = base ++ "_idx"
