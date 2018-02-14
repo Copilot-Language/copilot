@@ -167,22 +167,17 @@ streamgen ss funname (Stream _ buff expr t) = FD (static $ cty) dr Nothing body 
   dr = case t of
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
     _       -> Dr Nothing (DDIdent $ ident funname)
-  (e, env) = runState (cexpr expr) emptyFunState
-
-  drops :: [(Stream, Word32)]
-  drops = combine (ids env) ss
-  (bs, vars) = runState (mapM streambuff drops) []
-
-  body = CS $ concat  [ map BIDecln vars
-                      , concat bs
-                      , stmts env
-                      , [ BIStmt $ SJump $ JSReturn $ Just e ]
-                      ]
+  body = fungen ss expr
 
 {- Write function for the guard of a trigger -}
 guardgen :: [Stream] -> String -> Trigger -> FunDef
 guardgen ss funname (Trigger _ guard _) = fundef funname (static $ bool) [] body where
-  (e, env) = runState (cexpr guard) emptyFunState
+  body = fungen ss guard
+
+{- Generic function that writes the bodies of all generator / guard / args -}
+fungen :: [Stream] -> CP.Expr a -> CompoundStmt
+fungen ss expr = body where
+  (e, env) = runState (cexpr expr) emptyFunState
   drops = combine (ids env) ss
   (bs, vars) = runState (mapM streambuff drops) []
   body = CS $ concat  [ map BIDecln vars
@@ -190,7 +185,6 @@ guardgen ss funname (Trigger _ guard _) = fundef funname (static $ bool) [] body
                       , stmts env
                       , [ BIStmt $ SJump $ JSReturn $ Just e ]
                       ]
-
 
 {- Code reading current value of a (dropped) stream -}
 streambuff :: (Stream, Word32) -> State [Decln] [BlockItem]
