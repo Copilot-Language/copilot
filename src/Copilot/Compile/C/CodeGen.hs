@@ -151,6 +151,7 @@ gather spec = AProgram  { streams     = streams
 reify :: AProgram -> Program
 reify ap = Program  { funcs = concat $  [ map (uncurry (streamgen ss)) gens
                                         , map (uncurry (guardgen ss)) guards
+                                        , map (uncurry (arggen ss)) args
                                         ]
                     , vars = []
                     } where
@@ -173,6 +174,15 @@ streamgen ss funname (Stream _ buff expr t) = FD (static $ cty) dr Nothing body 
 guardgen :: [Stream] -> String -> Trigger -> FunDef
 guardgen ss funname (Trigger _ guard _) = fundef funname (static $ bool) [] body where
   body = fungen ss guard
+
+{- Write function that generates stream for argument of a trigger -}
+arggen :: [Stream] -> String -> UExpr -> FunDef
+arggen ss funname (UExpr t expr) = FD (static $ cty) dr Nothing body where
+  cty = ty2type t
+  dr = case t of
+    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
+    _       -> Dr Nothing (DDIdent $ ident funname)
+  body = fungen ss expr
 
 {- Generic function that writes the bodies of all generator / guard / args -}
 fungen :: [Stream] -> CP.Expr a -> CompoundStmt
