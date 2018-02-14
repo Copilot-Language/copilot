@@ -1,6 +1,11 @@
 {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 
-module Copilot.Compile.C.CodeGen where
+module Copilot.Compile.C.CodeGen
+  ( codegen
+  , gather
+  , vars
+  , funcs
+  ) where
 
 import Copilot.Core as CP
 
@@ -8,12 +13,23 @@ import Copilot.Compile.C.Tmp
 import Copilot.Compile.C.Util
 import Copilot.Compile.C.Translation
 
-import Language.C99.AST as C  ( BlockItem (..)
+import Language.C99.AST as C  ( BlockItem     (..)
                               , Decln
                               , FunDef
-                              , Expr      (..)
-                              , Init      (..)
+                              , Expr          (..)
+                              , Init          (..)
+                              , FunDef        (..)
+                              , Declr         (..)
+                              , DirectDeclr   (..)
+                              , CompoundStmt  (..)
+                              , Stmt          (..)
+                              , Ptr           (..)
+                              , JumpStmt  (JSReturn)
                               )
+import Language.C99.Util  ( static
+                          , ident
+                          , bool
+                          )
 
 import Control.Monad.State ( State
                            , put
@@ -39,7 +55,8 @@ emptyFunState = FunEnv { stmts = []
 
 {- Abstract program, used to gather information -}
 data AProgram = AProgram
-  { generators  :: [(String, Stream)]
+  { streams     :: [Stream]
+  , generators  :: [(String, Stream)]
   , trigguards  :: [(String, Trigger)]
   , trigargs    :: [(String, UExpr)]
   , externals   :: [(String, UType)]
@@ -94,7 +111,8 @@ cexpr (Op3 op e1 e2 e3) = do
 
 {- Gather required information from Spec, and create names for functions -}
 gather :: Spec -> AProgram
-gather spec = AProgram  { generators  = map genname streams
+gather spec = AProgram  { streams     = streams
+                        , generators  = map genname streams
                         , trigguards  = map guardname triggers
                         , trigargs    = concatMap argnames triggers
                         , externals   = M.toList externals'
@@ -128,6 +146,73 @@ gather spec = AProgram  { generators  = map genname streams
     Op3 _ e1 e2 e3      -> externs e1 `M.union` externs e2 `M.union` externs e3
     _                   -> M.empty
 
+
+{- Translate abstract program to a concrete one -}
+reify :: AProgram -> Program
+reify ap = Program  { funcs = map (uncurry (streamgen ss)) gens
+                    , vars = []
+                    } where
+  ss = streams ap
+  gens   = generators ap
+  guards = trigguards ap
+  args   = trigargs ap
+  exts   = externals ap
+
+{- Create a function that generates the stream -}
+streamgen :: [Stream] -> String -> Stream -> FunDef
+streamgen ss funname (Stream _ buff expr t) = FD (static $ cty) dr Nothing body where
+  cty = ty2type t
+  dr = case t of
+    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
+    _       -> Dr Nothing (DDIdent $ ident funname)
+  (e, env) = runState (cexpr expr) emptyFunState
+
+  drops :: [(Stream, Word32)]
+  drops = combine (ids env) ss
+  (bs, vars) = runState (mapM streambuff drops) []
+
+  body = CS $ concat  [ map BIDecln vars
+                      , concat bs
+                      , stmts env
+                      , [ BIStmt $ SJump $ JSReturn $ Just e ]
+                      ]
+
+  combine :: [(Id, Word32)] -> [Stream] -> [(Stream, Word32)]
+  combine xs ss = map (\(i,d) -> (findstream i ss, d)) xs
+
+
+{- Code reading current value of a (dropped) stream -}
+streambuff :: (Stream, Word32) -> State [Decln] [BlockItem]
+streambuff (Stream i buff _ ty, drop) = do
+  let cty = ty2type ty
+      basename = "s" ++ show i
+
+      loc = basename ++ "_loc"
+      ptr = basename ++ "_ptr"
+      buffname = basename ++ "_buff"
+      idx = "idx"
+      dropped = "dropped"
+      buffsize = length buff
+
+      vars = case ty of
+        Array _ -> [ vardef cty [ptrdeclr loc Nothing] ]
+        _       -> [ vardef cty [declr    loc Nothing] ]
+
+      body =  [ BIStmt $ SCompound $ CS $ idxcode ++ [
+                  BIStmt $ assign (EIdent $ ident loc) (EIndex (EIdent $ ident buffname) (var idx))
+                ]
+              ]
+
+      idxcode = case drop of
+        0 -> [ BIDecln $ vardef size_t [declr idx (Just $ IExpr $ var ptr)] ]
+        _ -> [ BIDecln $ vardef size_t [declr dropped (Just $ IExpr $ EAdd (var ptr) (constint drop))]
+             , BIDecln $ vardef size_t [declr idx (Just $ IExpr $ EMod (var dropped) (constint buffsize))]
+             ]
+
+  vars' <- get
+  put (vars ++ vars')
+  return body
+
 {- Translate Spec to Program, used by the compile function -}
 codegen :: Spec -> Program
-codegen = undefined
+codegen = reify.gather
