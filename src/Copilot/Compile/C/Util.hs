@@ -1,5 +1,6 @@
 module Copilot.Compile.C.Util where
 
+import Copilot.Compile.C.Tmp
 import Copilot.Compile.C.Translation
 
 import Copilot.Core
@@ -29,3 +30,7 @@ vardef :: DeclnSpecs -> [InitDeclr] -> Decln
 vardef ds []       = Dn ds Nothing
 vardef ds (i:ids)  = Dn ds dl where
   dl = Just $ foldl IDLCons (IDLBase i) ids
+
+{- Combine droplengths with the right stream -}
+combine :: [(Id, Word32)] -> [Stream] -> [(Stream, Word32)]
+combine xs ss = map (\(i,d) -> (findstream i ss, d)) xs

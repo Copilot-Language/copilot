@@ -149,7 +149,9 @@ gather spec = AProgram  { streams     = streams
 
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
-reify ap = Program  { funcs = map (uncurry (streamgen ss)) gens
+reify ap = Program  { funcs = concat $  [ map (uncurry (streamgen ss)) gens
+                                        , map (uncurry (guardgen ss)) guards
+                                        ]
                     , vars = []
                     } where
   ss = streams ap
@@ -177,8 +179,17 @@ streamgen ss funname (Stream _ buff expr t) = FD (static $ cty) dr Nothing body 
                       , [ BIStmt $ SJump $ JSReturn $ Just e ]
                       ]
 
-  combine :: [(Id, Word32)] -> [Stream] -> [(Stream, Word32)]
-  combine xs ss = map (\(i,d) -> (findstream i ss, d)) xs
+{- Write function for the guard of a trigger -}
+guardgen :: [Stream] -> String -> Trigger -> FunDef
+guardgen ss funname (Trigger _ guard _) = fundef funname (static $ bool) [] body where
+  (e, env) = runState (cexpr guard) emptyFunState
+  drops = combine (ids env) ss
+  (bs, vars) = runState (mapM streambuff drops) []
+  body = CS $ concat  [ map BIDecln vars
+                      , concat bs
+                      , stmts env
+                      , [ BIStmt $ SJump $ JSReturn $ Just e ]
+                      ]
 
 
 {- Code reading current value of a (dropped) stream -}
