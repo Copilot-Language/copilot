@@ -65,12 +65,17 @@ data Guard = Guard
   , guardTrigger  :: Trigger
   }
 
+data Argument = Argument
+  { argName :: String
+  , argExpr :: UExpr
+  }
+
 {- Abstract program, used to gather information -}
 data AProgram = AProgram
   { streams     :: [Stream]
   , generators  :: [Generator]
   , trigguards  :: [Guard]
-  , trigargs    :: [(String, UExpr)]
+  , trigargs    :: [Argument]
   , externals   :: [(String, UType)]
   }
 
@@ -145,10 +150,12 @@ gather spec = AProgram  { streams     = streams
                       , guardTrigger = t
                       }
 
-  argnames :: Trigger -> [(String, UExpr)]
+  argnames :: Trigger -> [Argument]
   argnames (Trigger name guard args) = args' where
     args' = map argname (zip [0..] args)
-    argname (n, a) = (name ++ "_arg" ++ show n, a)
+    argname (n, a) = Argument { argName = name ++ "_arg" ++ show n
+                              , argExpr = a
+                              }
 
   externals' :: Map String UType
   externals' = M.unions $ (map exstreams streams) ++ (map extriggers triggers)
@@ -170,7 +177,7 @@ gather spec = AProgram  { streams     = streams
 reify :: AProgram -> Program
 reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (guardgen ss) guards
-                                        , map (uncurry (arggen ss)) args
+                                        , map (arggen ss) args
                                         ]
                     , vars = []
                     } where
@@ -197,10 +204,11 @@ guardgen ss (Guard funname (Trigger _ guard _)) = fd where
   body = fungen ss guard
 
 {- Write function that generates stream for argument of a trigger -}
-arggen :: [Stream] -> String -> UExpr -> FunDef
-arggen ss funname (UExpr t expr) = FD (static $ cty) dr Nothing body where
-  cty = ty2type t
-  dr = case t of
+arggen :: [Stream] -> Argument -> FunDef
+arggen ss (Argument funname (UExpr ty expr)) = fd where
+  fd = FD (static $ cty) dr Nothing body
+  cty = ty2type ty
+  dr = case ty of
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
     _       -> Dr Nothing (DDIdent $ ident funname)
   body = fungen ss expr
