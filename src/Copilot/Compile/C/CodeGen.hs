@@ -56,6 +56,7 @@ emptyFunState = FunEnv { stmts = []
 data Generator = Generator
   { genBuff   :: String
   , genVal    :: String
+  , genIndex  :: String
   , genFunc   :: String
   , genStream :: Stream
   }
@@ -138,9 +139,10 @@ gather spec = AProgram  { streams     = streams
   triggers = specTriggers spec
 
   genname :: Stream -> Generator
-  genname s = Generator { genVal  = basename
-                        , genBuff = basename ++ "_buff"
-                        , genFunc = basename ++ "_gen"
+  genname s = Generator { genVal    = basename
+                        , genBuff   = basename ++ "_buff"
+                        , genIndex  = basename ++ "_idx"
+                        , genFunc   = basename ++ "_gen"
                         , genStream = s
                         } where
     basename = "s" ++ show (streamId s)
@@ -179,7 +181,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (guardgen ss) guards
                                         , map (arggen ss) args
                                         ]
-                    , vars = []
+                    , vars = globvars gens
                     } where
   ss = streams ap
   gens   = generators ap
@@ -187,9 +189,31 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
   args   = trigargs ap
   exts   = externals ap
 
+{- Global variables -}
+globvars :: [Generator] -> [Decln]
+globvars gens = buffs ++ vals ++ idxs where
+  (buffs, vals, idxs) = unzip3 $ map globvar gens
+
+  globvar :: Generator -> (Decln, Decln, Decln)
+  globvar (Generator buffname val idx _ (Stream _ buff _ ty)) =
+    let cty = ty2type ty
+        len = length buff
+    in case ty of
+      Array _ -> let len' = [len, (length.indices.dim) (head buff)] in
+        ( vardef (static $ cty)     [arrdeclr buffname len' (initvals ty buff)]
+        , vardef (static $ cty)     [ptrdeclr val (Just $ IExpr $ index buffname (constint 0))]
+        , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
+        )
+
+      _ ->
+        ( vardef (static $ cty)     [arrdeclr buffname [len] (initvals ty buff)]
+        , vardef (static $ cty)     [declr val (Just $ initval ty (head buff))]
+        , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
+        )
+
 {- Create a function that generates the stream -}
 streamgen :: [Stream] -> Generator -> FunDef
-streamgen ss (Generator _ _ func (Stream _ _ expr ty)) = fd where
+streamgen ss (Generator _ _ _ func (Stream _ _ expr ty)) = fd where
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
