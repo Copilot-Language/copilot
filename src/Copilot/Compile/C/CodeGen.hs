@@ -60,11 +60,16 @@ data Generator = Generator
   , genStream :: Stream
   }
 
+data Guard = Guard
+  { guardName     :: String
+  , guardTrigger  :: Trigger
+  }
+
 {- Abstract program, used to gather information -}
 data AProgram = AProgram
   { streams     :: [Stream]
   , generators  :: [Generator]
-  , trigguards  :: [(String, Trigger)]
+  , trigguards  :: [Guard]
   , trigargs    :: [(String, UExpr)]
   , externals   :: [(String, UType)]
   }
@@ -135,8 +140,10 @@ gather spec = AProgram  { streams     = streams
                         } where
     basename = "s" ++ show (streamId s)
 
-  guardname :: Trigger -> (String, Trigger)
-  guardname t = (triggerName t ++ "_guard", t)
+  guardname :: Trigger -> Guard
+  guardname t = Guard { guardName    = triggerName t ++ "_guard"
+                      , guardTrigger = t
+                      }
 
   argnames :: Trigger -> [(String, UExpr)]
   argnames (Trigger name guard args) = args' where
@@ -162,7 +169,7 @@ gather spec = AProgram  { streams     = streams
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
 reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
-                                        , map (uncurry (guardgen ss)) guards
+                                        , map (guardgen ss) guards
                                         , map (uncurry (arggen ss)) args
                                         ]
                     , vars = []
@@ -184,8 +191,9 @@ streamgen ss (Generator _ _ func (Stream _ _ expr ty)) = fd where
   body = fungen ss expr
 
 {- Write function for the guard of a trigger -}
-guardgen :: [Stream] -> String -> Trigger -> FunDef
-guardgen ss funname (Trigger _ guard _) = fundef funname (static $ bool) [] body where
+guardgen :: [Stream] -> Guard -> FunDef
+guardgen ss (Guard funname (Trigger _ guard _)) = fd where
+  fd = fundef funname (static $ bool) [] body
   body = fungen ss guard
 
 {- Write function that generates stream for argument of a trigger -}
