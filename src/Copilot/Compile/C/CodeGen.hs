@@ -186,10 +186,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (guardgen ss) guards
                                         , map (arggen ss) args
 
-                                        , [ triggers guards ]
-                                        , [ update gens ]
-                                        , [ updatebuffers gens ]
-                                        , [ step ]
+                                        , [ step gens guards ]
                                         ]
                     , vars = globvars gens
                     } where
@@ -294,40 +291,40 @@ streambuff (Stream i buff _ ty, drop) = do
 
 
 {- The step function updates the current state -}
-step = fundef "step" (static $ void) [] body where
-  body = CS $ map call' [ funcall "triggers" []
-                        , funcall "update" []
-                        , funcall "update_buffers" []
-                        ]
-  call' f = BIStmt $ SExpr $  ES $ Just f
+step :: [Generator] -> [Guard] -> FunDef
+step gens guards = fundef "step" (static $ void) [] body where
+  body = CS $ concat  [ triggers      guards
+                      , update        gens
+                      , updatebuffers gens
+                      ] where
 
-{- Check guards and fire triggers accordingly -}
-triggers :: [Guard] -> FunDef
-triggers gs = fundef "triggers" (static $ void) [] body where
-  body = CS $ map triggercond gs
+  {- Check guards and fire triggers accordingly -}
+  triggers :: [Guard] -> [BlockItem]
+  triggers gs = body where
+    body = map triggercond gs
 
-  triggercond :: Guard -> BlockItem
-  triggercond (Guard guardname cfunc args _) = BIStmt $ SSelect $ SSIf cond call where
-    cond = funcall guardname []
-    call = SExpr $ ES $ Just $ funcall cfunc args'
-    args' = map (\a -> funcall (argName a) []) args
+    triggercond :: Guard -> BlockItem
+    triggercond (Guard guardname cfunc args _) = BIStmt $ SSelect $ SSIf cond call where
+      cond = funcall guardname []
+      call = SExpr $ ES $ Just $ funcall cfunc args'
+      args' = map (\a -> funcall (argName a) []) args
 
-{- Update stream values -}
-update :: [Generator] -> FunDef
-update gens = fundef "update" (static $ void) [] body where
-  body = CS $ map update' gens
-  update' gen = BIStmt $ assign (EIdent $ ident (genVal gen)) (funcall (genFunc gen) [])
+  {- Update stream values -}
+  update :: [Generator] -> [BlockItem]
+  update gens = body where
+    body = map update' gens
+    update' gen = BIStmt $ assign (var (genVal gen)) (funcall (genFunc gen) [])
 
-{- Update buffers -}
-updatebuffers :: [Generator] -> FunDef
-updatebuffers gens = fundef "update_buffers" (static $ void) [] body where
-  body = CS $ map updatebuffer gens
+  {- Update buffers -}
+  updatebuffers :: [Generator] -> [BlockItem]
+  updatebuffers gens = body where
+    body = map updatebuffer gens
 
-  updatebuffer gen = BIStmt $ assign idxbuff (var base) where
-    idxbuff = index buffname (EIdent $ ident idx)
-    base = genVal gen
-    idx = genIndex gen
-    buffname = genBuff gen
+    updatebuffer gen = BIStmt $ assign idxbuff (var base) where
+      idxbuff = index buffname (var idx)
+      base = genVal gen
+      idx = genIndex gen
+      buffname = genBuff gen
 
 
 {- Translate Spec to Program, used by the compile function -}
