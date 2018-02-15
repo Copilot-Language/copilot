@@ -296,14 +296,12 @@ step gens guards = fundef "step" (static $ void) [] body where
   body = CS $ concat  [ triggers      guards
                       , update        gens
                       , updatebuffers gens
+                      , updateindices gens
                       ] where
 
   {- Check guards and fire triggers accordingly -}
   triggers :: [Guard] -> [BlockItem]
-  triggers gs = body where
-    body = map triggercond gs
-
-    triggercond :: Guard -> BlockItem
+  triggers gs = map triggercond gs where
     triggercond (Guard guardname cfunc args _) = BIStmt $ SSelect $ SSIf cond call where
       cond = funcall guardname []
       call = SExpr $ ES $ Just $ funcall cfunc args'
@@ -311,20 +309,28 @@ step gens guards = fundef "step" (static $ void) [] body where
 
   {- Update stream values -}
   update :: [Generator] -> [BlockItem]
-  update gens = body where
-    body = map update' gens
+  update gens = map update' gens where
     update' gen = BIStmt $ assign (var (genVal gen)) (funcall (genFunc gen) [])
 
   {- Update buffers -}
   updatebuffers :: [Generator] -> [BlockItem]
-  updatebuffers gens = body where
-    body = map updatebuffer gens
-
+  updatebuffers gens = map updatebuffer gens where
     updatebuffer gen = BIStmt $ assign idxbuff (var base) where
       idxbuff = index buffname (var idx)
       base = genVal gen
       idx = genIndex gen
       buffname = genBuff gen
+
+  {- Update indices / pointers in the arrays -}
+  updateindices :: [Generator] -> [BlockItem]
+  updateindices gens = incs ++ mods where
+    (incs, mods) = unzip $ map updateindex gens
+    updateindex (Generator _ _ idx _ (Stream _ buff _ _)) =
+      ( BIStmt $ SExpr $ ES $ Just (EInc $ var idx)
+      , BIStmt $ assign (var idx) (EMod (var idx) (constint buffsize))
+      ) where
+        buffsize = length buff
+
 
 
 {- Translate Spec to Program, used by the compile function -}
