@@ -25,10 +25,13 @@ import Language.C99.AST as C  ( BlockItem     (..)
                               , Stmt          (..)
                               , Ptr           (..)
                               , JumpStmt  (JSReturn)
+                              , ExprStmt (..)
+                              , SelectStmt  (SSIf)
                               )
 import Language.C99.Util  ( static
                           , ident
                           , bool
+                          , void
                           )
 
 import Control.Monad.State ( State
@@ -63,6 +66,8 @@ data Generator = Generator
 
 data Guard = Guard
   { guardName     :: String
+  , guardCFunc    :: String
+  , guardArgs     :: [Argument]
   , guardTrigger  :: Trigger
   }
 
@@ -76,7 +81,7 @@ data AProgram = AProgram
   { streams     :: [Stream]
   , generators  :: [Generator]
   , trigguards  :: [Guard]
-  , trigargs    :: [Argument]
+  --, trigargs    :: [Argument]
   , externals   :: [(String, UType)]
   }
 
@@ -132,7 +137,7 @@ gather :: Spec -> AProgram
 gather spec = AProgram  { streams     = streams
                         , generators  = map genname streams
                         , trigguards  = map guardname triggers
-                        , trigargs    = concatMap argnames triggers
+                        --, trigargs    = concatMap argnames triggers
                         , externals   = M.toList externals'
                         } where
   streams = specStreams spec
@@ -149,6 +154,8 @@ gather spec = AProgram  { streams     = streams
 
   guardname :: Trigger -> Guard
   guardname t = Guard { guardName    = triggerName t ++ "_guard"
+                      , guardCFunc   = triggerName t
+                      , guardArgs    = argnames t
                       , guardTrigger = t
                       }
 
@@ -180,13 +187,16 @@ reify :: AProgram -> Program
 reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (guardgen ss) guards
                                         , map (arggen ss) args
+
+                                        , [ triggers guards ]
+                                        , [ step ]
                                         ]
                     , vars = globvars gens
                     } where
   ss = streams ap
   gens   = generators ap
   guards = trigguards ap
-  args   = trigargs ap
+  args   = concatMap guardArgs guards
   exts   = externals ap
 
 {- Global variables -}
@@ -223,8 +233,8 @@ streamgen ss (Generator _ _ _ func (Stream _ _ expr ty)) = fd where
 
 {- Write function for the guard of a trigger -}
 guardgen :: [Stream] -> Guard -> FunDef
-guardgen ss (Guard funname (Trigger _ guard _)) = fd where
-  fd = fundef funname (static $ bool) [] body
+guardgen ss (Guard guardfunc _ _ (Trigger _ guard _)) = fd where
+  fd = fundef guardfunc (static $ bool) [] body
   body = fungen ss guard
 
 {- Write function that generates stream for argument of a trigger -}
@@ -280,6 +290,27 @@ streambuff (Stream i buff _ ty, drop) = do
   vars' <- get
   put (vars ++ vars')
   return body
+
+
+
+{- The step function updates the current state -}
+step = fundef "step" (static $ void) [] body where
+  body = CS $ map call' [ funcall "triggers" []
+                        ]
+  call' f = BIStmt $ SExpr $  ES $ Just f
+
+{- Check guards and fire triggers accordingly -}
+triggers :: [Guard] -> FunDef
+triggers gs = fundef "triggers" (static $ void) [] body where
+  body = CS $ map triggercond gs
+
+  triggercond :: Guard -> BlockItem
+  triggercond (Guard guardname cfunc args _) = BIStmt $ SSelect $ SSIf cond call where
+    cond = funcall guardname []
+    call = SExpr $ ES $ Just $ funcall cfunc args'
+    args' = map (\a -> funcall (argName a) []) args
+
+
 
 {- Translate Spec to Program, used by the compile function -}
 codegen :: Spec -> Program
