@@ -81,7 +81,6 @@ data AProgram = AProgram
   { streams     :: [Stream]
   , generators  :: [Generator]
   , trigguards  :: [Guard]
-  --, trigargs    :: [Argument]
   , externals   :: [(String, UType)]
   }
 
@@ -137,7 +136,6 @@ gather :: Spec -> AProgram
 gather spec = AProgram  { streams     = streams
                         , generators  = map genname streams
                         , trigguards  = map guardname triggers
-                        --, trigargs    = concatMap argnames triggers
                         , externals   = M.toList externals'
                         } where
   streams = specStreams spec
@@ -189,6 +187,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (arggen ss) args
 
                                         , [ triggers guards ]
+                                        , [ update gens ]
                                         , [ step ]
                                         ]
                     , vars = globvars gens
@@ -296,6 +295,7 @@ streambuff (Stream i buff _ ty, drop) = do
 {- The step function updates the current state -}
 step = fundef "step" (static $ void) [] body where
   body = CS $ map call' [ funcall "triggers" []
+                        , funcall "update" []
                         ]
   call' f = BIStmt $ SExpr $  ES $ Just f
 
@@ -310,6 +310,11 @@ triggers gs = fundef "triggers" (static $ void) [] body where
     call = SExpr $ ES $ Just $ funcall cfunc args'
     args' = map (\a -> funcall (argName a) []) args
 
+{- Update stream values -}
+update :: [Generator] -> FunDef
+update gens = fundef "update" (static $ void) [] body where
+  body = CS $ map update' gens
+  update' gen = BIStmt $ assign (EIdent $ ident (genVal gen)) (funcall (genFunc gen) [])
 
 
 {- Translate Spec to Program, used by the compile function -}
