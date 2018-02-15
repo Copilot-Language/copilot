@@ -188,6 +188,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
 
                                         , [ triggers guards ]
                                         , [ update gens ]
+                                        , [ updatebuffers gens ]
                                         , [ step ]
                                         ]
                     , vars = globvars gens
@@ -296,6 +297,7 @@ streambuff (Stream i buff _ ty, drop) = do
 step = fundef "step" (static $ void) [] body where
   body = CS $ map call' [ funcall "triggers" []
                         , funcall "update" []
+                        , funcall "update_buffers" []
                         ]
   call' f = BIStmt $ SExpr $  ES $ Just f
 
@@ -315,6 +317,17 @@ update :: [Generator] -> FunDef
 update gens = fundef "update" (static $ void) [] body where
   body = CS $ map update' gens
   update' gen = BIStmt $ assign (EIdent $ ident (genVal gen)) (funcall (genFunc gen) [])
+
+{- Update buffers -}
+updatebuffers :: [Generator] -> FunDef
+updatebuffers gens = fundef "update_buffers" (static $ void) [] body where
+  body = CS $ map updatebuffer gens
+
+  updatebuffer gen = BIStmt $ assign idxbuff (var base) where
+    idxbuff = index buffname (EIdent $ ident idx)
+    base = genVal gen
+    idx = genIndex gen
+    buffname = genBuff gen
 
 
 {- Translate Spec to Program, used by the compile function -}
