@@ -27,6 +27,7 @@ import Language.C99.AST as C  ( BlockItem     (..)
                               , JumpStmt  (JSReturn)
                               , ExprStmt (..)
                               , SelectStmt  (SSIf)
+                              , InitDeclr (..)
                               )
 import Language.C99.Util  ( static
                           , ident
@@ -295,6 +296,7 @@ step :: [Generator] -> [Guard] -> FunDef
 step gens guards = fundef "step" (static $ void) [] body where
   body = CS $ concat  [ triggers      guards
                       , update        gens
+                      , updatearrays  gens
                       , updatebuffers gens
                       , updateindices gens
                       ] where
@@ -312,14 +314,33 @@ step gens guards = fundef "step" (static $ void) [] body where
   update gens = map update' gens where
     update' gen = BIStmt $ assign (var (genVal gen)) (funcall (genFunc gen) [])
 
+  {- Copy current value of array to tmp value -}
+  updatearrays :: [Generator] -> [BlockItem]
+  updatearrays gens = concatMap updatearray gens where
+    updatearray :: Generator -> [BlockItem]
+    updatearray (Generator buff val idx _ (Stream _ b _ ty)) = case ty of
+      Array tya ->
+        [ BIDecln $ vardef (ty2type tya) [
+            IDDeclr $ Dr Nothing (DDArray1 (DDIdent $ ident tmp) Nothing (Just $ constint l))
+          ]
+        , BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [var tmp, var val, ESizeof (var tmp)]
+        ] where
+          size = ESizeof (index buff (constint 0))
+          tmp = val ++ "_tmp"
+          idxbuff = index buff (var idx)
+          l = length $ indices $ dim $ head b
+      _ -> []
+
   {- Update buffers -}
   updatebuffers :: [Generator] -> [BlockItem]
   updatebuffers gens = map updatebuffer gens where
-    updatebuffer gen = BIStmt $ assign idxbuff (var base) where
-      idxbuff = index buffname (var idx)
-      base = genVal gen
-      idx = genIndex gen
-      buffname = genBuff gen
+    updatebuffer (Generator buff val idx _ (Stream _ b _ ty)) = stmt where
+      idxbuff = index buff (var idx)
+      tmp = val ++ "_tmp"
+      size = ESizeof (var tmp)
+      stmt = case ty of
+        Array _ -> BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [idxbuff, var tmp, size]
+        _       -> BIStmt $ assign idxbuff (var val)
 
   {- Update indices / pointers in the arrays -}
   updateindices :: [Generator] -> [BlockItem]
