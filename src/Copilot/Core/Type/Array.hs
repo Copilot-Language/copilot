@@ -5,65 +5,84 @@
 {-# LANGUAGE Safe #-}
 
 -- | A purposely limited array implementation. Unlike Data.Array, it only
--- supports integer indixed arrays, starting at zero. 
+-- supports integer indixed arrays, starting at zero.
 
-{-# LANGUAGE GADTs, FlexibleInstances, StandaloneDeriving #-}
+{-# LANGUAGE  GADTs
+            , FlexibleInstances
+            , PolyKinds
+            , ScopedTypeVariables
+            , MultiParamTypeClasses
+            , FunctionalDependencies
+            , InstanceSigs
+#-}
 
 module Copilot.Core.Type.Array
   ( Array
   , array
-  , Index (..)
-  , dim
-  , fmap
   , toList
+  , fmap
+  , foldr
+  , dim
+  , Len
+  , Index (..)
+  , (.!)
   ) where
 
-import Data.List
-import Data.Foldable
+import GHC.TypeLits
+import Data.Foldable (toList)
 
-{- Class used as index / length of an array -}
-class Eq a => Index a where
-  indices :: a -> [a]
+{- Take proxy and turn it into an Int -}
+fromNat :: KnownNat n => proxy n -> Int
+fromNat p = fromInteger $ natVal p
 
-instance Index Int where
-  indices i = [0..i-1]
+{- Array range up to the proxy -}
+idxRange :: KnownNat n => proxy n -> [Int]
+idxRange p = [0.. (fromNat p) - 1]
 
-instance Index (Int, Int) where
-  indices (i1, i2) = [(i1', i2')  | i1' <- indices i1
-                                  , i2' <- indices i2]
 
-instance Index (Int, Int, Int) where
-  indices (i1, i2, i3) = [(i1', i2', i3') | i1' <- indices i1
-                                          , i2' <- indices i2
-                                          , i3' <- indices i3]
+{- Analogous to Proxy, but with a nicer name to hide details -}
+data Len a = Len
 
-instance Index (Int, Int, Int, Int) where
-  indices (i1, i2, i3, i4) = [(i1', i2', i3', i4')  | i1' <- indices i1
-                                                    , i2' <- indices i2
-                                                    , i3' <- indices i3
-                                                    , i4' <- indices i4]
+class Index i n | i -> n where
+  index     :: i
+  fromIndex :: i -> [n]
+  size      :: i -> Int
+  size i = length $ fromIndex i
 
+instance KnownNat n => Index (Len n) Int where
+  index     = Len
+  fromIndex = idxRange
+
+instance (KnownNat m, KnownNat n) => Index (Len m, Len n) (Int, Int) where
+  index = (Len, Len)
+  fromIndex (m, n) = [ (m', n') | m' <- idxRange m
+                                , n' <- idxRange n ]
+
+
+{- Actual Array data type -}
 data Array i a where
-  Array :: (Index i) => i -> [(i, a)] -> Array i a
+  Array :: Index i n => i -> [(n, a)] -> Array i a
 
+instance Functor (Array i) where
+  fmap f (Array i as) = Array i (map (applysnd f) as) where
+    applysnd :: (b -> c) -> (a, b) -> (a, c)
+    applysnd f (a, b) = (a, f b)
+
+instance Foldable (Array i) where
+  foldr = undefined -- Disallow foldr
+  toList (Array _ as) = map snd as
+
+
+{- Smart constructor for an array, checks validaty of data as well -}
+array :: forall n i a. Index i n => [(n, a)] -> Array i a
+array xs | length xs == l = Array idx xs
+         | otherwise = error $ "Length of data does not match type of array." where
+  idx = index
+  l = size idx
+
+{- Takes the index element from an array -}
 dim :: Array i a -> i
 dim (Array i _) = i
 
-deriving instance (Show i, Show a) => Show (Array i a)
-
-instance Index i => Functor (Array i) where
-  fmap f (Array is xs) = Array is (map f' xs) where
-    f' (i, x) = (i, f x)
-
-instance Foldable (Array i) where
-  foldMap f           = foldr (mappend.f) mempty
-  toList (Array _ xs) = map snd xs
-
-array :: (Index i) => i -> [(i, a)] -> Array i a
-array i vals | checks_OK = Array i vals
-             | otherwise = error "Values and indices do not match in array." where
-  checks_OK = length_OK && indices_OK
-  length_OK = length is == length vals
-  indices_OK = length (nub is') == length is
-  is = indices i
-  is' = map fst vals  -- Indices given by value tuples
+(.!) :: Array i a -> Int -> a
+(Array _ xs) .! n = snd $ xs !! n

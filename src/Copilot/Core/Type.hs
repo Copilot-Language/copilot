@@ -5,7 +5,12 @@
 -- | Typing for Core.
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, GADTs, KindSignatures #-}
+{-# LANGUAGE  ExistentialQuantification
+            , GADTs
+            , KindSignatures
+            , ScopedTypeVariables
+            , UndecidableInstances
+#-}
 
 module Copilot.Core.Type
   ( Type (..)
@@ -16,12 +21,13 @@ module Copilot.Core.Type
   , Value (..)
   , ArrayItem
   , Typename (..)
+  , tyIndex
   ) where
 
 import Data.Int
 import Data.Word
 import Copilot.Core.Type.Equality
-import Copilot.Core.Type.Array
+import Copilot.Core.Type.Array (Array, Index, index)
 
 -- TODO: preferably move Struct to own file
 data Value    = forall a. (Typed a, Show a) => V (Type a) String a
@@ -64,8 +70,11 @@ data Type :: * -> * where
   Word64  :: Type Word64
   Float   :: Type Float
   Double  :: Type Double
-  Array   :: (ArrayItem t, Index i) => Type t -> Type (Array i t)
+  Array   :: (ArrayItem t, Index i n) => Type t -> Type (Array i t)
   Struct  :: (Typed a, Struct a) => a -> Type a
+
+tyIndex :: forall i t. Type (Array i t) -> i
+tyIndex (Array _) = (index :: i)
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -159,7 +168,7 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
-instance (Index i, ArrayItem t) => Typed (Array i t) where
+instance (Index i n, ArrayItem t) => Typed (Array i t) where
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 
