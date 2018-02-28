@@ -37,8 +37,8 @@ vardef ds (i:ids)  = Dn ds dl where
   dl = Just $ foldl IDLCons (IDLBase i) ids
 
 {- Combine droplengths with the right stream -}
-combine :: [(Id, Word32)] -> [Stream] -> [(Stream, Word32)]
-combine xs ss = map (\(i,d) -> (findstream i ss, d)) xs
+combine :: [(Id, Word32, String)] -> [Stream] -> [(Stream, Word32, String)]
+combine xs ss = map (\(i,d,name) -> (findstream i ss, d,name)) xs
 
 
 index :: String -> C.Expr -> C.Expr
@@ -85,3 +85,7 @@ idxvar base = base ++ "_idx"
 
 excpy :: String -> String
 excpy name = name ++ "_cpy"
+
+dropname id n = locvar $ basevar id ++ case n > 0 of
+  True  -> "drop" ++ show n
+  False -> []

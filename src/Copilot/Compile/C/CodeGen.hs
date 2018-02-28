@@ -46,7 +46,7 @@ import Data.List (union, unionBy)
 {- Attribute Grammar like state -}
 data FunEnv = FunEnv
   { stmts   :: [BlockItem]
-  , ids     :: [(Id, Word32)]
+  , ids     :: [(Id, Word32, String)]
   }
 
 type FunState = State FunEnv
@@ -112,11 +112,21 @@ cexpr (Local ty1 ty2 n e1 e2) = do
 cexpr (Var ty n)   = return $ var n
 
 cexpr (Drop ty n id) = do
-  let basename = basevar id
-      val = locvar basename
-  env <- get
-  put $ env { ids = (ids env) `union` [(id, n)] }
-  return $ var val
+  locname <- fresh id n
+  return $ var locname where
+    {- Generate a fresh name, if it is already in use.
+       To avoid conflicts as much as possible, we append "_dropN" if n > 0. -}
+    fresh :: Id -> Word32 -> FunState String
+    fresh id drop = do
+      env <- get
+      let usednames = map third (ids env)
+          dropped = dropname id n
+          dropped_fresh x = dropped ++ "_" ++ (show x)
+          locname = head $ dropWhile (flip elem usednames) freshnames
+          freshnames = dropped:(dropped_fresh <$> [0..])
+      put $ env { ids = (ids env) `union` [(id, drop, locname)] }
+      return locname
+    third (a,b,c) = c
 
 cexpr (ExternVar ty n args) = case ty of
   Array _ -> return $ var (excpy n) -- Rename external arrays because of copying
@@ -267,6 +277,10 @@ arggen ss (Argument funname (UExpr ty expr)) = fd where
     _       -> Dr Nothing (DDIdent $ ident funname)
   body = fungen ss expr
 
+
+type VarName = String
+type Env = State [Id]
+
 {- Generic function that writes the bodies of all generator / guard / args -}
 fungen :: [Stream] -> CP.Expr a -> CompoundStmt
 fungen ss expr = body where
@@ -280,12 +294,10 @@ fungen ss expr = body where
                       ]
 
 {- Code reading current value of a (dropped) stream -}
-streambuff :: (Stream, Word32) -> State [Decln] [BlockItem]
-streambuff (Stream i buff _ ty, drop) = do
+streambuff :: (Stream, Word32, String) -> State [Decln] [BlockItem]
+streambuff (Stream i buff _ ty, drop, loc) = do
   let cty = ty2type ty
       basename = basevar i
-
-      loc = locvar basename
       ptr = idxvar basename
       buffname = basename ++ "_buff"
       idx = "idx"
