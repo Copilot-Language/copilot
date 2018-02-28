@@ -7,7 +7,7 @@ module Copilot.Compile.C.CodeGen
   , funcs
   ) where
 
-import Copilot.Core as CP
+import Copilot.Core as CP hiding (index)
 
 import Copilot.Compile.C.Tmp
 import Copilot.Compile.C.Util
@@ -207,7 +207,7 @@ globvars gens = buffs ++ vals ++ idxs where
     let cty = ty2type ty
         len = length buff
     in case ty of
-      Array _ -> let len' = [len, (length.indices.dim) (head buff)] in
+      Array _ -> let len' = [len, size $ dim (head buff)] in
         ( vardef (static $ cty)     [arrdeclr buffname len' (initvals ty buff)]
         , vardef (static $ cty)     [ptrdeclr val (Just $ IExpr $ index buffname (constint 0))]
         , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
@@ -328,7 +328,7 @@ step gens guards = fundef "step" (static $ void) [] body where
           size = ESizeof (index buff (constint 0))
           tmp = val ++ "_tmp"
           idxbuff = index buff (var idx)
-          l = length $ indices $ dim $ head b
+          l = length $ fromIndex $ tyIndex ty
       _ -> []
 
   {- Update buffers -}
