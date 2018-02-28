@@ -69,7 +69,7 @@ instance Functor (Array i) where
     applysnd f (a, b) = (a, f b)
 
 instance Foldable (Array i) where
-  foldr = undefined -- Disallow foldr
+  foldr f b (Array _ as) = foldr (f.snd) b as
   toList (Array _ as) = map snd as
 
 
