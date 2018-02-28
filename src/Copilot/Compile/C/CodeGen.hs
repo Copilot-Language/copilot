@@ -40,9 +40,7 @@ import Control.Monad.State ( State
                            , get
                            , runState
                            )
-import Data.List (union)
-import Data.Map (Map)
-import qualified Data.Map as M
+import Data.List (union, unionBy)
 
 
 {- Attribute Grammar like state -}
@@ -77,12 +75,18 @@ data Argument = Argument
   , argExpr :: UExpr
   }
 
+data External = External
+  { exName    :: String
+  , exLocName :: String
+  , exType    :: UType
+  }
+
 {- Abstract program, used to gather information -}
 data AProgram = AProgram
   { streams     :: [Stream]
   , generators  :: [Generator]
   , trigguards  :: [Guard]
-  , externals   :: [(String, UType)]
+  , externals   :: [External]
   }
 
 {- Concrete program, used to list global variables and functions -}
@@ -114,7 +118,9 @@ cexpr (Drop ty n id) = do
   put $ env { ids = (ids env) `union` [(id, n)] }
   return $ var val
 
-cexpr (ExternVar ty n args) = return $ var n
+cexpr (ExternVar ty n args) = case ty of
+  Array _ -> return $ var (excpy n) -- Rename external arrays because of copying
+  _       -> return $ var n
 
 cexpr (Op1 op e) = do
   e' <- cexpr e
@@ -137,7 +143,7 @@ gather :: Spec -> AProgram
 gather spec = AProgram  { streams     = streams
                         , generators  = map genname streams
                         , trigguards  = map guardname triggers
-                        , externals   = M.toList externals'
+                        , externals   = externals'
                         } where
   streams = specStreams spec
   triggers = specTriggers spec
@@ -165,21 +171,26 @@ gather spec = AProgram  { streams     = streams
                               , argExpr = a
                               }
 
-  externals' :: Map String UType
-  externals' = M.unions $ (map exstreams streams) ++ (map extriggers triggers)
+  externals' :: [External]
+  externals' = unions' $ (map exstreams streams) ++ (map extriggers triggers)
   exstreams (Stream _ _ e _) = externs e
-  extriggers (Trigger _ guard args) = M.unions (externs guard : map exuexprs args)
+  extriggers (Trigger _ guard args) = unions' (externs guard : map exuexprs args)
   exuexprs (UExpr _ e) = externs e
 
-  externs :: CP.Expr a -> Map String UType
+  externs :: CP.Expr a -> [External]
   externs e = case e of
-    Local _ _ _ e1 e2   -> (externs e1) `M.union` (externs e2)
-    ExternVar t name _  -> M.singleton name (UType t)
+    Local _ _ _ e1 e2   -> externs e1 `union'` externs e2
+    ExternVar t name _  -> [ External { exName    = name
+                                      , exLocName = excpy name
+                                      , exType    = UType t
+                                      } ]
     Op1 _ e             -> externs e
-    Op2 _ e1 e2         -> externs e1 `M.union` externs e2
-    Op3 _ e1 e2 e3      -> externs e1 `M.union` externs e2 `M.union` externs e3
-    _                   -> M.empty
+    Op2 _ e1 e2         -> externs e1 `union'` externs e2
+    Op3 _ e1 e2 e3      -> externs e1 `union'` externs e2 `union'` externs e3
+    _                   -> []
 
+  union' = unionBy (\a b -> exName a == exName b)
+  unions' = foldr union' []
 
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
@@ -187,9 +198,9 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
                                         , map (guardgen ss) guards
                                         , map (arggen ss) args
 
-                                        , [ step gens guards ]
+                                        , [ step gens guards exts ]
                                         ]
-                    , vars = globvars gens
+                    , vars = globvars gens ++ exarrays exts
                     } where
   ss = streams ap
   gens   = generators ap
@@ -208,16 +219,27 @@ globvars gens = buffs ++ vals ++ idxs where
         len = length buff
     in case ty of
       Array _ -> let len' = [len, size $ dim (head buff)] in
-        ( vardef (static $ cty)     [arrdeclr buffname len' (initvals ty buff)]
+        ( vardef (static $ cty)     [arrdeclr buffname len' (Just $ initvals ty buff)]
         , vardef (static $ cty)     [ptrdeclr val (Just $ IExpr $ index buffname (constint 0))]
         , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
         )
 
       _ ->
-        ( vardef (static $ cty)     [arrdeclr buffname [len] (initvals ty buff)]
+        ( vardef (static $ cty)     [arrdeclr buffname [len] (Just $ initvals ty buff)]
         , vardef (static $ cty)     [declr val (Just $ initval ty (head buff))]
         , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
         )
+
+{- Copies of external arrays -}
+exarrays :: [External] -> [Decln]
+exarrays exts = concatMap exarray exts where
+  exarray :: External -> [Decln]
+  exarray (External name locname (UType ty)) =
+    case ty of
+      Array _ -> let cty = ty2type ty
+                     len = length $ fromIndex $ tyIndex ty
+                 in [ vardef (static $ cty) [arrdeclr locname [len] Nothing] ]
+      _       -> []
 
 {- Create a function that generates the stream -}
 streamgen :: [Stream] -> Generator -> FunDef
@@ -292,14 +314,28 @@ streambuff (Stream i buff _ ty, drop) = do
 
 
 {- The step function updates the current state -}
-step :: [Generator] -> [Guard] -> FunDef
-step gens guards = fundef "step" (static $ void) [] body where
-  body = CS $ concat  [ triggers      guards
+step :: [Generator] -> [Guard] -> [External] -> FunDef
+step gens guards exts = fundef "step" (static $ void) [] body where
+  body = CS $ concat  [ copyexts      exts
+                      , triggers      guards
                       , update        gens
                       , updatearrays  gens
                       , updatebuffers gens
                       , updateindices gens
                       ] where
+
+  {- Copy external arrays to make monitor reentrant -}
+  copyexts :: [External] -> [BlockItem]
+  copyexts exts = concatMap copyext exts where
+    copyext :: External -> [BlockItem]
+    copyext (External name locname (UType ty)) = case ty of
+      Array _ -> let l = size $ tyIndex ty
+                 in [ BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [ var locname
+                                                                    , var name
+                                                                    , ESizeof (var locname)
+                                                                    ]
+                    ]
+      _       -> []
 
   {- Check guards and fire triggers accordingly -}
   triggers :: [Guard] -> [BlockItem]
