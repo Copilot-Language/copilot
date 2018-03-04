@@ -14,6 +14,7 @@ import Copilot.Core as CP hiding (index)
 import Copilot.Compile.C.Tmp
 import Copilot.Compile.C.Util
 import Copilot.Compile.C.Translation
+import Copilot.Compile.C.Meta
 
 import Language.C99.AST as C  ( BlockItem     (..)
                               , Decln
@@ -56,40 +57,6 @@ emptyFunState :: FunEnv
 emptyFunState = FunEnv { stmts = []
                        , ids   = []
                        }
-
-data Generator = Generator
-  { genBuff   :: String
-  , genVal    :: String
-  , genIndex  :: String
-  , genFunc   :: String
-  , genStream :: Stream
-  }
-
-data Guard = Guard
-  { guardName     :: String
-  , guardCFunc    :: String
-  , guardArgs     :: [Argument]
-  , guardTrigger  :: Trigger
-  }
-
-data Argument = Argument
-  { argName :: String
-  , argExpr :: UExpr
-  }
-
-data External = External
-  { exName    :: String
-  , exLocName :: String
-  , exType    :: UType
-  }
-
-{- Abstract program, used to gather information -}
-data AProgram = AProgram
-  { streams     :: [Stream]
-  , generators  :: [Generator]
-  , trigguards  :: [Guard]
-  , externals   :: [External]
-  }
 
 {- Concrete program, used to list global variables and functions -}
 data Program = Program
