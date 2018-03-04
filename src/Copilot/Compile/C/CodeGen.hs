@@ -5,6 +5,8 @@ module Copilot.Compile.C.CodeGen
   , gather
   , vars
   , funcs
+
+  , Generator (..)
   ) where
 
 import Copilot.Core as CP hiding (index)

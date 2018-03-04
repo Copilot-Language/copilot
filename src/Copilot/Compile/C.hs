@@ -2,3 +2,5 @@ module Copilot.Compile.C ( compile, testcompile, normalize ) where
 
 import Copilot.Compile.C.Normalize
 import Copilot.Compile.C.Compile
+
+import Copilot.Compile.ACSL.Expr
