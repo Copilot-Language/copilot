@@ -7,11 +7,11 @@ import Copilot.Core ( Stream (..)
                     )
 
 data Generator = Generator
-  { genBuff   :: String
-  , genVal    :: String
-  , genIndex  :: String
-  , genFunc   :: String
-  , genStream :: Stream
+  { genBuffName   :: String
+  , genValName    :: String
+  , genIndexName  :: String
+  , genFuncName   :: String
+  , genStream     :: Stream
   }
 
 data Guard = Guard

@@ -5,8 +5,6 @@ module Copilot.Compile.C.CodeGen
   , gather
   , vars
   , funcs
-
-  , Generator (..)
   ) where
 
 import Copilot.Core as CP hiding (index)
@@ -128,11 +126,11 @@ gather spec = AProgram  { streams     = streams
   triggers = specTriggers spec
 
   genname :: Stream -> Generator
-  genname s = Generator { genVal    = basename
-                        , genBuff   = basename ++ "_buff"
-                        , genIndex  = idxvar basename
-                        , genFunc   = basename ++ "_gen"
-                        , genStream = s
+  genname s = Generator { genValName    = basename
+                        , genBuffName   = basename ++ "_buff"
+                        , genIndexName  = idxvar basename
+                        , genFuncName   = basename ++ "_gen"
+                        , genStream     = s
                         } where
     basename = basevar (streamId s)
 
@@ -329,7 +327,7 @@ step gens guards exts = fundef "step" (static $ void) [] body where
   {- Update stream values -}
   update :: [Generator] -> [BlockItem]
   update gens = map update' gens where
-    update' gen = BIStmt $ assign (var (genVal gen)) (funcall (genFunc gen) [])
+    update' gen = BIStmt $ assign (var (genValName gen)) (funcall (genFuncName gen) [])
 
   {- Copy current value of array to tmp value -}
   updatearrays :: [Generator] -> [BlockItem]
