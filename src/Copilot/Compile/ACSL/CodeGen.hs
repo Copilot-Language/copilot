@@ -33,11 +33,14 @@ arggenACSL ap (Argument _ (UExpr _ e)) = streamACSL ap e
  - This function is only used by more specific *genACSL functions -}
 streamACSL :: AProgram -> Expr a -> Doc
 streamACSL ap e = text "/*@" $$ nest 4 (vcat spec) $$ text "*/" where
-  spec = requires ++ [ text "assigns  \\nothing;"
-                     , text "ensures  \\result == " <> result <> semi
-                     ]
+  spec =  requires ++ indices ++
+          [ text "assigns  \\nothing;"
+          , text "ensures  \\result == " <> result <> semi
+          ]
   gens = generators ap
-  requires = map validrange (join (dependencies e) gens)
+  deps = dependencies e
+  requires = map validrange (join deps gens)
+  indices  = map validindex (join deps gens)
   result = exprACSL ap e
 
 {- Streams where the given stream depends on -}
@@ -53,10 +56,19 @@ dependencies e = case e of
 
 {- Returns a 'requires \valid <range>' -}
 validrange :: Generator -> Doc
-validrange g = text "requires \\valid " <> parens (var <> char '+' <> range) <> semi where
+validrange g = text "requires \\valid" <+> parens (var <> char '+' <> range) <> semi where
   var     = text $ genBuffName g
   range   = parens (int 0 <> text ".." <> int (bufflen (genStream g) - 1))
   bufflen (Stream _ buff _ _) = length buff
+
+{- Check if the index of the generator is valid -}
+validindex :: Generator -> Doc
+validindex g@(Generator _ _ _ _ (Stream _ b _ _)) =
+  text "requires" <+> int 0 <+> le <+> idx <+> lt <+> int max <> semi where
+    idx = text $ genIndexName g
+    le  = text "<="
+    lt  = text "<"
+    max = length b
 
 {- Joins a list of id's with their generators -}
 join :: [Id] -> [Generator] -> [Generator]
