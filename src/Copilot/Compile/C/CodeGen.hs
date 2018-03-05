@@ -175,8 +175,8 @@ gather spec = AProgram  { streams     = streams
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
 reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
-                                        , map (guardgen ss) guards
-                                        , map (arggen ss) args
+                                        , map (guardgen ap) guards
+                                        , map (arggen ap) args
 
                                         , [ step gens guards exts ]
                                         ]
@@ -234,20 +234,24 @@ streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = (acsl, fd) where
   acsl = streamgenACSL ap g
 
 {- Write function for the guard of a trigger -}
-guardgen :: [Stream] -> Guard -> (Doc, FunDef)
-guardgen ss (Guard guardfunc _ _ (Trigger _ guard _)) = (empty, fd) where
+guardgen :: AProgram -> Guard -> (Doc, FunDef)
+guardgen ap g@(Guard guardfunc _ _ (Trigger _ guard _)) = (acsl, fd) where
+  ss = streams ap
   fd = fundef guardfunc (static $ bool) [] body
   body = fungen ss guard
+  acsl = guardgenACSL ap g
 
 {- Write function that generates stream for argument of a trigger -}
-arggen :: [Stream] -> Argument -> (Doc, FunDef)
-arggen ss (Argument funname (UExpr ty expr)) = (empty, fd) where
+arggen :: AProgram -> Argument -> (Doc, FunDef)
+arggen ap a@(Argument funname (UExpr ty expr)) = (acsl, fd) where
+  ss = streams ap
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
     _       -> Dr Nothing (DDIdent $ ident funname)
   body = fungen ss expr
+  acsl = arggenACSL ap a
 
 
 type VarName = String
