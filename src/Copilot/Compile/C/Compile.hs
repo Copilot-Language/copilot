@@ -11,6 +11,8 @@ import Language.C99.Pretty (pretty)
 import Data.List (intersperse)
 import Text.PrettyPrint ( render
                         , ($+$)
+                        , (<>)
+                        , semi
                         , empty
                         , text
                         , Doc )
@@ -44,7 +46,7 @@ compile s = do
               , text ""
               ]
               ++
-              map pretty (vars defs)
+              map (\x -> pretty x <> semi) (vars defs)
               ++
               [ text "" ]
               ++
