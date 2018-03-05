@@ -5,9 +5,67 @@ module Copilot.Compile.ACSL.Expr where
 import Copilot.Core ( Op1 (..)
                     , Op2 (..)
                     , Op3 (..)
+                    , Stream (..)
+                    , Expr (..)
+                    , Id
                     )
+import Copilot.Core.Type.Show ( showWithType
+                              , ShowType (..)
+                              )
+import Copilot.Compile.C.Meta
 
+import Data.List  ( find )
+import Data.Maybe ( fromJust )
 import Text.PrettyPrint
+
+{- Translate Core.Expr to ACSL -}
+exprACSL :: AProgram -> Expr a -> Doc
+exprACSL ap expr = let  gens = generators ap
+                        exts = externals ap
+                   in case expr of
+  Const ty x -> text $ showWithType Haskell ty x
+
+  Drop _ n id ->  let gen = lookupGenerator id gens
+                      buff = genBuffName gen
+                      idx = genIndexName gen
+                      len (Stream _ b _ _) = length b
+                  in buffidx buff idx (fromIntegral n) (len $ genStream gen)
+
+  Local _ _ n e1 e2 -> text "\\let" <+> text n <+> equals <+> exprACSL ap e1
+                                    <+> semi <+> exprACSL ap e2
+
+  Var _ n -> text n
+
+  ExternVar _ n _ ->  let ex = lookupExternal n exts
+                      in text $ exLocName ex
+
+  -- ExternFun
+
+  Op1 op e -> parens $ op1ACSL op (exprACSL ap e)
+
+  Op2 op e1 e2 -> parens $ op2ACSL op (exprACSL ap e1) (exprACSL ap e2)
+
+  Op3 op e1 e2 e3 -> parens $ op3ACSL op (exprACSL ap e1)
+                                         (exprACSL ap e2)
+                                         (exprACSL ap e3)
+
+  -- Label
+
+
+{- Returns code that take an index of a buffer, possibly with a drop n -}
+buffidx :: String -> String -> Int -> Int -> Doc
+buffidx buff idx n len = text buff <> brackets idx' where
+  idx' | n == 0    = text idx
+       | otherwise = parens (text idx <> char '+' <> int n) <> char '%' <> int len
+
+{- Some helper functions -}
+lookupExternal :: String -> [External] -> External
+lookupExternal n exts = fromJust $ find (\(External n' _ _) -> n == n') exts
+
+lookupGenerator :: Id -> [Generator] -> Generator
+lookupGenerator id gens = fromJust $ find match gens where
+  match = (\(Generator _ _ _ _ (Stream id' _ _ _)) -> id == id')
+
 
 
 op1ACSL :: Op1 a b -> Doc -> Doc

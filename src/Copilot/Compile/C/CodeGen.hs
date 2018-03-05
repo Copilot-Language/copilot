@@ -14,6 +14,9 @@ import Copilot.Compile.C.Util
 import Copilot.Compile.C.Translation
 import Copilot.Compile.C.Meta
 
+import Copilot.Compile.ACSL.CodeGen
+import Text.PrettyPrint
+
 import Language.C99.AST as C  ( BlockItem     (..)
                               , Decln
                               , FunDef
@@ -59,7 +62,7 @@ emptyFunState = FunEnv { stmts = []
 {- Concrete program, used to list global variables and functions -}
 data Program = Program
   { vars  :: [Decln]
-  , funcs :: [FunDef]
+  , funcs :: [(Doc, FunDef)]
   }
 
 
@@ -171,7 +174,7 @@ gather spec = AProgram  { streams     = streams
 
 {- Translate abstract program to a concrete one -}
 reify :: AProgram -> Program
-reify ap = Program  { funcs = concat $  [ map (streamgen ss) gens
+reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
                                         , map (guardgen ss) guards
                                         , map (arggen ss) args
 
@@ -219,24 +222,26 @@ exarrays exts = concatMap exarray exts where
       _       -> []
 
 {- Create a function that generates the stream -}
-streamgen :: [Stream] -> Generator -> FunDef
-streamgen ss (Generator _ _ _ func (Stream _ _ expr ty)) = fd where
+streamgen :: AProgram -> Generator -> (Doc, FunDef)
+streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = (acsl, fd) where
+  ss = streams ap
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident func)
     _       -> Dr Nothing (DDIdent $ ident func)
   body = fungen ss expr
+  acsl = streamgenACSL ap g
 
 {- Write function for the guard of a trigger -}
-guardgen :: [Stream] -> Guard -> FunDef
-guardgen ss (Guard guardfunc _ _ (Trigger _ guard _)) = fd where
+guardgen :: [Stream] -> Guard -> (Doc, FunDef)
+guardgen ss (Guard guardfunc _ _ (Trigger _ guard _)) = (empty, fd) where
   fd = fundef guardfunc (static $ bool) [] body
   body = fungen ss guard
 
 {- Write function that generates stream for argument of a trigger -}
-arggen :: [Stream] -> Argument -> FunDef
-arggen ss (Argument funname (UExpr ty expr)) = fd where
+arggen :: [Stream] -> Argument -> (Doc, FunDef)
+arggen ss (Argument funname (UExpr ty expr)) = (empty, fd) where
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
@@ -293,8 +298,8 @@ streambuff (Stream i buff _ ty, drop, loc) = do
 
 
 {- The step function updates the current state -}
-step :: [Generator] -> [Guard] -> [External] -> FunDef
-step gens guards exts = fundef "step" (static $ void) [] body where
+step :: [Generator] -> [Guard] -> [External] -> (Doc, FunDef)
+step gens guards exts = (empty, fundef "step" (static $ void) [] body) where
   body = CS $ concat  [ copyexts      exts
                       , triggers      guards
                       , update        gens

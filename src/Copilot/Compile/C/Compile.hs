@@ -6,14 +6,15 @@ import Copilot.Compile.C.Normalize
 import Copilot.Core (Spec)
 import Copilot.Core.PrettyPrint
 
-import Language.C99.AST ( TransUnit (..)
-                        , ExtDecln (..)
-                        )
 import Language.C99.Pretty (pretty)
 
-import Text.PrettyPrint (render)
+import Data.List (intersperse)
+import Text.PrettyPrint ( render
+                        , ($+$)
+                        , empty
+                        , text
+                        , Doc )
 
-import Control.Monad.State (execState)
 
 {- A function to test compilation -}
 testcompile :: Spec -> IO ()
@@ -33,18 +34,26 @@ testcompile s = do
 {- Compile function, currently prints to stdout -}
 compile :: Spec -> IO ()
 compile s = do
-    putStrLn $ unlines headers
-    putStrLn $ render $ pretty (compile' s)
+    putStrLn $ render $ foldr ($+$) empty code
     where
-      headers = [ "#include <stdio.h>"
-                , "#include <stdbool.h>"
-                , "#include <string.h>"
-                , "#include <stdint.h>"
-                ]
+      defs = codegen s
+      code =  [ text "#include <stdio.h>"
+              , text "#include <stdbool.h>"
+              , text "#include <string.h>"
+              , text "#include <stdint.h>"
+              , text ""
+              ]
+              ++
+              map pretty (vars defs)
+              ++
+              [ text "" ]
+              ++
+              seperate funs
 
-      compile' :: Spec -> TransUnit
-      compile' s = TransUnit (vars' ++ funcs') where
-        vars' = map EDDecln (vars defs)
-        funcs' = map EDFunDef (funcs defs)
+      funs :: [Doc]
+      funs = map (\(d,f) -> d $+$ pretty f) (funcs defs)
 
-        defs = codegen s
+
+      {- Seperate with whitelines -}
+      seperate :: [Doc] -> [Doc]
+      seperate ds = intersperse (text "") ds

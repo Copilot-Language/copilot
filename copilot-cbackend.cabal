@@ -47,4 +47,6 @@ library
                           , Copilot.Compile.C.Compile
                           , Copilot.Compile.C.Util
                           , Copilot.Compile.C.Tmp
+                          , Copilot.Compile.C.Meta
                           , Copilot.Compile.ACSL.Expr
+                          , Copilot.Compile.ACSL.CodeGen
