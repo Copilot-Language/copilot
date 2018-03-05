@@ -4,6 +4,8 @@ module Copilot.Compile.ACSL.CodeGen where
 
 import Copilot.Core ( Stream (..)
                     , Expr (..)
+                    , UExpr (..)
+                    , Trigger (..)
                     , Id
                     )
 
@@ -15,16 +17,31 @@ import Data.Maybe (fromJust)
 import Text.PrettyPrint
 
 streamgenACSL :: AProgram -> Generator -> Doc
-streamgenACSL ap (Generator _ _ _ _ (Stream _ _ e _)) = foldr ($+$) empty
-  ( [ text "/*@" ]
+streamgenACSL ap (Generator _ _ _ _ (Stream _ _ e _)) =
+  streamACSL ap e
+
+guardgenACSL :: AProgram -> Guard -> Doc
+guardgenACSL ap g = streamACSL ap (triggerGuard $ guardTrigger g)
+
+arggenACSL :: AProgram -> Argument -> Doc
+arggenACSL ap (Argument _ (UExpr _ e)) = streamACSL ap e
+
+{- Write ACSL specification with:
+ - * List of requires for every external streambuffer
+ - * assigns \nothing
+ - * ensures \result == evaluation of expression
+ - This function is only used by more specific *genACSL functions -}
+streamACSL :: AProgram -> Expr a -> Doc
+streamACSL ap e = foldr ($+$) empty (
+  [ text "/*@" ]
   ++ requires ++
   [ text " *  assigns \\nothing;"
   , text " *  ensures \\result == " <> result
   , text " */"
   ] ) where
+    gens = generators ap
+    requires = map validrange (join (dependencies e) gens)
     result = exprACSL ap e
-    requires = map validrange (join (dependencies e) (generators ap))
-
 
 {- Streams where the given stream depends on -}
 dependencies :: Expr a -> [Id]
