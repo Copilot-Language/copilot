@@ -178,7 +178,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
                                         , map (guardgen ap) guards
                                         , map (arggen ap) args
 
-                                        , [ step gens guards exts ]
+                                        , [ step ap ]
                                         ]
                     , vars = globvars gens ++ exarrays exts
                     } where
@@ -302,8 +302,8 @@ streambuff (Stream i buff _ ty, drop, loc) = do
 
 
 {- The step function updates the current state -}
-step :: [Generator] -> [Guard] -> [External] -> (Doc, FunDef)
-step gens guards exts = (empty, fundef "step" (static $ void) [] body) where
+step :: AProgram -> (Doc, FunDef)
+step ap = (acsl, fundef "step" (static $ void) [] body) where
   body = CS $ concat  [ copyexts      exts
                       , triggers      guards
                       , update        gens
@@ -311,6 +311,10 @@ step gens guards exts = (empty, fundef "step" (static $ void) [] body) where
                       , updatebuffers gens
                       , updateindices gens
                       ] where
+  gens = generators ap
+  guards = trigguards ap
+  exts = externals ap
+  acsl = stepACSL ap
 
   {- Copy external arrays to make monitor reentrant -}
   copyexts :: [External] -> [BlockItem]
