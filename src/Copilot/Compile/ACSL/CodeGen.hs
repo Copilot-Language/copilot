@@ -16,6 +16,39 @@ import Data.List
 import Data.Maybe (fromJust)
 import Text.PrettyPrint
 
+stepACSL :: AProgram -> Doc
+stepACSL ap = text "/*@" $$ nest 4 (vcat spec) $$ text "*/" where
+  spec = requires ++ assigns ++ ensures
+  gens = generators ap
+
+  requires = map validindex gens
+  assigns = map assignsrule (vals ++ buffers ++ indices) where
+    vals    = map genValName gens
+    buffers = map (\g -> buffidx (genBuffName g) (genIndexName g)) gens
+    indices = map genIndexName gens
+  ensures  = map arraysame gens
+
+  {- Simple indexing of a buffer -}
+  buffidx :: String -> String -> String
+  buffidx buff idx = buff ++ "[" ++ idx ++ "]"
+
+  {- Create an assigns rule from string -}
+  assignsrule :: String -> Doc
+  assignsrule var = text "assigns  " <> text var <> semi
+
+  {- Ensures that all elements of array stay equal,
+   - except for i == \old(s*_idx) -}
+  arraysame :: Generator -> Doc
+  arraysame g@(Generator _ _ _ _ (Stream _ b _ _)) =
+    text "ensures  \\forall int i; 0 <= i < " <> int max <>
+        text "&& i !=" <+> oldidx <+> text "==>" $$
+        nest 4 (buff <+> text "==" <+> oldbuff <> semi) where
+      idx     = text (genIndexName g)
+      buff    = text (genBuffName g) <> brackets (char 'i')
+      oldidx  = text "\\old(" <> idx <> text ")"
+      oldbuff = text "\\old(" <> buff <> text ")"
+      max     = length b
+
 streamgenACSL :: AProgram -> Generator -> Doc
 streamgenACSL ap (Generator _ _ _ _ (Stream _ _ e _)) =
   streamACSL ap e
