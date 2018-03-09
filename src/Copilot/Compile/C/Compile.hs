@@ -17,22 +17,6 @@ import Text.PrettyPrint ( render
                         , text
                         , Doc )
 
-
-{- A function to test compilation -}
-testcompile :: Spec -> IO ()
-testcompile s = do
-  let s' = normalize s
-  putStrLn $ prettyPrint s
-  putStrLn dots
-  compile s
-  putStrLn line
-  putStrLn $ prettyPrint s'
-  putStrLn dots
-  compile s'
-  where
-    dots = ". . . . . . . . . ."
-    line = "-------------------"
-
 {- Compile function, currently prints to stdout -}
 compile :: Spec -> IO ()
 compile s = do

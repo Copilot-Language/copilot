@@ -1,4 +1,4 @@
-module Copilot.Compile.C ( compile, testcompile, normalize ) where
+module Copilot.Compile.C ( compile, normalize ) where
 
 import Copilot.Compile.C.Normalize
 import Copilot.Compile.C.Compile
