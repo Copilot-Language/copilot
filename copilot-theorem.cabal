@@ -37,6 +37,9 @@ library
                             -trust=process
                             -trust=random
                             -trust=unix
+                            -trust=parsec
+                            -trust=bytestring
+                            -trust=text
 
   build-depends           : base >= 4.0 && < 5
                           , copilot-core == 3.0
