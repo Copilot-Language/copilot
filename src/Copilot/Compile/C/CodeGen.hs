@@ -303,7 +303,7 @@ streambuff (Stream i buff _ ty, drop, loc) = do
 
 {- The step function updates the current state -}
 step :: AProgram -> (Doc, FunDef)
-step ap = (acsl, fundef "step" (static $ void) [] body) where
+step ap = (acsl, fundef "step" void [] body) where
   body = CS $ concat  [ copyexts      exts
                       , triggers      guards
                       , update        gens
