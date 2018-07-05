@@ -1,10 +1,10 @@
 {-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 
 module Copilot.Compile.C.CodeGen
-  ( codegen
-  , gather
+  ( gather
   , vars
   , funcs
+  , reify
   ) where
 
 import Copilot.Core as CP hiding (index)
@@ -62,7 +62,7 @@ emptyFunState = FunEnv { stmts = []
 {- Concrete program, used to list global variables and functions -}
 data Program = Program
   { vars  :: [Decln]
-  , funcs :: [(Doc, FunDef)]
+  , funcs :: [FunDef]
   }
 
 
@@ -222,8 +222,8 @@ exarrays exts = concatMap exarray exts where
       _       -> []
 
 {- Create a function that generates the stream -}
-streamgen :: AProgram -> Generator -> (Doc, FunDef)
-streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = (acsl, fd) where
+streamgen :: AProgram -> Generator -> FunDef
+streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = fd where
   ss = streams ap
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
@@ -231,19 +231,17 @@ streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = (acsl, fd) where
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident func)
     _       -> Dr Nothing (DDIdent $ ident func)
   body = fungen ss expr
-  acsl = streamgenACSL ap g
 
 {- Write function for the guard of a trigger -}
-guardgen :: AProgram -> Guard -> (Doc, FunDef)
-guardgen ap g@(Guard guardfunc _ _ (Trigger _ guard _)) = (acsl, fd) where
+guardgen :: AProgram -> Guard -> FunDef
+guardgen ap g@(Guard guardfunc _ _ (Trigger _ guard _)) = fd where
   ss = streams ap
   fd = fundef guardfunc (static $ bool) [] body
   body = fungen ss guard
-  acsl = guardgenACSL ap g
 
 {- Write function that generates stream for argument of a trigger -}
-arggen :: AProgram -> Argument -> (Doc, FunDef)
-arggen ap a@(Argument funname (UExpr ty expr)) = (acsl, fd) where
+arggen :: AProgram -> Argument -> FunDef
+arggen ap a@(Argument funname (UExpr ty expr)) = fd where
   ss = streams ap
   fd = FD (static $ cty) dr Nothing body
   cty = ty2type ty
@@ -251,7 +249,6 @@ arggen ap a@(Argument funname (UExpr ty expr)) = (acsl, fd) where
     Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
     _       -> Dr Nothing (DDIdent $ ident funname)
   body = fungen ss expr
-  acsl = arggenACSL ap a
 
 
 type VarName = String
@@ -302,8 +299,8 @@ streambuff (Stream i buff _ ty, drop, loc) = do
 
 
 {- The step function updates the current state -}
-step :: AProgram -> (Doc, FunDef)
-step ap = (acsl, fundef "step" void [] body) where
+step :: AProgram -> FunDef
+step ap = fundef "step" void [] body where
   body = CS $ concat  [ copyexts      exts
                       , triggers      guards
                       , update        gens
@@ -314,7 +311,6 @@ step ap = (acsl, fundef "step" void [] body) where
   gens = generators ap
   guards = trigguards ap
   exts = externals ap
-  acsl = stepACSL ap
 
   {- Copy external arrays to make monitor reentrant -}
   copyexts :: [External] -> [BlockItem]
@@ -379,9 +375,3 @@ step ap = (acsl, fundef "step" void [] body) where
       , BIStmt $ assign (var idx) (EMod (var idx) (constint buffsize))
       ) where
         buffsize = length buff
-
-
-
-{- Translate Spec to Program, used by the compile function -}
-codegen :: Spec -> Program
-codegen = reify.gather

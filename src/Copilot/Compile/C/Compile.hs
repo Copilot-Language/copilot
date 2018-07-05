@@ -3,6 +3,8 @@ module Copilot.Compile.C.Compile where
 import Copilot.Compile.C.CodeGen
 import Copilot.Compile.C.Normalize
 
+import Copilot.Compile.ACSL.CodeGen
+
 import Copilot.Core (Spec)
 import Copilot.Core.PrettyPrint
 
@@ -39,7 +41,8 @@ compile params s = do
       filename   = applyprefix (prefix params) "monitor.c"
       prettycode = render $ foldr ($+$) empty code
 
-      defs = codegen s
+      defs = reify   $ gather $ normalize s
+      acsl = acslgen $ gather s
       code =  [ text "#include <stdio.h>"
               , text "#include <stdbool.h>"
               , text "#include <string.h>"
@@ -54,7 +57,7 @@ compile params s = do
               seperate funs
 
       funs :: [Doc]
-      funs = map (\(d,f) -> d $+$ pretty f) (funcs defs)
+      funs = map (\(f,d) -> d $+$ pretty f) (zip (funcs defs) acsl)
 
       {- Seperate with whitelines -}
       seperate :: [Doc] -> [Doc]

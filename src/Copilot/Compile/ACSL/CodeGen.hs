@@ -106,3 +106,11 @@ validindex g@(Generator _ _ _ _ (Stream _ b _ _)) =
 {- Joins a list of id's with their generators -}
 join :: [Id] -> [Generator] -> [Generator]
 join ids gens = [ gen | i <- ids, gen <- gens, (streamId $ genStream gen) == i ]
+
+
+{- Generate ACSL code based on AProgram -}
+acslgen :: AProgram -> [Doc]
+acslgen ap = map (streamgenACSL ap) (generators ap) ++
+             map (guardgenACSL ap) (trigguards ap) ++
+             map (arggenACSL ap) (concatMap guardArgs (trigguards ap)) ++
+             [ stepACSL ap ]
