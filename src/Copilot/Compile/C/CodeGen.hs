@@ -102,9 +102,7 @@ cexpr (Drop ty n id) = do
       return locname
     third (a,b,c) = c
 
-cexpr (ExternVar ty n args) = case ty of
-  Array _ -> return $ var (excpy n) -- Rename external arrays because of copying
-  _       -> return $ var n
+cexpr (ExternVar ty n args) = return $ var (excpy n)
 
 cexpr (Op1 op e) = do
   e' <- cexpr e
@@ -184,7 +182,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
 
                                         , [ step ap ]
                                         ]
-                    , vars = globvars gens ++ exarrays exts
+                    , vars = globvars gens ++ extvars exts
                     } where
   ss = streams ap
   gens   = generators ap
@@ -215,15 +213,14 @@ globvars gens = buffs ++ vals ++ idxs where
         )
 
 {- Copies of external arrays -}
-exarrays :: [External] -> [Decln]
-exarrays exts = concatMap exarray exts where
+extvars :: [External] -> [Decln]
+extvars exts = concatMap exarray exts where
   exarray :: External -> [Decln]
-  exarray (External name locname (UType ty)) =
+  exarray (External name locname (UType ty)) = let cty = ty2type ty in
     case ty of
-      Array _ -> let cty = ty2type ty
-                     len = length $ fromIndex $ tyIndex ty
+      Array _ -> let len = length $ fromIndex $ tyIndex ty
                  in [ vardef (static $ cty) [arrdeclr locname [len] Nothing] ]
-      _       -> []
+      _       -> [ vardef (static $ cty) [declr locname Nothing] ]
 
 {- Create a function that generates the stream -}
 streamgen :: AProgram -> Generator -> FunDef
@@ -327,7 +324,7 @@ step ap = fundef "step" void [] body where
                                                                     , ESizeof (var locname)
                                                                     ]
                     ]
-      _       -> []
+      _       -> [ BIStmt $ assign (EIdent $ ident locname) (EIdent $ ident name) ]
 
   {- Check guards and fire triggers accordingly -}
   triggers :: [Guard] -> [BlockItem]
