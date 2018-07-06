@@ -5,6 +5,7 @@ module Copilot.Compile.C.CodeGen
   , vars
   , funcs
   , reify
+  , headerfile
   ) where
 
 import Copilot.Core as CP hiding (index)
@@ -32,11 +33,14 @@ import Language.C99.AST as C  ( BlockItem     (..)
                               , ExprStmt (..)
                               , SelectStmt  (SSIf)
                               , InitDeclr (..)
+                              , ExtDecln (..)
+                              , Decln ( Dn )
                               )
 import Language.C99.Util  ( static
                           , ident
                           , bool
                           , void
+                          , extern
                           )
 
 import Control.Monad.State ( State
@@ -375,3 +379,20 @@ step ap = fundef "step" void [] body where
       , BIStmt $ assign (var idx) (EMod (var idx) (constint buffsize))
       ) where
         buffsize = length buff
+
+
+{- Generates header file: (variables, triggers, step-function) -}
+headerfile :: AProgram -> ([ExtDecln], [ExtDecln], ExtDecln)
+headerfile ap = ( map vardecln     (externals ap)
+                , map triggerdecln triggers
+                , EDFunDef $ fundef "step" void [] (CS [])
+                ) where
+    vardecln (External name _ (UType ty)) = EDDecln $ vardef ty' [varname] where
+      varname = declr name Nothing
+      ty' = extern $ ty2type ty
+
+    triggerdecln (Trigger name _ args) = EDFunDef $ fundef name void args' (CS []) where
+      args' = map (\(UExpr ty _) -> Dn (ty2type ty) Nothing) args
+
+    triggers = map guardTrigger (trigguards ap)
+

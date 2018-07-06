@@ -17,7 +17,8 @@ import Text.PrettyPrint ( render
                         , semi
                         , empty
                         , text
-                        , Doc )
+                        , Doc
+                        , doubleQuotes )
 
 
 data Params = Params
@@ -29,37 +30,62 @@ defaultParams = Params
   { prefix = Nothing
   }
 
+{- Apply the given prefix to a base filename -}
 applyprefix :: Maybe String -> String -> String
 applyprefix (Just pre) filename = pre ++ "_" ++ filename
 applyprefix _          filename = filename
 
-{- Compile function, currently prints to stdout -}
+{- seperate with whitelines -}
+seperate :: [Doc] -> [Doc]
+seperate ds = intersperse (text "") ds
+
+
+ccode :: Spec -> String -> String
+ccode s hfile = render $ foldr ($+$) empty code where
+  defs = reify $ gather $ normalize s
+  code =  [ text "#include <stdio.h>"
+          , text "#include <string.h>"
+          , text ""
+          , text "#include " <> doubleQuotes (text hfile)
+          , text ""
+          ]
+          ++
+          map (\x -> pretty x <> semi) (vars defs)
+          ++
+          [ text "" ]
+          ++
+          seperate funs
+  acsl = acslgen $ gather s
+  funs :: [Doc]
+  funs = map (\(f,d) -> d $+$ pretty f) (zip (funcs defs) acsl)
+
+
+hcode :: Spec -> String
+hcode s = render $ foldr ($+$) empty code where
+  (vars, triggers, step) = headerfile $ gather s
+  code =  [ text "#include <stdbool.h>"
+          , text "#include <stdint.h>"
+          ]
+          ++
+          [ text ""
+          , text "/* External variables */" ] ++
+          map pretty vars
+          ++
+          [ text ""
+          , text "/* Triggers */" ] ++
+          map pretty triggers
+          ++
+          [ text "" ] ++
+          [ pretty step ]
+
+
+{- Compile function, writes both .c as well as *.h file -}
 compile :: Params -> Spec -> IO ()
 compile params s = do
-    writeFile filename prettycode
+    writeFile cfile (ccode s hfile)
+    writeFile hfile (hcode s)
     where
-      filename   = applyprefix (prefix params) "monitor.c"
-      prettycode = render $ foldr ($+$) empty code
-
-      defs = reify   $ gather $ normalize s
-      acsl = acslgen $ gather s
-      code =  [ text "#include <stdio.h>"
-              , text "#include <stdbool.h>"
-              , text "#include <string.h>"
-              , text "#include <stdint.h>"
-              , text ""
-              ]
-              ++
-              map (\x -> pretty x <> semi) (vars defs)
-              ++
-              [ text "" ]
-              ++
-              seperate funs
-
-      funs :: [Doc]
-      funs = map (\(f,d) -> d $+$ pretty f) (zip (funcs defs) acsl)
-
-      {- Seperate with whitelines -}
-      seperate :: [Doc] -> [Doc]
-      seperate ds = intersperse (text "") ds
+      basename = applyprefix (prefix params) "monitor"
+      cfile    = basename ++ ".c"
+      hfile    = basename ++ ".h"
 
