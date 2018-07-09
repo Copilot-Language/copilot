@@ -41,13 +41,13 @@ exprACSL ap expr = let  gens = generators ap
 
   -- ExternFun
 
-  Op1 op e -> parens $ op1ACSL op (exprACSL ap e)
+  Op1 op e -> op1ACSL op (exprACSL ap e)
 
-  Op2 op e1 e2 -> parens $ op2ACSL op (exprACSL ap e1) (exprACSL ap e2)
+  Op2 op e1 e2 -> op2ACSL op (exprACSL ap e1) (exprACSL ap e2)
 
-  Op3 op e1 e2 e3 -> parens $ op3ACSL op (exprACSL ap e1)
-                                         (exprACSL ap e2)
-                                         (exprACSL ap e3)
+  Op3 op e1 e2 e3 -> op3ACSL op (exprACSL ap e1)
+                                (exprACSL ap e2)
+                                (exprACSL ap e3)
 
   -- Label
 
