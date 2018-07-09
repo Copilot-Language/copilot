@@ -20,6 +20,9 @@ import Text.PrettyPrint ( render
                         , Doc
                         , doubleQuotes )
 
+import System.Directory (createDirectoryIfMissing)
+import Options.Applicative hiding (empty)
+import qualified Data.Semigroup as S ((<>))
 
 data Params = Params
   { prefix  :: Maybe String
@@ -79,13 +82,28 @@ hcode s = render $ foldr ($+$) empty code where
           [ pretty step ]
 
 
+data CmdArgs = CmdArgs
+  { output  :: String }
+
+cmdargs :: Parser CmdArgs
+cmdargs = CmdArgs <$> strOption (    long "output"
+                                S.<> short 'o'
+                                S.<> value "."
+                                S.<> help "Output directory of C files"
+                                )
+
+
 {- Compile function, writes both .c as well as *.h file -}
 compile :: Params -> Spec -> IO ()
-compile params s = do
-  writeFile cfile (ccode s hfile)
-  writeFile hfile (hcode s)
-  where
-    basename = applyprefix (prefix params) "monitor"
-    cfile    = basename ++ ".c"
-    hfile    = basename ++ ".h"
+compile params s = writeout =<< execParser opts where
+  opts = info (cmdargs <**> helper) fullDesc
 
+  writeout :: CmdArgs -> IO ()
+  writeout args = do
+    createDirectoryIfMissing True (output args)
+    writeFile cfile (ccode s hfile)
+    writeFile hfile (hcode s)
+    where
+      basename = output args ++ "/" ++ applyprefix (prefix params) "monitor"
+      cfile    = basename ++ ".c"
+      hfile    = basename ++ ".h"
