@@ -82,10 +82,10 @@ hcode s = render $ foldr ($+$) empty code where
 {- Compile function, writes both .c as well as *.h file -}
 compile :: Params -> Spec -> IO ()
 compile params s = do
-    writeFile cfile (ccode s hfile)
-    writeFile hfile (hcode s)
-    where
-      basename = applyprefix (prefix params) "monitor"
-      cfile    = basename ++ ".c"
-      hfile    = basename ++ ".h"
+  writeFile cfile (ccode s hfile)
+  writeFile hfile (hcode s)
+  where
+    basename = applyprefix (prefix params) "monitor"
+    cfile    = basename ++ ".c"
+    hfile    = basename ++ ".h"
 
