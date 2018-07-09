@@ -42,6 +42,7 @@ library
                           , containers
                           , optparse-applicative >= 0.14.0.0
                           , directory >= 1.3.0.0
+                          , filepath >= 1.4.0.0
   exposed-modules         : Copilot.Compile.C
                           , Copilot.Compile.C.Normalize
                           , Copilot.Compile.C.CodeGen

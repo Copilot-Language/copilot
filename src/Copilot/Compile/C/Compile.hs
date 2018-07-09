@@ -21,6 +21,7 @@ import Text.PrettyPrint ( render
                         , doubleQuotes )
 
 import System.Directory (createDirectoryIfMissing)
+import System.FilePath.Posix (normalise)
 import Options.Applicative hiding (empty)
 import qualified Data.Semigroup as S ((<>))
 
@@ -100,10 +101,12 @@ compile params s = writeout =<< execParser opts where
 
   writeout :: CmdArgs -> IO ()
   writeout args = do
-    createDirectoryIfMissing True (output args)
-    writeFile cfile (ccode s hfile)
-    writeFile hfile (hcode s)
+    createDirectoryIfMissing True (normalise $ output args)
+    writeFile cpath (ccode s hfile)
+    writeFile hpath (hcode s)
     where
-      basename = output args ++ "/" ++ applyprefix (prefix params) "monitor"
+      basename = applyprefix (prefix params) "monitor"
       cfile    = basename ++ ".c"
       hfile    = basename ++ ".h"
+      cpath    = normalise $ output args ++ "/" ++ cfile
+      hpath    = normalise $ output args ++ "/" ++ hfile
