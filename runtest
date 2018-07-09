@@ -1,31 +1,13 @@
-#!/bin/bash -eu
+#!/bin/bash
 
-infile=${1:-testing/Testing.hs}
-
+infile="$1"
 if [ ! -e $infile ]; then
-  echo "File $infile does not exist."
+  echo "File \"$infile\" does not exist."
   exit 1
 fi
-base="$(basename $infile)"
-filename="${base%.*}"
 
-cfile="$filename.c"
-bin="$filename"
+shift
 
 p=$(cabal exec printenv GHC_PACKAGE_PATH)
 
-GHC_PACKAGE_PATH="$p" runhaskell "$infile"
-
-#succes=0
-#(
-#echo '#include "util.h"'
-#GHC_PACKAGE_PATH="$p" runhaskell "$infile"
-#succes=$?
-#) | tee "testing/$cfile"
-#
-#if [ $succes -eq 0 ]; then
-#  pushd testing 1> /dev/null
-#  gcc -g -Wall -o "$bin" "$cfile"
-#  ./$bin
-#  popd 1> /dev/null
-#fi
+GHC_PACKAGE_PATH="$p" runhaskell "$infile" $@
