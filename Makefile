@@ -1,3 +1,4 @@
+
 PACKAGE= \
   copilot-core \
   copilot-theorem \
@@ -25,9 +26,13 @@ test: build
 	#cabal run copilot-regression
 	#cabal run copilot-c99-qc
 
+
+
 .PHONY: veryclean
 veryclean:
 	-rm -rf cabal.sandbox.config
 	-rm -rf .cabal-sandbox
 	-rm -rf dist
 
+
+include Examples/Makefile
