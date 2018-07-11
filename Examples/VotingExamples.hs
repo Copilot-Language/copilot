@@ -59,3 +59,5 @@ votingExamples =
   do
     interpret 20 vote
 --    prettyPrint vote
+
+main = votingExamples

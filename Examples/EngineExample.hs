@@ -36,6 +36,8 @@ engineMonitor = do
 engineExample :: IO ()
 engineExample = interpret 10 engineMonitor
 
+main = engineExample
+
 --  reify engineMonitor >>= S.compile (S.Params { S.prefix = Just "engine" })
   
-    
+

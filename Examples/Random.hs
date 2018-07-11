@@ -19,3 +19,5 @@ randomEx = do
                                         -- spec---mostly used for
                                         -- interpreting/QuickCheck testing.
   putStrLn (P.prettyPrint p)
+
+main = randomEx

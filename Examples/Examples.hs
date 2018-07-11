@@ -10,8 +10,7 @@ module Examples ( examples ) where
 
 import qualified Prelude as P
 import Language.Copilot hiding (even, odd)
---import Copilot.Compile.C99
-import qualified Copilot.Tools.CBMC as C
+--import Copilot.Compile.C
 
 --------------------------------------------------------------------------------
 
@@ -163,13 +162,11 @@ examples = do
   -- putStrLn ""
   -- putStrLn "Atom:"
   -- reify spec >>= compile defaultParams 
-  putStrLn "Check equivalence:"
-  putStrLn ""
-  putStrLn ""
-  reify spec >>= 
-    C.genCBMC C.defaultParams {C.numIterations = 20}
+  --reify spec >>= compile (defaultParams {prefix = Just "examples"})
 
 test :: Spec
 test = do
   observer "obs" (latch a)
 --------------------------------------------------------------------------------
+
+main = examples

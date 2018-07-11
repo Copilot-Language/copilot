@@ -39,3 +39,5 @@ statExamples = do
   putStrLn ""
   putStrLn ""
   interpret 20 statisticsTest
+
+main = statExamples

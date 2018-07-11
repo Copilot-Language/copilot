@@ -9,8 +9,9 @@
 module ExtFuns ( extFuns ) where
 
 import Language.Copilot 
-import qualified Copilot.Compile.C99 as C
-import qualified Copilot.Compile.SBV as S
+import qualified Copilot.Compile.C as C
+--import qualified Copilot.Compile.C99 as C
+--import qualified Copilot.Compile.SBV as S
 --import qualified Copilot.Tools.CBMC as B
 
 --------------------------------------------------------------------------------
@@ -53,8 +54,9 @@ spec = trigger "trigger" true [ arg func0
 extFuns :: IO ()
 extFuns = do
    interpret 10 spec
----   reify spec >>= C.compile C.defaultParams 
-   reify spec >>= S.compile (S.Params { S.prefix = Just "externFunSpec" })
+---   reify spec >>= S.compile (S.Params { S.prefix = Just "externFunSpec" })
 
 
 --------------------------------------------------------------------------------
+
+main = extFuns

@@ -65,3 +65,5 @@ satExamples :: IO ()
 satExamples = runFunc f0 >> runFunc f1
 
 ---------------------------------------------------------------------------------
+
+main = satExamples

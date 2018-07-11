@@ -26,3 +26,6 @@ clockExamples = do
   putStrLn ""
   putStrLn ""
   interpret 10 clockTest
+
+
+main = clockExamples

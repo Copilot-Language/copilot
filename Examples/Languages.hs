@@ -166,6 +166,9 @@ languages = do
   interpret 20 copyAccept
 
 ---------------------------------------------------------------------------------
+
+main = languages
+
 -- -- Recognize the language of arbitrarily long sequence of prime numbers.
 
 -- -- Sieve of Eratosthenes

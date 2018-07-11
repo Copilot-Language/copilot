@@ -11,7 +11,7 @@ module Examples2 ( examples2 ) where
 import Prelude ()
 import Language.Copilot
 
-import qualified Copilot.Compile.SBV as S
+import Copilot.Compile.C
 
 import qualified Data.List as L
 
@@ -70,6 +70,6 @@ spec = do
 
 examples2 :: IO ()
 examples2 = do
---  reify fibSpec >>= S.compile S.defaultParams
---  reify spec >>= S.compile S.defaultParams 
-  reify spec >>= S.compile (S.Params { S.prefix = Just "secondexamplespec" })
+  reify spec >>= compile (defaultParams {prefix = Just "secondexamplespec"} )
+
+main = interpret 50 spec
