@@ -17,6 +17,9 @@ module Language.Copilot
   -- , module Copilot.Library.Utils
   -- , module Copilot.Library.Voting
   -- , module Copilot.Library.Stacks
+
+  , copilotMain
+  , defaultMain
   ) where
 
 import Copilot.Language
@@ -38,3 +41,4 @@ import Copilot.Library.Libraries
 -- import Copilot.Library.Voting
 -- import Copilot.Library.Stacks
 
+import Language.Copilot.Main
