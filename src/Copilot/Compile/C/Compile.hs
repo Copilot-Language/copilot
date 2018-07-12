@@ -6,7 +6,6 @@ import Copilot.Compile.C.Normalize
 import Copilot.Compile.ACSL.CodeGen
 
 import Copilot.Core (Spec)
-import Copilot.Core.PrettyPrint
 
 import Language.C99.Pretty (pretty)
 
@@ -22,22 +21,12 @@ import Text.PrettyPrint ( render
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath.Posix (normalise)
-import Options.Applicative hiding (empty)
-import qualified Data.Semigroup as S ((<>))
 
-data Params = Params
-  { prefix  :: Maybe String
-  }
-
-defaultParams :: Params
-defaultParams = Params
-  { prefix = Nothing
-  }
 
 {- Apply the given prefix to a base filename -}
-applyprefix :: Maybe String -> String -> String
-applyprefix (Just pre) filename = pre ++ "_" ++ filename
-applyprefix _          filename = filename
+applyprefix :: String -> String -> String
+applyprefix ""  filename = filename
+applyprefix pre filename = pre ++ "_" ++ filename
 
 {- seperate with whitelines -}
 seperate :: [Doc] -> [Doc]
@@ -83,30 +72,17 @@ hcode s = render $ foldr ($+$) empty code where
           [ pretty step ]
 
 
-data CmdArgs = CmdArgs
-  { output  :: String }
-
-cmdargs :: Parser CmdArgs
-cmdargs = CmdArgs <$> strOption (    long "output"
-                                S.<> short 'o'
-                                S.<> value "."
-                                S.<> help "Output directory of C files"
-                                )
-
-
 {- Compile function, writes both .c as well as *.h file -}
-compile :: Params -> Spec -> IO ()
-compile params s = writeout =<< execParser opts where
-  opts = info (cmdargs <**> helper) fullDesc
+compile :: String -> FilePath -> Spec -> IO ()
+compile prefix outdir s = do
+  createDirectoryIfMissing True (normalise out)
+  writeFile cpath (ccode s hfile)
+  writeFile hpath (hcode s)
+  where
+    basename = applyprefix prefix "monitor"
+    cfile    = basename ++ ".c"
+    hfile    = basename ++ ".h"
+    cpath    = normalise $ out ++ cfile
+    hpath    = normalise $ out ++ hfile
 
-  writeout :: CmdArgs -> IO ()
-  writeout args = do
-    createDirectoryIfMissing True (normalise $ output args)
-    writeFile cpath (ccode s hfile)
-    writeFile hpath (hcode s)
-    where
-      basename = applyprefix (prefix params) "monitor"
-      cfile    = basename ++ ".c"
-      hfile    = basename ++ ".h"
-      cpath    = normalise $ output args ++ "/" ++ cfile
-      hpath    = normalise $ output args ++ "/" ++ hfile
+    out = outdir ++ "/"

@@ -1,8 +1,6 @@
 module Copilot.Compile.C
   ( compile
   , normalize
-  , Params (..)
-  , defaultParams
   ) where
 
 import Copilot.Compile.C.Normalize
