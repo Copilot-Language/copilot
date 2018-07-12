@@ -35,4 +35,4 @@ veryclean:
 	-rm -rf dist
 
 
-include Examples/Makefile
+include Examples/examples.mk
