@@ -45,7 +45,7 @@ class Typed a => Struct a where
   fromValues  :: Values a -> a
 
 {- Class and instances of elements that are allowed in arrays -}
-class Typed t => ArrayItem t
+class (Show t, Typed t) => ArrayItem t
 instance ArrayItem Bool
 instance ArrayItem Int8
 instance ArrayItem Int16

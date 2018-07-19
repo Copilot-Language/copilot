@@ -63,6 +63,9 @@ instance (KnownNat m, KnownNat n) => Index (Len m, Len n) (Int, Int) where
 data Array i a where
   Array :: Index i n => i -> [(n, a)] -> Array i a
 
+instance Show t => Show (Array i t) where
+  show (Array _ vals) = show $ map snd vals
+
 instance Functor (Array i) where
   fmap f (Array i as) = Array i (map (applysnd f) as) where
     applysnd :: (b -> c) -> (a, b) -> (a, c)

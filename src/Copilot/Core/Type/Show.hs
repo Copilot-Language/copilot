@@ -35,6 +35,7 @@ showWit t =
     Word64 -> ShowWit
     Float  -> ShowWit
     Double -> ShowWit
+    Array t -> ShowWit
 
 --------------------------------------------------------------------------------
 
