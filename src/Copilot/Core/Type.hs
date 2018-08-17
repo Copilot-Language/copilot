@@ -29,6 +29,8 @@ import Data.Word
 import Copilot.Core.Type.Equality
 import Copilot.Core.Type.Array (Array, Index, index)
 
+import Data.Typeable (Typeable)
+
 -- TODO: preferably move Struct to own file
 data Value    = forall a. (Typed a, Show a) => V (Type a) String a
 type Values a = [Value]
@@ -88,9 +90,6 @@ instance EqualType Type where
   (=~=) Word64 Word64 = Just Refl
   (=~=) Float  Float  = Just Refl
   (=~=) Double Double = Just Refl
-  {-(=~=) (Array t1) (Array t2) | Just Refl <- t1 =~= t2 = Just Refl
-                              | otherwise              = Nothing-}
-  (=~=) (Struct _) (Struct _) = typeOf =~= typeOf
   (=~=) _ _ = Nothing
 
 --------------------------------------------------------------------------------
@@ -128,7 +127,7 @@ instance Eq SimpleType where
 
 --------------------------------------------------------------------------------
 
-class Typed a where
+class Typeable a => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
   simpleType _ = SStruct
@@ -168,7 +167,7 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
-instance (Index i n, ArrayItem t) => Typed (Array i t) where
+instance (Typeable i, Index i n, ArrayItem t) => Typed (Array i t) where
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 

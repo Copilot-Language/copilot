@@ -16,7 +16,6 @@ module Copilot.Core.Interpret.Eval
   ) where
 
 import Copilot.Core
-import Copilot.Core.Type.Dynamic
 import Copilot.Core.Type.Show (showWithType, ShowType)
 
 import Prelude hiding (id)
@@ -28,7 +27,9 @@ import Data.Map (Map)
 import Data.Maybe (fromJust)
 import Data.Bits
 import Control.Exception (Exception, throw)
-import Data.Typeable
+
+import Data.Dynamic (Dynamic, fromDynamic, toDyn)
+import Data.Typeable (Typeable)
 
 --------------------------------------------------------------------------------
 
@@ -84,7 +85,7 @@ instance Exception InterpException
 
 --------------------------------------------------------------------------------
 
-type Env nm = [(nm, DynamicF [] Type)]
+type Env nm = [(nm, Dynamic)]
 
 -- -- | External arrays environment.
 -- type ArrEnv = [(Name, [DynamicF [] Type])]
@@ -153,19 +154,19 @@ eval showType k spec =
 
 --------------------------------------------------------------------------------
 
-type LocalEnv = [(Name, Dynamic Type)]
+type LocalEnv = [(Name, Dynamic)]
 
-evalExpr_ :: Int -> Expr a -> LocalEnv -> Env Id -> a
+evalExpr_ :: Typeable a => Int -> Expr a -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 locs strms = case e0 of
   Const _ x                          -> x
   Drop t i id                        ->
-    let Just xs = lookup id strms >>= fromDynF t in
-    reverse xs !! (fromIntegral i + k)
+    let Just buff = lookup id strms >>= fromDynamic in
+    reverse buff !! (fromIntegral i + k)
   Local t1 _ name e1 e2              ->
     let x     = evalExpr_ k e1 locs strms in
-    let locs' = (name, toDyn t1 x) : locs  in
+    let locs' = (name, toDyn x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2  locs' strms
-  Var t name                         -> fromJust $ lookup name locs >>= fromDyn t
+  Var t name                         -> fromJust $ lookup name locs >>= fromDynamic
   ExternVar _ name xs                -> evalExternVar k name xs
   ExternFun _ name _ expr _          -> --evalFunc k t name expr
     case expr of
@@ -288,11 +289,11 @@ evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
 
 --------------------------------------------------------------------------------
 
-initStrm :: Stream -> (Id, DynamicF [] Type)
+initStrm :: Stream -> (Id, Dynamic)
 initStrm Stream { streamId       = id
                 , streamBuffer   = buffer
                 , streamExprType = t } =
-  (id, toDynF t (reverse buffer))
+  (id, toDyn (reverse buffer))
 
 -- XXX actually only need to compute until shortest stream is of length k
 -- XXX this should just be a foldl' over [0,1..k]
@@ -309,10 +310,10 @@ evalStreams top specStrms initStrms =
     evalStream Stream { streamId       = id
                       , streamExpr     = e
                       , streamExprType = t } =
-      let xs = fromJust $ lookup id strms >>= fromDynF t       in
+      let xs = fromJust $ lookup id strms >>= fromDynamic      in
       let x  = evalExpr_ k e [] strms                          in
       let ls = x `seq` (x:xs)                                  in
-      (id, toDynF t ls)
+      (id, toDyn ls)
 
 --------------------------------------------------------------------------------
 
@@ -352,7 +353,7 @@ evalObserver showType k strms
 
 --------------------------------------------------------------------------------
 
-evalExprs_ :: Int -> Expr a -> Env Id -> [a]
+evalExprs_ :: Typeable a => Int -> Expr a -> Env Id -> [a]
 evalExprs_ k e strms =
   map (\i -> evalExpr_ i e [] strms) [0..(k-1)]
 
@@ -365,4 +366,4 @@ safeIndex i ls =
   if length ls' > i then Just (ls' !! i)
     else Nothing
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
