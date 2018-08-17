@@ -21,6 +21,8 @@ import Text.Printf
 
 import GHC.Float (float2Double)
 
+import Data.Typeable (Typeable)
+
 --------------------------------------------------------------------------------
 
 -- 'nc' stands for naming convention.
@@ -116,7 +118,7 @@ streamRec (C.Stream { C.streamId       = id
 
 --------------------------------------------------------------------------------
 
-expr :: C.Expr a -> Trans Expr
+expr :: Typeable a => C.Expr a -> Trans Expr
 
 expr (C.Const t v) = return $ trConst t v
 
@@ -149,7 +151,7 @@ expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Float  -> trSign ta e
   C.Double -> trSign ta e
   _        -> expr $ C.Const ta 1
-  where trSign :: (Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
+  where trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
         trSign ta e =
           expr (C.Op3 (C.Mux ta)
             (C.Op2 (C.Lt ta) e (C.Const ta 0))
