@@ -36,6 +36,7 @@ showWit t =
     Float  -> ShowWit
     Double -> ShowWit
     Array t -> ShowWit
+    Struct t -> ShowWit
 
 --------------------------------------------------------------------------------
 

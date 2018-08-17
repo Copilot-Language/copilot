@@ -73,7 +73,7 @@ data Type :: * -> * where
   Float   :: Type Float
   Double  :: Type Double
   Array   :: (ArrayItem t, Index i n) => Type t -> Type (Array i t)
-  Struct  :: (Typed a, Struct a) => a -> Type a
+  Struct  :: (Show a, Typed a, Struct a) => a -> Type a
 
 tyIndex :: forall i t. Type (Array i t) -> i
 tyIndex (Array _) = (index :: i)
