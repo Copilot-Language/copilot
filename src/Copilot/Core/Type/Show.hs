@@ -54,6 +54,8 @@ showType t =
     Word64 -> "Word64"
     Float  -> "Float"
     Double -> "Double"
+    Array t -> "Array " ++ showType t
+    Struct t -> "Struct"
 
 --------------------------------------------------------------------------------
 
