@@ -8,7 +8,7 @@ module Copilot.Compile.C.CodeGen
   , headerfile
   ) where
 
-import Copilot.Core as CP hiding (index)
+import Copilot.Core as CP hiding (index, ExtFun, toList)
 
 import Copilot.Compile.C.Tmp
 import Copilot.Compile.C.Util
@@ -18,9 +18,9 @@ import Copilot.Compile.C.Meta
 import Copilot.Compile.ACSL.CodeGen
 import Text.PrettyPrint
 
-import Language.C99.AST as C  ( BlockItem     (..)
+import Language.C99 as C  ( BlockItem     (..)
                               , Decln
-                              , FunDef
+                              , ExtDecln
                               , Expr          (..)
                               , Init          (..)
                               , FunDef        (..)
@@ -29,19 +29,20 @@ import Language.C99.AST as C  ( BlockItem     (..)
                               , CompoundStmt  (..)
                               , Stmt          (..)
                               , Ptr           (..)
-                              , JumpStmt  (JSReturn)
+                              , JumpStmt  (JumpReturn)
                               , ExprStmt (..)
-                              , SelectStmt  (SSIf)
+                              , SelectStmt  (SelectIf)
                               , InitDeclr (..)
                               , ExtDecln (..)
-                              , Decln ( Dn )
+                              , Decln ( Decln )
+                              , PrimExpr    (..)
+                              , PostfixExpr (..)
+                              , AddExpr     (..)
+                              , MultExpr    (..)
+                              , UnaryExpr   (..)
                               )
-import Language.C99.Util  ( static
-                          , ident
-                          , bool
-                          , void
-                          , extern
-                          )
+import Language.C99.Util hiding (vardef, var)
+import Language.C99.Sugar.Wrap
 
 import Control.Monad.State ( State
                            , put
@@ -49,6 +50,8 @@ import Control.Monad.State ( State
                            , runState
                            )
 import Data.List (union, unionBy)
+
+import GHC.Exts
 
 
 {- Attribute Grammar like state -}
@@ -78,10 +81,10 @@ cexpr (Local ty1 ty2 n e1 e2) = do
   let cty = ty2type ty1
   e1' <- cexpr e1
   env <- get
-  let decln = BIDecln $ vardef cty [declr n (Just $ IExpr e1')]
-  put $ env { stmts = (stmts env) ++ [decln] }
+  let decln = BlockItemDecln $ vardef cty [declr n (Just $ InitExpr $ wrap e1')]
+  put $ env { stmts = (stmts env) ++ [wrap decln] }
   e2' <- cexpr e2
-  return e2'
+  return $ wrap e2'
 
 cexpr (Var ty n)   = return $ var n
 
@@ -202,14 +205,14 @@ globvars gens = buffs ++ vals ++ idxs where
     in case ty of
       Array _ -> let len' = [len, size $ dim (head buff)] in
         ( vardef (static $ cty)     [arrdeclr buffname len' (Just $ initvals ty buff)]
-        , vardef (static $ cty)     [ptrdeclr val (Just $ IExpr $ index buffname (constint 0))]
-        , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
+        , vardef (static $ cty)     [ptrdeclr val (Just $ InitExpr $ wrap $ index buffname (wrap $ constint 0))]
+        , vardef (static $ size_t)  [declr idx (Just $ InitExpr $ wrap $ constint 0)]
         )
 
       _ ->
         ( vardef (static $ cty)     [arrdeclr buffname [len] (Just $ initvals ty buff)]
         , vardef (static $ cty)     [declr val (Just $ initval ty (head buff))]
-        , vardef (static $ size_t)  [declr idx (Just $ IExpr $ constint 0)]
+        , vardef (static $ size_t)  [declr idx (Just $ InitExpr $ wrap $ constint 0)]
         )
 
 {- Copies of external arrays -}
@@ -226,29 +229,29 @@ extvars exts = concatMap exarray exts where
 streamgen :: AProgram -> Generator -> FunDef
 streamgen ap g@(Generator _ _ _ func (Stream _ _ expr ty)) = fd where
   ss = streams ap
-  fd = FD (static $ cty) dr Nothing body
+  fd = FunDef (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
-    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident func)
-    _       -> Dr Nothing (DDIdent $ ident func)
+    Array _ -> Declr (Just $ PtrBase Nothing) (DirectDeclrIdent $ ident func)
+    _       -> Declr Nothing (DirectDeclrIdent $ ident func)
   body = fungen ss expr
 
 {- Write function for the guard of a trigger -}
 guardgen :: AProgram -> Guard -> FunDef
 guardgen ap g@(Guard guardfunc _ _ (Trigger _ guard _)) = fd where
   ss = streams ap
-  fd = fundef guardfunc (static $ bool) [] body
-  body = fungen ss guard
+  fd = fundef (static $ bool) guardfunc [] (toList body)
+  (Compound (Just body)) = fungen ss guard
 
 {- Write function that generates stream for argument of a trigger -}
 arggen :: AProgram -> Argument -> FunDef
 arggen ap a@(Argument funname (UExpr ty expr)) = fd where
   ss = streams ap
-  fd = FD (static $ cty) dr Nothing body
+  fd = FunDef (static $ cty) dr Nothing body
   cty = ty2type ty
   dr = case ty of
-    Array _ -> Dr (Just $ PBase Nothing) (DDIdent $ ident funname)
-    _       -> Dr Nothing (DDIdent $ ident funname)
+    Array _ -> Declr (Just $ PtrBase Nothing) (DirectDeclrIdent $ ident funname)
+    _       -> Declr Nothing (DirectDeclrIdent $ ident funname)
   body = fungen ss expr
 
 
@@ -261,11 +264,11 @@ fungen ss expr = body where
   (e, env) = runState (cexpr expr) emptyFunState
   drops = combine (ids env) ss
   (bs, vars) = runState (mapM streambuff drops) []
-  body = CS $ concat  [ map BIDecln vars
-                      , concat bs
-                      , stmts env
-                      , [ BIStmt $ SJump $ JSReturn $ Just e ]
-                      ]
+  body = Compound $ Just $ fromList $ concat  [ map BlockItemDecln vars
+                            , concat bs
+                            , stmts env
+                            , [ BlockItemStmt $ StmtJump $ JumpReturn $ Just e ]
+                            ]
 
 {- Code reading current value of a (dropped) stream -}
 streambuff :: (Stream, Word32, String) -> State [Decln] [BlockItem]
@@ -282,15 +285,15 @@ streambuff (Stream i buff _ ty, drop, loc) = do
         Array _ -> [ vardef cty [ptrdeclr loc Nothing] ]
         _       -> [ vardef cty [declr    loc Nothing] ]
 
-      body =  [ BIStmt $ SCompound $ CS $ idxcode ++ [
-                  BIStmt $ assign (EIdent $ ident loc) (EIndex (EIdent $ ident buffname) (var idx))
+      body =  [ BlockItemStmt $ StmtCompound $ Compound $ Just $ fromList $ idxcode ++ [
+                  BlockItemStmt $ assign (wrap $ PrimIdent $ ident loc) (wrap $ PostfixIndex (wrap $ PrimIdent $ ident buffname) (wrap $ var idx))
                 ]
               ]
 
       idxcode = case drop of
-        0 -> [ BIDecln $ vardef size_t [declr idx (Just $ IExpr $ var ptr)] ]
-        _ -> [ BIDecln $ vardef size_t [declr dropped (Just $ IExpr $ EAdd (var ptr) (constint drop))]
-             , BIDecln $ vardef size_t [declr idx (Just $ IExpr $ EMod (var dropped) (constint buffsize))]
+        0 -> [ BlockItemDecln $ vardef size_t [declr idx (Just $ InitExpr $ wrap $ var ptr)] ]
+        _ -> [ BlockItemDecln $ vardef size_t [declr dropped (Just $ InitExpr $ wrap $ AddPlus (wrap $ var ptr) (wrap $ constword drop))]
+             , BlockItemDecln $ vardef size_t [declr idx (Just $ InitExpr $ wrap $ MultMod (wrap $ var dropped) (wrap $ constword buffsize))]
              ]
 
   vars' <- get
@@ -301,14 +304,14 @@ streambuff (Stream i buff _ ty, drop, loc) = do
 
 {- The step function updates the current state -}
 step :: AProgram -> FunDef
-step ap = fundef "step" void [] body where
-  body = CS $ concat  [ copyexts      exts
-                      , triggers      guards
-                      , update        gens
-                      , updatearrays  gens
-                      , updatebuffers gens
-                      , updateindices gens
-                      ] where
+step ap = fundef void "step" [] body where
+  body = concat [ copyexts      exts
+                , triggers      guards
+                , update        gens
+                , updatearrays  gens
+                , updatebuffers gens
+                , updateindices gens
+                ] where
   gens = generators ap
   guards = trigguards ap
   exts = externals ap
@@ -319,25 +322,25 @@ step ap = fundef "step" void [] body where
     copyext :: External -> [BlockItem]
     copyext (External name locname (UType ty)) = case ty of
       Array _ -> let l = size $ tyIndex ty
-                 in [ BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [ var locname
-                                                                    , var name
-                                                                    , ESizeof (var locname)
+                 in [ BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap $ funcall "memcpy" [ wrap $ var locname
+                                                                    , wrap $ var name
+                                                                    , wrap $ UnarySizeExpr (wrap $ var locname)
                                                                     ]
                     ]
-      _       -> [ BIStmt $ assign (EIdent $ ident locname) (EIdent $ ident name) ]
+      _       -> [ BlockItemStmt $ assign (wrap $ PrimIdent $ ident locname) (wrap $ PrimIdent $ ident name) ]
 
   {- Check guards and fire triggers accordingly -}
   triggers :: [Guard] -> [BlockItem]
   triggers gs = map triggercond gs where
-    triggercond (Guard guardname cfunc args _) = BIStmt $ SSelect $ SSIf cond call where
+    triggercond (Guard guardname cfunc args _) = BlockItemStmt $ StmtSelect $ SelectIf (wrap cond) (wrap call) where
       cond = funcall guardname []
-      call = SExpr $ ES $ Just $ funcall cfunc args'
-      args' = map (\a -> funcall (argName a) []) args
+      call = StmtExpr $ ExprStmt $ Just $ wrap $ funcall cfunc args'
+      args' = map (\a -> wrap $ funcall (argName a) []) args
 
   {- Update stream values -}
   update :: [Generator] -> [BlockItem]
   update gens = map update' gens where
-    update' gen = BIStmt $ assign (var (genValName gen)) (funcall (genFuncName gen) [])
+    update' gen = BlockItemStmt $ assign (wrap $ var (genValName gen)) (wrap $ funcall (genFuncName gen) [])
 
   {- Copy current value of array to tmp value -}
   updatearrays :: [Generator] -> [BlockItem]
@@ -345,12 +348,12 @@ step ap = fundef "step" void [] body where
     updatearray :: Generator -> [BlockItem]
     updatearray (Generator buff val idx _ (Stream _ b _ ty)) = case ty of
       Array tya ->
-        [ BIDecln $ vardef (ty2type tya) [
-            IDDeclr $ Dr Nothing (DDArray1 (DDIdent $ ident tmp) Nothing (Just $ constint l))
+        [ BlockItemDecln $ vardef (ty2type tya) [
+            InitDeclr $ Declr Nothing (DirectDeclrArray1 (DirectDeclrIdent $ ident tmp) Nothing (Just $ wrap $ constint $ fromIntegral l))
           ]
-        , BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [var tmp, var val, ESizeof (var tmp)]
+        , BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap $ funcall "memcpy" [wrap $ var tmp, wrap $ var val, wrap $ UnarySizeExpr (wrap $ var tmp)]
         ] where
-          size = ESizeof (index buff (constint 0))
+          size = UnarySizeExpr (wrap $ index buff (wrap $ constint 0))
           tmp = val ++ "_tmp"
           idxbuff = index buff (var idx)
           l = length $ fromIndex $ tyIndex ty
@@ -362,18 +365,18 @@ step ap = fundef "step" void [] body where
     updatebuffer (Generator buff val idx _ (Stream _ b _ ty)) = stmt where
       idxbuff = index buff (var idx)
       tmp = val ++ "_tmp"
-      size = ESizeof (var tmp)
+      size = UnarySizeExpr (wrap $ var tmp)
       stmt = case ty of
-        Array _ -> BIStmt $ SExpr $ ES $ Just $ funcall "memcpy" [idxbuff, var tmp, size]
-        _       -> BIStmt $ assign idxbuff (var val)
+        Array _ -> BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap $ funcall "memcpy" [wrap idxbuff, wrap $ var tmp, wrap $ size]
+        _       -> BlockItemStmt $ assign (wrap idxbuff) (wrap $ var val)
 
   {- Update indices / pointers in the arrays -}
   updateindices :: [Generator] -> [BlockItem]
   updateindices gens = incs ++ mods where
     (incs, mods) = unzip $ map updateindex gens
     updateindex (Generator _ _ idx _ (Stream _ buff _ _)) =
-      ( BIStmt $ SExpr $ ES $ Just (EInc $ var idx)
-      , BIStmt $ assign (var idx) (EMod (var idx) (constint buffsize))
+      ( BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap (UnaryInc $ wrap $ var idx)
+      , BlockItemStmt $ assign (wrap $ var idx) (wrap $ MultMod (wrap $ var idx) (wrap $ constint (fromIntegral buffsize)))
       ) where
         buffsize = length buff
 
@@ -382,14 +385,14 @@ step ap = fundef "step" void [] body where
 headerfile :: AProgram -> ([ExtDecln], [ExtDecln], ExtDecln)
 headerfile ap = ( map vardecln     (externals ap)
                 , map triggerdecln triggers
-                , EDFunDef $ fundef "step" void [] (CS [])
+                , ExtFun $ fundeclr void "step" []
                 ) where
-    vardecln (External name _ (UType ty)) = EDDecln $ vardef ty' [varname] where
+    vardecln (External name _ (UType ty)) = ExtDecln $ vardef ty' [varname] where
       varname = declr name Nothing
       ty' = extern $ ty2type ty
 
-    triggerdecln (Trigger name _ args) = EDFunDef $ fundef name void args' (CS []) where
-      args' = map (\(UExpr ty _) -> Dn (ty2type ty) Nothing) args
+    triggerdecln (Trigger name _ args) = ExtFun $ fundeclr void name args' where
+      args' = map (\(UExpr ty _) -> Decln (ty2type ty) Nothing) args
 
     triggers = map guardTrigger (trigguards ap)
 

@@ -4,12 +4,14 @@ module Copilot.Compile.C.Tmp where
 
 -- All temporary stuff, that needs some final location / implementation
 
-import Copilot.Core hiding (SExpr)
-import Language.C99.AST as C
-import Language.C99.Util
+import Copilot.Core      hiding (Expr)
+import Language.C99 as C hiding (Cast, And, Or, var)
+import Language.C99.Sugar.Wrap
 
 import Data.Maybe (fromJust)
 import Data.List  (find)
+
+import GHC.Exts
 
 -- TODO: find better solution to fix this problem
 deop :: Op1 a b -> (Type a,Type b)
@@ -126,34 +128,34 @@ opname2 op = case op of
   BwShiftR _ _ ->  "RS"
 
 
-var n = EIdent $ ident n
+var :: String -> C.Expr
+var n = wrap $ PrimIdent $ ident n
 
-funcall :: String -> [C.Expr] -> C.Expr
-funcall n es = EFunCall (EIdent $ ident n) (args es) where
-  args [] = Nothing
-  args (x:[]) = Just $ AELBase x
-  args (x:xs) = Just $ foldl (\xs x -> AELCons xs x) (AELBase x) xs
-
-constint x = EConst $ cint (fromIntegral x)
-constword x = EConst $ cuint (fromIntegral x)
-constfloat x = EConst $ cfloat x
-constdouble x = EConst $ cdouble x
-constbool True = EConst $ CEnum (ident "true")
-constbool False = EConst $ CEnum (ident "false")
-
-
-
-size_t = typedefty "size_t"
-
-
-fundef :: String -> DeclnSpecs -> [Decln] -> CompoundStmt -> FunDef
-fundef n ds args body = FD ds dr (args' args) body where
-  dr = Dr Nothing (DDIdent $ ident n)
+funcall :: String -> [AssignExpr] -> PostfixExpr
+funcall name args = PostfixFunction (wrap $ var name) (args' args) where
   args' [] = Nothing
-  args' [x] = Just $ DnLBase x
-  args' (x:xs)  = Just $ foldl (\xs x -> DnLCons xs x) (DnLBase x) xs
+  args' xs = Just $ fromList xs
 
-funarg ty name = Dn ty (Just $ IDLBase $ IDDeclr $ (Dr Nothing (DDIdent $ ident name)))
+constint x = litint x
+constword x = litint (fromIntegral x)
+constfloat x = litfloat x
+constdouble x = litdouble x
+constbool True = PrimConst $ ConstEnum $ Enum (ident "true")
+constbool False = PrimConst $ ConstEnum $ Enum (ident "false")
+
+
+
+size_t = typedef' "size_t"
+
+
+{-fundef :: String -> DeclnSpecs -> [Decln] -> CompoundStmt -> FunDef
+fundef n ds args body = FunDef ds dr (args' args) body where
+  dr = Declr Nothing (DirectDeclrIdent $ ident n)
+  args' [] = Nothing
+  args' [x] = Just $ DeclnBase x
+  args' (x:xs)  = Just $ foldl (\xs x -> DeclnCons xs x) (DeclnBase x) xs-}
+
+funarg ty name = Decln ty (Just $ InitDeclrBase $ InitDeclr $ (Declr Nothing (DirectDeclrIdent $ ident name)))
 
 
 
@@ -165,14 +167,15 @@ findstream id ss = fromJust $ find eq ss where
 
 -- Assign a variable
 -- TODO
-assign var e = SExpr $ ES $ Just $ EAssign AAssign var e
+assign :: String -> C.Expr -> Stmt
+assign var e = StmtExpr $ ExprStmt $ Just $ wrap $ Assign (wrap $ PrimIdent $ ident var) AEq (wrap e)
 
 
 -- TODO
 ddarray :: DirectDeclr -> [C.Expr] -> InitDeclr
-ddarray dd xs = IDInit varn (vals xs) where
-  varn = Dr Nothing (DDArray1 dd Nothing Nothing)
-  vals (x:[]) = IArray (InitLBase Nothing (IExpr x))
-  vals (x:xs) = IArray (foldl val base xs) where
-    base = InitLBase Nothing (IExpr x)
-    val xs x = InitLCons xs Nothing (IExpr x)
+ddarray dd xs = InitDeclrInitr varn (vals (map wrap xs)) where
+  varn = Declr Nothing (DirectDeclrArray1 dd Nothing Nothing)
+  vals (x:[]) = InitArray (InitBase Nothing (InitExpr x))
+  vals (x:xs) = InitArray (foldl val base xs) where
+    base = InitBase Nothing (InitExpr x)
+    val xs x = InitCons xs Nothing (InitExpr x)

@@ -4,91 +4,92 @@
 
 module Copilot.Compile.C.Translation where
 
-import Copilot.Compile.C.Tmp
+import Copilot.Compile.C.Tmp hiding (var)
 
 import Copilot.Core as CP
-import Language.C99.AST as C hiding (Struct)
-import Language.C99.Util
+import Language.C99 as C hiding (Struct, var)
+import Language.C99.Sugar.Wrap
+import Language.C99.Sugar.Expr hiding (Expr, funcall)
 
 ty2type :: Type a -> DeclnSpecs
 ty2type ty = case ty of
-  Int8      -> typedefty "int8_t"
-  Int16     -> typedefty "int16_t"
-  Int32     -> typedefty "int32_t"
-  Int64     -> typedefty "int64_t"
-  Word8     -> typedefty "uint8_t"
-  Word16    -> typedefty "uint16_t"
-  Word32    -> typedefty "uint32_t"
-  Word64    -> typedefty "uint64_t"
+  Int8      -> typedef' "int8_t"
+  Int16     -> typedef' "int16_t"
+  Int32     -> typedef' "int32_t"
+  Int64     -> typedef' "int64_t"
+  Word8     -> typedef' "uint8_t"
+  Word16    -> typedef' "uint16_t"
+  Word32    -> typedef' "uint32_t"
+  Word64    -> typedef' "uint64_t"
   Float     -> float
   Double    -> double
-  Bool      -> typedefty "bool"
+  Bool      -> typedef' "bool"
   Array tya -> ty2type tya
   Struct s  -> case typename s of
-    TyTypedef n -> typedefty n
+    TyTypedef n -> typedef' n
     TyStruct n  -> struct n
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of
-  Not     -> EUn UNot e
-  Abs _   -> funcall "abs" [e]
-  Sign _  -> funcall "sign" [e] -- TODO implement function
-  Recip _ -> EDiv (constint 1) (var "e")
-  Exp _   -> funcall "exp" [e]
-  Sqrt _  -> funcall "sqrt" [e]
-  Log _   -> funcall "log" [e]
-  Sin _   -> funcall "sin" [e]
-  Cos _   -> funcall "cos" [e]
-  Asin _  -> funcall "asin" [e]
-  Atan _  -> funcall "atan" [e]
-  Acos _  -> funcall "acos" [e]
-  Sinh _  -> funcall "sinh" [e]
-  Tanh _  -> funcall "tanh" [e]
-  Cosh _  -> funcall "cosh" [e]
-  Asinh _ -> funcall "asinh" [e]
-  Atanh _ -> funcall "atanh" [e]
-  Acosh _ -> funcall "acosh" [e]
-  BwNot _ -> EUn UBNot e
-  Cast ty _ -> undefined -- TODO
+  Not     -> wrap $ UnaryOp UONot (wrap e)
+  Abs _   -> wrap $ funcall "abs" [wrap e]
+  Sign _  -> wrap $ funcall "sign" [wrap e] -- TODO implement function
+  Recip _ -> wrap $ MultDiv (wrap $ constint 1) (wrap $ eval $ var "e")
+  Exp _   -> wrap $ funcall "exp" [wrap e]
+  Sqrt _  -> wrap $ funcall "sqrt" [wrap e]
+  Log _   -> wrap $ funcall "log" [wrap e]
+  Sin _   -> wrap $ funcall "sin" [wrap e]
+  Cos _   -> wrap $ funcall "cos" [wrap e]
+  Asin _  -> wrap $ funcall "asin" [wrap e]
+  Atan _  -> wrap $ funcall "atan" [wrap e]
+  Acos _  -> wrap $ funcall "acos" [wrap e]
+  Sinh _  -> wrap $ funcall "sinh" [wrap e]
+  Tanh _  -> wrap $ funcall "tanh" [wrap e]
+  Cosh _  -> wrap $ funcall "cosh" [wrap e]
+  Asinh _ -> wrap $ funcall "asinh" [wrap e]
+  Atanh _ -> wrap $ funcall "atanh" [wrap e]
+  Acosh _ -> wrap $ funcall "acosh" [wrap e]
+  BwNot _ -> wrap $ UnaryOp UOBNot (wrap e)
+  CP.Cast ty _ -> undefined -- TODO
 
 op2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
-op2 op = case op of
-  And     -> ELAnd
-  Or      -> ELOr
-  Add _  -> EAdd
-  Sub _  -> ESub
-  Mul _  -> EMult
-  Mod _  -> EMod
-  Div _  -> EDiv
-  Fdiv _ -> EDiv
-  Pow _  -> \b n -> funcall "pow" [b, n]
-  Logb _ -> undefined -- TODO
-  Eq _   -> EEq
-  Ne _   -> ENEq
-  Le _   -> ELE
-  Ge  _  -> EGE
-  Lt   _ -> ELT
-  Gt _   -> EGT
-  BwAnd _   -> EAnd
-  BwOr _    -> EOr
-  BwXor _   -> EXor
-  BwShiftL _ _ -> EShiftL
-  BwShiftR _ _ -> EShiftR
+op2 op e1 e2 = case op of
+  CP.And        -> wrap $ C.LAnd      (wrap e1) (wrap e2)
+  CP.Or         -> wrap $ C.LOr       (wrap e1) (wrap e2)
+  Add _         -> wrap $ AddPlus     (wrap e1) (wrap e2)
+  Sub _         -> wrap $ AddMin      (wrap e1) (wrap e2)
+  Mul _         -> wrap $ MultMult    (wrap e1) (wrap e2)
+  Mod _         -> wrap $ MultMod     (wrap e1) (wrap e2)
+  Div _         -> wrap $ MultDiv     (wrap e1) (wrap e2)
+  Fdiv _        -> wrap $ MultDiv     (wrap e1) (wrap e2)
+  Pow _         -> wrap $ (\b n -> funcall "pow" [b, n]) (wrap e1) (wrap e2)
+  Logb _        -> undefined -- TODO
+  Eq _          -> wrap $ EqEq        (wrap e1) (wrap e2)
+  Ne _          -> wrap $ EqNEq       (wrap e1) (wrap e2)
+  Le _          -> wrap $ RelLE       (wrap e1) (wrap e2)
+  Ge  _         -> wrap $ RelGE       (wrap e1) (wrap e2)
+  Lt   _        -> wrap $ RelLT       (wrap e1) (wrap e2)
+  Gt _          -> wrap $ RelGT       (wrap e1) (wrap e2)
+  BwAnd _       -> wrap $ C.And       (wrap e1) (wrap e2)
+  BwOr _        -> wrap $ C.Or        (wrap e1) (wrap e2)
+  BwXor _       -> wrap $ C.XOr       (wrap e1) (wrap e2)
+  BwShiftL _ _  -> wrap $ ShiftLeft   (wrap e1) (wrap e2)
+  BwShiftR _ _  -> wrap $ ShiftRight  (wrap e1) (wrap e2)
 
 op3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
-op3 op = case op of
-  Mux _   -> ECond
+op3 op e1 e2 e3 = case op of
+  Mux _   -> wrap $ Cond (wrap e1) (wrap e2) (wrap e3)
 
 {- C code for a given constant and type -}
 constty :: Type a -> a -> C.Expr
-constty Int8    = constint
-constty Int16   = constint
-constty Int32   = constint
-constty Int64   = constint
-constty Word8   = constword
-constty Word16  = constword
-constty Word32  = constword
-constty Word64  = constword
-constty Bool    = constbool
-constty Float   = constfloat
-constty Double  = constdouble
+constty Int8    = wrap.constint.fromIntegral
+constty Int16   = wrap.constint.fromIntegral
+constty Int32   = wrap.constint.fromIntegral
+constty Int64   = wrap.constint.fromIntegral
+constty Word8   = wrap.constword.fromIntegral
+constty Word16  = wrap.constword.fromIntegral
+constty Word32  = wrap.constword.fromIntegral
+constty Word64  = wrap.constword.fromIntegral
+constty Bool    = wrap.constbool
+constty Float   = wrap.constfloat
+constty Double  = wrap.constdouble
