@@ -56,10 +56,10 @@ library
                  , Copilot.Language.Operators.Temporal
                  , Copilot.Language.Prelude
                  , Copilot.Language.Reify
-  other-modules:   Copilot.Language.Analyze
-                 , Copilot.Language.Interpret
                  , Copilot.Language.Stream
                  , Copilot.Language.Spec
+  other-modules:   Copilot.Language.Analyze
+                 , Copilot.Language.Interpret
                  , System.Mem.StableName.Dynamic
                  , System.Mem.StableName.Map
                  , Copilot.Language.Error
