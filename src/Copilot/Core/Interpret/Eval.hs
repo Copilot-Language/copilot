@@ -262,7 +262,7 @@ evalOp2 op = case op of
   Sub _        -> (-)
   Mul _        -> (*)
   Mod _        -> (catchZero P.mod)
-  Div _        -> (catchZero P.div)
+  Div _        -> (catchZero P.quot)
   Fdiv _       -> (P./)
   Pow _        -> (P.**)
   Logb _       -> P.logBase
