@@ -6,7 +6,7 @@ module Copilot.Compile.C.Tmp where
 
 import Copilot.Core      hiding (Expr)
 import Language.C99 as C hiding (Cast, And, Or, var)
-import Language.C99.Sugar.Wrap
+import Language.C99.Util hiding (var)
 
 import Data.Maybe (fromJust)
 import Data.List  (find)

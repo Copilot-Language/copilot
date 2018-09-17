@@ -41,8 +41,7 @@ import Language.C99 as C  ( BlockItem     (..)
                               , MultExpr    (..)
                               , UnaryExpr   (..)
                               )
-import Language.C99.Util hiding (vardef, var)
-import Language.C99.Sugar.Wrap
+import Language.C99.Util hiding (vardef, var, funcall, Var)
 
 import Control.Monad.State ( State
                            , put

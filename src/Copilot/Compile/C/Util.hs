@@ -8,7 +8,7 @@ import Copilot.Compile.C.Translation
 import Copilot.Core
 
 import Language.C99 as C hiding (Struct)
-import Language.C99.Sugar.Wrap
+import Language.C99.Util
 
 {- TODO: move these functions -}
 ptrdeclr :: String -> Maybe Init -> InitDeclr

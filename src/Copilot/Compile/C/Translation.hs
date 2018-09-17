@@ -8,8 +8,7 @@ import Copilot.Compile.C.Tmp hiding (var)
 
 import Copilot.Core as CP
 import Language.C99 as C hiding (Struct, var)
-import Language.C99.Sugar.Wrap
-import Language.C99.Sugar.Expr hiding (Expr, funcall)
+import Language.C99.Util       hiding (Expr, funcall)
 
 ty2type :: Type a -> DeclnSpecs
 ty2type ty = case ty of
