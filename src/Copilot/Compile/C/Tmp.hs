@@ -167,8 +167,8 @@ findstream id ss = fromJust $ find eq ss where
 
 -- Assign a variable
 -- TODO
-assign :: String -> C.Expr -> Stmt
-assign var e = StmtExpr $ ExprStmt $ Just $ wrap $ Assign (wrap $ PrimIdent $ ident var) AEq (wrap e)
+assign :: C.Expr -> C.Expr -> Stmt
+assign var e = StmtExpr $ ExprStmt $ Just $ wrap $ Assign (wrap var) AEq (wrap e)
 
 
 -- TODO

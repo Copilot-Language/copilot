@@ -82,7 +82,7 @@ cexpr (Local ty1 ty2 n e1 e2) = do
   e1' <- cexpr e1
   env <- get
   let decln = BlockItemDecln $ vardef cty [declr n (Just $ InitExpr $ wrap e1')]
-  put $ env { stmts = (stmts env) ++ [wrap decln] }
+  put $ env { stmts = (stmts env) ++ [decln] }
   e2' <- cexpr e2
   return $ wrap e2'
 
@@ -332,7 +332,7 @@ step ap = fundef void "step" [] body where
   {- Check guards and fire triggers accordingly -}
   triggers :: [Guard] -> [BlockItem]
   triggers gs = map triggercond gs where
-    triggercond (Guard guardname cfunc args _) = BlockItemStmt $ StmtSelect $ SelectIf (wrap cond) (wrap call) where
+    triggercond (Guard guardname cfunc args _) = BlockItemStmt $ StmtSelect $ SelectIf (wrap cond) call where
       cond = funcall guardname []
       call = StmtExpr $ ExprStmt $ Just $ wrap $ funcall cfunc args'
       args' = map (\a -> wrap $ funcall (argName a) []) args
@@ -340,7 +340,7 @@ step ap = fundef void "step" [] body where
   {- Update stream values -}
   update :: [Generator] -> [BlockItem]
   update gens = map update' gens where
-    update' gen = BlockItemStmt $ assign (wrap $ var (genValName gen)) (wrap $ funcall (genFuncName gen) [])
+    update' gen = BlockItemStmt $ assign (wrap $ PrimIdent $ ident $ genValName gen) (wrap $ funcall (genFuncName gen) [])
 
   {- Copy current value of array to tmp value -}
   updatearrays :: [Generator] -> [BlockItem]
@@ -368,7 +368,7 @@ step ap = fundef void "step" [] body where
       size = UnarySizeExpr (wrap $ var tmp)
       stmt = case ty of
         Array _ -> BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap $ funcall "memcpy" [wrap idxbuff, wrap $ var tmp, wrap $ size]
-        _       -> BlockItemStmt $ assign (wrap idxbuff) (wrap $ var val)
+        _       -> BlockItemStmt $ assign idxbuff (wrap $ var val)
 
   {- Update indices / pointers in the arrays -}
   updateindices :: [Generator] -> [BlockItem]
@@ -376,7 +376,7 @@ step ap = fundef void "step" [] body where
     (incs, mods) = unzip $ map updateindex gens
     updateindex (Generator _ _ idx _ (Stream _ buff _ _)) =
       ( BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap (UnaryInc $ wrap $ var idx)
-      , BlockItemStmt $ assign (wrap $ var idx) (wrap $ MultMod (wrap $ var idx) (wrap $ constint (fromIntegral buffsize)))
+      , BlockItemStmt $ assign (wrap $ PrimIdent $ ident idx) (wrap $ MultMod (wrap $ var idx) (wrap $ constint (fromIntegral buffsize)))
       ) where
         buffsize = length buff
 
