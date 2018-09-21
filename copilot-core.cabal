@@ -41,11 +41,11 @@ library
     -caf-all
     -fno-warn-orphans
 
-    -fpackage-trust
-    -trust=array
-    -trust=base
-    -trust=containers
-    -trust=random
+    -- -fpackage-trust
+    -- -trust=array
+    -- -trust=base
+    -- -trust=containers
+    -- -- -trust=random
 
   build-depends:
     containers >= 0.4,
