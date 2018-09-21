@@ -69,10 +69,10 @@ library
     -caf-all
     -Wall
 
-    -fpackage-trust
-    -trust=array
-    -trust=base
-    -trust=containers
-    -trust=copilot-core
+    -- -fpackage-trust
+    -- -trust=array
+    -- -trust=base
+    -- -trust=containers
+    -- -- -trust=copilot-core
 
 
