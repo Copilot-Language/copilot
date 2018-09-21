@@ -27,19 +27,19 @@ library
                             -fno-warn-missing-signatures
                             -fcontext-stack=100
 
-                            -fpackage-trust
-                            -trust=array
-                            -trust=base
-                            -trust=containers
-                            -trust=copilot-core
-                            -trust=directory
-                            -trust=exceptions
-                            -trust=process
-                            -trust=random
-                            -trust=unix
-                            -trust=parsec
-                            -trust=bytestring
-                            -trust=text
+                            -- -fpackage-trust
+                            -- -trust=array
+                            -- -trust=base
+                            -- -trust=containers
+                            -- -- -trust=copilot-core
+                            -- -trust=directory
+                            -- -- -trust=exceptions
+                            -- -trust=process
+                            -- -- -trust=random
+                            -- -trust=unix
+                            -- -- -trust=parsec
+                            -- -trust=bytestring
+                            -- -- -trust=text
 
   build-depends           : base >= 4.0 && < 5
                           , copilot-core == 3.0
