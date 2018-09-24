@@ -49,6 +49,8 @@ ccode s hfile = render $ foldr ($+$) empty code where
           [ text "" ]
           ++
           seperate funs
+          ++
+          [ text "" ]
   acsl = acslgen $ gather s
   funs :: [Doc]
   funs = map (\(f,d) -> d $+$ pretty f) (zip (funcs defs) acsl)
@@ -70,7 +72,8 @@ hcode s = render $ foldr ($+$) empty code where
           map pretty triggers
           ++
           [ text "" ] ++
-          [ pretty step ]
+          [ pretty step ] ++
+          [ text "" ]
 
 
 {- Compile function, writes both .c as well as *.h file -}
