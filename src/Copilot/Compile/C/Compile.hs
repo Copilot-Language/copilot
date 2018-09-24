@@ -38,6 +38,7 @@ ccode s hfile = render $ foldr ($+$) empty code where
   defs = reify $ gather $ normalize s
   code =  [ text "#include <stdio.h>"
           , text "#include <string.h>"
+          , text "#include <math.h>"
           , text ""
           , text "#include " <> doubleQuotes (text hfile)
           , text ""
