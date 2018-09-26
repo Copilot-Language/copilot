@@ -18,6 +18,8 @@ import Data.List  ( find )
 import Data.Maybe ( fromJust )
 import Text.PrettyPrint
 
+import Prelude hiding ((<>))
+
 {- Translate Core.Expr to ACSL -}
 exprACSL :: AProgram -> Expr a -> Doc
 exprACSL ap expr = let  gens = generators ap

@@ -16,6 +16,8 @@ import Data.List
 import Data.Maybe (fromJust)
 import Text.PrettyPrint
 
+import Prelude hiding ((<>))
+
 stepACSL :: AProgram -> Doc
 stepACSL ap = text "/*@" $$ nest 4 (vcat spec) $$ text "*/" where
   spec = requires ++ assigns ++ ensures
