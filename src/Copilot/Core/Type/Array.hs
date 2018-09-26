@@ -4,88 +4,63 @@
 
 {-# LANGUAGE Safe #-}
 
--- | A purposely limited array implementation. Unlike Data.Array, it only
--- supports integer indixed arrays, starting at zero.
+-- | Implementation of an array that uses type literals to store length. No
+-- explicit indexing is used for the input data. Supports arbitrary nesting of
+-- arrays.
 
-{-# LANGUAGE  GADTs
-            , FlexibleInstances
-            , PolyKinds
-            , ScopedTypeVariables
-            , MultiParamTypeClasses
-            , FunctionalDependencies
-            , InstanceSigs
-#-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Copilot.Core.Type.Array
   ( Array
   , array
-  , toList
-  , fmap
-  , foldr
-  , dim
-  , Len
-  , Index (..)
-  , (.!)
+  , flatten
+  , size
+  , Flatten
+  , InnerType
   ) where
 
-import GHC.TypeLits
-import Data.Foldable (toList)
+import GHC.TypeLits     (Nat, KnownNat, natVal)
+import Data.Proxy       (Proxy (..))
 
-{- Take proxy and turn it into an Int -}
-fromNat :: KnownNat n => proxy n -> Int
-fromNat p = fromInteger $ natVal p
+data Array (n :: Nat) t where
+  Array :: [t] -> Array n t
 
-{- Array range up to the proxy -}
-idxRange :: KnownNat n => proxy n -> [Int]
-idxRange p = [0.. (fromNat p) - 1]
+instance Show t => Show (Array n t) where
+  show (Array xs) = show xs
 
-
-{- Analogous to Proxy, but with a nicer name to hide details -}
-data Len a = Len
-
-class Index i n | i -> n where
-  index     :: i
-  fromIndex :: i -> [n]
-  size      :: i -> Int
-  size i = length $ fromIndex i
-
-instance KnownNat n => Index (Len n) Int where
-  index     = Len
-  fromIndex = idxRange
-
-instance (KnownNat m, KnownNat n) => Index (Len m, Len n) (Int, Int) where
-  index = (Len, Len)
-  fromIndex (m, n) = [ (m', n') | m' <- idxRange m
-                                , n' <- idxRange n ]
+array :: forall n t. KnownNat n => [t] -> Array n t
+array xs | datalen == typelen = Array xs
+         | otherwise          = error errmsg where
+  datalen = length xs
+  typelen = fromIntegral $ natVal (Proxy :: Proxy n)
+  errmsg = "Length of data (" ++ show datalen ++
+           ") does not match length of type (" ++ show typelen ++ ")."
 
 
-{- Actual Array data type -}
-data Array i a where
-  Array :: Index i n => i -> [(n, a)] -> Array i a
-
-instance Show t => Show (Array i t) where
-  show (Array _ vals) = show $ map snd vals
-
-instance Functor (Array i) where
-  fmap f (Array i as) = Array i (map (applysnd f) as) where
-    applysnd :: (b -> c) -> (a, b) -> (a, c)
-    applysnd f (a, b) = (a, f b)
-
-instance Foldable (Array i) where
-  foldr f b (Array _ as) = foldr (f.snd) b as
-  toList (Array _ as) = map snd as
+type family InnerType x where
+  InnerType (Array _ x) = InnerType x
+  InnerType x           = x
 
 
-{- Smart constructor for an array, checks validaty of data as well -}
-array :: forall n i a. Index i n => [(n, a)] -> Array i a
-array xs | length xs == l = Array idx xs
-         | otherwise = error $ "Length of data does not match type of array." where
-  idx = index
-  l = size idx
+class Flatten a b where
+  flatten :: Array n a -> [b]
 
-{- Takes the index element from an array -}
-dim :: Array i a -> i
-dim (Array i _) = i
+instance Flatten a a where
+  flatten (Array xs) = xs
 
-(.!) :: Array i a -> Int -> a
-(Array _ xs) .! n = snd $ xs !! n
+instance Flatten a b => Flatten (Array n a) b where
+  flatten (Array xss) = concat $ map flatten xss
+
+instance Foldable (Array n) where
+  foldr f base (Array xs) = foldr f base xs
+
+
+size :: forall a n b. (Flatten a b, b ~ InnerType a) => Array n a -> Int
+size xs = length $ (flatten xs :: [b])

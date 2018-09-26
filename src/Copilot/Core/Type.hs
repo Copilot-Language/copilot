@@ -10,6 +10,7 @@
             , KindSignatures
             , ScopedTypeVariables
             , UndecidableInstances
+            , FlexibleContexts
 #-}
 
 module Copilot.Core.Type
@@ -19,17 +20,19 @@ module Copilot.Core.Type
   , SimpleType (..)
   , Struct (..)
   , Value (..)
-  , ArrayItem
   , Typename (..)
-  , tyIndex
+  , tysize
   ) where
 
 import Data.Int
 import Data.Word
 import Copilot.Core.Type.Equality
-import Copilot.Core.Type.Array (Array, Index, index)
+import Copilot.Core.Type.Array
 
 import Data.Typeable (Typeable)
+
+import GHC.TypeLits (KnownNat, natVal)
+import Data.Proxy   (Proxy (..))
 
 -- TODO: preferably move Struct to own file
 data Value    = forall a. (Typed a, Show a) => V (Type a) String a
@@ -46,20 +49,6 @@ class Typed a => Struct a where
   toValues    :: a -> Values a
   fromValues  :: Values a -> a
 
-{- Class and instances of elements that are allowed in arrays -}
-class (Show t, Typed t) => ArrayItem t
-instance ArrayItem Bool
-instance ArrayItem Int8
-instance ArrayItem Int16
-instance ArrayItem Int32
-instance ArrayItem Int64
-instance ArrayItem Word8
-instance ArrayItem Word16
-instance ArrayItem Word32
-instance ArrayItem Word64
-instance ArrayItem Float
-instance ArrayItem Double
-
 data Type :: * -> * where
   Bool    :: Type Bool
   Int8    :: Type Int8
@@ -72,11 +61,15 @@ data Type :: * -> * where
   Word64  :: Type Word64
   Float   :: Type Float
   Double  :: Type Double
-  Array   :: (ArrayItem t, Index i n) => Type t -> Type (Array i t)
+  Array   :: forall n t. ( KnownNat n
+                         , Typed t
+                         , Typed (InnerType t)
+                         , Flatten t (InnerType t)
+                         ) => Type t -> Type (Array n t)
   Struct  :: (Show a, Typed a, Struct a) => a -> Type a
 
-tyIndex :: forall i t. Type (Array i t) -> i
-tyIndex (Array _) = (index :: i)
+tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
+tysize _ = fromIntegral $ natVal (Proxy :: Proxy n)
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -127,7 +120,7 @@ instance Eq SimpleType where
 
 --------------------------------------------------------------------------------
 
-class Typeable a => Typed a where
+class (Show a, Typeable a) => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
   simpleType _ = SStruct
@@ -167,7 +160,7 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
-instance (Typeable i, Index i n, ArrayItem t) => Typed (Array i t) where
+instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (InnerType t)) => Typed (Array n t) where
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 
