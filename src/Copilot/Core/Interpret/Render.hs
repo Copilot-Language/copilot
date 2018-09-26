@@ -15,8 +15,11 @@ import Data.List (intersperse, transpose, foldl')
 import Data.Maybe (catMaybes)
 import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import qualified Data.Map as M
-import Text.PrettyPrint.NCol (asColumns)
+-- TODO: pretty-ncols is not updated yet to support >=base-4.11
+-- import Text.PrettyPrint.NCol (asColumns)
 import Text.PrettyPrint (Doc, ($$), (<>), text, render, empty)
+
+import Prelude hiding ((<>))
 
 --------------------------------------------------------------------------------
 
@@ -24,31 +27,31 @@ renderAsTable :: ExecTrace -> String
 renderAsTable
   ExecTrace
     { interpTriggers  = trigs
-    , interpObservers = obsvs } =
-  ( render
-  . asColumns
-  . transpose
-  . (:) (ppTriggerNames ++ ppObserverNames)
-  . transpose
-  ) (ppTriggerOutputs ++ ppObserverOutputs)
+    , interpObservers = obsvs } = "Rendering as table is not support, because pretty-ncols is not updated (yet) to newer base versions."
+  -- ( render
+  -- . asColumns
+  -- . transpose
+  -- . (:) (ppTriggerNames ++ ppObserverNames)
+  -- . transpose
+  -- ) (ppTriggerOutputs ++ ppObserverOutputs)
 
-  where
+  -- where
 
-  ppTriggerNames :: [Doc]
-  ppTriggerNames  = map (text . (++ ":")) (M.keys trigs)
+  -- ppTriggerNames :: [Doc]
+  -- ppTriggerNames  = map (text . (++ ":")) (M.keys trigs)
 
-  ppObserverNames :: [Doc]
-  ppObserverNames = map (text . (++ ":")) (M.keys obsvs)
+  -- ppObserverNames :: [Doc]
+  -- ppObserverNames = map (text . (++ ":")) (M.keys obsvs)
 
-  ppTriggerOutputs :: [[Doc]]
-  ppTriggerOutputs = map (map ppTriggerOutput) (M.elems trigs)
+  -- ppTriggerOutputs :: [[Doc]]
+  -- ppTriggerOutputs = map (map ppTriggerOutput) (M.elems trigs)
 
-  ppTriggerOutput :: Maybe [Output] -> Doc
-  ppTriggerOutput (Just vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
-  ppTriggerOutput Nothing   = text "--"
+  -- ppTriggerOutput :: Maybe [Output] -> Doc
+  -- ppTriggerOutput (Just vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
+  -- ppTriggerOutput Nothing   = text "--"
 
-  ppObserverOutputs :: [[Doc]]
-  ppObserverOutputs = map (map text) (M.elems obsvs)
+  -- ppObserverOutputs :: [[Doc]]
+  -- ppObserverOutputs = map (map text) (M.elems obsvs)
 
 --------------------------------------------------------------------------------
 

@@ -52,7 +52,6 @@ library
     base >= 4.0 && < 5,
     pretty >= 1.0,
     random > 1.0,
-    pretty-ncols >= 0.1,
     mtl >= 2.0,
     dlist
 

@@ -17,7 +17,7 @@ module Copilot.Compile.Header.C99
 import Copilot.Core
 import Data.List (intersperse, nubBy)
 import Text.PrettyPrint.HughesPJ
-import Prelude hiding (unlines)
+import Prelude hiding (unlines, (<>))
 
 --------------------------------------------------------------------------------
 
