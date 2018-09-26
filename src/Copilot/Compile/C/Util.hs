@@ -1,4 +1,7 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+{-# LANGUAGE FlexibleContexts #-}
 
 module Copilot.Compile.C.Util where
 
@@ -64,8 +67,16 @@ structdata xs = map f (toValues xs) where
     otherwise -> InitExpr $ wrap $ constty ty v
 
 {- Create init data for array -}
-arraydata :: Typed a => Array i a -> [Init]
-arraydata xs = map f (toList xs) where
+arraydata :: forall a n b. (
+    Flatten a b
+  , b ~ InnerType a
+  , Typed a
+  , Typed b
+  ) => Array n a -> [Init]
+arraydata xs = map f (flat xs) where
+  flat :: Array n a -> [b]
+  flat = flatten
+  f :: Typed b => b -> Init
   f x = InitExpr $ wrap $ constty typeOf x
 
 {- Create InitList from list of Inits -}
