@@ -221,7 +221,7 @@ extvars exts = concatMap exarray exts where
   exarray :: External -> [Decln]
   exarray (External name locname (UType ty)) = let cty = ty2type ty in
     case ty of
-      Array _ -> let len = tysize ty
+      Array _ -> let len = tylength ty
                  in [ vardef (static $ cty) [arrdeclr locname [len] Nothing] ]
       _       -> [ vardef (static $ cty) [declr locname Nothing] ]
 
@@ -321,7 +321,7 @@ step ap = fundef void "step" [] body where
   copyexts exts = concatMap copyext exts where
     copyext :: External -> [BlockItem]
     copyext (External name locname (UType ty)) = case ty of
-      Array _ -> let l = tysize ty
+      Array _ -> let l = tylength ty
                  in [ BlockItemStmt $ StmtExpr $ ExprStmt $ Just $ wrap $ funcall "memcpy" [ wrap $ var locname
                                                                     , wrap $ var name
                                                                     , wrap $ UnarySizeExpr (wrap $ var locname)
@@ -356,7 +356,7 @@ step ap = fundef void "step" [] body where
           size = UnarySizeExpr (wrap $ index buff (wrap $ constint 0))
           tmp = val ++ "_tmp"
           idxbuff = index buff (var idx)
-          l = tysize ty
+          l = tylength ty
       _ -> []
 
   {- Update buffers -}
