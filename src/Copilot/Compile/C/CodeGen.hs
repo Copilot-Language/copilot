@@ -6,6 +6,7 @@ module Copilot.Compile.C.CodeGen
   , funcs
   , reify
   , headerfile
+  , mkfunargs
   ) where
 
 import Copilot.Core as CP hiding (index, ExtFun, toList)
@@ -391,13 +392,17 @@ headerfile ap = ( map vardecln     (externals ap)
       ty' = extern $ ty2type ty
 
     triggerdecln (Trigger name _ args) = ExtFun $ fundeclr void name args' where
-      args' = map mkarg (zip args argnames)
-      argnames = map (\x -> "arg" ++ show x) [0..]
-      mkarg :: (UExpr, String) -> Decln
-      mkarg (UExpr ty _, name) = vardef (ty2type ty) d where
-        d = case ty of
-          Array _ -> [ptrdeclr name Nothing]
-          _       -> [declr    name Nothing]
+      args' = mkfunargs (zip args argnames)
+      argnames = map (\n -> "arg" ++ (show n)) [0..]
 
     triggers = map guardTrigger (trigguards ap)
 
+
+{- Create a list of typed and named function arguments -}
+mkfunargs :: [(UExpr, String)] -> [Decln]
+mkfunargs args = map mkarg args where
+  mkarg :: (UExpr, String) -> Decln
+  mkarg (UExpr ty _, name) = vardef (ty2type ty) d where
+    d = case ty of
+      Array _ -> [ptrdeclr name Nothing]
+      _       -> [declr    name Nothing]
