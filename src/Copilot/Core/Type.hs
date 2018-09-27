@@ -22,6 +22,7 @@ module Copilot.Core.Type
   , Value (..)
   , Typename (..)
   , tysize
+  , tylength
   ) where
 
 import Data.Int
@@ -68,8 +69,14 @@ data Type :: * -> * where
                          ) => Type t -> Type (Array n t)
   Struct  :: (Show a, Typed a, Struct a) => a -> Type a
 
+-- Get the length of an array from its type
+tylength :: forall n t. KnownNat n => Type (Array n t) -> Int
+tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
+
+-- Get the total (nested) size of an array from its type
 tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
-tysize _ = fromIntegral $ natVal (Proxy :: Proxy n)
+tysize ty@(Array ty'@(Array _)) = tylength ty * tylength ty'
+tysize ty@(Array _            ) = tylength ty
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
