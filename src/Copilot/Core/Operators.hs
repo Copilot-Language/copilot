@@ -11,8 +11,10 @@ module Copilot.Core.Operators
   , Op3 (..)
   ) where
 
-import Copilot.Core.Type (Type)
+import Copilot.Core.Type        (Type(..))
+import Copilot.Core.Type.Array  (Array)
 import Data.Bits
+import Data.Word                (Word32)
 
 --------------------------------------------------------------------------------
 
@@ -77,6 +79,8 @@ data Op2 a b c where
   BwXor    :: Bits a => Type a -> Op2 a a a
   BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
   BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
+  -- Array operator.
+  Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
 
 -- | Ternary operators.
 data Op3 a b c d where
