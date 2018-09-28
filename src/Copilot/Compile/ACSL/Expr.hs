@@ -124,6 +124,7 @@ op2ACSL op = case op of
   BwXor     _   -> infixop "^"
   BwShiftL  _ _ -> infixop "<<"
   BwShiftR  _ _ -> infixop ">>"
+  Index     _   -> \arr idx -> arr <> brackets idx
 
 op3ACSL :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 op3ACSL op e1 e2 e3 = case op of

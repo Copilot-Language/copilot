@@ -72,6 +72,8 @@ deop2 op = let tri x = (x,x,x) in case op of
   BwShiftL ty1 ty2  -> (ty1, ty2, ty1)
   BwShiftR ty1 ty2  -> (ty1, ty2, ty1)
 
+  Index ty1@(Array ty2) -> (ty1, Word32, ty2)
+
 deop3 :: Op3 a b c d -> (Type a, Type b, Type c, Type d)
 deop3 (Mux ty) = (Bool, ty, ty, ty)
 
@@ -126,6 +128,7 @@ opname2 op = case op of
   BwXor    _   ->  "BXOR"
   BwShiftL _ _ ->  "LS"
   BwShiftR _ _ ->  "RS"
+  Index    _   ->  "idx"
 
 
 var :: String -> C.Expr

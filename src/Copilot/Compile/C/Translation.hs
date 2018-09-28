@@ -75,6 +75,8 @@ op2 op e1 e2 = case op of
   BwShiftL _ _  -> wrap $ ShiftLeft   (wrap e1) (wrap e2)
   BwShiftR _ _  -> wrap $ ShiftRight  (wrap e1) (wrap e2)
 
+  Index _       -> wrap $ PostfixIndex (wrap e1) (wrap e2)
+
 op3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 op3 op e1 e2 e3 = case op of
   Mux _   -> wrap $ Cond (wrap e1) (wrap e2) (wrap e3)
