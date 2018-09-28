@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Compile.C.Normalize
   ( normalize
   ) where
@@ -5,6 +7,7 @@ module Copilot.Compile.C.Normalize
 import Copilot.Core
 import Copilot.Compile.C.Tmp
 
+import Data.Typeable          (Typeable)
 import Control.Monad.State
 
 type VarName = String
@@ -51,20 +54,15 @@ normalize s = evalState (normalize' s) [] where
 
     Op1 op e -> do
       let (ty,ty') = deop op
-      n <- fresh ("arg"++(opname1 op))
-      e' <- normexpr e
-      return $ Local ty ty' n e' (Op1 op (Var ty n))
+      (arg, loc) <- oparg e ty ty' ""
+      return $ loc (Op1 op arg)
 
     Op2 op e1 e2 -> do
-      n1 <- fresh ((opname2 op)++"L")
-      n2 <- fresh ((opname2 op)++"R")
-      e1' <- normexpr e1
-      e2' <- normexpr e2
-      let (ty,ty',ty'') = deop2 op
-          loc1 = Local ty  ty'' n1 e1' loc2
-          loc2 = Local ty' ty'' n2 e2' expr
-          expr = Op2 op (Var ty n1) (Var ty' n2)
-      return loc1
+      let (ty, ty', ty'') = deop2 op
+      (arg0, loc0) <- oparg e1 ty  ty'' "L"
+      (arg1, loc1) <- oparg e2 ty' ty'' "R"
+      return $ (loc0 . loc1) (Op2 op arg0 arg1)
+
 
     Op3 op e1 e2 e3 -> do
       n1 <- fresh "cond"
@@ -94,3 +92,26 @@ normalize s = evalState (normalize' s) [] where
         freshvars = v:((v ++).show <$> [0..])
     put (v':used)
     return v'
+
+  -- In case the expression is a terminal we do not want to create a local
+  -- variable out of it.
+  -- If it is not a terminal, return a variable as argument to the operator and
+  -- create a local definition which can be chained.
+  oparg :: Typeable a
+    => Expr a -> Type a -> Type b -> String -> Env (Expr a, (Expr b -> Expr b))
+  oparg e ty ty' postfix = do
+    let opname (Op1 op _    ) = opname1 op
+        opname (Op2 op _ _  ) = opname2 op
+    e' <- normexpr e
+    if isterminal e'
+      then    return (e, id)
+      else do n <- fresh ((opname e) ++ postfix)
+              return (Var ty n, \e'' -> Local ty ty' n e' e'')
+
+-- Is the expression a terminal in the AST?
+isterminal :: Expr a -> Bool
+isterminal (Drop _ 0 _) = True
+isterminal (Const _ _)  = True
+isterminal (Var _ _)    = True
+isterminal _            = False
+
