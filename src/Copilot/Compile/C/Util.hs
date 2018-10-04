@@ -62,7 +62,7 @@ initvals ty xs = InitArray $ initlist $ map (initval ty) xs
 {- Create init data for struct -}
 structdata :: Struct a => a -> [Init]
 structdata xs = map f (toValues xs) where
-  f (V ty (Field v)) = case ty of
+  f (Value ty (Field v)) = case ty of
     Array _   -> InitArray $ initlist $ arraydata v
     otherwise -> InitExpr $ wrap $ constty ty v
 
