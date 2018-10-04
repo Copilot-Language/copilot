@@ -24,9 +24,7 @@ ty2type ty = case ty of
   Double    -> double
   Bool      -> typedef' "bool"
   Array tya -> ty2type tya
-  Struct s  -> case typename s of
-    TyTypedef n -> typedef' n
-    TyStruct n  -> struct n
+  Struct s  -> struct $ typename s
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of
