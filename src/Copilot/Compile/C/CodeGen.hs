@@ -4,9 +4,11 @@ module Copilot.Compile.C.CodeGen
   ( gather
   , vars
   , funcs
+  , typedeclns
   , reify
   , headerfile
   , mkfunargs
+  , mkstructdecln
   ) where
 
 import Copilot.Core as CP hiding (index, ExtFun, toList)
@@ -41,6 +43,10 @@ import Language.C99 as C  ( BlockItem     (..)
                               , AddExpr     (..)
                               , MultExpr    (..)
                               , UnaryExpr   (..)
+                              , TypeSpec    (..)
+                              , TypedefName (..)
+                              , StructOrUnionSpec (..)
+                              , StructOrUnion (..)
                               )
 import Language.C99.Util hiding (vardef, var, funcall, Var)
 
@@ -49,7 +55,8 @@ import Control.Monad.State ( State
                            , get
                            , runState
                            )
-import Data.List (union, unionBy)
+import Data.List (union, unionBy, nub)
+import Data.Typeable (Typeable)
 
 import GHC.Exts
 
@@ -68,8 +75,9 @@ emptyFunState = FunEnv { stmts = []
 
 {- Concrete program, used to list global variables and functions -}
 data Program = Program
-  { vars  :: [Decln]
-  , funcs :: [FunDef]
+  { vars       :: [Decln]
+  , funcs      :: [FunDef]
+  , typedeclns :: [Decln]
   }
 
 
@@ -129,6 +137,7 @@ gather spec = AProgram  { streams     = streams
                         , generators  = map genname streams
                         , trigguards  = map guardname triggers
                         , externals   = externals'
+                        , types       = types
                         } where
   streams = specStreams spec
   triggers = specTriggers spec
@@ -155,6 +164,13 @@ gather spec = AProgram  { streams     = streams
     argname (n, a) = Argument { argName = name ++ "_arg" ++ show n
                               , argExpr = a
                               }
+
+  -- Gather all types that are used
+  types :: [UType]
+  types = nub $ concat $ map (gathertypes.triggerGuard) triggers
+          ++ concatMap (\xs -> map f (triggerArgs xs)) triggers
+          ++ map (\(Stream _ _ e _) -> gathertypes e) streams where
+    f (UExpr _ e) = gathertypes e
 
   externals' :: [External]
   externals' = unions' $ (map exstreams streams) ++ (map extriggers triggers)
@@ -186,12 +202,20 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
                                         , [ step ap ]
                                         ]
                     , vars = globvars gens ++ extvars exts
+                    , typedeclns = structdeclns types'
                     } where
   ss = streams ap
   gens   = generators ap
   guards = trigguards ap
   args   = concatMap guardArgs guards
   exts   = externals ap
+  types' = types ap
+
+  structdeclns :: [UType] -> [Decln]
+  structdeclns tys = concatMap mkstruct tys where
+    mkstruct (UType ty) = case ty of
+      CP.Struct ty' -> [mkstructdecln ty]
+      _             -> []
 
 {- Global variables -}
 globvars :: [Generator] -> [Decln]
@@ -406,3 +430,40 @@ mkfunargs args = map mkarg args where
     d = case ty of
       Array _ -> [ptrdeclr name Nothing]
       _       -> [declr    name Nothing]
+
+
+{- Gather all used types in an expression -}
+gathertypes :: Typeable a => CP.Expr a -> [UType]
+gathertypes e = case e of
+  Const ty _            -> [UType ty]
+  Local ty1 ty2 _ e1 e2 -> [UType ty1, UType ty2] ++ gathertypes e1 ++ gathertypes e2
+  Var ty _              -> [UType ty]
+  Drop ty _ _           -> [UType ty]
+  ExternVar ty _ _      -> [UType ty]
+  Op1 _ e1              -> gathertypes e1
+  Op2 _ e1 e2           -> gathertypes e1 ++ gathertypes e2
+  Op3 _ e1 e2 e3        -> gathertypes e1 ++ gathertypes e2 ++ gathertypes e3
+
+mkstructdecln :: Struct a => Type a -> Decln
+mkstructdecln (CP.Struct ty) = structdecln (typename ty) (map f fields) where
+  fields = toValues ty
+  f (Value fty v) = case fty of
+    Array _ -> fielddef (ty2typespec fty) (Just $ PtrBase Nothing) (fieldname v)
+    _       -> fielddef (ty2typespec fty) Nothing                  (fieldname v)
+
+  -- TODO: (re)move
+  ty2typespec :: Type a -> TypeSpec
+  ty2typespec ty = let td name = TTypedef (TypedefName $ ident name) in case ty of
+    Int8      -> td "int8_t"
+    Int16     -> td "int16_t"
+    Int32     -> td "int32_t"
+    Int64     -> td "int64_t"
+    Word8     -> td "uint8_t"
+    Word16    -> td "uint16_t"
+    Word32    -> td "uint32_t"
+    Word64    -> td "uint64_t"
+    Float     -> TFloat
+    Double    -> TDouble
+    Bool      -> td "bool"
+    Array tya -> ty2typespec tya
+    CP.Struct s  -> TStructOrUnion $ StructOrUnionForwDecln C.Struct (ident $ typename s)

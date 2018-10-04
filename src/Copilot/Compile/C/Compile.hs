@@ -7,6 +7,7 @@ import Copilot.Compile.ACSL.CodeGen
 
 import Copilot.Core (Spec)
 
+import Language.C99 (Decln)
 import Language.C99.Pretty (pretty)
 
 import Data.List (intersperse)
@@ -17,7 +18,8 @@ import Text.PrettyPrint ( render
                         , empty
                         , text
                         , Doc
-                        , doubleQuotes )
+                        , doubleQuotes
+                        , vcat)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath.Posix (normalise)
@@ -45,6 +47,12 @@ ccode s hfile = render $ foldr ($+$) empty code where
           , text "#include " <> doubleQuotes (text hfile)
           , text ""
           ]
+          ++
+          [ text "/* Struct declarations */" ]
+          ++
+          map (\x -> pretty x <> semi) (typedeclns defs)
+          ++
+          [ text "" ]
           ++
           map (\x -> pretty x <> semi) (vars defs)
           ++

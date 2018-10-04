@@ -38,4 +38,5 @@ data AProgram = AProgram
   , generators  :: [Generator]
   , trigguards  :: [Guard]
   , externals   :: [External]
+  , types       :: [UType]
   }
