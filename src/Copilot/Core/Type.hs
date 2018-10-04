@@ -27,6 +27,9 @@ module Copilot.Core.Type
   , toValues
   , Field (..)
   , typename
+
+  , Struct
+  , fieldname
   ) where
 
 import Data.Int
