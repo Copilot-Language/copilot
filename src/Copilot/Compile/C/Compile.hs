@@ -69,9 +69,15 @@ ccode s hfile = render $ foldr ($+$) empty code where
 hcode :: Spec -> String
 hcode s = render $ foldr ($+$) empty code where
   (vars, triggers, step) = headerfile $ gather s
+  defs = reify $ gather $ normalize s
   code =  [ text "#include <stdbool.h>"
           , text "#include <stdint.h>"
           ]
+          ++
+          [ text ""
+          , text "/* Forward struct declarations */" ]
+          ++
+          map (\x -> pretty x <> semi) (forwdeclns defs)
           ++
           [ text ""
           , text "/* External variables */" ] ++

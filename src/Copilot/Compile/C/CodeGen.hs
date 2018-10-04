@@ -5,10 +5,12 @@ module Copilot.Compile.C.CodeGen
   , vars
   , funcs
   , typedeclns
+  , forwdeclns
   , reify
   , headerfile
   , mkfunargs
   , mkstructdecln
+  , mkstructforwdecln
   ) where
 
 import Copilot.Core as CP hiding (index, ExtFun, toList)
@@ -78,6 +80,7 @@ data Program = Program
   { vars       :: [Decln]
   , funcs      :: [FunDef]
   , typedeclns :: [Decln]
+  , forwdeclns :: [Decln]
   }
 
 
@@ -203,6 +206,7 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
                                         ]
                     , vars = globvars gens ++ extvars exts
                     , typedeclns = structdeclns types'
+                    , forwdeclns = forwdeclns types'
                     } where
   ss = streams ap
   gens   = generators ap
@@ -216,6 +220,12 @@ reify ap = Program  { funcs = concat $  [ map (streamgen ap) gens
     mkstruct (UType ty) = case ty of
       CP.Struct ty' -> [mkstructdecln ty]
       _             -> []
+
+  forwdeclns :: [UType] -> [Decln]
+  forwdeclns tys = concatMap mkforw tys where
+    mkforw (UType ty) = case ty of
+      CP.Struct _ -> [mkstructforwdecln ty]
+      _           -> []
 
 {- Global variables -}
 globvars :: [Generator] -> [Decln]
@@ -467,3 +477,6 @@ mkstructdecln (CP.Struct ty) = structdecln (typename ty) (map f fields) where
     Bool      -> td "bool"
     Array tya -> ty2typespec tya
     CP.Struct s  -> TStructOrUnion $ StructOrUnionForwDecln C.Struct (ident $ typename s)
+
+mkstructforwdecln :: Struct a => Type a -> Decln
+mkstructforwdecln (CP.Struct ty) = structforwdecln (typename ty)
