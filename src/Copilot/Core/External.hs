@@ -18,13 +18,15 @@ import Data.DList (DList, empty, singleton, append, concat, toList)
 import Data.List (nubBy)
 import Prelude hiding (all, concat, foldr)
 
+import Data.Typeable    (Typeable)
+
 --------------------------------------------------------------------------------
 
 data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
 
-data ExtFun = forall a . ExtFun
+data ExtFun = forall a . Typeable a => ExtFun
   { externFunName      :: Name
   , externFunType      :: Type a
   , externFunArgs      :: [UExpr]

@@ -34,7 +34,7 @@ import Data.Word
 import Copilot.Core.Type.Equality
 import Copilot.Core.Type.Array
 
-import Data.Typeable (Typeable)
+import Data.Typeable (Typeable, typeRep)
 
 import GHC.TypeLits (KnownNat, natVal, Symbol, KnownSymbol, symbolVal)
 import Data.Proxy   (Proxy (..))
@@ -176,6 +176,9 @@ instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (Inner
 --------------------------------------------------------------------------------
 
 -- | A untyped type (no phantom type).
-data UType = forall a . UType { uTypeType :: Type a }
+data UType = forall a . Typeable a => UType { uTypeType :: Type a }
+
+instance Eq UType where
+  UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
 
 --------------------------------------------------------------------------------
