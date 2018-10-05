@@ -98,6 +98,7 @@ op1ACSL op = case op of
   Acosh _   -> prefixop "\\acosh"
   BwNot _   -> prefixop "~"
   Cast  _ _ -> prefixop ""
+  GetField _ _ _ -> prefixop "TODO"
 
 op2ACSL :: Op2 a b c -> Doc -> Doc -> Doc
 op2ACSL op = case op of
