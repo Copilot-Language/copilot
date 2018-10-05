@@ -47,6 +47,8 @@ data Op1 a b where
   BwNot    :: Bits     a => Type a -> Op1 a a
   -- Casting operator.
   Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
+  -- Struct operator.
+  GetField :: Type a -> Type b -> String -> Op1 a b
 
 -- | Binary operators.
 data Op2 a b c where
