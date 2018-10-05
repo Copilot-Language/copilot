@@ -48,6 +48,7 @@ op1 op e = case op of
   Acosh _ -> wrap $ funcall "acosh" [wrap e]
   BwNot _ -> wrap $ UnaryOp UOBNot (wrap e)
   CP.Cast ty _ -> undefined -- TODO
+  GetField _ _ n -> wrap $ PostfixDot (wrap e) (ident n)
 
 op2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
 op2 op e1 e2 = case op of
