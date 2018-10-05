@@ -55,6 +55,7 @@ library
                  , Copilot.Language.Operators.Ord
                  , Copilot.Language.Operators.Temporal
                  , Copilot.Language.Operators.Array
+                 , Copilot.Language.Operators.Struct
                  , Copilot.Language.Prelude
                  , Copilot.Language.Reify
                  , Copilot.Language.Stream
