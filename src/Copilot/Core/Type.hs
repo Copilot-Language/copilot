@@ -30,6 +30,7 @@ module Copilot.Core.Type
 
   , Struct
   , fieldname
+  , accessorname
   ) where
 
 import Data.Int
@@ -53,6 +54,9 @@ data Field (s :: Symbol) t = Field t
 
 fieldname :: forall s t. KnownSymbol s => Field s t -> String
 fieldname _ = symbolVal (Proxy :: Proxy s)
+
+accessorname :: forall a s t. (Struct a, KnownSymbol s) => (a -> Field s t) -> String
+accessorname _ = symbolVal (Proxy :: Proxy s)
 
 
 data Type :: * -> * where
