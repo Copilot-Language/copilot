@@ -48,7 +48,7 @@ class Struct a where
   typename :: a -> String
   toValues :: a -> [Value a]
 
-data Value a = forall s t. (KnownSymbol s) => Value (Type t) (Field s t)
+data Value a = forall s t. (Typeable t, KnownSymbol s) => Value (Type t) (Field s t)
 
 data Field (s :: Symbol) t = Field t
 
