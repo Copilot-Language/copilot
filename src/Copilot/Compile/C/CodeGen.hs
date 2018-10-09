@@ -457,9 +457,11 @@ gathertypes e = case e of
 mkstructdecln :: Struct a => Type a -> Decln
 mkstructdecln (CP.Struct ty) = structdecln (typename ty) (map f fields) where
   fields = toValues ty
-  f (Value fty v) = case fty of
-    Array _ -> fielddef (ty2typespec fty) (Just $ PtrBase Nothing) (fieldname v)
-    _       -> fielddef (ty2typespec fty) Nothing                  (fieldname v)
+  f (Value fty v) = let name = DirectDeclrIdent $ ident $ fieldname v
+                    in case fty of
+    Array _ -> fielddef (ty2typespec fty) arrdeclr where
+      arrdeclr = Declr Nothing (DirectDeclrArray1 name Nothing (Just $ wrap $ constint $ fromIntegral (tylength fty)))
+    _       -> fielddef (ty2typespec fty) (Declr Nothing name)
 
   -- TODO: (re)move
   ty2typespec :: Type a -> TypeSpec
