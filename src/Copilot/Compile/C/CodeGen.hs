@@ -445,14 +445,24 @@ mkfunargs args = map mkarg args where
 {- Gather all used types in an expression -}
 gathertypes :: Typeable a => CP.Expr a -> [UType]
 gathertypes e = case e of
-  Const ty _            -> [UType ty]
-  Local ty1 ty2 _ e1 e2 -> [UType ty1, UType ty2] ++ gathertypes e1 ++ gathertypes e2
-  Var ty _              -> [UType ty]
-  Drop ty _ _           -> [UType ty]
-  ExternVar ty _ _      -> [UType ty]
+  Const ty _            -> gathertytypes ty
+  Local ty1 ty2 _ e1 e2 -> gathertytypes ty1 ++ gathertytypes ty2 ++ gathertypes e1 ++ gathertypes e2
+  Var ty _              -> gathertytypes ty
+  Drop ty _ _           -> gathertytypes ty
+  ExternVar ty _ _      -> gathertytypes ty
   Op1 _ e1              -> gathertypes e1
   Op2 _ e1 e2           -> gathertypes e1 ++ gathertypes e2
   Op3 _ e1 e2 e3        -> gathertypes e1 ++ gathertypes e2 ++ gathertypes e3
+
+{- Gather types from a type -}
+gathertytypes :: Typeable a => Type a -> [UType]
+gathertytypes ty = case ty of
+  CP.Struct ty' -> (concatMap structty (toValues ty')) ++ [UType ty]
+  Array ty'     -> (gathertytypes ty') ++ [UType ty]
+  _             -> [UType ty]
+
+structty :: Typeable a => Value a -> [UType]
+structty (Value ty _) = gathertytypes ty
 
 mkstructdecln :: Struct a => Type a -> Decln
 mkstructdecln (CP.Struct ty) = structdecln (typename ty) (map f fields) where
