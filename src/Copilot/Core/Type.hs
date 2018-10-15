@@ -50,7 +50,7 @@ class Struct a where
 
 data Value a = forall s t. (Typeable t, KnownSymbol s) => Value (Type t) (Field s t)
 
-data Field (s :: Symbol) t = Field t
+data Field (s :: Symbol) t = Show t => Field t
 
 fieldname :: forall s t. KnownSymbol s => Field s t -> String
 fieldname _ = symbolVal (Proxy :: Proxy s)
