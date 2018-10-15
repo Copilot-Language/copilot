@@ -129,6 +129,8 @@ instance Eq SimpleType where
   SWord16 == SWord16  = True
   SWord32 == SWord32  = True
   SWord64 == SWord64  = True
+  SFloat  == SFloat   = True
+  SDouble == SDouble  = True
   (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
                              | otherwise              = False
   SStruct == SStruct  = True
