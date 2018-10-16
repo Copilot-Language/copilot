@@ -12,6 +12,7 @@
             , UndecidableInstances
             , FlexibleContexts
             , DataKinds
+            , FlexibleInstances
 #-}
 
 module Copilot.Core.Type
@@ -43,20 +44,30 @@ import Data.Typeable (Typeable, typeRep)
 import GHC.TypeLits (KnownNat, natVal, Symbol, KnownSymbol, symbolVal)
 import Data.Proxy   (Proxy (..))
 
+import Data.List (intercalate)
+
 
 class Struct a where
   typename :: a -> String
   toValues :: a -> [Value a]
 
-data Value a = forall s t. (Typeable t, KnownSymbol s) => Value (Type t) (Field s t)
+data Value a = forall s t. (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
 
-data Field (s :: Symbol) t = Show t => Field t
+data Field (s :: Symbol) t = Field t
 
 fieldname :: forall s t. KnownSymbol s => Field s t -> String
 fieldname _ = symbolVal (Proxy :: Proxy s)
 
 accessorname :: forall a s t. (Struct a, KnownSymbol s) => (a -> Field s t) -> String
 accessorname _ = symbolVal (Proxy :: Proxy s)
+
+instance (KnownSymbol s, Show t) => Show (Field s t) where
+  show f@(Field v) = fieldname f ++ ":" ++ show v
+
+instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
+  show t = "<" ++ fields ++ ">" where
+    fields = intercalate "," $ map showfield (toValues t)
+    showfield (Value _ field) = show field
 
 
 data Type :: * -> * where
@@ -76,7 +87,7 @@ data Type :: * -> * where
                          , Typed (InnerType t)
                          , Flatten t (InnerType t)
                          ) => Type t -> Type (Array n t)
-  Struct  :: (Show a, Typed a, Struct a) => a -> Type a
+  Struct  :: (Typed a, Struct a) => a -> Type a
 
 -- Get the length of an array from its type
 tylength :: forall n t. KnownNat n => Type (Array n t) -> Int
