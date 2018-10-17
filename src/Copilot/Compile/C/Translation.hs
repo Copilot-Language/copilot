@@ -63,7 +63,7 @@ op1 op e = case op of
   Atanh _ -> wrap $ funcall "atanh" [wrap e]
   Acosh _ -> wrap $ funcall "acosh" [wrap e]
   BwNot _ -> wrap $ UnaryOp UOBNot (wrap e)
-  CP.Cast ty _ -> undefined -- TODO
+  CP.Cast ty _ -> wrap $ C.Cast (TypeName (SpecQualType (ty2typespec ty) Nothing) Nothing) (wrap e)
   GetField _ _ n -> wrap $ PostfixDot (wrap e) (ident n)
 
 op2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
