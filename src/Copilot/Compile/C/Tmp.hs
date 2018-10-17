@@ -102,7 +102,7 @@ opname1 op = case op of
   Atanh _  -> "atanh"
   Acosh _  -> "acosh"
   BwNot _  -> "bnot"
-  Cast _ _ -> "(cast)"
+  Cast _ _ -> "cast"
   GetField _ _ _ -> "field"
 
 
