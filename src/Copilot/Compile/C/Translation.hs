@@ -7,7 +7,7 @@ module Copilot.Compile.C.Translation where
 import Copilot.Compile.C.Tmp hiding (var)
 
 import Copilot.Core as CP
-import Language.C99 as C hiding (Struct, var)
+import Language.C99 as C hiding (var)
 import Language.C99.Util       hiding (Expr, funcall)
 
 ty2type :: Type a -> DeclnSpecs
@@ -24,7 +24,23 @@ ty2type ty = case ty of
   Double    -> double
   Bool      -> typedef' "bool"
   Array tya -> ty2type tya
-  Struct s  -> struct $ typename s
+  CP.Struct s  -> struct $ typename s
+
+ty2typespec :: Type a -> TypeSpec
+ty2typespec ty = let td name = TTypedef (TypedefName $ ident name) in case ty of
+  Int8      -> td "int8_t"
+  Int16     -> td "int16_t"
+  Int32     -> td "int32_t"
+  Int64     -> td "int64_t"
+  Word8     -> td "uint8_t"
+  Word16    -> td "uint16_t"
+  Word32    -> td "uint32_t"
+  Word64    -> td "uint64_t"
+  Float     -> TFloat
+  Double    -> TDouble
+  Bool      -> td "bool"
+  Array tya -> ty2typespec tya
+  CP.Struct s  -> TStructOrUnion $ StructOrUnionForwDecln C.Struct (ident $ typename s)
 
 op1 :: Op1 a b -> C.Expr -> C.Expr
 op1 op e = case op of

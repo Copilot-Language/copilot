@@ -473,22 +473,5 @@ mkstructdecln (CP.Struct ty) = structdecln (typename ty) (map f fields) where
       arrdeclr = Declr Nothing (DirectDeclrArray1 name Nothing (Just $ wrap $ constint $ fromIntegral (tylength fty)))
     _       -> fielddef (ty2typespec fty) (Declr Nothing name)
 
-  -- TODO: (re)move
-  ty2typespec :: Type a -> TypeSpec
-  ty2typespec ty = let td name = TTypedef (TypedefName $ ident name) in case ty of
-    Int8      -> td "int8_t"
-    Int16     -> td "int16_t"
-    Int32     -> td "int32_t"
-    Int64     -> td "int64_t"
-    Word8     -> td "uint8_t"
-    Word16    -> td "uint16_t"
-    Word32    -> td "uint32_t"
-    Word64    -> td "uint64_t"
-    Float     -> TFloat
-    Double    -> TDouble
-    Bool      -> td "bool"
-    Array tya -> ty2typespec tya
-    CP.Struct s  -> TStructOrUnion $ StructOrUnionForwDecln C.Struct (ident $ typename s)
-
 mkstructforwdecln :: Struct a => Type a -> Decln
 mkstructforwdecln (CP.Struct ty) = structforwdecln (typename ty)
