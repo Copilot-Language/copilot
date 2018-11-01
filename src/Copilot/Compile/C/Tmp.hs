@@ -103,7 +103,7 @@ opname1 op = case op of
   Acosh _  -> "acosh"
   BwNot _  -> "bnot"
   Cast _ _ -> "cast"
-  GetField _ _ _ -> "field"
+  GetField _ _ name -> "field" ++ name
 
 
 opname2 :: Op2 a b c -> String
