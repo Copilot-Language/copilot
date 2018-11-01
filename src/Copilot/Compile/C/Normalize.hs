@@ -110,9 +110,8 @@ normalize s = evalState (normalize' s) [] where
 
 -- Is the expression a terminal in the AST?
 isterminal :: Expr a -> Bool
-isterminal (Drop _ 0 _)      = True
-isterminal (Const _ _)       = True
-isterminal (Var _ _)         = True
-isterminal (ExternVar _ _ _) = True
-isterminal _                 = False
-
+isterminal (Op1 _ _    )     = False
+isterminal (Op2 _ _ _  )     = False
+isterminal (Op3 _ _ _ _)     = False
+isterminal (Local _ _ _ _ _) = False
+isterminal _                 = True
