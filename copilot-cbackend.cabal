@@ -44,12 +44,3 @@ library
                           , directory >= 1.3.0.0
                           , filepath >= 1.4.0.0
   exposed-modules         : Copilot.Compile.C
-                          , Copilot.Compile.C.Normalize
-                          , Copilot.Compile.C.CodeGen
-                          , Copilot.Compile.C.Translation
-                          , Copilot.Compile.C.Compile
-                          , Copilot.Compile.C.Util
-                          , Copilot.Compile.C.Tmp
-                          , Copilot.Compile.C.Meta
-                          , Copilot.Compile.ACSL.Expr
-                          , Copilot.Compile.ACSL.CodeGen
