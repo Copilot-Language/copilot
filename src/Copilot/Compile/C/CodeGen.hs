@@ -63,6 +63,7 @@ transop1 op e = case op of
   Sqrt     _      -> funcall "sqrt"  [e]
   Log      _      -> funcall "log"   [e]
   Sin      _      -> funcall "sin"   [e]
+  Tan      _      -> funcall "tan"   [e]
   Cos      _      -> funcall "cos"   [e]
   Asin     _      -> funcall "asin"  [e]
   Atan     _      -> funcall "atan"  [e]
