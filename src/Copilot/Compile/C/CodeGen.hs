@@ -79,7 +79,29 @@ transop1 op e = case op of
 
 -- | Translates a Copilot binary operator and arguments into a C99 expression.
 transop2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
-transop2 = undefined
+transop2 op e1 e2 = case op of
+  And          -> e1 C..&& e2
+  Or           -> e1 C..|| e2
+  Add      _   -> e1 C..+  e2
+  Sub      _   -> e1 C..-  e2
+  Mul      _   -> e1 C..*  e2
+  Mod      _   -> e1 C..%  e2
+  Div      _   -> e1 C../  e2
+  Fdiv     _   -> e1 C../  e2
+  Pow      _   -> funcall "pow" [e1, e2]
+  Logb     _   -> funcall "log" [e2] C../ funcall "log" [e1]
+  Eq       _   -> e1 C..== e2
+  Ne       _   -> e1 C..!= e2
+  Le       _   -> e1 C..<= e2
+  Ge       _   -> e1 C..>= e2
+  Lt       _   -> e1 C..<  e2
+  Gt       _   -> e1 C..>  e2
+  BwAnd    _   -> e1 C..&  e2
+  BwOr     _   -> e1 C..|  e2
+  BwXor    _   -> e1 C..^  e2
+  BwShiftL _ _ -> e1 C..<< e2
+  BwShiftR _ _ -> e1 C..>> e2
+  Index    _   -> C.Index e1 e2
 
 -- | Translates a Copilot ternaty operator and arguments into a C99 expression.
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
