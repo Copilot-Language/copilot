@@ -30,7 +30,7 @@ transexpr (Drop _ _ sid) = do
         n -> "drop_" ++ show n
   return $ C.Ident freshname
 
-transexpr (ExternVar _ name _) = return $ C.Ident (cpyname name)
+transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
 
 transexpr (ExternFun _ _ _ _ _) = undefined
 
