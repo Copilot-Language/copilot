@@ -54,7 +54,28 @@ transexpr (Op3 op e1 e2 e3) = do
 
 -- | Translates a Copilot unary operator and arguments into a C99 expression.
 transop1 :: Op1 a b -> C.Expr -> C.Expr
-transop1 = undefined
+transop1 op e = case op of
+  Not             -> (C..!) e
+  Abs      _      -> funcall "abs"      [e]
+  Sign     _      -> funcall "copysign" [C.LitDouble 1.0, e]
+  Recip    _      -> C.LitDouble 1.0 C../ e
+  Exp      _      -> funcall "exp"   [e]
+  Sqrt     _      -> funcall "sqrt"  [e]
+  Log      _      -> funcall "log"   [e]
+  Sin      _      -> funcall "sin"   [e]
+  Cos      _      -> funcall "cos"   [e]
+  Asin     _      -> funcall "asin"  [e]
+  Atan     _      -> funcall "atan"  [e]
+  Acos     _      -> funcall "acos"  [e]
+  Sinh     _      -> funcall "sinh"  [e]
+  Tanh     _      -> funcall "tanh"  [e]
+  Cosh     _      -> funcall "cosh"  [e]
+  Asinh    _      -> funcall "asinh" [e]
+  Atanh    _      -> funcall "atanh" [e]
+  Acosh    _      -> funcall "acosh" [e]
+  BwNot    _      -> (C..~) e
+  Cast     ty _   -> C.Cast (transtypename ty) e
+  GetField _  _ n -> C.Dot e n
 
 -- | Translates a Copilot binary operator and arguments into a C99 expression.
 transop2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
@@ -71,3 +92,6 @@ constty = undefined
 -- | Translate a Copilot type to a C99 type.
 transtype :: Type a -> C.Type
 transtype = undefined
+
+transtypename :: Type a -> C.TypeName
+transtypename = undefined

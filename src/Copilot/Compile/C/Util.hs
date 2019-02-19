@@ -29,3 +29,6 @@ excpyname name = name ++ "_cpy"
 -- of dropped items, to a variables the name.
 dropname :: String -> Int -> String
 dropname name n = name ++ "_drop" ++ show n
+
+funcall :: C.Ident -> [C.Expr] -> C.Expr
+funcall name args = C.Funcall (C.Ident name) args
