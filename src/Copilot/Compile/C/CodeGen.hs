@@ -111,7 +111,18 @@ transop3 op e1 e2 e3 = case op of
 
 -- | Give a C99 literal expression based on a value and a type.
 constty :: Type a -> a -> C.Expr
-constty = undefined
+constty ty = case ty of
+  Bool   -> C.LitBool
+  Int8   -> C.LitInt . fromIntegral
+  Int16  -> C.LitInt . fromIntegral
+  Int32  -> C.LitInt . fromIntegral
+  Int64  -> C.LitInt . fromIntegral
+  Word8  -> C.LitInt . fromIntegral
+  Word16 -> C.LitInt . fromIntegral
+  Word32 -> C.LitInt . fromIntegral
+  Word64 -> C.LitInt . fromIntegral
+  Float  -> C.LitFloat
+  Double -> C.LitDouble
 
 -- | Translate a Copilot type to a C99 type.
 transtype :: Type a -> C.Type
