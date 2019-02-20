@@ -126,7 +126,20 @@ constty ty = case ty of
 
 -- | Translate a Copilot type to a C99 type.
 transtype :: Type a -> C.Type
-transtype = undefined
+transtype ty = case ty of
+  Bool      -> C.TypeSpec $ C.TypedefName "bool"
+  Int8      -> C.TypeSpec $ C.TypedefName "int8_t"
+  Int16     -> C.TypeSpec $ C.TypedefName "int16_t"
+  Int32     -> C.TypeSpec $ C.TypedefName "int32_t"
+  Int64     -> C.TypeSpec $ C.TypedefName "int64_t"
+  Word8     -> C.TypeSpec $ C.TypedefName "uint8_t"
+  Word16    -> C.TypeSpec $ C.TypedefName "uint16_t"
+  Word32    -> C.TypeSpec $ C.TypedefName "uint32_t"
+  Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
+  Float     -> C.TypeSpec C.Float
+  Double    -> C.TypeSpec C.Double
+  Array ty' -> C.Array (transtype ty') Nothing
+  Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
 transtypename :: Type a -> C.TypeName
 transtypename = undefined
