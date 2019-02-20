@@ -106,7 +106,8 @@ transop2 op e1 e2 = case op of
 
 -- | Translates a Copilot ternaty operator and arguments into a C99 expression.
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
-transop3 = undefined
+transop3 op e1 e2 e3 = case op of
+  Mux _ -> C.Cond e1 e2 e3
 
 -- | Give a C99 literal expression based on a value and a type.
 constty :: Type a -> a -> C.Expr
