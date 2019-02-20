@@ -141,5 +141,6 @@ transtype ty = case ty of
   Array ty' -> C.Array (transtype ty') Nothing
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
+-- | Translate a Copilot type intro a C typename
 transtypename :: Type a -> C.TypeName
-transtypename = undefined
+transtypename ty = C.TypeName $ transtype ty
