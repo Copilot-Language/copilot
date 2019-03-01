@@ -2,6 +2,7 @@ module Copilot.Compile.C.Util where
 
 import Control.Monad.State
 
+import Copilot.Core  (Id)
 import qualified Language.C99.Simple.AST as C
 
 
@@ -21,14 +22,21 @@ names :: [C.Decln] -> [String]
 names ds = map match ds where
   match (C.Decln _ _ name _) = name
 
+-- | Turn a stream id into a suitable C variable name.
+streamname :: Id -> String
+streamname sid = "s" ++ show sid
+
+-- | Add a postifx for the buffer
+buffername :: Id -> String
+buffername sid = streamname sid ++ "_buff"
+
+-- | Turn a stream id into the global varname for indices.
+indexname :: Id -> String
+indexname sid = streamname sid ++ "_idx"
+
 -- | Add a postfix for copies of external variables the name.
 excpyname :: String -> String
 excpyname name = name ++ "_cpy"
-
--- | Add a postfix for the `drop` operation on a stream, including the number
--- of dropped items, to a variables the name.
-dropname :: String -> Int -> String
-dropname name n = name ++ "_drop" ++ show n
 
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args

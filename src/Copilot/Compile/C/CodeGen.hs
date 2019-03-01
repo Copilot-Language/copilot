@@ -21,14 +21,13 @@ transexpr (Local ty1 _ name e1 e2) = do
 
 transexpr (Var _ n) = return $ C.Ident n
 
-transexpr (Drop _ _ sid) = do
-  (declns, vars) <- get
-  let usednames = (names declns) ++ vars
-      freshname = fresh name usednames
-      name = case sid of
-        0 -> "drop"
-        n -> "drop_" ++ show n
-  return $ C.Ident freshname
+transexpr (Drop _ amount sid) = do
+  let var    = streamname sid
+      indexvar = indexname sid
+      index  = case amount of
+        0 -> C.Ident indexvar
+        n -> C.Ident indexvar C..+ C.LitInt (fromIntegral n)
+  return $ C.Index (C.Ident var) index
 
 transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
 
