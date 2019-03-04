@@ -38,5 +38,9 @@ indexname sid = streamname sid ++ "_idx"
 excpyname :: String -> String
 excpyname name = name ++ "_cpy"
 
+-- | Turn stream id into name of its generator function.
+generatorname :: Id -> String
+generatorname sid = streamname sid ++ "_gen"
+
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args
