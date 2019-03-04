@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module Copilot.Compile.C.CodeGen where
+module Copilot.Compile.C.Translate where
 
 import Control.Monad.State
 
