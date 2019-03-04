@@ -143,3 +143,37 @@ transtype ty = case ty of
 -- | Translate a Copilot type intro a C typename
 transtypename :: Type a -> C.TypeName
 transtypename ty = C.TypeName $ transtype ty
+
+-- | Translate a Copilot Spec to a header and a C transunit.
+transspec :: Spec -> (C.TransUnit, C.TransUnit)
+transspec spec = (hfile, cfile) where
+  streams  = specStreams spec
+
+  cfile = C.TransUnit (concat gendeclns) genfuncs where
+    (gendeclns, genfuncs) = unzip $ map transstream streams
+
+  hfile = undefined
+
+
+-- | Translate a stream into a generator function and global variables
+transstream :: Stream -> ([C.Decln], C.FunDef)
+transstream (Stream sid buff expr ty) = (declns, genfunc) where
+  (cexpr, (cvars, _)) = runState (transexpr expr) mempty
+
+  cty     = transtype ty
+  name    = generatorname sid
+  genfunc = C.FunDef cty name [] cvars [C.Return $ Just cexpr]
+
+  declns   = [ mkbuffdecln  sid ty buff
+             , mkindexdecln sid
+             , mkvaldecln   sid ty buff
+             ]
+
+mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
+mkbuffdecln = undefined
+
+mkindexdecln :: Id -> C.Decln
+mkindexdecln = undefined
+
+mkvaldecln :: Id -> Type a -> [a] -> C.Decln
+mkvaldecln = undefined
