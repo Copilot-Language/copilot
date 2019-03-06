@@ -169,11 +169,34 @@ transstream (Stream sid buff expr ty) = (declns, genfunc) where
              , mkvaldecln   sid ty buff
              ]
 
+-- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
-mkbuffdecln = undefined
+mkbuffdecln sid ty xs = C.Decln (Just C.Static) cty name initvals where
+  name     = buffername sid
+  cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
+  buffsize = length xs
+  initvals = mkinits ty xs
 
+-- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
-mkindexdecln = undefined
+mkindexdecln sid = C.Decln (Just C.Static) cty name initval where
+  name    = indexname sid
+  cty     = C.TypeSpec $ C.TypedefName "size_t"
+  initval = C.InitExpr $ C.LitInt 0
 
+-- | Make C stream declaration and initialise it with the first value of the
+-- | buffer of the same stream.
 mkvaldecln :: Id -> Type a -> [a] -> C.Decln
-mkvaldecln = undefined
+mkvaldecln sid ty buff = C.Decln (Just C.Static) cty name initval where
+  name    = streamname sid
+  cty     = transtype ty
+  initval = mkinit ty (head buff)
+
+-- | Make an initial declaration from a list of values.
+mkinits :: Type a -> [a] -> C.Init
+mkinits ty xs = C.InitArray $ map (mkinit ty) xs
+
+-- | Make an initial declaration from a single value.
+mkinit :: Type a -> a -> C.Init
+mkinit (Array ty') xs = C.InitArray $ map (mkinit ty') (arrayelems xs)
+mkinit ty          x  = C.InitExpr  $ constty ty x
