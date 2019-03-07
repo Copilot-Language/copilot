@@ -46,5 +46,9 @@ generatorname sid = streamname sid ++ "_gen"
 guardname :: String -> String
 guardname name = name ++ "_guard"
 
+-- | Turn a trigger name into a an trigger argument name.
+argname :: String -> Int -> String
+argname name n = name ++ "_arg" ++ show n
+
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args
