@@ -8,6 +8,7 @@ import qualified Language.C99.Simple as C
 
 import Copilot.Core
 import Copilot.Compile.C.Util
+import Copilot.Compile.C.External
 import Copilot.Compile.C.Translate
 
 
@@ -20,12 +21,34 @@ compile spec prefix = do
   writeFile (prefix ++ ".c") cfile
   writeFile (prefix ++ ".h") hfile
 
+-- | Generate the .c file from a spec. It has the following structure:
+-- |
+-- | * Include .h file
+-- | * Declarations of global buffers and indices.
+-- | * Generator functions for streams, guards and trigger args.
+-- | * Declaration of step() function.
 compilec :: Spec -> C.TransUnit
-compilec = undefined
+compilec spec = C.TransUnit declns [] where
+  streams  = specStreams spec
+  triggers = specTriggers spec
+  exts     = gatherexts streams triggers
+
+  declns = mkexts exts ++ mkglobals streams
+
+  mkexts :: [External] -> [C.Decln]
+  mkexts exts = map mkextcpydecln exts
+
+  mkglobals :: [Stream] -> [C.Decln]
+  mkglobals streams = map buffdecln streams ++ map indexdecln streams where
+    buffdecln  (Stream sid buff _ ty) = mkbuffdecln  sid ty buff
+    indexdecln (Stream sid _    _ _ ) = mkindexdecln sid
 
 compileh :: Spec -> C.TransUnit
 compileh = undefined
 
+-- | Make a declaration for a copy of an external variable.
+mkextcpydecln :: External -> C.Decln
+mkextcpydecln = undefined
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
