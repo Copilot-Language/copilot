@@ -2,11 +2,29 @@
 
 module Copilot.Compile.C.CodeGen where
 
+import Text.PrettyPrint     (render)
+import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
 
 import Copilot.Core
 import Copilot.Compile.C.Util
 import Copilot.Compile.C.Translate
+
+
+-- | Compile the specification to a .h and a .c file.
+compile :: Spec -> String -> IO ()
+compile spec prefix = do
+  let cfile = render $ pretty $ C.translate $ compilec spec
+      hfile = render $ pretty $ C.translate $ compileh spec
+
+  writeFile (prefix ++ ".c") cfile
+  writeFile (prefix ++ ".h") hfile
+
+compilec :: Spec -> C.TransUnit
+compilec = undefined
+
+compileh :: Spec -> C.TransUnit
+compileh = undefined
 
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
