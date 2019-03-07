@@ -3,6 +3,8 @@
 module Copilot.Compile.C.CodeGen where
 
 import Text.PrettyPrint     (render)
+import Control.Monad.State  (runState)
+
 import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
 
@@ -28,23 +30,49 @@ compile spec prefix = do
 -- | * Generator functions for streams, guards and trigger args.
 -- | * Declaration of step() function.
 compilec :: Spec -> C.TransUnit
-compilec spec = C.TransUnit declns [] where
+compilec spec = C.TransUnit declns funs where
   streams  = specStreams spec
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
 
   declns = mkexts exts ++ mkglobals streams
+  funs   = genfuns streams triggers
 
+  -- Make declarations for copies of external variables.
   mkexts :: [External] -> [C.Decln]
   mkexts exts = map mkextcpydecln exts
 
+  -- Make buffer and index declarations for streams.
   mkglobals :: [Stream] -> [C.Decln]
   mkglobals streams = map buffdecln streams ++ map indexdecln streams where
     buffdecln  (Stream sid buff _ ty) = mkbuffdecln  sid ty buff
     indexdecln (Stream sid _    _ _ ) = mkindexdecln sid
 
+  -- Make generator functions, including trigger arguments.
+  genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
+  genfuns streams triggers =  map streamgen streams
+                           ++ concatMap triggergen triggers where
+    streamgen :: Stream -> C.FunDef
+    streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
+
+    triggergen :: Trigger -> [C.FunDef]
+    triggergen (Trigger name guard args) = guarddef : argdefs where
+      guarddef = genfun (guardname name) guard Bool
+      argdefs  = map arggen (zip argnames args)
+
+      argnames = [aname | n <- [0..], let aname = argname name n]
+
+      arggen :: (String, UExpr) -> C.FunDef
+      arggen (argname, UExpr ty expr) = genfun argname expr ty
+
 compileh :: Spec -> C.TransUnit
 compileh = undefined
+
+-- | Write a generator function for a stream.
+genfun :: String -> Expr a -> Type a -> C.FunDef
+genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
+  cty = transtype ty
+  (cexpr, (cvars, _)) = runState (transexpr expr) mempty
 
 -- | Make a declaration for a copy of an external variable.
 mkextcpydecln :: External -> C.Decln
