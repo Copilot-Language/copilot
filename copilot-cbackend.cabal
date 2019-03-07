@@ -47,3 +47,4 @@ library
   exposed-modules         : Copilot.Compile.C
                           , Copilot.Compile.C.Translate
                           , Copilot.Compile.C.Util
+                          , Copilot.Compile.C.CodeGen
