@@ -37,7 +37,7 @@ compilec spec = C.TransUnit declns funs where
   exts     = gatherexts streams triggers
 
   declns = mkexts exts ++ mkglobals streams
-  funs   = genfuns streams triggers
+  funs   = genfuns streams triggers ++ [mkstep streams triggers exts]
 
   -- Make declarations for copies of external variables.
   mkexts :: [External] -> [C.Decln]
@@ -127,3 +127,32 @@ mkinit :: Type a -> a -> C.Init
 mkinit (Array ty') xs = C.InitArray $ map (mkinit ty') (arrayelems xs)
 mkinit ty          x  = C.InitExpr  $ constty ty x
 
+
+-- | The step function updates all streams,a
+mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
+mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
+  void = C.TypeSpec C.Void
+  declns = []
+  stmts  = map mkexcopy exts ++ map mktriggercheck triggers
+
+  -- Make code that copies an external variable to its local one.
+  mkexcopy :: External -> C.Stmt
+  mkexcopy (External name cpyname ty) = C.Expr $ case ty of
+    Array _ -> memcpy cpyname name (fromIntegral $ tysize ty)
+    _       -> C.Ident cpyname C..= C.Ident name
+
+  -- Make if-statement to check the guard, call the trigger if necessary.
+  mktriggercheck :: Trigger -> C.Stmt
+  mktriggercheck (Trigger name guard args) = C.If guard' firetrigger where
+    guard'      = C.Funcall (C.Ident $ guardname name) []
+    firetrigger = [C.Expr $ C.Funcall (C.Ident name) args'] where
+      args'        = take (length args) (map argcall argnames)
+      argcall name = C.Funcall (C.Ident name) []
+      argnames = [aname | n <- [0..], let aname = argname name n]
+
+  -- Write a call to the memcpy function.
+  memcpy :: String -> String -> Integer -> C.Expr
+  memcpy dest src size = C.Funcall (C.Ident "memcpy") [ C.Ident dest
+                                                      , C.Ident src
+                                                      , C.LitInt size
+                                                      ]
