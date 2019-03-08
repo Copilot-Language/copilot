@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Copilot.Compile.C.CodeGen where
 
@@ -76,7 +77,31 @@ genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
 
 -- | Make a declaration for a copy of an external variable.
 mkextcpydecln :: External -> C.Decln
-mkextcpydecln = undefined
+mkextcpydecln (External name cpyname ty) = decln where
+  cty   = transtype ty
+  decln = C.Decln (Just C.Static) cty cpyname init
+  init  = mkinit ty (defaultval ty) where
+    -- Make a default init value based on the type.
+    -- Arrays recurse on their contents type.
+    -- Structs unpack the struct, and replace every value with the default.
+    -- Note that the name of the field (s) have to be copied explicitly.
+    defaultval :: Type a -> a
+    defaultval ty = case ty of
+      Bool      -> False
+      Int8      -> 0
+      Int16     -> 0
+      Int32     -> 0
+      Int64     -> 0
+      Word8     -> 0
+      Word16    -> 0
+      Word32    -> 0
+      Word64    -> 0
+      Float     -> 0.0
+      Double    -> 0.0
+      Array ty' -> (array $ take (tylength ty) $ repeat $ defaultval ty')
+      Struct s  -> fromValues $ map mkval (toValues s) where
+        mkval (Value ty' (_ :: Field s t)) = Value ty' (field ty' :: Field s t)
+        field ty' = Field $ defaultval ty'
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
@@ -101,3 +126,4 @@ mkinits ty xs = C.InitArray $ map (mkinit ty) xs
 mkinit :: Type a -> a -> C.Init
 mkinit (Array ty') xs = C.InitArray $ map (mkinit ty') (arrayelems xs)
 mkinit ty          x  = C.InitExpr  $ constty ty x
+
