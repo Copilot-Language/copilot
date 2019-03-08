@@ -1,5 +1,5 @@
 module Copilot.Compile.C
-  ( module Copilot.Compile.C.Translate
+  ( compile
   ) where
 
-import Copilot.Compile.C.Translate
+import Copilot.Compile.C.CodeGen
