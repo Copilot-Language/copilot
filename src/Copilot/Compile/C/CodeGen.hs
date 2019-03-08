@@ -130,6 +130,7 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   stmts  =  map mkexcopy exts
          ++ map mktriggercheck triggers
          ++ map mkupdatebuffer streams
+         ++ map mkupdateindex streams
 
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
@@ -152,6 +153,14 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
       var   = C.Ident $ buffername sid
       index = C.Ident $ indexname sid
       val   = C.Funcall (C.Ident $ generatorname sid) []
+
+  -- Code to update the index.
+  mkupdateindex :: Stream -> C.Stmt
+  mkupdateindex (Stream sid buff expr ty) = C.Expr $ globvar C..= val where
+    globvar = C.Ident $ indexname sid
+    index   = (C..++) (C.Ident $ indexname sid)
+    val     = index C..% (C.LitInt $ fromIntegral len)
+    len     = length buff
 
   -- Write a call to the memcpy function.
   memcpy :: String -> String -> Integer -> C.Expr
