@@ -59,9 +59,7 @@ compilec spec = C.TransUnit declns funs where
     triggergen :: Trigger -> [C.FunDef]
     triggergen (Trigger name guard args) = guarddef : argdefs where
       guarddef = genfun (guardname name) guard Bool
-      argdefs  = map arggen (zip argnames args)
-
-      argnames = [aname | n <- [0..], let aname = argname name n]
+      argdefs  = map arggen (zip (argnames name) args)
 
       arggen :: (String, UExpr) -> C.FunDef
       arggen (argname, UExpr ty expr) = genfun argname expr ty
@@ -146,9 +144,8 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   mktriggercheck (Trigger name guard args) = C.If guard' firetrigger where
     guard'      = C.Funcall (C.Ident $ guardname name) []
     firetrigger = [C.Expr $ C.Funcall (C.Ident name) args'] where
-      args'        = take (length args) (map argcall argnames)
+      args'        = take (length args) (map argcall (argnames name))
       argcall name = C.Funcall (C.Ident name) []
-      argnames = [aname | n <- [0..], let aname = argname name n]
 
   -- Write a call to the memcpy function.
   memcpy :: String -> String -> Integer -> C.Expr

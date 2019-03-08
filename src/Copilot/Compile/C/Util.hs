@@ -50,5 +50,9 @@ guardname name = name ++ "_guard"
 argname :: String -> Int -> String
 argname name n = name ++ "_arg" ++ show n
 
+-- | Enumerate all argument names based on trigger name.
+argnames :: String -> [String]
+argnames base = [aname | n <- [0..], let aname = argname base n]
+
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args
