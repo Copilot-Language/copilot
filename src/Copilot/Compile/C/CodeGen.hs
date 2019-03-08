@@ -107,7 +107,7 @@ mkbuffdecln sid ty xs = C.Decln (Just C.Static) cty name initvals where
   name     = buffername sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
-  initvals = mkinits ty xs
+  initvals = C.InitArray $ map (mkinit ty) xs
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
@@ -115,10 +115,6 @@ mkindexdecln sid = C.Decln (Just C.Static) cty name initval where
   name    = indexname sid
   cty     = C.TypeSpec $ C.TypedefName "size_t"
   initval = C.InitExpr $ C.LitInt 0
-
--- | Make an initial declaration from a list of values.
-mkinits :: Type a -> [a] -> C.Init
-mkinits ty xs = C.InitArray $ map (mkinit ty) xs
 
 -- | Make an initial declaration from a single value.
 mkinit :: Type a -> a -> C.Init
