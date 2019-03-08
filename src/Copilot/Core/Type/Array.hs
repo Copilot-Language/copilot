@@ -24,6 +24,7 @@ module Copilot.Core.Type.Array
   , size
   , Flatten
   , InnerType
+  , arrayelems
   ) where
 
 import GHC.TypeLits     (Nat, KnownNat, natVal)
@@ -64,3 +65,6 @@ instance Foldable (Array n) where
 
 size :: forall a n b. (Flatten a b, b ~ InnerType a) => Array n a -> Int
 size xs = length $ (flatten xs :: [b])
+
+arrayelems :: Array n a -> [a]
+arrayelems (Array xs) = xs
