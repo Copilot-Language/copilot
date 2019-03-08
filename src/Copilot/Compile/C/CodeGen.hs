@@ -127,7 +127,9 @@ mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   void = C.TypeSpec C.Void
   declns = []
-  stmts  = map mkexcopy exts ++ map mktriggercheck triggers
+  stmts  =  map mkexcopy exts
+         ++ map mktriggercheck triggers
+         ++ map mkupdatebuffer streams
 
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
@@ -142,6 +144,14 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
     firetrigger = [C.Expr $ C.Funcall (C.Ident name) args'] where
       args'        = take (length args) (map argcall (argnames name))
       argcall name = C.Funcall (C.Ident name) []
+
+  -- Code to update the global buffer.
+  mkupdatebuffer :: Stream -> C.Stmt
+  mkupdatebuffer (Stream sid buff expr ty) =
+    C.Expr $ C.Index var index C..= val where
+      var   = C.Ident $ buffername sid
+      index = C.Ident $ indexname sid
+      val   = C.Funcall (C.Ident $ generatorname sid) []
 
   -- Write a call to the memcpy function.
   memcpy :: String -> String -> Integer -> C.Expr
