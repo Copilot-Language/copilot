@@ -16,7 +16,7 @@ transexpr (Const ty x) = return $ constty ty x
 transexpr (Local ty1 _ name e1 e2) = do
   e1' <- transexpr e1
   e2' <- transexpr e2
-  statetell ([C.Decln Nothing (transtype ty1) name (C.InitExpr e1')], [])
+  statetell ([C.VarDecln Nothing (transtype ty1) name (C.InitExpr e1')], [])
   return $ e2'
 
 transexpr (Var _ n) = return $ C.Ident n

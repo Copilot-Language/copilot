@@ -20,7 +20,7 @@ fresh name used = head $ dropWhile (flip elem used) (name:freshnames) where
 -- | Collect all the names from a list of C99 declarations.
 names :: [C.Decln] -> [String]
 names ds = map match ds where
-  match (C.Decln _ _ name _) = name
+  match (C.VarDecln _ _ name _) = name
 
 -- | Turn a stream id into a suitable C variable name.
 streamname :: Id -> String

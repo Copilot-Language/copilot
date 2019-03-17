@@ -77,7 +77,7 @@ genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
 mkextcpydecln :: External -> C.Decln
 mkextcpydecln (External name cpyname ty) = decln where
   cty   = transtype ty
-  decln = C.Decln (Just C.Static) cty cpyname init
+  decln = C.VarDecln (Just C.Static) cty cpyname init
   init  = mkinit ty (defaultval ty) where
     -- Make a default init value based on the type.
     -- Arrays recurse on their contents type.
@@ -103,7 +103,7 @@ mkextcpydecln (External name cpyname ty) = decln where
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
-mkbuffdecln sid ty xs = C.Decln (Just C.Static) cty name initvals where
+mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals where
   name     = buffername sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
@@ -111,7 +111,7 @@ mkbuffdecln sid ty xs = C.Decln (Just C.Static) cty name initvals where
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
-mkindexdecln sid = C.Decln (Just C.Static) cty name initval where
+mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   name    = indexname sid
   cty     = C.TypeSpec $ C.TypedefName "size_t"
   initval = C.InitExpr $ C.LitInt 0
