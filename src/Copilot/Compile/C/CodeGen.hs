@@ -21,7 +21,16 @@ compile spec prefix = do
   let cfile = render $ pretty $ C.translate $ compilec spec
       hfile = render $ pretty $ C.translate $ compileh spec
 
-  writeFile (prefix ++ ".c") cfile
+      -- TODO: find a nicer solution using annotated AST's
+      cmacros = unlines [ "#include <stdint.h>"
+                        , "#include <stdbool.h>"
+                        , "#include <string.h>"
+                        , ""
+                        , "#include \"" ++ prefix ++ ".h\""
+                        , ""
+                        ]
+
+  writeFile (prefix ++ ".c") $ cmacros ++ cfile
   writeFile (prefix ++ ".h") hfile
 
 -- | Generate the .c file from a spec. It has the following structure:
