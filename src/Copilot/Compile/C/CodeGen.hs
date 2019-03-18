@@ -107,7 +107,7 @@ mkextcpydecln :: External -> C.Decln
 mkextcpydecln (External name cpyname ty) = decln where
   cty   = transtype ty
   decln = C.VarDecln (Just C.Static) cty cpyname init
-  init  = mkinit ty (defaultval ty) where
+  init  = Just $ mkinit ty (defaultval ty) where
     -- Make a default init value based on the type.
     -- Arrays recurse on their contents type.
     -- Structs unpack the struct, and replace every value with the default.
@@ -136,14 +136,14 @@ mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals where
   name     = buffername sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
-  initvals = C.InitArray $ map (mkinit ty) xs
+  initvals = Just $ C.InitArray $ map (mkinit ty) xs
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
 mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   name    = indexname sid
   cty     = C.TypeSpec $ C.TypedefName "size_t"
-  initval = C.InitExpr $ C.LitInt 0
+  initval = Just $ C.InitExpr $ C.LitInt 0
 
 -- | Make an initial declaration from a single value.
 mkinit :: Type a -> a -> C.Init
