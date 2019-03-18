@@ -69,8 +69,13 @@ compileh :: Spec -> C.TransUnit
 compileh spec = C.TransUnit declns [] where
   streams  = specStreams spec
   triggers = specTriggers spec
+  exts     = gatherexts streams triggers
 
-  declns = fundeclns streams triggers ++ [stepdecln]
+  declns = mkexts exts ++ fundeclns streams triggers ++ [stepdecln]
+
+  -- Make declarations for external variables.
+  mkexts :: [External] -> [C.Decln]
+  mkexts = map mkextdecln
 
   -- Make declarations for generators, guards and arguments
   fundeclns :: [Stream] -> [Trigger] -> [C.Decln]
@@ -101,6 +106,12 @@ genfun :: String -> Expr a -> Type a -> C.FunDef
 genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
   cty = transtype ty
   (cexpr, (cvars, _)) = runState (transexpr expr) mempty
+
+-- | Make a extern declaration of an variable.
+mkextdecln :: External -> C.Decln
+mkextdecln (External name _ ty) = decln where
+  decln = C.VarDecln (Just C.Extern) cty name Nothing
+  cty   = transtype ty
 
 -- | Make a declaration for a copy of an external variable.
 mkextcpydecln :: External -> C.Decln
