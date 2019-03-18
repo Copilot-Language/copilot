@@ -64,8 +64,37 @@ compilec spec = C.TransUnit declns funs where
       arggen :: (String, UExpr) -> C.FunDef
       arggen (argname, UExpr ty expr) = genfun argname expr ty
 
+-- | Generate the .h file from a spec.
 compileh :: Spec -> C.TransUnit
-compileh = undefined
+compileh spec = C.TransUnit declns [] where
+  streams  = specStreams spec
+  triggers = specTriggers spec
+
+  declns = fundeclns streams triggers ++ [stepdecln]
+
+  -- Make declarations for generators, guards and arguments
+  fundeclns :: [Stream] -> [Trigger] -> [C.Decln]
+  fundeclns streams triggers =  map streamdecln streams
+                             ++ concatMap triggerdecln triggers where
+    streamdecln :: Stream -> C.Decln
+    streamdecln (Stream sid _ _ ty) = gendecln (generatorname sid) ty
+
+    triggerdecln :: Trigger -> [C.Decln]
+    triggerdecln (Trigger name _ args) = guarddecln : argdeclns where
+      guarddecln = gendecln (guardname name) Bool
+      argdeclns  = map argdecln (zip (argnames name) args)
+
+      argdecln :: (String, UExpr) -> C.Decln
+      argdecln (argname, UExpr ty _) = gendecln argname ty
+
+  -- Declaration for the step function.
+  stepdecln :: C.Decln
+  stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void) "step" []
+
+-- | Write a declaration for a generator function.
+gendecln :: String -> Type a -> C.Decln
+gendecln name ty = C.FunDecln Nothing cty name [] where
+  cty   = transtype ty
 
 -- | Write a generator function for a stream.
 genfun :: String -> Expr a -> Type a -> C.FunDef
