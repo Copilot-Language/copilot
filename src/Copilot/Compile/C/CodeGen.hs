@@ -80,11 +80,22 @@ compileh spec = C.TransUnit declns [] where
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
 
-  declns = mkexts exts ++ fundeclns streams triggers ++ [stepdecln]
+  declns =  mkexts exts
+         ++ extfundeclns triggers
+         ++ fundeclns streams triggers
+         ++ [stepdecln]
 
   -- Make declarations for external variables.
   mkexts :: [External] -> [C.Decln]
   mkexts = map mkextdecln
+
+  extfundeclns :: [Trigger] -> [C.Decln]
+  extfundeclns triggers = map extfundecln triggers where
+    extfundecln :: Trigger -> C.Decln
+    extfundecln (Trigger name _ args) = C.FunDecln Nothing cty name params where
+        cty    = C.TypeSpec C.Void
+        params = map mkparam $ zip (argnames name) args
+        mkparam (name, UExpr ty _) = C.Param (transtype ty) name
 
   -- Make declarations for generators, guards and arguments
   fundeclns :: [Stream] -> [Trigger] -> [C.Decln]
