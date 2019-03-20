@@ -26,10 +26,6 @@ names ds = map match ds where
 streamname :: Id -> String
 streamname sid = "s" ++ show sid
 
--- | Add a postifx for the buffer
-buffername :: Id -> String
-buffername sid = streamname sid ++ "_buff"
-
 -- | Turn a stream id into the global varname for indices.
 indexname :: Id -> String
 indexname sid = streamname sid ++ "_idx"

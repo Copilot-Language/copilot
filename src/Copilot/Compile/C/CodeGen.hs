@@ -164,7 +164,7 @@ mkextcpydecln (External name cpyname ty) = decln where
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
 mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals where
-  name     = buffername sid
+  name     = streamname sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
   initvals = Just $ C.InitArray $ map (mkinit ty) xs
@@ -210,7 +210,7 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   mkupdatebuffer :: Stream -> C.Stmt
   mkupdatebuffer (Stream sid buff expr ty) =
     C.Expr $ C.Index var index C..= val where
-      var   = C.Ident $ buffername sid
+      var   = C.Ident $ streamname sid
       index = C.Ident $ indexname sid
       val   = C.Funcall (C.Ident $ generatorname sid) []
 
