@@ -178,8 +178,9 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
 -- | Make an initial declaration from a single value.
 mkinit :: Type a -> a -> C.Init
 mkinit (Array ty') xs = C.InitArray $ map (mkinit ty') (arrayelems xs)
+mkinit (Struct _)  x  = C.InitArray $ map fieldinit (toValues x) where
+  fieldinit (Value ty (Field val)) = mkinit ty val
 mkinit ty          x  = C.InitExpr  $ constty ty x
-
 
 -- | The step function updates all streams,a
 mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
