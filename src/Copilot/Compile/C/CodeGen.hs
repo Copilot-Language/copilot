@@ -118,12 +118,12 @@ compileh spec = C.TransUnit declns [] where
 -- | Write a declaration for a generator function.
 gendecln :: String -> Type a -> C.Decln
 gendecln name ty = C.FunDecln Nothing cty name [] where
-  cty   = transtype ty
+  cty = C.decay $ transtype ty
 
 -- | Write a generator function for a stream.
 genfun :: String -> Expr a -> Type a -> C.FunDef
 genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
-  cty = transtype ty
+  cty = C.decay $ transtype ty
   (cexpr, (cvars, _)) = runState (transexpr expr) mempty
 
 -- | Make a extern declaration of an variable.
