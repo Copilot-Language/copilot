@@ -14,7 +14,6 @@ import Copilot.Compile.C.Util
 import Copilot.Compile.C.External
 import Copilot.Compile.C.Translate
 
-
 -- | Compile the specification to a .h and a .c file.
 compile :: Spec -> String -> IO ()
 compile spec prefix = do
@@ -195,7 +194,10 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
   mkexcopy (External name cpyname ty) = C.Expr $ case ty of
-    Array _ -> memcpy cpyname name (fromIntegral $ tysize ty)
+    Array _ -> memcpy exvar locvar size where
+                 exvar  = C.Ident cpyname
+                 locvar = C.Ident name
+                 size   = C.LitInt $ fromIntegral $ tysize ty
     _       -> C.Ident cpyname C..= C.Ident name
 
   -- Make if-statement to check the guard, call the trigger if necessary.
@@ -223,8 +225,5 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
     len     = length buff
 
   -- Write a call to the memcpy function.
-  memcpy :: String -> String -> Integer -> C.Expr
-  memcpy dest src size = C.Funcall (C.Ident "memcpy") [ C.Ident dest
-                                                      , C.Ident src
-                                                      , C.LitInt size
-                                                      ]
+  memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
+  memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
