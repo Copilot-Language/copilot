@@ -210,8 +210,12 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
 
   -- Code to update the global buffer.
   mkupdatebuffer :: Stream -> C.Stmt
-  mkupdatebuffer (Stream sid buff expr ty) =
-    C.Expr $ C.Index var index C..= val where
+  mkupdatebuffer (Stream sid buff expr ty) = case ty of
+    Array _ -> C.Expr $ memcpy dest src size where
+      dest = C.Index (C.Ident $ streamname sid) (C.Ident $ indexname sid)
+      src  = C.Funcall (C.Ident $ generatorname sid) []
+      size = C.LitInt $ fromIntegral $ tysize ty
+    _ -> C.Expr $ C.Index var index C..= val where
       var   = C.Ident $ streamname sid
       index = C.Ident $ indexname sid
       val   = C.Funcall (C.Ident $ generatorname sid) []
