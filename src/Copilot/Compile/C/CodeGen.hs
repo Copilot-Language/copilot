@@ -136,29 +136,7 @@ mkextdecln (External name _ ty) = decln where
 mkextcpydecln :: External -> C.Decln
 mkextcpydecln (External name cpyname ty) = decln where
   cty   = transtype ty
-  decln = C.VarDecln (Just C.Static) cty cpyname init
-  init  = Just $ mkinit ty (defaultval ty) where
-    -- Make a default init value based on the type.
-    -- Arrays recurse on their contents type.
-    -- Structs unpack the struct, and replace every value with the default.
-    -- Note that the name of the field (s) have to be copied explicitly.
-    defaultval :: Type a -> a
-    defaultval ty = case ty of
-      Bool      -> False
-      Int8      -> 0
-      Int16     -> 0
-      Int32     -> 0
-      Int64     -> 0
-      Word8     -> 0
-      Word16    -> 0
-      Word32    -> 0
-      Word64    -> 0
-      Float     -> 0.0
-      Double    -> 0.0
-      Array ty' -> (array $ take (tylength ty) $ repeat $ defaultval ty')
-      Struct s  -> fromValues $ map mkval (toValues s) where
-        mkval (Value ty' (_ :: Field s t)) = Value ty' (field ty' :: Field s t)
-        field ty' = Field $ defaultval ty'
+  decln = C.VarDecln (Just C.Static) cty cpyname Nothing
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
