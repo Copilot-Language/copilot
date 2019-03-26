@@ -49,3 +49,4 @@ library
                           , Copilot.Compile.C.Util
                           , Copilot.Compile.C.CodeGen
                           , Copilot.Compile.C.External
+                          , Copilot.Compile.C.Compile
