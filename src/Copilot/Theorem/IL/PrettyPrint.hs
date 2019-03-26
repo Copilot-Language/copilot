@@ -9,6 +9,8 @@ import Copilot.Theorem.IL.Spec
 import Text.PrettyPrint.HughesPJ
 import qualified Data.Map as Map
 
+import Prelude hiding ((<>))
+
 --------------------------------------------------------------------------------
 
 prettyPrint :: IL -> String
