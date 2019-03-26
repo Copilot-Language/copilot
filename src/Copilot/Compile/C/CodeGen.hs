@@ -5,6 +5,9 @@ module Copilot.Compile.C.CodeGen where
 
 import Text.PrettyPrint     (render)
 import Control.Monad.State  (runState)
+import Data.List            (union, nub)
+import Data.Maybe           (catMaybes)
+import Data.Typeable        (Typeable)
 
 import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
@@ -78,11 +81,22 @@ compileh spec = C.TransUnit declns [] where
   streams  = specStreams spec
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
+  exprs    = gatherexprs streams triggers
 
-  declns =  mkexts exts
+  declns =  mkstructdeclns exprs
+         ++ mkexts exts
          ++ extfundeclns triggers
          ++ fundeclns streams triggers
          ++ [stepdecln]
+
+  -- Write struct datatypes
+  mkstructdeclns :: [UExpr] -> [C.Decln]
+  mkstructdeclns es = catMaybes $ map mkdecln utypes where
+    mkdecln (UType ty) = case ty of
+      Struct x -> Just $ mkstructdecln ty
+      _        -> Nothing
+
+    utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
 
   -- Make declarations for external variables.
   mkexts :: [External] -> [C.Decln]
@@ -114,6 +128,8 @@ compileh spec = C.TransUnit declns [] where
   -- Declaration for the step function.
   stepdecln :: C.Decln
   stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void) "step" []
+
+
 
 -- | Write a declaration for a generator function.
 gendecln :: String -> Type a -> C.Decln
@@ -210,3 +226,42 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   -- Write a call to the memcpy function.
   memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
   memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
+
+
+-- | Write a struct declaration based on its definition.
+mkstructdecln :: Struct a => Type a -> C.Decln
+mkstructdecln (Struct x) = C.TypeDecln struct where
+  struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
+  fields = map mkfield (toValues x)
+
+  mkfield :: Value a -> C.FieldDecln
+  mkfield (Value ty field) = C.FieldDecln (transtype ty) (fieldname field)
+
+-- | List all types of an expression, returns items uniquely.
+exprtypes :: Typeable a => Expr a -> [UType]
+exprtypes e = case e of
+  Const ty _            -> typetypes ty
+  Local ty1 ty2 _ e1 e2 -> typetypes ty1 `union` typetypes ty2
+                           `union` exprtypes e1 `union` exprtypes e2
+  Var ty _              -> typetypes ty
+  Drop ty _ _           -> typetypes ty
+  ExternVar ty _ _      -> typetypes ty
+  Op1 _ e1              -> exprtypes e1
+  Op2 _ e1 e2           -> exprtypes e1 `union` exprtypes e2
+  Op3 _ e1 e2 e3        -> exprtypes e1 `union` exprtypes e2 `union` exprtypes e3
+
+-- | List all types of an type, returns items uniquely.
+typetypes :: Typeable a => Type a -> [UType]
+typetypes ty = case ty of
+  Array ty' -> [UType ty] `union` typetypes ty
+  Struct x  -> [UType ty] `union` map (\(Value ty' _) -> UType ty') (toValues x)
+  _         -> [UType ty]
+
+-- | Collect all expression of a list of streams and triggers and wrap them
+-- into an UEXpr.
+gatherexprs :: [Stream] -> [Trigger] -> [UExpr]
+gatherexprs streams triggers =  map streamexpr streams
+                             ++ concatMap triggerexpr triggers where
+  streamexpr  (Stream _ _ expr ty)   = UExpr ty expr
+  triggerexpr (Trigger _ guard args) = UExpr Bool guard : args
+
