@@ -44,9 +44,19 @@ compilec spec = C.TransUnit declns funs where
   streams  = specStreams spec
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
+  exprs    = gatherexprs streams triggers
 
-  declns = mkexts exts ++ mkglobals streams
+  declns = mkstructdeclns exprs ++ mkexts exts ++ mkglobals streams
   funs   = genfuns streams triggers ++ [mkstep streams triggers exts]
+
+  -- Write struct datatypes
+  mkstructdeclns :: [UExpr] -> [C.Decln]
+  mkstructdeclns es = catMaybes $ map mkdecln utypes where
+    mkdecln (UType ty) = case ty of
+      Struct x -> Just $ mkstructdecln ty
+      _        -> Nothing
+
+    utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
 
   -- Make declarations for copies of external variables.
   mkexts :: [External] -> [C.Decln]
@@ -81,16 +91,15 @@ compileh spec = C.TransUnit declns [] where
   exts     = gatherexts streams triggers
   exprs    = gatherexprs streams triggers
 
-  declns =  mkstructdeclns exprs
+  declns =  mkstructforwdeclns exprs
          ++ mkexts exts
          ++ extfundeclns triggers
          ++ [stepdecln]
 
-  -- Write struct datatypes
-  mkstructdeclns :: [UExpr] -> [C.Decln]
-  mkstructdeclns es = catMaybes $ map mkdecln utypes where
+  mkstructforwdeclns :: [UExpr] -> [C.Decln]
+  mkstructforwdeclns es = catMaybes $ map mkdecln utypes where
     mkdecln (UType ty) = case ty of
-      Struct x -> Just $ mkstructdecln ty
+      Struct x -> Just $ mkstructforwdecln ty
       _        -> Nothing
 
     utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es

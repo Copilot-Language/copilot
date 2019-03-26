@@ -120,6 +120,11 @@ mkstructdecln (Struct x) = C.TypeDecln struct where
   mkfield :: Value a -> C.FieldDecln
   mkfield (Value ty field) = C.FieldDecln (transtype ty) (fieldname field)
 
+-- | Write a forward struct decralration.
+mkstructforwdecln :: Struct a => Type a -> C.Decln
+mkstructforwdecln (Struct x) = C.TypeDecln struct where
+  struct = C.TypeSpec $ C.Struct (typename x)
+
 -- | List all types of an expression, returns items uniquely.
 exprtypes :: Typeable a => Expr a -> [UType]
 exprtypes e = case e of
