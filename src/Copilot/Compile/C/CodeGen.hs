@@ -86,7 +86,6 @@ compileh spec = C.TransUnit declns [] where
   declns =  mkstructdeclns exprs
          ++ mkexts exts
          ++ extfundeclns triggers
-         ++ fundeclns streams triggers
          ++ [stepdecln]
 
   -- Write struct datatypes
@@ -109,21 +108,6 @@ compileh spec = C.TransUnit declns [] where
         cty    = C.TypeSpec C.Void
         params = map mkparam $ zip (argnames name) args
         mkparam (name, UExpr ty _) = C.Param (transtype ty) name
-
-  -- Make declarations for generators, guards and arguments
-  fundeclns :: [Stream] -> [Trigger] -> [C.Decln]
-  fundeclns streams triggers =  map streamdecln streams
-                             ++ concatMap triggerdecln triggers where
-    streamdecln :: Stream -> C.Decln
-    streamdecln (Stream sid _ _ ty) = gendecln (generatorname sid) ty
-
-    triggerdecln :: Trigger -> [C.Decln]
-    triggerdecln (Trigger name _ args) = guarddecln : argdeclns where
-      guarddecln = gendecln (guardname name) Bool
-      argdeclns  = map argdecln (zip (argnames name) args)
-
-      argdecln :: (String, UExpr) -> C.Decln
-      argdecln (argname, UExpr ty _) = gendecln argname ty
 
   -- Declaration for the step function.
   stepdecln :: C.Decln
