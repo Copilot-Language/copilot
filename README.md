@@ -102,5 +102,4 @@ Program, Contract #NNL08AD13T.  Copilot was developed jointly by Galois,
 Inc. and the National Institute of Aerospace.
 
 The following people have contributed to Copilot: Lee Pike, Nis Wegmann,
-Sebastian Niller, Robin Morisset, Alwyn Goodloe, and Levent Erkok.
-
+Sebastian Niller, Robin Morisset, Alwyn Goodloe, Levent Erkok and Frank Dedden.
