@@ -14,11 +14,11 @@ description:
   Examples are available at
   <https://github.com/leepike/Copilot/tree/master/Examples>.
 
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe,
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
                      Sebastian Niller, Nis Nordbyop Wegmann
 license:             BSD3
 license-file:        LICENSE
-maintainer:          leepike@gmail.com
+maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
