@@ -39,12 +39,6 @@ library
     -fwarn-tabs
     -fno-warn-orphans
 
-    -- -fpackage-trust
-    -- -trust=array
-    -- -trust=base
-    -- -trust=containers
-    -- -- -trust=random
-
   build-depends:
     containers >= 0.4,
     base >= 4.0 && < 5,
