@@ -3,12 +3,12 @@ version:             3.0
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
-author:              Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
+author:              Frank Dedden, Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
 synopsis:            A stream DSL for writing embedded C programs.
 build-type:          Simple
-maintainer:          Lee Pike <leepike@galois.com>
+maintainer:          Frank Dedden <dev@dedden.net>
 category:            Language, Embedded
-homepage:            http://leepike.github.com/Copilot/
+homepage:            https://copilot-language.github.io
 stability:           Experimental
 description:
   This package is the main entry-point for using Copilot.
