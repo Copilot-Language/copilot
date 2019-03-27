@@ -57,7 +57,6 @@ library
 
   exposed-modules:
 
-    Copilot.Compile.Header.C99
     Copilot.Core
     Copilot.Core.Error
     Copilot.Core.Expr
