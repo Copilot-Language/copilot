@@ -3,3 +3,4 @@ cabal.sandbox.config
 dist
 copilot-profiling
 .DS_Store
+.log
