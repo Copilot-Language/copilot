@@ -33,8 +33,6 @@ library
     ghc-options:
       -Wall
       -fwarn-tabs
-      -auto-all
-      -caf-all
       -fno-warn-orphans
     build-depends:
                        base >= 4.0 && < 5
