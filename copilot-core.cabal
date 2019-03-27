@@ -37,8 +37,6 @@ library
   ghc-options:
     -Wall
     -fwarn-tabs
-    -auto-all
-    -caf-all
     -fno-warn-orphans
 
     -- -fpackage-trust
