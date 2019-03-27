@@ -42,9 +42,6 @@ library
                      , copilot-theorem >= 3.0
                      , copilot-language >= 3.0
                      , copilot-libraries >= 3.0
-                     --, copilot-sbv >= 2.2.1
-                     --, copilot-cbmc >= 2.2.1
-                     --, copilot-c99 >= 2.2.1
                      , copilot-cbackend >= 3.0
                      , optparse-applicative >= 0.14.0.0
                      , directory >= 1.3.0.0
@@ -52,39 +49,3 @@ library
 
 
     exposed-modules: Language.Copilot, Language.Copilot.Main
-
---executable copilot-regression
---  default-language        : Haskell2010
---  hs-source-dirs          : Examples, src
---  ghc-options             : -Wall -fwarn-tabs
---  main-is                 : Test.hs
---  build-depends:
---                     base >= 4.0 && < 5
---                   , copilot-core >= 3.0
---                   , copilot-theorem >= 3.0
---                   , copilot-language >= 3.0
---                   , copilot-libraries >= 3.0
---                   --, copilot-sbv >= 2.2.1
---                   --, copilot-cbmc >= 2.2.1
---                   --, copilot-c99 >= 2.2.1
---                   , directory >= 1.2.1
---                   , random
---  other-modules:    AddMult
---                  , Array
---                  , Cast
---                  , ClockExamples
---                  , EngineExample
---                  , Examples
---                  , Examples2
---                  , ExtFuns
---                  , Languages
---                  , Local
---                  , LTLExamples
---                  , PTLTLExamples
---                  , Random
---                  , RegExpExamples
---                  , Sat
---                  , StackExamples
---                  , StatExamples
---                  , VotingExamples
-
