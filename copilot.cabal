@@ -25,7 +25,7 @@ extra-source-files:  README.md
 
 source-repository head
     type:       git
-    location:   git://github.com/Copilot-Language/Copilot.git
+    location:   https://github.com/Copilot-Language/Copilot.git
 
 library
     hs-source-dirs: src
