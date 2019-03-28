@@ -26,7 +26,7 @@ build-type:          Simple
 
 source-repository head
     type:       git
-    location:   git://github.com/leepike/copilot-language.git
+    location:   https://github.com/Copilot-Language/copilot-language.git
 
 library
   default-language: Haskell2010
