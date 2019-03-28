@@ -17,9 +17,9 @@ description:
 
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
-                     Nis Nordby Wegmann
-maintainer:          leepike@gmail.com
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
+                     Sebastian Niller, Nis Nordby Wegmann
+maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
