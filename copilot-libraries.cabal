@@ -55,6 +55,4 @@ library
 
   ghc-options:
     -fwarn-tabs
-    -auto-all
-    -caf-all
     -Wall
