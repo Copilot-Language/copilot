@@ -68,11 +68,3 @@ library
   ghc-options:
     -fwarn-tabs
     -Wall
-
-    -- -fpackage-trust
-    -- -trust=array
-    -- -trust=base
-    -- -trust=containers
-    -- -- -trust=copilot-core
-
-
