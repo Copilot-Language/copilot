@@ -16,7 +16,7 @@ description               :
 
 license                   : BSD3
 license-file              : LICENSE
-maintainer                : leepike@gmail.com
+maintainer                : Frank Dedden <dev@dedden.net>
 stability                 : Experimental
 category                  : Language, Embedded
 build-type                : Simple
