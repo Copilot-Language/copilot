@@ -67,8 +67,6 @@ library
                  , Copilot.Language.Error
   ghc-options:
     -fwarn-tabs
-    -auto-all
-    -caf-all
     -Wall
 
     -- -fpackage-trust
