@@ -16,10 +16,10 @@ description:
 
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
-                     Nis Nordby Wegmann
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
+                     Sebastian Niller, Nis Nordby Wegmann
 homepage:            https://github.com/Copilot-Language/copilot-libraries
-maintainer:          leepike@gmail.com
+maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
