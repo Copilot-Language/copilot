@@ -10,10 +10,10 @@ description:
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
   multiple back-end compilers, and other verification tools.  A tutorial, bug
   reports, and todos are available at
-  <https://github.com/leepike/copilot-discussion>.
+  <https://github.com/Copilot-Language/copilot-discussion>.
   .
   Examples are available at
-  <https://github.com/leepike/Copilot/tree/master/Examples>.
+  <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
 
 license:             BSD3
 license-file:        LICENSE
