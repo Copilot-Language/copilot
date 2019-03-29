@@ -1,5 +1,5 @@
 cabal-version             : >= 1.10
-name                      : copilot-cbackend
+name                      : copilot-c99
 version                   : 3.0
 synopsis                  : A compiler for Copilot targeting C99.
 description               :
@@ -27,7 +27,7 @@ author                    : Frank Dedden
 
 source-repository head
     type:       git
-    location:   git://github.com/Copilot-Language/copilot-cbackend.git
+    location:   git://github.com/Copilot-Language/copilot-c99.git
 
 library
   default-language        : Haskell2010
