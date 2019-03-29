@@ -1,0 +1,52 @@
+cabal-version             : >= 1.10
+name                      : copilot-cbackend
+version                   : 3.0
+synopsis                  : A compiler for Copilot targeting C99.
+description               :
+  This package is a back-end from Copilot to C.
+  .
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.  A tutorial, bug
+  reports, and todos are available at
+  <https://github.com/Copilot-Language/copilot-discussion>.
+  .
+  Examples are available at
+  <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
+
+license                   : BSD3
+license-file              : LICENSE
+maintainer                : Frank Dedden <dev@dedden.net>
+stability                 : Experimental
+category                  : Language, Embedded
+build-type                : Simple
+extra-source-files        : README.md
+
+author                    : Frank Dedden
+                          , Alwyn Goodloe
+
+source-repository head
+    type:       git
+    location:   git://github.com/Copilot-Language/copilot-cbackend.git
+
+library
+  default-language        : Haskell2010
+  hs-source-dirs          : src
+  ghc-options             : -Wall -fwarn-tabs
+  ghc-prof-options        : -auto-all -caf-all
+  build-depends           : base >= 4.3 && < 5
+                          , copilot-core == 3.0
+                          , language-c99
+                          , language-c99-util
+                          , language-c99-simple
+                          , mtl >= 2.2.1
+                          , pretty >= 1.1.3.3
+                          , containers
+                          , directory >= 1.3.0.0
+                          , filepath >= 1.4.0.0
+  exposed-modules         : Copilot.Compile.C
+                          , Copilot.Compile.C.Translate
+                          , Copilot.Compile.C.Util
+                          , Copilot.Compile.C.CodeGen
+                          , Copilot.Compile.C.External
+                          , Copilot.Compile.C.Compile
