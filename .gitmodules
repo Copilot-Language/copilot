@@ -13,6 +13,3 @@
 [submodule "lib/copilot-theorem"]
 	path = lib/copilot-theorem
 	url = https://github.com/Copilot-Language/copilot-theorem
-[submodule "lib/copilot-cbackend"]
-	path = lib/copilot-cbackend
-	url = https://github.com/Copilot-Language/copilot-cbackend
