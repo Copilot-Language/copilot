@@ -9,7 +9,7 @@
 module Cast ( castEx ) where
 
 import Language.Copilot hiding (even, odd)
-import Copilot.Compile.C99
+--import Copilot.Compile.C
 
 b :: Stream Bool
 b = [True] ++ not b
@@ -29,4 +29,6 @@ spec = trigger "trigger" true [arg y, arg i]
 castEx :: IO ()
 castEx = do 
   interpret 10 spec
-  reify spec >>= compile defaultParams
+  --reify spec >>= compile defaultParams
+
+main = castEx

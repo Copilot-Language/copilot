@@ -47,3 +47,5 @@ spec = do
 
 regExpExamples :: IO ()
 regExpExamples = interpret 15 spec
+
+main = regExpExamples

@@ -4,44 +4,32 @@
 
 -- | Example in sampling external arrays.
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax, DataKinds #-}
 
 module Array ( array ) where
 
 import Language.Copilot hiding (cycle)
-import Data.List (cycle)
---import qualified Copilot.Compile.C99 as C
-import qualified Copilot.Compile.SBV as S
+import Copilot.Compile.C
 
---------------------------------------------------------------------------------
+import Examples.Util
 
-extArr :: Stream Word32
-extArr = externArray "arr1" arrIdx 5 (Just $ repeat [7,8,9,10,11])
+{- Small helper function for constructing 1-dimensional arrays -}
+array' as = array (zip [0..] as)
 
-arrIdx :: Stream Word32
-arrIdx = [0] ++ (arrIdx + 1) `mod` 4
+arr :: Stream (Array (Len 3) Int8)
+arr = [ array' [4,5,6],
+        array' [1,2,3] ] ++ arr
 
-arrIdx2 :: Stream Word8
-arrIdx2 = extern "idx2" (Just [0,0..])
+exarr :: Stream (Array (Len 3) Int8)
+exarr = extern "exarr" Nothing
 
-extArr2 :: Stream Word16 -> Stream Word32
-extArr2 idx = externArray "arr2" idx 4 (Just $ repeat [1,2,3,4])
+arr2D :: Stream (Array (Len 2, Len 3) Int8)
+arr2D = [ array [ ((0,0), 10), ((0,1), 20), ((0,2),30)
+                , ((1,0), 40), ((1,1), 50), ((1,2),40)
+                ] ] ++ arr2D
 
-extArr3 :: Stream Word32
-extArr3 = extArr2 (cast $ externW8 "idx3" (Just $ cycle [0,1,2])) 
+spec = do
+  trigger "farray" true [arg arr, arg arr]
+  trigger "farray2D" true [arg arr2D]
 
-spec :: Spec
-spec = trigger "trigger" true [ arg extArr
-                              , arg (extArr2 (cast arrIdx2))
-                              , arg extArr3
--- Throws an exception since the index is too big for the array!
---                              , arg (extArr2 5)
-                              ]
-
-array :: IO ()
-array = do
---  reify spec >>= C.compile C.defaultParams 
-  interpret 10 spec
-  reify spec >>= S.compile S.defaultParams 
-
---------------------------------------------------------------------------------
+main = interpret 30 spec

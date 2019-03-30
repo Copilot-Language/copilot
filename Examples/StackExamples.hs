@@ -32,3 +32,5 @@ stackExamples = do
   putStrLn ""
   putStrLn ""
   interpret 15 stackTest
+
+main = stackExamples

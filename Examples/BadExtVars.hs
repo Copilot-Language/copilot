@@ -34,39 +34,6 @@ interp0 = interpret 10 spec0
 y :: Stream Word16
 y = extern "y" (Just $ [0..])
 
--- This is ok---indexes just different types.  However, normally, the external
--- array should be given exactly one environment---this will use a different
--- array in different contexts.
-extArr0 :: Stream Word32
-extArr0 = externArray "arr" x 5 (Just $ repeat [7,8,9,10,11])
-extArr1 :: Stream Word32
-extArr1 = externArray "arr" y 5 (Just $ repeat [4,4,5,5,6])
-
--- Both indexes grow to be too big for the array.  The interpreter throws an
--- error.
-spec1 :: Spec
-spec1 = trigger "trigger" true [ arg extArr0
-                               , arg extArr1
-                               ]
-
-interp1 :: IO ()
-interp1 = interpret 10 spec1
-
---------------------------------------------------------------------------------
-
--- Not Ok---saying "arr" is of a different type
-extArr2 :: Stream Word16
-extArr2 = externArray "arr" y 5 (Just $ repeat [7::Word16,8,9,10,11])
-
-spec2 :: Spec
-spec2 = trigger "trigger" true [ arg extArr2
-                               , arg extArr1
-                               ]
-
--- Should fail---"arr" given two different types.
-interp2 :: IO ()
-interp2 = interpret 10 spec2
-
 --------------------------------------------------------------------------------
 
 -- Not Ok---different number of args.
@@ -92,18 +59,15 @@ spec4 :: Spec
 spec4 = trigger "trigger" true [ arg func0, arg func2 ]
 
 interp4 :: IO ()
-interp4 =  
+interp4 =
   interpret 10 spec4
 
 --------------------------------------------------------------------------------
 
 badExtVars :: IO ()
-badExtVars = do 
+badExtVars = do
  interp0
- interp1
- interp2
  interp3
  interp4
 
-
-
+main = badExtVars

@@ -76,3 +76,4 @@ ptltlExamples = do
   prettyPrint sinceExtTest
   interpret 20  sinceExtTest
 
+main = ptltlExamples

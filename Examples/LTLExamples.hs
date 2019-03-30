@@ -1,7 +1,9 @@
 module LTLExamples where
 
 import qualified Prelude as P
+import Copilot.Compile.C
 import Language.Copilot
+import Examples.Util
 
 ----------------
 -- LTL tests ---
@@ -46,3 +48,5 @@ ltlExamples = do
   putStrLn ""
   putStrLn ""
   interpret 20 ltlTest
+
+main = ltlExamples

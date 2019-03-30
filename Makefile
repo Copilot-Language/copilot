@@ -1,22 +1,13 @@
-PACKAGE= \
-  copilot-core \
-  copilot-theorem \
-  copilot-language \
-  copilot-libraries \
-  copilot-sbv \
-  copilot-c99 \
-  copilot-cbmc
-
-PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
-
 default: build
+
+PACKAGEDIRS=$(shell find lib/ -iname '*.cabal'  -exec dirname {} \;)
 
 cabal.sandbox.config:
 	cabal sandbox init
 
 .PHONY: build
 build: cabal.sandbox.config
-	cabal sandbox add-source $(PACKAGEDIR)
+	cabal sandbox add-source ${PACKAGEDIRS}
 	cabal install  --dependencies-only --force-reinstalls
 	cabal install
 
@@ -24,8 +15,9 @@ build: cabal.sandbox.config
 
 .PHONY: test
 test: build
-	cabal run copilot-regression
-	cabal run copilot-c99-qc
+	#cabal run copilot-regression
+	#cabal run copilot-c99-qc
+
 
 .PHONY: veryclean
 veryclean:
@@ -33,3 +25,5 @@ veryclean:
 	-rm -rf .cabal-sandbox
 	-rm -rf dist
 
+
+include Examples/examples.mk

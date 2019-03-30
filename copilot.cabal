@@ -1,14 +1,14 @@
 name:                copilot
-version:             2.2.1
+version:             3.0
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
-author:              Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
+author:              Frank Dedden, Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
 synopsis:            A stream DSL for writing embedded C programs.
 build-type:          Simple
-maintainer:          Lee Pike <leepike@galois.com>
+maintainer:          Frank Dedden <dev@dedden.net>
 category:            Language, Embedded
-homepage:            http://leepike.github.com/Copilot/
+homepage:            https://copilot-language.github.io
 stability:           Experimental
 description:
   This package is the main entry-point for using Copilot.
@@ -25,7 +25,7 @@ extra-source-files:  README.md
 
 source-repository head
     type:       git
-    location:   git://github.com/Copilot-Language/Copilot.git
+    location:   https://github.com/Copilot-Language/Copilot.git
 
 library
     hs-source-dirs: src
@@ -33,53 +33,17 @@ library
     ghc-options:
       -Wall
       -fwarn-tabs
-      -auto-all
-      -caf-all
       -fno-warn-orphans
     build-depends:
                        base >= 4.0 && < 5
-                     , copilot-core >= 2.2.1
-                     , copilot-theorem >= 2.2.1
-                     , copilot-language >= 2.2.1
-                     , copilot-libraries >= 2.2.1
-                     , copilot-sbv >= 2.2.1
-                     , copilot-cbmc >= 2.2.1
-                     , copilot-c99 >= 2.2.1
+                     , copilot-core >= 3.0
+                     , copilot-theorem >= 3.0
+                     , copilot-language >= 3.0
+                     , copilot-libraries >= 3.0
+                     , copilot-c99 >= 3.0
+                     , optparse-applicative >= 0.14.0.0
+                     , directory >= 1.3.0.0
+                     , filepath >= 1.4.1.1
 
-    exposed-modules: Language.Copilot
 
-executable copilot-regression
-  default-language        : Haskell2010
-  hs-source-dirs          : Examples, src
-  ghc-options             : -Wall -fwarn-tabs
-  main-is                 : Test.hs
-  build-depends:
-                     base >= 4.0 && < 5
-                   , copilot-core >= 2.2.1
-                   , copilot-theorem >= 2.2.1
-                   , copilot-language >= 2.2.1
-                   , copilot-libraries >= 2.2.1
-                   , copilot-sbv >= 2.2.1
-                   , copilot-cbmc >= 2.2.1
-                   , copilot-c99 >= 2.2.1
-                   , directory >= 1.2.1
-                   , random
-  other-modules:    AddMult
-                  , Array
-                  , Cast
-                  , ClockExamples
-                  , EngineExample
-                  , Examples
-                  , Examples2
-                  , ExtFuns
-                  , Languages
-                  , Local
-                  , LTLExamples
-                  , PTLTLExamples
-                  , Random
-                  , RegExpExamples
-                  , Sat
-                  , StackExamples
-                  , StatExamples
-                  , VotingExamples
-
+    exposed-modules: Language.Copilot, Language.Copilot.Main

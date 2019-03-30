@@ -1,0 +1,13 @@
+#!/bin/bash
+
+infile="$1"
+if [ ! -e $infile ]; then
+  echo "File \"$infile\" does not exist."
+  exit 1
+fi
+
+shift
+
+p=$(cabal exec printenv GHC_PACKAGE_PATH)
+
+GHC_PACKAGE_PATH="$p" runhaskell "$infile" $@
