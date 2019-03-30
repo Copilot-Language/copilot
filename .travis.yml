@@ -24,6 +24,7 @@ before_install:
   - git clone https://github.com/fdedden/language-c99
   - git clone https://github.com/fdedden/language-c99-simple
   - git clone https://github.com/fdedden/language-c99-util
+  - cd ..
 
 script:
   - make test
