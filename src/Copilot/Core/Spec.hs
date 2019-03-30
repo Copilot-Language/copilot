@@ -11,16 +11,16 @@ module Copilot.Core.Spec
   , Trigger (..)
   , Spec (..)
   , Property (..)
-  , StructData (..)
   ) where
 
 import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type, Typed)
+import Data.Typeable (Typeable)
 
 --------------------------------------------------------------------------------
 
 -- | A stream.
-data Stream = forall a. Typed a => Stream
+data Stream = forall a. (Typeable a, Typed a) => Stream
   { streamId         :: Id
   , streamBuffer     :: [a]
   , streamExpr       :: Expr a
@@ -29,7 +29,7 @@ data Stream = forall a. Typed a => Stream
 --------------------------------------------------------------------------------
 
 -- | An observer.
-data Observer = forall a. Observer
+data Observer = forall a. Typeable a => Observer
   { observerName     :: Name
   , observerExpr     :: Expr a
   , observerExprType :: Type a }
@@ -48,13 +48,6 @@ data Trigger = Trigger
 data Property = Property
   { propertyName     :: Name
   , propertyExpr     :: Expr Bool }
-
---------------------------------------------------------------------------------
-
--- | Struct representation as a bit array.
-data StructData = StructData
-  { structName       :: Name
-  , structFields     :: [(Name, UExpr)] }
 
 --------------------------------------------------------------------------------
 

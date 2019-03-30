@@ -7,8 +7,8 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Copilot.Core.External
-  ( ExtVar (..), ExtArray (..), ExtFun (..), ExtStruct (..)
-  , externVars, externArrays, externFuns, externStructs
+  ( ExtVar (..), ExtFun (..)
+  , externVars, externFuns
   ) where
 
 import Copilot.Core.Expr
@@ -18,30 +18,19 @@ import Data.DList (DList, empty, singleton, append, concat, toList)
 import Data.List (nubBy)
 import Prelude hiding (all, concat, foldr)
 
+import Data.Typeable    (Typeable)
+
 --------------------------------------------------------------------------------
 
 data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
 
-data ExtArray = forall a b . Integral a => ExtArray
-  { externArrayName     :: Name
-  , externArrayElemType :: Type b
-  , externArrayIdx      :: Expr a
-  , externArrayIdxType  :: Type a
-  , externArraySize     :: Int
-  , externArrayTag      :: Maybe Tag }
-
-data ExtFun = forall a . ExtFun
+data ExtFun = forall a . Typeable a => ExtFun
   { externFunName      :: Name
   , externFunType      :: Type a
   , externFunArgs      :: [UExpr]
   , externFunTag       :: Maybe Tag }
-
-data ExtStruct = ExtStruct
-  { externStructName  :: Name
-  , externStructArgs  :: [(Name, UExpr)]
-  , externStructTag   :: Maybe Tag }
 
 --------------------------------------------------------------------------------
 
@@ -59,10 +48,7 @@ externVarsExpr e0 = case e0 of
   Local _ _ _ e1 e2         -> externVarsExpr e1 `append` externVarsExpr e2
   Var _ _                   -> empty
   ExternVar t name _        -> singleton (ExtVar name (UType t))
-  ExternArray _ _ _ _ e _ _ -> externVarsExpr e
   ExternFun _ _ ues _ _     -> concat (map externVarsUExpr ues)
-  ExternStruct _ _ _ _      -> empty
-  GetField _ _ _ _          -> empty
   Op1 _ e                   -> externVarsExpr e
   Op2 _ e1 e2               -> externVarsExpr e1 `append` externVarsExpr e2
   Op3 _ e1 e2 e3            -> externVarsExpr e1 `append`
@@ -72,33 +58,6 @@ externVarsExpr e0 = case e0 of
 
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
-
---------------------------------------------------------------------------------
-
-externArrays :: Spec -> [ExtArray]
-externArrays = toList . all externArraysExpr
-
-externArraysExpr :: Expr a -> DList ExtArray
-externArraysExpr e0 = case e0 of
-  Const  _ _                      -> empty
-  Drop   _ _ _                    -> empty
-  Local _ _ _ e1 e2               -> externArraysExpr e1 `append` externArraysExpr e2
-  Var _ _                         -> empty
-  ExternVar _ _ _                 -> empty
-  ExternArray t1 t2  name
-              size idx _ tag      -> singleton (ExtArray name t2 idx t1 size tag)
-  ExternFun _ _ ues _ _           -> concat (map externArraysUExpr ues)
-  ExternStruct _ _ _ _            -> empty
-  GetField _ _ _ _                -> empty
-  Op1 _ e                         -> externArraysExpr e
-  Op2 _ e1 e2                     -> externArraysExpr e1 `append` externArraysExpr e2
-  Op3 _ e1 e2 e3                  -> externArraysExpr e1 `append`
-                                     externArraysExpr e2 `append`
-                                     externArraysExpr e3
-  Label _ _ e                     -> externArraysExpr e
-
-externArraysUExpr :: UExpr -> DList ExtArray
-externArraysUExpr UExpr { uExprExpr = e } = externArraysExpr e
 
 --------------------------------------------------------------------------------
 
@@ -112,10 +71,7 @@ externFunsExpr e0 = case e0 of
   Local _ _ _ e1 e2           -> externFunsExpr e1 `append` externFunsExpr e2
   Var _ _                     -> empty
   ExternVar _ _ _             -> empty
-  ExternArray _ _ _ _ idx _ _ -> externFunsExpr idx
   ExternFun t name ues _ tag  -> concat $ singleton (ExtFun name t ues tag) : (map externFunsUExpr ues)
-  ExternStruct _ _ _ _        -> empty
-  GetField _ _ _ _            -> empty
   Op1 _ e                     -> externFunsExpr e
   Op2 _ e1 e2                 -> externFunsExpr e1 `append` externFunsExpr e2
   Op3 _ e1 e2 e3              -> externFunsExpr e1 `append`
@@ -126,28 +82,6 @@ externFunsExpr e0 = case e0 of
 externFunsUExpr :: UExpr -> DList ExtFun
 externFunsUExpr UExpr { uExprExpr = e } = externFunsExpr e
 
-
---------------------------------------------------------------------------------
-
-externStructs :: Spec -> [ExtStruct]
-externStructs = toList . all externStructsExpr
-
-externStructsExpr :: Expr a -> DList ExtStruct
-externStructsExpr e0 = case e0 of
-  Const _ _                       -> empty
-  Drop  _ _ _                     -> empty
-  Local _ _ _ _ _                 -> empty
-  Var   _ _                       -> empty
-  ExternVar   _ _ _               -> empty
-  ExternArray _ _ _ _ _ _ _       -> empty
-  ExternFun   _ _ _ _ _           -> empty
-  ExternStruct _ name ses tag     -> singleton (ExtStruct name ses tag)
-                      -- all expressions in a struct are typed
-  GetField _ _ _ _                -> empty
-  Op1   _ _                       -> empty
-  Op2   _ _ _                     -> empty
-  Op3   _ _ _ _                   -> empty
-  Label _ _ e                     -> externStructsExpr e
 
 --------------------------------------------------------------------------------
 

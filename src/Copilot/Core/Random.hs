@@ -22,6 +22,8 @@ import Prelude hiding (id)
 import System.Random (StdGen)
 import Control.Monad.Reader
 
+import Data.Typeable (Typeable)
+
 --------------------------------------------------------------------------------
 
 randomSpec :: Int -> Weights -> StdGen -> Spec
@@ -166,7 +168,7 @@ genTrigger ss name = do
 
 --------------------------------------------------------------------------------
 
-genExpr :: [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
+genExpr :: Typeable a => [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
 genExpr extVars ss t = do
   dp <- depth
   ws <- weights
@@ -261,7 +263,7 @@ genOp1Bool extVars ss = do
   ew <- genExpr extVars ss (typeOf :: Type Bool)
   return $ Op1 Not ew
 
-genOp1Num :: Num a => [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
+genOp1Num :: (Typeable a, Num a) => [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
 genOp1Num extVars ss t = do
   ew  <- genExpr extVars ss t
   opw <- elements [Abs t, Sign t]
@@ -303,7 +305,7 @@ genOp2Ord extVars ss =
                                   _      -> False
     in  filter (not . p) ss
 
-genOp2Num :: [DynExtVar] -> [StreamInfo] -> Type a -> NumWit a -> Gen (Expr a)
+genOp2Num :: Typeable a => [DynExtVar] -> [StreamInfo] -> Type a -> NumWit a -> Gen (Expr a)
 genOp2Num extVars ss t NumWit = do
   ew1 <- genExpr extVars ss t
   ew2 <- genExpr extVars ss t
@@ -312,7 +314,7 @@ genOp2Num extVars ss t NumWit = do
                   , (Mul t) ]
   return $ Op2 opw ew1 ew2
 
-genOp2Integral ::
+genOp2Integral :: Typeable a =>
   [DynExtVar] -> [StreamInfo] -> Type a -> IntegralWit a -> Gen (Expr a)
 genOp2Integral extVars ss t IntegralWit = do
   ew1 <- genExpr extVars ss t
@@ -321,7 +323,7 @@ genOp2Integral extVars ss t IntegralWit = do
                   , (Mod t) ]
   return $ Op2 opw ew1 ew2
 
-genOp3Mux :: [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
+genOp3Mux :: Typeable a => [DynExtVar] -> [StreamInfo] -> Type a -> Gen (Expr a)
 genOp3Mux extVars ss t = do
   ew1 <- genExpr extVars ss (typeOf :: Type Bool)
   ew2 <- genExpr extVars ss t

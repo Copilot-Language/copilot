@@ -32,6 +32,7 @@ module Copilot.Core
   , module Copilot.Core.Operators
   , module Copilot.Core.Spec
   , module Copilot.Core.Type
+  , module Copilot.Core.Type.Array
   , module Copilot.Core.Type.Uninitialized
   , module Data.Int
   , module Data.Word
@@ -44,6 +45,7 @@ import Copilot.Core.MakeTags
 import Copilot.Core.Operators
 import Copilot.Core.Spec
 import Copilot.Core.Type
+import Copilot.Core.Type.Array
 import Copilot.Core.Type.Uninitialized
 import Data.Int
 import Data.Word

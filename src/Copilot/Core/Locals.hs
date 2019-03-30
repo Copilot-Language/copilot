@@ -12,7 +12,7 @@ module Copilot.Core.Locals
   , locals
   ) where
 
-import Copilot.Core
+import Copilot.Core hiding (toList)
 import Data.DList (DList, empty, singleton, append, concat, toList)
 import Data.List (nubBy)
 import Prelude hiding (concat, foldr)
@@ -78,9 +78,6 @@ locsExpr e0 = case e0 of
   Var _ _                    -> empty
   ExternVar _ _ _            -> empty
   ExternFun _ _ _ _ _        -> empty
-  ExternArray _ _  _ _ _ _ _ -> empty
-  ExternStruct _ _ _ _       -> empty
-  GetField _ _ _ _           -> empty
   Op1 _ e                    -> locsExpr e
   Op2 _ e1 e2                -> locsExpr e1 `append` locsExpr e2
   Op3 _ e1 e2 e3             -> locsExpr e1 `append` locsExpr e2

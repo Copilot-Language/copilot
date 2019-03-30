@@ -5,18 +5,72 @@
 -- | Typing for Core.
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, GADTs, KindSignatures #-}
+{-# LANGUAGE  ExistentialQuantification
+            , GADTs
+            , KindSignatures
+            , ScopedTypeVariables
+            , UndecidableInstances
+            , FlexibleContexts
+            , DataKinds
+            , FlexibleInstances
+#-}
 
 module Copilot.Core.Type
   ( Type (..)
   , Typed (..)
   , UType (..)
-  , SimpleType(..)
+  , SimpleType (..)
+
+  , tysize
+  , tylength
+
+  , Value (..)
+  , toValues
+  , fromValues
+  , Field (..)
+  , typename
+
+  , Struct
+  , fieldname
+  , accessorname
   ) where
 
 import Data.Int
 import Data.Word
 import Copilot.Core.Type.Equality
+import Copilot.Core.Type.Array
+
+import Data.Typeable (Typeable, typeRep)
+
+import GHC.TypeLits (KnownNat, natVal, Symbol, KnownSymbol, symbolVal)
+import Data.Proxy   (Proxy (..))
+
+import Data.List (intercalate)
+
+
+class Struct a where
+  typename :: a -> String
+  toValues :: a -> [Value a]
+  fromValues :: [Value a] -> a
+
+data Value a = forall s t. (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
+
+data Field (s :: Symbol) t = Field t
+
+fieldname :: forall s t. KnownSymbol s => Field s t -> String
+fieldname _ = symbolVal (Proxy :: Proxy s)
+
+accessorname :: forall a s t. (Struct a, KnownSymbol s) => (a -> Field s t) -> String
+accessorname _ = symbolVal (Proxy :: Proxy s)
+
+instance (KnownSymbol s, Show t) => Show (Field s t) where
+  show f@(Field v) = fieldname f ++ ":" ++ show v
+
+instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
+  show t = "<" ++ fields ++ ">" where
+    fields = intercalate "," $ map showfield (toValues t)
+    showfield (Value _ field) = show field
+
 
 data Type :: * -> * where
   Bool    :: Type Bool
@@ -30,6 +84,21 @@ data Type :: * -> * where
   Word64  :: Type Word64
   Float   :: Type Float
   Double  :: Type Double
+  Array   :: forall n t. ( KnownNat n
+                         , Typed t
+                         , Typed (InnerType t)
+                         , Flatten t (InnerType t)
+                         ) => Type t -> Type (Array n t)
+  Struct  :: (Typed a, Struct a) => a -> Type a
+
+-- Get the length of an array from its type
+tylength :: forall n t. KnownNat n => Type (Array n t) -> Int
+tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
+
+-- Get the total (nested) size of an array from its type
+tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
+tysize ty@(Array ty'@(Array _)) = tylength ty * tylength ty'
+tysize ty@(Array _            ) = tylength ty
 
 instance EqualType Type where
   (=~=) Bool   Bool   = Just Refl
@@ -47,24 +116,45 @@ instance EqualType Type where
 
 --------------------------------------------------------------------------------
 
-data SimpleType = SBool
-                | SInt8
-                | SInt16
-                | SInt32
-                | SInt64
-                | SWord8
-                | SWord16
-                | SWord32
-                | SWord64
-                | SFloat
-                | SDouble
-  deriving Eq
+data SimpleType where
+  SBool   :: SimpleType
+  SInt8   :: SimpleType
+  SInt16  :: SimpleType
+  SInt32  :: SimpleType
+  SInt64  :: SimpleType
+  SWord8  :: SimpleType
+  SWord16 :: SimpleType
+  SWord32 :: SimpleType
+  SWord64 :: SimpleType
+  SFloat  :: SimpleType
+  SDouble :: SimpleType
+  SArray  :: Type t -> SimpleType
+  SStruct :: SimpleType
+
+{- This instance is necessary, otherwise the type of SArray can't be inferred -}
+instance Eq SimpleType where
+  SBool   == SBool    = True
+  SInt8   == SInt8    = True
+  SInt16  == SInt16   = True
+  SInt32  == SInt32   = True
+  SInt64  == SInt64   = True
+  SWord8  == SWord8   = True
+  SWord16 == SWord16  = True
+  SWord32 == SWord32  = True
+  SWord64 == SWord64  = True
+  SFloat  == SFloat   = True
+  SDouble == SDouble  = True
+  (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
+                             | otherwise              = False
+  SStruct == SStruct  = True
+  _ == _ = False
 
 --------------------------------------------------------------------------------
 
-class Typed a where
-  typeOf :: Type a
+class (Show a, Typeable a) => Typed a where
+  typeOf     :: Type a
   simpleType :: Type a -> SimpleType
+  simpleType _ = SStruct
 
 --------------------------------------------------------------------------------
 
@@ -101,10 +191,16 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
+instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (InnerType t)) => Typed (Array n t) where
+  typeOf                = Array typeOf
+  simpleType (Array t)  = SArray t
 
 --------------------------------------------------------------------------------
 
 -- | A untyped type (no phantom type).
-data UType = forall a . UType { uTypeType :: Type a }
+data UType = forall a . Typeable a => UType { uTypeType :: Type a }
+
+instance Eq UType where
+  UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
 
 --------------------------------------------------------------------------------

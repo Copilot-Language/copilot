@@ -35,6 +35,8 @@ showWit t =
     Word64 -> ShowWit
     Float  -> ShowWit
     Double -> ShowWit
+    Array t -> ShowWit
+    Struct t -> ShowWit
 
 --------------------------------------------------------------------------------
 
@@ -52,6 +54,8 @@ showType t =
     Word64 -> "Word64"
     Float  -> "Float"
     Double -> "Double"
+    Array t -> "Array " ++ showType t
+    Struct t -> "Struct"
 
 --------------------------------------------------------------------------------
 
