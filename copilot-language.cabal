@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-language
-version:             2.2.1
+version:             3.0
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
 description:
@@ -10,23 +10,23 @@ description:
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
   multiple back-end compilers, and other verification tools.  A tutorial, bug
   reports, and todos are available at
-  <https://github.com/leepike/copilot-discussion>.
+  <https://github.com/Copilot-Language/copilot-discussion>.
   .
   Examples are available at
-  <https://github.com/leepike/Copilot/tree/master/Examples>.
+  <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
 
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
-                     Nis Nordby Wegmann
-maintainer:          leepike@gmail.com
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
+                     Sebastian Niller, Nis Nordby Wegmann
+maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
 
 source-repository head
     type:       git
-    location:   git://github.com/leepike/copilot-language.git
+    location:   https://github.com/Copilot-Language/copilot-language.git
 
 library
   default-language: Haskell2010
@@ -37,8 +37,8 @@ library
                , data-reify >= 0.6
                , mtl >= 2.0 && < 3
                , ghc-prim >= 0.2
-               , copilot-core >= 2.2.1
-               , copilot-theorem >= 2.1
+               , copilot-core >= 3.0
+               , copilot-theorem >= 3.0
   exposed-modules: Copilot
                  , Copilot.Language
                  , Copilot.Language.Operators.BitWise
@@ -54,25 +54,17 @@ library
                  , Copilot.Language.Operators.Mux
                  , Copilot.Language.Operators.Ord
                  , Copilot.Language.Operators.Temporal
+                 , Copilot.Language.Operators.Array
+                 , Copilot.Language.Operators.Struct
                  , Copilot.Language.Prelude
                  , Copilot.Language.Reify
-  other-modules:   Copilot.Language.Analyze
-                 , Copilot.Language.Interpret
                  , Copilot.Language.Stream
                  , Copilot.Language.Spec
+  other-modules:   Copilot.Language.Analyze
+                 , Copilot.Language.Interpret
                  , System.Mem.StableName.Dynamic
                  , System.Mem.StableName.Map
                  , Copilot.Language.Error
   ghc-options:
     -fwarn-tabs
-    -auto-all
-    -caf-all
     -Wall
-
-    -fpackage-trust
-    -trust=array
-    -trust=base
-    -trust=containers
-    -trust=copilot-core
-
-

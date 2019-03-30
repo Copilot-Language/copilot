@@ -10,6 +10,8 @@ module Copilot.Language
   ( module Data.Int
   , module Data.Word
   , module Copilot.Core
+  , module Copilot.Core.Type
+  , module Copilot.Core.Type.Array
   , module Copilot.Language.Error
   , module Copilot.Language.Interpret
   , module Copilot.Language.Operators.Boolean
@@ -24,6 +26,8 @@ module Copilot.Language
   , module Copilot.Language.Operators.Ord
   , module Copilot.Language.Operators.Temporal
   , module Copilot.Language.Operators.BitWise
+  , module Copilot.Language.Operators.Array
+  , module Copilot.Language.Operators.Struct
   , module Copilot.Language.Prelude
   , Spec
   , Stream
@@ -39,6 +43,8 @@ module Copilot.Language
 import Data.Int hiding (Int)
 import Data.Word
 import Copilot.Core (Name, Typed)
+import Copilot.Core.Type
+import Copilot.Core.Type.Array
 import qualified Copilot.Core.PrettyPrint as PP
 import Copilot.Language.Error
 import Copilot.Language.Interpret
@@ -54,6 +60,8 @@ import Copilot.Language.Operators.Mux
 import Copilot.Language.Operators.Ord
 import Copilot.Language.Operators.Temporal
 import Copilot.Language.Operators.BitWise
+import Copilot.Language.Operators.Array
+import Copilot.Language.Operators.Struct
 import Copilot.Language.Reify
 import Copilot.Language.Prelude
 import Copilot.Language.Spec

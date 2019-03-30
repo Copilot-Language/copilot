@@ -208,27 +208,6 @@ mkExpr refMkId refStreams refMap = go
 
     ------------------------------------------------------
 
-    ExternArray cs e size mXs -> do
-      w <- go e
-      return $ Core.ExternArray typeOf typeOf cs size w mXs Nothing
-
-    ------------------------------------------------------
-
-    ExternStruct cs sargs -> do
-      args' <- mapM (\(name, Arg e) -> mkStrArg (name, Arg e)) sargs
-      return $ Core.ExternStruct typeOf cs args' Nothing
-
-    ------------------------------------------------------
-
-    GetField struct field -> do
-      s <- go struct
-      return $ Core.GetField typeOf typeOf s field
-      {-  ISSUE: UNLIKE APPEND, GETFIELD DOES NOT HAVE CONSISTENT RETURN TYPE
-            --> NEED TO PROPERLY DEFINE GETFIELD IN EXPR
-              --> IMPLEMENT GETFIELD FROM CORE THROUGH LANGUAGE -}
-
-    ------------------------------------------------------
-
     Op1 op e -> do
       w <- go e
       return $ Core.Op1 op w

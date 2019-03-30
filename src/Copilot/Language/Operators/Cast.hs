@@ -8,7 +8,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Copilot.Language.Operators.Cast
-  ( cast, unsafeCast ) where
+  ( cast, unsafeCast, Cast, UnsafeCast ) where
 
 import qualified Copilot.Core.Operators as C
 import Copilot.Core.Type

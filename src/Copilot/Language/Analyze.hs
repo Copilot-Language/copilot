@@ -147,19 +147,6 @@ analyzeExpr refStreams s = do
                       SeenFun  -> throw NestedExternFun
                       SeenArr  -> throw NestedArray
                       SeenStruct-> throw InvalidField
-      ExternArray _ idx _ _ -> case seenExt of
-                                 NoExtern  -> go SeenArr nodes' idx
-                                 SeenFun   -> throw NestedExternFun
-                                 SeenArr   -> throw NestedArray
-                                 SeenStruct-> go SeenStruct nodes' idx
-      ExternStruct _ sargs -> case seenExt of
-                                NoExtern  ->
-                                  mapM_ (\(_, Arg a) -> go SeenStruct nodes' a) sargs
-                                SeenFun   -> throw NestedExternFun
-                                SeenArr   -> throw NestedArray
-                                SeenStruct->
-                                  mapM_ (\(_, Arg a) -> go SeenStruct nodes' a) sargs
-      GetField e _        -> analyzeAppend refStreams dstn e () analyzeExpr --Copied from `Append` case
       Local e f           -> go seenExt nodes' e >>
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -359,22 +346,6 @@ collectExts refStreams stream_ env_ = do
                      , externFunArgs = (name, argTypes) : externFunArgs env''
                      }
 
-      ExternArray name idx _ _ -> do
-        env' <- go nodes env idx
-        let arr = ( name, getSimpleType stream )
-        return env' { externArrEnv = arr : externArrEnv env' }
-
-      ExternStruct name sargs -> do
-        env' <- foldM (\env' (_, Arg arg_) -> go nodes env' arg_)
-                  env sargs
-        --let argTypes = map (\(Arg arg_) -> (n, getSimpleType arg_)) sargs
-        let argTypes = map (\(_, Arg arg_) -> getSimpleType arg_) sargs
-        let struct = (name, getSimpleType stream)
-        return env' { externStructEnv = struct : externStructEnv env'
-                    , externStructArgs = (name, argTypes) : externStructArgs env' }
-
-      GetField _ _           -> return env
-
       Local e _              -> go nodes env e
       Var _                  -> return env
       Op1 _ e                -> go nodes env e
@@ -386,16 +357,7 @@ collectExts refStreams stream_ env_ = do
       Label _ e              -> go nodes env e
 
 --------------------------------------------------------------------------------
-{-
-getArgName :: forall a. C.Typed a => Stream a -> String
-getArgName arg_stream =
-  case arg_stream of
-    Extern cs _          -> cs
-    ExternFun cs _ _     -> cs
-    ExternArray cs _ _ _ -> cs
-    ExternStruct cs _    -> cs
-    _                    -> ""
--}
+
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
 

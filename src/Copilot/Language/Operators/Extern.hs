@@ -20,19 +20,6 @@ module Copilot.Language.Operators.Extern
   , externF
   , externD
   , externFun
-  , externArray
-  , externArrayB
-  , externArrayW8
-  , externArrayW16
-  , externArrayW32
-  , externArrayW64
-  , externArrayI8
-  , externArrayI16
-  , externArrayI32
-  , externArrayI64
-  , externArrayF
-  , externArrayD
-  , externStruct
   , funArg -- * Deprecated.
   ) where
 
@@ -51,28 +38,10 @@ extern = Extern
 externFun :: Typed a => String -> [Arg] -> Maybe (Stream a) -> Stream a
 externFun = ExternFun
 
-externArray :: (Typed a, Typed b, Integral a)
-            => String -> Stream a -> Size -> Maybe [[b]] -> Stream b
-externArray = ExternArray
-
 -- | Deprecated.
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
 
-externStruct :: Typed a => String -> [(String, Arg)] -> Stream a
-externStruct = ExternStruct
-
-{-(#) :: Typed a => Core.StructData -> String -> Stream a
-(Core.StructData {Core.structName = x, Core.structInst = y})#z = getField x z
-  where
-    getField struct_nm field_nm =
-      let test = find (\(Core.StructData name _) -> name == struct_nm) structs in
-      case test of
-        Nothing -> error "No struct named \"" ++ struct_nm ++ "\" in the spec"
-        Just element ->
-          fromMaybe (find (\(Core.SExpr name _) -> name == field_nm) (element Core.structInst))
-            (error "No field by the name of \"" ++ field_nm ++ "\"") element
--}
 --------------------------------------------------------------------------------
 
 externB   :: String -> Maybe [Bool] -> Stream Bool
@@ -97,50 +66,3 @@ externF   :: String -> Maybe [Float] -> Stream Float
 externF   = extern
 externD   :: String -> Maybe [Double] -> Stream Double
 externD   = extern
-
---------------------------------------------------------------------------------
-
-externArrayB   :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Bool]] -> Stream Bool
-externArrayB   = externArray
-externArrayW8  :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Word8]] -> Stream Word8
-externArrayW8  = externArray
-externArrayW16 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Word16]] -> Stream Word16
-externArrayW16 = externArray
-externArrayW32 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Word32]] -> Stream Word32
-externArrayW32 = externArray
-externArrayW64 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Word64]] -> Stream Word64
-externArrayW64 = externArray
-externArrayI8  :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Int8]] -> Stream Int8
-externArrayI8  = externArray
-externArrayI16 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Int16]] -> Stream Int16
-externArrayI16 = externArray
-externArrayI32 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Int32]] -> Stream Int32
-externArrayI32 = externArray
-externArrayI64 :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Int64]] -> Stream Int64
-externArrayI64 = externArray
-externArrayF   :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Float]] -> Stream Float
-externArrayF   = externArray
-externArrayD   :: (Typed a, Integral a)
-               => String -> Stream a -> Size
-                         -> Maybe [[Double]] -> Stream Double
-externArrayD   = externArray
