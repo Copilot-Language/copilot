@@ -30,7 +30,7 @@ There are two ways to install Copilot:
 
       git clone https://github.com/Copilot-Language/Copilot.git
       cd Copilot
-      git submodule update --remote
+      git submodule update --init --remote
       make
 
 Note there is a TravisCI build (linked to at the top of this README) if you
