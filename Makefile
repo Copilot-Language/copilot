@@ -1,21 +1,13 @@
-
-PACKAGE= \
-  copilot-core \
-  copilot-theorem \
-  copilot-language \
-  copilot-libraries \
-  copilot-c99
-
-PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
-
 default: build
+
+PACKAGEDIRS=$(shell find lib/ -iname '*.cabal'  -exec dirname {} \;)
 
 cabal.sandbox.config:
 	cabal sandbox init
 
 .PHONY: build
 build: cabal.sandbox.config
-	cabal sandbox add-source $(PACKAGEDIR)
+	cabal sandbox add-source ${PACKAGEDIRS}
 	cabal install  --dependencies-only --force-reinstalls
 	cabal install
 
@@ -25,7 +17,6 @@ build: cabal.sandbox.config
 test: build
 	#cabal run copilot-regression
 	#cabal run copilot-c99-qc
-
 
 
 .PHONY: veryclean
