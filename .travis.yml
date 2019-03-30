@@ -20,12 +20,6 @@ before_install:
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
   - git submodule update --remote
-  - cd lib
-  - git clone https://github.com/fdedden/language-c99
-  - git clone https://github.com/fdedden/language-c99-simple
-  - git clone https://github.com/fdedden/language-c99-util
-  - cd ..
 
 script:
   - make test
-
