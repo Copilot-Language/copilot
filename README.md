@@ -18,7 +18,13 @@ for systems with hard realtime requirements.
 Copilot-core can be found on
 [Hackage](https://hackage.haskell.org/package/copilot-core). It is typically
 only installed as part of the complete Copilot distribution. For installation
-instructions, please refer to the Copilot website:
+instructions, please refer to the [Copilot
+website](https://copilot-language.github.io).
+
+
+## Further information
+For further information, install instructions and documentation, please visit
+the Copilot website:
 [https://copilot-language.github.io](https://copilot-language.github.io)
 
 
