@@ -1,18 +1,23 @@
 [submodule "lib/copilot-language"]
 	path = lib/copilot-language
 	url = https://github.com/Copilot-Language/copilot-language.git
+	branch = master
 [submodule "lib/copilot-core"]
 	path = lib/copilot-core
 	url = https://github.com/Copilot-Language/copilot-core.git
+	branch = master
 [submodule "lib/copilot-libraries"]
 	path = lib/copilot-libraries
 	url = https://github.com/Copilot-Language/copilot-libraries.git
+	branch = master
 [submodule "lib/copilot-discussion"]
 	path = lib/copilot-discussion
 	url = https://github.com/Copilot-Language/copilot-discussion.git
 [submodule "lib/copilot-theorem"]
 	path = lib/copilot-theorem
 	url = https://github.com/Copilot-Language/copilot-theorem
-[submodule "lib/copilot-cbackend"]
-	path = lib/copilot-cbackend
-	url = https://github.com/Copilot-Language/copilot-cbackend
+	branch = master
+[submodule "lib/copilot-c99"]
+	path = lib/copilot-c99
+	url = https://github.com/Copilot-Language/copilot-c99.git
+	branch = master

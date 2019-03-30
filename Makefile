@@ -4,7 +4,7 @@ PACKAGE= \
   copilot-theorem \
   copilot-language \
   copilot-libraries \
-  copilot-cbackend
+  copilot-c99
 
 PACKAGEDIR=$(foreach p, $(PACKAGE), lib/$(p)/)
 
