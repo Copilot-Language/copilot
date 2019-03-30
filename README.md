@@ -11,7 +11,7 @@ ensures us that the output is constant in memory and time, making it suitable
 for systems with hard realtime requirements.
 
 
-# Installation
+## Installation
 There are two ways to install Copilot:
 
 * From Hackage (Recommended way):
@@ -37,7 +37,7 @@ Note there is a TravisCI build (linked to at the top of this README) if you
 have trouble building/installing.
 
 
-# Contributions
+## Contributions
 Feel free to open new issues and send pull requests.
 
 In order to contribute to Copilot, please use the following steps which will
@@ -68,23 +68,23 @@ of Git Flow's master branch is our latest tag, and the equivalent of Git Flow's
 develop branch is our master.
 
 
-# Further information
+## Further information
 For further information, including documentation and a tutorial, please visit
 the Copilot website:
 [https://copilot-language.github.io](https://copilot-language.github.io)
 
 
-# Acknowledgements
+## Acknowledgements
 We are grateful for NASA Contract NNL08AD13T to Galois, Inc. and the National
 Institute of Aerospace, which partially supported this work.
 
 
-# License
+## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
 [here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE)
 
 
-# The Copilot Team
+## The Copilot Team
 The development of Copilot spans across several years. During these years
 the following people have helped develop Copilot (in no particular order):
 
