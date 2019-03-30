@@ -34,16 +34,18 @@ library
   hs-source-dirs          : src
   ghc-options             : -Wall -fwarn-tabs
   ghc-prof-options        : -auto-all -caf-all
-  build-depends           : base >= 4.3 && < 5
-                          , copilot-core == 3.0
-                          , language-c99
-                          , language-c99-util
-                          , language-c99-simple
-                          , mtl >= 2.2.1
-                          , pretty >= 1.1.3.3
-                          , containers
-                          , directory >= 1.3.0.0
-                          , filepath >= 1.4.0.0
+  build-depends           : base                >= 4.9 && < 5
+                          , containers          >= 0.4 && < 0.7
+                          , directory           >= 1.3 && < 1.4
+                          , filepath            >= 1.4 && < 1.5
+                          , mtl                 >= 2.2 && < 2.3
+                          , pretty              >= 1.1 && < 1.2
+
+                          , copilot-core        >= 3.0 && < 3.1
+                          , language-c99        >= 0.1 && < 0.2
+                          , language-c99-util   >= 0.1 && < 0.2
+                          , language-c99-simple >= 0.1 && < 0.2
+
   exposed-modules         : Copilot.Compile.C
                           , Copilot.Compile.C.Translate
                           , Copilot.Compile.C.Util
