@@ -6,7 +6,7 @@ description:
   Some tools to prove properties on Copilot programs with k-induction model
   checking.
 
-version                   : 2.2.1
+version                   : 3.0
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : jonathan.laurent@ens.fr
@@ -27,19 +27,22 @@ library
                             -fno-warn-missing-signatures
                             -fcontext-stack=100
 
-                            -fpackage-trust
-                            -trust=array
-                            -trust=base
-                            -trust=containers
-                            -trust=copilot-core
-                            -trust=directory
-                            -trust=exceptions
-                            -trust=process
-                            -trust=random
-                            -trust=unix
+                            -- -fpackage-trust
+                            -- -trust=array
+                            -- -trust=base
+                            -- -trust=containers
+                            -- -- -trust=copilot-core
+                            -- -trust=directory
+                            -- -- -trust=exceptions
+                            -- -trust=process
+                            -- -- -trust=random
+                            -- -trust=unix
+                            -- -- -trust=parsec
+                            -- -trust=bytestring
+                            -- -- -trust=text
 
   build-depends           : base >= 4.0 && < 5
-                          , copilot-core == 2.2.1
+                          , copilot-core == 3.0
                           , mtl
                           , containers
                           , pretty
@@ -51,14 +54,14 @@ library
                           , xml
                           , random
                           , transformers
-                          , smtlib2 >= 0.3 && < 1.0
+                          -- , smtlib2 >= 0.3 && < 1.0
                           , ansi-terminal
 
   exposed-modules         : Copilot.Theorem
                           , Copilot.Theorem.Prove
                           , Copilot.Theorem.Kind2
                           , Copilot.Theorem.Prover.SMT
-                          , Copilot.Theorem.Prover.Z3
+                          -- , Copilot.Theorem.Prover.Z3
                           , Copilot.Theorem.Kind2.Prover
 
   other-modules           : Copilot.Theorem.Tactics

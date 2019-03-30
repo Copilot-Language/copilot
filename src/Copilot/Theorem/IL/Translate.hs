@@ -21,6 +21,8 @@ import Text.Printf
 
 import GHC.Float (float2Double)
 
+import Data.Typeable (Typeable)
+
 --------------------------------------------------------------------------------
 
 -- 'nc' stands for naming convention.
@@ -116,7 +118,7 @@ streamRec (C.Stream { C.streamId       = id
 
 --------------------------------------------------------------------------------
 
-expr :: C.Expr a -> Trans Expr
+expr :: Typeable a => C.Expr a -> Trans Expr
 
 expr (C.Const t v) = return $ trConst t v
 
@@ -141,10 +143,6 @@ expr (C.ExternFun t name args _ _) = do
   return s
   where trArg (C.UExpr {C.uExprExpr}) = expr uExprExpr
 
--- Arrays and functions are treated the same way
-expr (C.ExternArray ta tb name _ ind _ _) =
-  expr (C.ExternFun tb name [C.UExpr ta ind] Nothing Nothing)
-
 expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Int8   -> trSign ta e
   C.Int16  -> trSign ta e
@@ -153,7 +151,7 @@ expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Float  -> trSign ta e
   C.Double -> trSign ta e
   _        -> expr $ C.Const ta 1
-  where trSign :: (Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
+  where trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
         trSign ta e =
           expr (C.Op3 (C.Mux ta)
             (C.Op2 (C.Lt ta) e (C.Const ta 0))
@@ -188,9 +186,6 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
   e1'   <- expr e1
   e2'   <- expr e2
   newMux cond' (trType t) e1' e2'
-
-expr (C.ExternStruct _ _ _ _) = undefined
-expr (C.GetField _ _ _ _) = undefined
 
 trConst :: C.Type a -> a -> Expr
 trConst t v = case t of

@@ -12,6 +12,8 @@ import Text.PrettyPrint.HughesPJ
 import qualified Data.Map   as Map
 import qualified Data.Bimap as Bimap
 
+import Prelude hiding ((<>))
+
 --------------------------------------------------------------------------------
 
 indent     = nest 4
