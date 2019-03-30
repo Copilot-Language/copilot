@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-libraries
-version:             2.2.1
+version:             3.0
 synopsis:            Libraries for the Copilot language.
 description:
   Libraries for the Copilot language.
@@ -9,17 +9,17 @@ description:
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
   multiple back-end compilers, and other verification tools.  A tutorial, bug
   reports, and todos are available at
-  <https://github.com/leepike/copilot-discussion>.
+  <https://github.com/Copilot-Language/copilot-discussion>.
   .
   Examples are available at
   <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
 
 license:             BSD3
 license-file:        LICENSE
-author:              Lee Pike, Robin Morisset, Alwyn Goodloe, Sebastian Niller,
-                     Nis Nordby Wegmann
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
+                     Sebastian Niller, Nis Nordby Wegmann
 homepage:            https://github.com/Copilot-Language/copilot-libraries
-maintainer:          leepike@gmail.com
+maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
@@ -37,7 +37,7 @@ library
     array,
     base >= 4.0 && <= 5.0,
     containers,
-    copilot-language == 2.2.1,
+    copilot-language == 3.0,
     parsec >= 2.0,
     mtl >= 2.0
 
@@ -55,6 +55,4 @@ library
 
   ghc-options:
     -fwarn-tabs
-    -auto-all
-    -caf-all
     -Wall
