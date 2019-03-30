@@ -40,11 +40,11 @@ library
     -fno-warn-orphans
 
   build-depends:
-    containers >= 0.4,
-    base >= 4.0 && < 5,
-    pretty >= 1.0,
-    random > 1.0,
-    mtl >= 2.0,
+    base       >= 4.9 && < 5,
+    containers >= 0.4 && < 0.7,
+    pretty     >= 1.0 && < 1.2,
+    random     > 1.0  && < 1.2,
+    mtl        >= 2.0 && < 2.3,
     dlist
 
   exposed-modules:
