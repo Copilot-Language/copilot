@@ -126,7 +126,7 @@ nodeRhsVarsSet n =
       descrRhsVars (VarDescr _ (Constrs cs))  =
         mconcat (map (foldExpr varOcc) cs)
 
-  in Map.fold (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
+  in Map.foldr (Set.union . descrRhsVars) Set.empty (nodeLocalVars n)
 
 nodeImportedExtVarsSet :: Node -> Set ExtVar
 nodeImportedExtVarsSet = Map.keysSet . Bimap.toMapR . nodeImportedVars
