@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/Copilot-Language/Copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/Copilot)
+[![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
 
 # Copilot: a stream DSL
 Copilot is a runtime verification framework written in Haskell. It allows the
@@ -14,19 +15,17 @@ for systems with hard realtime requirements.
 ## Installation
 There are two ways to install Copilot:
 
-* From Hackage (Recommended way):
+* From Hackage (recommended):
 
-  The Copilot library is cabalized. Assuming you have cabal and the GHC
+  The Copilot library is cabalized. Assuming you have cabal, the GHC
   compiler installed (the
   [Haskell Platform](http://hackage.haskell.org/platform/) is the easiest way
-  to obtain these), it should merely be a matter of running
+  to obtain these), and an Internet connection, it should merely be a matter of running:
 
       cabal install copilot
 
-  with an Internet connection.
-
-* Building from source from the GitHub repositories, typically one would only
-  go this route to develop Copilot.
+* Building from source from the GitHub repositories (typically, one would only
+  go this route to develop Copilot):
 
       git clone https://github.com/Copilot-Language/Copilot.git
       cd Copilot
@@ -71,7 +70,7 @@ develop branch is our master.
 ## Further information
 For further information, including documentation and a tutorial, please visit
 the Copilot website:
-[https://copilot-language.github.io](https://copilot-language.github.io)
+[https://copilot-language.github.io](https://copilot-language.github.io).
 
 
 ## Acknowledgements
@@ -81,7 +80,7 @@ Institute of Aerospace, which partially supported this work.
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE)
+[here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE).
 
 
 ## The Copilot Team
