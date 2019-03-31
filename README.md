@@ -14,16 +14,14 @@ for systems with hard realtime requirements.
 ## Installation
 There are two ways to install Copilot:
 
-* From Hackage (Recommended way):
+* From Hackage (recommended):
 
-  The Copilot library is cabalized. Assuming you have cabal and the GHC
+  The Copilot library is cabalized. Assuming you have cabal, the GHC
   compiler installed (the
   [Haskell Platform](http://hackage.haskell.org/platform/) is the easiest way
-  to obtain these), it should merely be a matter of running
+  to obtain these), and an Internet connection, it should merely be a matter of running:
 
       cabal install copilot
-
-  with an Internet connection.
 
 * Building from source from the GitHub repositories, typically one would only
   go this route to develop Copilot.
