@@ -23,8 +23,8 @@ There are two ways to install Copilot:
 
       cabal install copilot
 
-* Building from source from the GitHub repositories, typically one would only
-  go this route to develop Copilot.
+* Building from source from the GitHub repositories (typically,one would only
+  go this route to develop Copilot):
 
       git clone https://github.com/Copilot-Language/Copilot.git
       cd Copilot
