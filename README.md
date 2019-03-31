@@ -9,8 +9,8 @@ approach.
 
 Programs can be interpreted for testing, or translated C99 code to be
 incorporated in a project, or as a standalone application. The C99 backend
-ensures us that the output is constant in memory and time, making it suitable
-for systems with hard realtime requirements.
+output is constant in memory and time, making it suitable for systems with hard
+realtime requirements.
 
 
 ## Installation
