@@ -71,7 +71,7 @@ develop branch is our master.
 ## Further information
 For further information, including documentation and a tutorial, please visit
 the Copilot website:
-[https://copilot-language.github.io](https://copilot-language.github.io)
+[https://copilot-language.github.io](https://copilot-language.github.io).
 
 
 ## Acknowledgements
@@ -81,7 +81,7 @@ Institute of Aerospace, which partially supported this work.
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE)
+[here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE).
 
 
 ## The Copilot Team
