@@ -1,4 +1,4 @@
-# Copilot: A stream DSL for hard real-time runtime monitoring C programs
+# Copilot: Stream DSL for hard real-time runtime verification
 
 [![Build Status](https://travis-ci.org/Copilot-Language/Copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/Copilot)
 [![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
