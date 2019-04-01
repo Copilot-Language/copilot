@@ -16,5 +16,3 @@ veryclean:
 	-rm -rf cabal.sandbox.config
 	-rm -rf .cabal-sandbox
 	-rm -rf dist
-
-include Examples/examples.mk
