@@ -23,6 +23,7 @@ maintainer:          Frank Dedden <dev@dedden.net>
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
+extra-source-files:  README.md
 
 source-repository head
     type:       git
