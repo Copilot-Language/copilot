@@ -16,8 +16,8 @@ import Copilot.Compile.C99.Translate
 import Copilot.Compile.C99.CodeGen
 
 -- | Compile the specification to a .h and a .c file.
-compile :: Spec -> String -> IO ()
-compile spec prefix = do
+compile :: String -> Spec -> IO ()
+compile prefix spec = do
   let cfile = render $ pretty $ C.translate $ compilec spec
       hfile = render $ pretty $ C.translate $ compileh spec
 
