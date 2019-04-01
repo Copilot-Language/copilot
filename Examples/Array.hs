@@ -1,35 +1,37 @@
 --------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+-- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Example in sampling external arrays.
+-- This is a simple example for arrays. As a program, it does not make much
+-- sense, however it shows of the features of arrays nicely.
 
-{-# LANGUAGE RebindableSyntax, DataKinds #-}
+-- Enable compiler extension for type-level data, necesary for the array length.
+{-# LANGUAGE DataKinds #-}
 
-module Array ( array ) where
+module Array where
 
-import Language.Copilot hiding (cycle)
-import Copilot.Compile.C
+import Language.Copilot
+import Copilot.Compile.C99
 
-import Examples.Util
+import Prelude hiding ((++), (>))
 
-{- Small helper function for constructing 1-dimensional arrays -}
-array' as = array (zip [0..] as)
+-- Lets define an array of length 2.
+-- Make the buffer of the streams 3 elements long.
+arr :: Stream (Array 2 Bool)
+arr = [ array [True, False]
+      , array [True, True]
+      , array [False, False]] ++ arr
 
-arr :: Stream (Array (Len 3) Int8)
-arr = [ array' [4,5,6],
-        array' [1,2,3] ] ++ arr
-
-exarr :: Stream (Array (Len 3) Int8)
+-- Refer to an external array.
+exarr :: Stream (Array 3 Int8)
 exarr = extern "exarr" Nothing
 
-arr2D :: Stream (Array (Len 2, Len 3) Int8)
-arr2D = [ array [ ((0,0), 10), ((0,1), 20), ((0,2),30)
-                , ((1,0), 40), ((1,1), 50), ((1,2),40)
-                ] ] ++ arr2D
-
 spec = do
-  trigger "farray" true [arg arr, arg arr]
-  trigger "farray2D" true [arg arr2D]
+  -- A trigger that fires 'func' when the first element of 'arr' is True.
+  -- It passes the current value of exarr as an argument.
+  -- The prototype of 'func' would be:
+  -- void func (int8_t arg[3]);
+  trigger "func" (arr .!! 0) [arg exarr]
 
-main = interpret 30 spec
+-- Compile the spec
+main = reify spec >>= compile "array"
