@@ -26,7 +26,6 @@ module Copilot.Core.Type
 
   , Value (..)
   , toValues
-  , fromValues
   , Field (..)
   , typename
 
@@ -51,7 +50,6 @@ import Data.List (intercalate)
 class Struct a where
   typename :: a -> String
   toValues :: a -> [Value a]
-  fromValues :: [Value a] -> a
 
 data Value a = forall s t. (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
 
