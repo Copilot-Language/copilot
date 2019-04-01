@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs #-}
 
-module Copilot.Compile.C.Translate where
+module Copilot.Compile.C99.Translate where
 
 import Control.Monad.State
 
 import Copilot.Core
-import Copilot.Compile.C.Util
+import Copilot.Compile.C99.Util
 
 import qualified Language.C99.Simple as C
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Copilot.Compile.C.CodeGen where
+module Copilot.Compile.C99.CodeGen where
 
 import Control.Monad.State  (runState)
 import Data.List            (union)
@@ -10,9 +10,9 @@ import Data.Typeable        (Typeable)
 import qualified Language.C99.Simple as C
 
 import Copilot.Core
-import Copilot.Compile.C.Util
-import Copilot.Compile.C.External
-import Copilot.Compile.C.Translate
+import Copilot.Compile.C99.Util
+import Copilot.Compile.C99.External
+import Copilot.Compile.C99.Translate
 
 -- | Write a declaration for a generator function.
 gendecln :: String -> Type a -> C.Decln

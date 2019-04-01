@@ -1,11 +1,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Copilot.Compile.C.External where
+module Copilot.Compile.C99.External where
 
 import Data.List  (unionBy)
 
 import Copilot.Core
-import Copilot.Compile.C.Util
+import Copilot.Compile.C99.Util
 
 -- | Representation of external variables.
 data External = forall a. External

@@ -46,9 +46,9 @@ library
                           , language-c99-util   >= 0.1 && < 0.2
                           , language-c99-simple >= 0.1 && < 0.2
 
-  exposed-modules         : Copilot.Compile.C
-                          , Copilot.Compile.C.Translate
-                          , Copilot.Compile.C.Util
-                          , Copilot.Compile.C.CodeGen
-                          , Copilot.Compile.C.External
-                          , Copilot.Compile.C.Compile
+  exposed-modules         : Copilot.Compile.C99
+                          , Copilot.Compile.C99.Translate
+                          , Copilot.Compile.C99.Util
+                          , Copilot.Compile.C99.CodeGen
+                          , Copilot.Compile.C99.External
+                          , Copilot.Compile.C99.Compile

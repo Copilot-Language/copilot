@@ -1,4 +1,4 @@
-module Copilot.Compile.C.Compile
+module Copilot.Compile.C99.Compile
   ( compile
   ) where
 
@@ -10,10 +10,10 @@ import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
 
 import Copilot.Core
-import Copilot.Compile.C.Util
-import Copilot.Compile.C.External
-import Copilot.Compile.C.Translate
-import Copilot.Compile.C.CodeGen
+import Copilot.Compile.C99.Util
+import Copilot.Compile.C99.External
+import Copilot.Compile.C99.Translate
+import Copilot.Compile.C99.CodeGen
 
 -- | Compile the specification to a .h and a .c file.
 compile :: Spec -> String -> IO ()

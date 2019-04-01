@@ -1,4 +1,4 @@
-module Copilot.Compile.C.Util where
+module Copilot.Compile.C99.Util where
 
 import Control.Monad.State
 
