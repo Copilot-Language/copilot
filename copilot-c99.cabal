@@ -41,9 +41,9 @@ library
                           , pretty              >= 1.1 && < 1.2
 
                           , copilot-core        >= 3.0 && < 3.1
-                          , language-c99        >= 0.1 && < 0.2
-                          , language-c99-util   >= 0.1 && < 0.2
-                          , language-c99-simple >= 0.1 && < 0.2
+                          , language-c99        >= 0.1.1 && < 0.2
+                          , language-c99-util   >= 0.1.1 && < 0.2
+                          , language-c99-simple >= 0.1.1 && < 0.2
 
   exposed-modules         : Copilot.Compile.C99
                           , Copilot.Compile.C99.Translate
