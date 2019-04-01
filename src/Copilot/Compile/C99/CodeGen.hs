@@ -141,7 +141,7 @@ exprtypes e = case e of
 -- | List all types of an type, returns items uniquely.
 typetypes :: Typeable a => Type a -> [UType]
 typetypes ty = case ty of
-  Array ty' -> [UType ty] `union` typetypes ty
+  Array ty' -> [UType ty] `union` typetypes ty'
   Struct x  -> [UType ty] `union` map (\(Value ty' _) -> UType ty') (toValues x)
   _         -> [UType ty]
 
