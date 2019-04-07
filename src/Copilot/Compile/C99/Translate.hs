@@ -77,7 +77,7 @@ transop1 op e = case op of
   Acosh    _      -> funcall "acosh" [e]
   BwNot    _      -> (C..~) e
   Cast     _ ty  -> C.Cast (transtypename ty) e
-  GetField _  _ n -> C.Dot e n
+  GetField (Struct _)  _ f -> C.Dot e (accessorname f)
 
 -- | Translates a Copilot binary operator and arguments into a C99 expression.
 transop2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
