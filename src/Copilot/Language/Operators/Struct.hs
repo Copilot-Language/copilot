@@ -14,6 +14,6 @@ import GHC.TypeLits             (KnownSymbol)
 
 (#) :: (KnownSymbol s, Typed t, Typed a, Struct a)
       => Stream a -> (a -> Field s t) -> Stream t
-(#) s f = Op1 (GetField typeOf typeOf (accessorname f)) s
+(#) s f = Op1 (GetField typeOf typeOf f) s
 
 --------------------------------------------------------------------------------
