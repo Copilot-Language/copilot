@@ -251,6 +251,8 @@ evalOp1 op = case op of
   Acosh _    -> P.acosh
   BwNot _    -> complement
   Cast _ _   -> P.fromIntegral
+  GetField (Struct _) _ f -> unfield . f where
+    unfield (Field v) = v
 
 --------------------------------------------------------------------------------
 
