@@ -251,6 +251,8 @@ evalOp1 op = case op of
   Acosh _    -> P.acosh
   BwNot _    -> complement
   Cast _ _   -> P.fromIntegral
+  GetField (Struct _) _ f -> unfield . f where
+    unfield (Field v) = v
 
 --------------------------------------------------------------------------------
 
@@ -277,6 +279,7 @@ evalOp2 op = case op of
   BwXor _      -> (xor)
   BwShiftL _ _ -> ( \ !a !b -> shiftL a $! fromIntegral b )
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
+  Index    _   -> \xs n -> (arrayelems xs) !! (fromIntegral n)
 
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = throw DivideByZero

@@ -11,7 +11,9 @@ module Copilot.Core.Operators
   , Op3 (..)
   ) where
 
-import Copilot.Core.Type        (Type(..))
+import GHC.TypeLits             (KnownSymbol)
+
+import Copilot.Core.Type        (Type(..), Field(..))
 import Copilot.Core.Type.Array  (Array)
 import Data.Bits
 import Data.Word                (Word32)
@@ -48,7 +50,7 @@ data Op1 a b where
   -- Casting operator.
   Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
   -- Struct operator.
-  GetField :: Type a -> Type b -> String -> Op1 a b
+  GetField :: KnownSymbol s => Type a -> Type b -> (a -> Field s b) -> Op1 a b
 
 -- | Binary operators.
 data Op2 a b c where

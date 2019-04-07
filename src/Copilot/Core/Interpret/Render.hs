@@ -15,9 +15,7 @@ import Data.List (intersperse, transpose, foldl')
 import Data.Maybe (catMaybes)
 import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import qualified Data.Map as M
--- TODO: pretty-ncols is not updated yet to support >=base-4.11
--- import Text.PrettyPrint.NCol (asColumns)
-import Text.PrettyPrint (Doc, ($$), (<>), text, render, empty)
+import Text.PrettyPrint
 
 import Prelude hiding ((<>))
 
@@ -27,31 +25,29 @@ renderAsTable :: ExecTrace -> String
 renderAsTable
   ExecTrace
     { interpTriggers  = trigs
-    , interpObservers = obsvs } = "Rendering as table is not support, because pretty-ncols is not updated (yet) to newer base versions."
-  -- ( render
-  -- . asColumns
-  -- . transpose
-  -- . (:) (ppTriggerNames ++ ppObserverNames)
-  -- . transpose
-  -- ) (ppTriggerOutputs ++ ppObserverOutputs)
+    , interpObservers = obsvs } = ( render
+                                  . asColumns
+                                  . transpose
+                                  . (:) (ppTriggerNames ++ ppObserverNames)
+                                  . transpose
+                                  ) (ppTriggerOutputs ++ ppObserverOutputs)
+     where
 
-  -- where
+     ppTriggerNames :: [Doc]
+     ppTriggerNames  = map (text . (++ ":")) (M.keys trigs)
 
-  -- ppTriggerNames :: [Doc]
-  -- ppTriggerNames  = map (text . (++ ":")) (M.keys trigs)
+     ppObserverNames :: [Doc]
+     ppObserverNames = map (text . (++ ":")) (M.keys obsvs)
 
-  -- ppObserverNames :: [Doc]
-  -- ppObserverNames = map (text . (++ ":")) (M.keys obsvs)
+     ppTriggerOutputs :: [[Doc]]
+     ppTriggerOutputs = map (map ppTriggerOutput) (M.elems trigs)
 
-  -- ppTriggerOutputs :: [[Doc]]
-  -- ppTriggerOutputs = map (map ppTriggerOutput) (M.elems trigs)
+     ppTriggerOutput :: Maybe [Output] -> Doc
+     ppTriggerOutput (Just vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
+     ppTriggerOutput Nothing   = text "--"
 
-  -- ppTriggerOutput :: Maybe [Output] -> Doc
-  -- ppTriggerOutput (Just vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
-  -- ppTriggerOutput Nothing   = text "--"
-
-  -- ppObserverOutputs :: [[Doc]]
-  -- ppObserverOutputs = map (map text) (M.elems obsvs)
+     ppObserverOutputs :: [[Doc]]
+     ppObserverOutputs = map (map text) (M.elems obsvs)
 
 --------------------------------------------------------------------------------
 
@@ -98,3 +94,27 @@ step ExecTrace
           }
 
 --------------------------------------------------------------------------------
+
+
+
+-- Copied from pretty-ncols because of incompatibility with newer GHC versions.
+asColumns :: [[Doc]] -> Doc
+asColumns = flip asColumnsWithBuff $ 1
+
+asColumnsWithBuff :: [[Doc]] -> Int -> Doc
+asColumnsWithBuff lls q = normalize
+        where normalize = vcat $ map hsep 
+                        $ map (\x -> pad (length x) longColumnLen empty x) 
+                        $ pad' longEntryLen q
+                        $ transpose lls -- normalize column height
+              longColumnLen = maximum (map length lls)
+              longEntryLen = maximum $ map docLen (concat lls)
+
+docLen d = length $ render d 
+
+pad :: Int -> Int -> a -> [a] -> [a]
+pad lx max b ls = ls ++ replicate (max - lx) b
+
+pad' _ _ []       = []
+pad' mx q (ls:xs) = map buf ls : pad' mx q xs 
+        where buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)
