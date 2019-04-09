@@ -44,11 +44,11 @@ library
                      , directory            >= 1.3  && < 1.4
                      , filepath             >= 1.4  && < 1.5
 
-                     , copilot-core         >= 3.0  && < 3.1
-                     , copilot-theorem      >= 3.0  && < 3.1
-                     , copilot-language     >= 3.0  && < 3.1
-                     , copilot-libraries    >= 3.0  && < 3.1
-                     , copilot-c99          >= 3.0  && < 3.1
+                     , copilot-core         >= 3.0.1  && < 3.1
+                     , copilot-theorem      >= 3.0    && < 3.1
+                     , copilot-language     >= 3.0.1  && < 3.1
+                     , copilot-libraries    >= 3.0    && < 3.1
+                     , copilot-c99          >= 3.0.1  && < 3.1
 
 
     exposed-modules: Language.Copilot, Language.Copilot.Main
