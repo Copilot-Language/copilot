@@ -26,6 +26,7 @@ extra-source-files:
   Examples/Heater.hs
   Examples/Array.hs
   Examples/Struct.hs
+  Examples/Counter.hs
 
 source-repository head
     type:       git
