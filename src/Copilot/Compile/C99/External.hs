@@ -21,8 +21,8 @@ extunion = unionBy (\a b -> extname a == extname b)
 -- | Collect all external variables from the streams and triggers.
 gatherexts :: [Stream] -> [Trigger] -> [External]
 gatherexts streams triggers = streamsexts `extunion` triggersexts where
-  streamsexts  = concat $ map streamexts streams
-  triggersexts = concat $ map triggerexts triggers
+  streamsexts  = foldr extunion mempty $ map streamexts streams
+  triggersexts = foldr extunion mempty $ map triggerexts triggers
 
   streamexts :: Stream -> [External]
   streamexts (Stream _ _ expr _) = exprexts expr
