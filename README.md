@@ -13,28 +13,45 @@ output is constant in memory and time, making it suitable for systems with hard
 realtime requirements.
 
 
-## Installation
-There are two ways to install Copilot:
+## Using Copilot
+Assuming you have GHC and cabal already installed (see [Haskell
+Platform](http://hackage.haskell.org/platform/) or
+[ghcup](https://www.haskell.org/ghcup/)), there are several ways to use
+Copilot:
 
-* From Hackage (recommended):
+* Adding Copilot to your project
 
-  The Copilot library is cabalized. Assuming you have cabal, the GHC
-  compiler installed (the
-  [Haskell Platform](http://hackage.haskell.org/platform/) is the easiest way
-  to obtain these), and an Internet connection, it should merely be a matter of
-running:
+  Copilot is available from
+  [Hackage](https://hackage.haskell.org/package/copilot). Adding `copilot`
+  to your project's cabal file should be enough to get going.
+
+* Adding Copilot to the default GHC environment
 
    ```bash
-   cabal install copilot
+   cabal v2-install --lib copilot
    ```
 
-* Building from source from the GitHub repositories (typically, one would only
-  go this route to develop Copilot):
+  After which Copilot will be available from ghci.
+
+* Launching a repl with Copilot
+
+  Another quick solution is to cabal to launch a repl with Copilot
+  available.
+
+  ```bash
+  cabal v2-repl --build-depends copilot
+  ```
+
+  Cabal will download and build Copilot only to make it available in the
+  launched repl. The global GHC environment will not be affected.
+
+* Building from source (typically done for development):
+
    ```bash
    git clone https://github.com/Copilot-Language/Copilot.git
    cd Copilot
    git submodule update --init --remote
-   make
+   cabal v2-build
    ```
 
 Note there is a TravisCI build (linked to at the top of this README) if you
