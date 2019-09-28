@@ -154,7 +154,6 @@ the following people have helped develop Copilot (in no particular order):
 * Lee Pike
 * Alwyn Goodloe (maintainer)
 * Robin Morisset
-* Levent Erkők
 * Sebastian Niller
 * Nis Wegmann
 * Chris Hathhorn
