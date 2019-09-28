@@ -55,7 +55,7 @@ Copilot:
 
   Compiling can either be done in a Nix-style build, or a traditional one:
 
-  _Nix-Style build (Cabal > 2.x)_
+  _Nix-Style build (Cabal >= 2.x)_
 
   ```bash
   cabal build       # For Cabal 3.x
