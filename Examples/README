@@ -1,0 +1,42 @@
+This directory contains a number of examples.  They show off various aspects of
+the language and various backends, including compiling through the Atom (C99)
+backend, SBV backend, interpreting, and generating driver to model-check the two
+back-ends against each other (in Examples).  The libraries are in the
+copilot-libraries package.
+
+ * AddMult: demonstrates Haskell-level recursion
+
+ * Array: external arrays
+
+ * BadExtVars: demonstrates the analyzer catches badly-typed external variables
+
+ * Cast: demonstrates type-safe casting
+
+ * ClockExamples: demonstrates the use of clocks (to control sampling rates)
+
+ * EngineExample: simple engine temperature monitor example
+
+ * Examples: a large number of small examples
+
+ * Examples2: more small examples
+
+ * ExtFuns: sampling external functions
+
+ * Local: using local variables (let expressions inside of Copilot)
+
+ * LTLExamples: demonstrates the bounded LTL library
+
+ * PTLTLExamples: demonstrates the past-time LTL library
+
+ * Random: how to generate a random specification for QuickCheck-type testing
+   (use the copilot-c99-qc executable to run QuickCheck tests against the Atom
+   backend).
+
+ * RegExpExamples: demonstrates the regular expressions library
+
+ * StackExamples: demonstrates the stack library
+
+ * StatExamples: demonstrates the statistics library
+
+ * VotingExamples: demonstrates the fault-tolerant voting library
+ 
