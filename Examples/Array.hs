@@ -23,18 +23,14 @@ arr = [ array [True, False]
       , array [True, True]
       , array [False, False]] ++ arr
 
--- Refer to an external array.
-exarr :: Stream (Array 3 Int8)
-exarr = extern "exarr" Nothing
-
 spec :: Spec
 spec = do
   -- A trigger that fires 'func' when the first element of 'arr' is True.
-  -- It passes the current value of exarr as an argument.
+  -- It passes the current value of arr as an argument.
   -- The prototype of 'func' would be:
   -- void func (int8_t arg[3]);
-  trigger "func" (arr .!! 0) [arg exarr]
+  trigger "func" (arr .!! 0) [arg arr]
 
 -- Compile the spec
 main :: IO ()
-main = reify spec >>= compile "array"
+main = interpret 30 spec
