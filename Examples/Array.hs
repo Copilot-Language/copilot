@@ -8,7 +8,7 @@
 -- Enable compiler extension for type-level data, necesary for the array length.
 {-# LANGUAGE DataKinds #-}
 
-module Array where
+module Main where
 
 import Language.Copilot
 import Copilot.Compile.C99
@@ -26,6 +26,7 @@ arr = [ array [True, False]
 exarr :: Stream (Array 3 Int8)
 exarr = extern "exarr" Nothing
 
+spec :: Spec
 spec = do
   -- A trigger that fires 'func' when the first element of 'arr' is True.
   -- It passes the current value of exarr as an argument.
@@ -34,4 +35,5 @@ spec = do
   trigger "func" (arr .!! 0) [arg exarr]
 
 -- Compile the spec
+main :: IO ()
 main = reify spec >>= compile "array"
