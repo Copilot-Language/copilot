@@ -2,10 +2,11 @@
 -- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- This is a simple example for arrays. As a program, it does not make much
+-- | This is a simple example for arrays. As a program, it does not make much
 -- sense, however it shows of the features of arrays nicely.
 
--- Enable compiler extension for type-level data, necesary for the array length.
+-- | Enable compiler extension for type-level data, necesary for the array
+-- length.
 {-# LANGUAGE DataKinds #-}
 
 module Main where
