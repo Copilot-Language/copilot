@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+-- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
 -- | Another small example that calculates a constant value using a recursive
