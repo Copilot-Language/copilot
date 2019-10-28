@@ -1,15 +1,14 @@
 --------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+-- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
+
+-- | Examples of casting types.
 
 {-# LANGUAGE RebindableSyntax #-}
 
--- Examples of casting types.  
+module Main where
 
-module Cast ( castEx ) where
-
-import Language.Copilot hiding (even, odd)
---import Copilot.Compile.C
+import Language.Copilot
 
 b :: Stream Bool
 b = [True] ++ not b
@@ -26,9 +25,5 @@ y = 1 + cast x
 spec :: Spec
 spec = trigger "trigger" true [arg y, arg i]
 
-castEx :: IO ()
-castEx = do 
-  interpret 10 spec
-  --reify spec >>= compile defaultParams
-
-main = castEx
+main :: IO ()
+main = interpret 30 spec
