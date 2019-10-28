@@ -7,13 +7,13 @@
 
 -- | Enable compiler extension for type-level data, necesary for the array
 -- length.
-{-# LANGUAGE DataKinds #-}
+
+{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE DataKinds        #-}
 
 module Main where
 
 import Language.Copilot
-
-import Prelude hiding ((++), (>))
 
 -- Lets define an array of length 2.
 -- Make the buffer of the streams 3 elements long.
