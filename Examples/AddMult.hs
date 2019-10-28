@@ -8,7 +8,6 @@
 module Main where
 
 import Language.Copilot
-import Copilot.Compile.C99
 
 spec :: Spec
 spec = trigger "f" true [ arg $ mult 5 ]
