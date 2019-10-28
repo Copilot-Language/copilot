@@ -1,31 +1,30 @@
--- | Clocks library tests.
+--------------------------------------------------------------------------------
+-- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
 
-module ClockExamples ( clockExamples ) where
+-- | Example showing usage of clocks to generate periodically recurring truth
+-- values.
 
-import Prelude ( putStrLn, IO, Bool )
-import Copilot.Language
+module Main where
+
+import Language.Copilot
 import Copilot.Library.Clocks
 
+-- | We need to force a type for the argument of `period`.
 p :: Word8
-p = 5 
+p = 5
 
-clkStream, clk1Stream :: Stream Bool
-clkStream  = clk  ( period p ) ( phase 0 )
-clk1Stream = clk1 ( period p ) ( phase 0 )
+-- | Both have the same period, but a different phase.
+clkStream :: Stream Bool
+clkStream  = clk (period p) (phase 0)
 
+clkStream' :: Stream Bool
+clkStream' = clk (period p) (phase 2)
 
-clockTest :: Spec
-clockTest = do
-  observer "clk" clkStream
-  observer "clk1" clk1Stream
+spec :: Spec
+spec = do
+  observer "clk"  clkStream
+  observer "clk'" clkStream'
 
-
-clockExamples :: IO ()
-clockExamples = do
-  prettyPrint clockTest
-  putStrLn ""
-  putStrLn ""
-  interpret 10 clockTest
-
-
-main = clockExamples
+main :: IO ()
+main = interpret 30 spec
