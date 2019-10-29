@@ -33,7 +33,7 @@ transexpr (Drop _ amount sid) = do
 
 transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
 
-transexpr (Label _ _ _) = undefined
+transexpr (Label _ _ e) = transexpr e -- ignore label
 
 transexpr (Op1 op e) = do
   e' <- transexpr e
