@@ -1,11 +1,14 @@
+--------------------------------------------------------------------------------
+-- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
+--------------------------------------------------------------------------------
+
+-- | Example showing an implementation of a resettable counter.
+
 {-# LANGUAGE RebindableSyntax #-}
 
-module Latch where
+module Main where
 
 import Language.Copilot
-import Copilot.Compile.C99
-
-import Prelude hiding ((++), (==), mod)
 
 -- A resettable counter
 counter :: Stream Bool -> Stream Bool -> Stream Int32
@@ -25,4 +28,4 @@ spec :: Spec
 spec = trigger "counter" true [arg $ bytecounter]
 
 main :: IO ()
-main = reify spec >>= compile "latch"
+main = interpret 270 spec

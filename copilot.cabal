@@ -53,3 +53,62 @@ library
 
 
     exposed-modules: Language.Copilot, Language.Copilot.Main
+
+
+executable addmult
+    main-is:            AddMult.hs
+    hs-source-dirs:     Examples
+    build-depends:      base        >= 4.9    && < 5
+                      , copilot     >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable array
+    main-is:            Array.hs
+    hs-source-dirs:     Examples
+    build-depends:      base        >= 4.9    && < 5
+                      , copilot     >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable cast
+    main-is:            Cast.hs
+    hs-source-dirs:     Examples
+    build-depends:      base        >= 4.9    && < 5
+                      , copilot     >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable clock
+    main-is:            Clock.hs
+    hs-source-dirs:     Examples
+    build-depends:      base              >= 4.9    && < 5
+                      , copilot           >= 3.0.1  && < 3.1
+                      , copilot-libraries >= 3.0    && < 3.1
+    default-language:   Haskell2010
+
+executable counter
+    main-is:            Counter.hs
+    hs-source-dirs:     Examples
+    build-depends:      base              >= 4.9    && < 5
+                      , copilot           >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable engine
+    main-is:            Engine.hs
+    hs-source-dirs:     Examples
+    build-depends:      base              >= 4.9    && < 5
+                      , copilot           >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable heater
+    main-is:            Heater.hs
+    hs-source-dirs:     Examples
+    build-depends:      base              >= 4.9    && < 5
+                      , copilot           >= 3.0.1  && < 3.1
+                      , copilot-c99       >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
+
+executable voting
+    main-is:            Voting.hs
+    hs-source-dirs:     Examples
+    build-depends:      base              >= 4.9    && < 5
+                      , copilot           >= 3.0.1  && < 3.1
+    default-language:   Haskell2010
