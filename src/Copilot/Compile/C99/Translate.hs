@@ -15,11 +15,11 @@ transexpr (Const ty x) = return $ constty ty x
 
 transexpr (Local ty1 _ name e1 e2) = do
   e1' <- transexpr e1
-  e2' <- transexpr e2
   let cty1 = transtype ty1
       init = Just $ C.InitExpr e1'
   statetell ([C.VarDecln Nothing cty1 name init], [])
-  return $ e2'
+
+  transexpr e2
 
 transexpr (Var _ n) = return $ C.Ident n
 
