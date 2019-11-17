@@ -48,8 +48,6 @@ data Expr a where
   Local        :: Typeable a => Type a -> Type b -> Name -> Expr a -> Expr b -> Expr b
   Var          :: Typeable a => Type a -> Name -> Expr a
   ExternVar    :: Typeable a => Type a -> Name -> Maybe [a] -> Expr a
-  ExternFun    :: Typeable a => Type a -> Name -> [UExpr] -> Maybe (Expr a)
-               -> Maybe Tag -> Expr a
   Op1          :: Typeable a => Op1 a b -> Expr a -> Expr b
   Op2          :: (Typeable a, Typeable b) => Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: (Typeable a, Typeable b, Typeable c) => Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d
