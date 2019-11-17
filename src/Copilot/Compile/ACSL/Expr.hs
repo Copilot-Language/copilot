@@ -41,8 +41,6 @@ exprACSL ap expr = let  gens = generators ap
   ExternVar _ n _ ->  let ex = lookupExternal n exts
                       in text $ exLocName ex
 
-  -- ExternFun
-
   Op1 op e -> op1ACSL op (exprACSL ap e)
 
   Op2 op e1 e2 -> op2ACSL op (exprACSL ap e1) (exprACSL ap e2)
