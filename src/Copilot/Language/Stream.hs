@@ -31,8 +31,6 @@ data Stream :: * -> * where
               => Int -> Stream a -> Stream a
   Extern      :: Typed a
               => String -> Maybe [a] -> Stream a
-  ExternFun   :: Typed a
-              => String -> [Arg] -> Maybe (Stream a) -> Stream a
   Local       :: (Typed a, Typed b)
               => Stream a -> (Stream a -> Stream b) -> Stream b
   Var         :: Typed a
