@@ -168,10 +168,6 @@ evalExpr_ k e0 locs strms = case e0 of
     x `seq` locs' `seq` evalExpr_ k e2  locs' strms
   Var t name                         -> fromJust $ lookup name locs >>= fromDynamic
   ExternVar _ name xs                -> evalExternVar k name xs
-  ExternFun _ name _ expr _          -> --evalFunc k t name expr
-    case expr of
-      Nothing -> throw (NoExtsInterp name)
-      Just e  -> evalExpr_ k e locs strms
   Op1 op e1                          ->
     let ev1 = evalExpr_ k e1 locs strms in
     let op1 = evalOp1 op                in

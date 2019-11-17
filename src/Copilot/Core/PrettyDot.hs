@@ -41,10 +41,6 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
   ExternVar _ name _         -> (if bb then (text (printf "%s [label=\"externV: %s\",color=cyan1, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))) else (text (printf "%s [label=\"%s\",color=cyan1, style=filled]\n" (show ii::String) (mkExtTmpVar name)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
                   ,ii+1)
-  ExternFun _ name args _ tag  -> let (r1, i1) = ppUExprL (ii+1) ii bb args in
-            (if bb then (text (printf "%s [label=\"externF: %s\",color=cyan4, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
-                  <> (hcat (r1))) else (text (printf "%s [label=\"%s\",color=cyan4, style=filled]\n" (show ii::String) (mkExtTmpTag name tag))<> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
-                  ,i1)
   Local _ _ name e1 e2       -> let (r1, i1) = ppExprDot (ii+2) (ii+1) bb e1
                                 in let (r2, i2) = ppExprDot (i1) ii bb e2
                                 in (text (printf "%s [label=\"local:\",color=blue, style=filled]\n" (show ii::String) )
