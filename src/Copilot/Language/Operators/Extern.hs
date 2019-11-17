@@ -17,9 +17,7 @@ module Copilot.Language.Operators.Extern
   , externI16
   , externI32
   , externI64
-  , externF
   , externD
-  , externFun
   , funArg -- * Deprecated.
   ) where
 
@@ -34,9 +32,6 @@ type Size = Int
 
 extern :: Typed a => String -> Maybe [a] -> Stream a
 extern = Extern
-
-externFun :: Typed a => String -> [Arg] -> Maybe (Stream a) -> Stream a
-externFun = ExternFun
 
 -- | Deprecated.
 funArg :: Typed a => Stream a -> Arg
@@ -62,7 +57,5 @@ externI32 :: String -> Maybe [Int32] -> Stream Int32
 externI32 = extern
 externI64 :: String -> Maybe [Int64] -> Stream Int64
 externI64 = extern
-externF   :: String -> Maybe [Float] -> Stream Float
-externF   = extern
 externD   :: String -> Maybe [Double] -> Stream Double
 externD   = extern

@@ -36,7 +36,6 @@ data AnalyzeException
   | DropIndexOverflow
   | ReferentialCycle
   | DropMaxViolation
-  | NestedExternFun
   | NestedArray
   | TooMuchRecursion
   | InvalidField
@@ -52,8 +51,6 @@ instance Show AnalyzeException where
   show ReferentialCycle       = badUsage $  "Referential cycle!"
   show DropMaxViolation       = badUsage $  "Maximum drop violation (" ++
                                   show (maxBound :: DropIdx) ++ ")!"
-  show NestedExternFun        = badUsage $
-    "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
   show NestedArray            = badUsage $
     "An external function cannot take another external function or external array as an argument.  Try defining a stream, and using the stream values in the other definition."
   show TooMuchRecursion       = badUsage $
@@ -135,18 +132,6 @@ analyzeExpr refStreams s = do
       Const _             -> return ()
       Drop k e1           -> analyzeDrop (fromIntegral k) e1
       Extern _ _          -> return ()
-      ExternFun _ args me ->
-        checkInterp >> checkArgs
-        where
-        checkInterp = case me of
-                        Nothing -> return ()
-                        Just e  -> go seenExt nodes' e
-        checkArgs = case seenExt of
-                      NoExtern -> mapM_ (\(Arg a) ->
-                                             go SeenFun nodes' a) args
-                      SeenFun  -> throw NestedExternFun
-                      SeenArr  -> throw NestedArray
-                      SeenStruct-> throw InvalidField
       Local e f           -> go seenExt nodes' e >>
                              go seenExt nodes' (f (Var "dummy"))
       Var _               -> return ()
@@ -209,8 +194,6 @@ analyzeDrop _ _                            = throw DropAppliedToNonAppend
 data ExternEnv = ExternEnv
   { externVarEnv  :: [(String, C.SimpleType)]
   , externArrEnv  :: [(String, C.SimpleType)]
-  , externFunEnv  :: [(String, C.SimpleType)]
-  , externFunArgs :: [(String, [C.SimpleType])]
   , externStructEnv  :: [(String, C.SimpleType)]
   , externStructArgs :: [(String, [C.SimpleType])]
   }
@@ -222,27 +205,19 @@ data ExternEnv = ExternEnv
 analyzeExts :: ExternEnv -> IO ()
 analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
-                      , externFunEnv  = funs
-                      , externFunArgs = args
                       , externStructEnv  = datastructs
                       , externStructArgs = struct_args }
     = do
     -- symbol names redeclared?
     findDups vars arrs
-    findDups vars funs
     --findDups vars struct_args
     findDups vars datastructs
-    findDups arrs funs
     --findDups arrs struct_args
     findDups arrs datastructs
-    --findDups funs struct_args
-    findDups funs datastructs
     -- conflicting types?
     conflictingTypes vars
     conflictingTypes arrs
-    conflictingTypes funs
     -- symbol names given different number of args and right types?
-    funcArgCheck args
     --funcArgCheck struct_args
     funcArgCheck struct_args
 
@@ -299,7 +274,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
-           (ExternEnv [] [] [] [] [] [])
+           (ExternEnv [] [] [] [])
            (triggers $ runSpec spec)
   foldM observerExts env (observers $ runSpec spec)
 
@@ -333,18 +308,6 @@ collectExts refStreams stream_ env_ = do
       Extern name _          ->
         let ext = ( name, getSimpleType stream ) in
         return env { externVarEnv = ext : externVarEnv env }
-
-      ExternFun name args me -> do
-        env' <- case me of
-                  Nothing -> return env
-                  Just e  -> go nodes env e
-        env'' <- foldM (\env'' (Arg arg_) -> go nodes env'' arg_)
-                   env' args
-        let argTypes = map (\(Arg arg_) -> getSimpleType arg_) args
-        let fun = (name, getSimpleType stream)
-        return env'' { externFunEnv  = fun : externFunEnv env''
-                     , externFunArgs = (name, argTypes) : externFunArgs env''
-                     }
 
       Local e _              -> go nodes env e
       Var _                  -> return env

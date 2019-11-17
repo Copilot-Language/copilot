@@ -199,15 +199,6 @@ mkExpr refMkId refStreams refMap = go
 
     ------------------------------------------------------
 
-    ExternFun cs args interpExpr -> do
-      args' <- mapM mkFunArg args
-      w <- case interpExpr of
-             Nothing -> return Nothing
-             Just e  -> liftM Just (go e)
-      return $ Core.ExternFun typeOf cs args' w Nothing
-
-    ------------------------------------------------------
-
     Op1 op e -> do
       w <- go e
       return $ Core.Op1 op w
