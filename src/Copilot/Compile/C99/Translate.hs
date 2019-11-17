@@ -33,8 +33,6 @@ transexpr (Drop _ amount sid) = do
 
 transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
 
-transexpr (ExternFun _ _ _ _ _) = undefined
-
 transexpr (Label _ _ _) = undefined
 
 transexpr (Op1 op e) = do
