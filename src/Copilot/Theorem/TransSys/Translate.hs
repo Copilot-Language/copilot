@@ -36,7 +36,6 @@ ncAnonInput   = "in"
 ncLocal s     = "l" ++ dropWhile (not . isNumber) s
 
 ncExternVarNode name = "ext-" ++ name
-ncExternFunNode name = "fun-" ++ name
 
 ncImported :: NodeId -> String -> String
 ncImported n s = n ++ ncSep ++ s
@@ -201,8 +200,6 @@ expr t (C.Op2 op e1 e2) = handleOp2
   where
     notHandled (UnhandledOp2 _opName _ta _tb _tc) =
       newUnconstrainedVar t
-
-expr t (C.ExternFun _ _ _ _ _) = newUnconstrainedVar t
 
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
