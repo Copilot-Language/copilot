@@ -36,9 +36,6 @@ ncLocal s = "l" ++ dropWhile (not . isNumber) s
 ncExternVar :: C.Name -> SeqId
 ncExternVar n = "ext_" ++ n
 
-ncExternFun :: C.Name -> SeqId
-ncExternFun n = "_" ++ n
-
 ncUnhandledOp :: String -> String
 ncUnhandledOp = id
 
@@ -135,13 +132,6 @@ expr (C.Var t name) = return $ SVal (trType t) (ncLocal name) _n_
 
 expr (C.ExternVar t name _) = bound s t >> return s
   where s = SVal (trType t) (ncExternVar name) _n_
-
-expr (C.ExternFun t name args _ _) = do
-  args' <- mapM trArg args
-  let s = FunApp (trType t) (ncExternFun name) args'
-  bound s t
-  return s
-  where trArg (C.UExpr {C.uExprExpr}) = expr uExprExpr
 
 expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Int8   -> trSign ta e
