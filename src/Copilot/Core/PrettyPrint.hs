@@ -66,6 +66,7 @@ ppOp1 op = case op of
   BwNot _                 -> ppPrefix "~"
   Cast _ _                -> ppPrefix "(cast)"
   GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
+  GetField _ _ _          -> impossible "ppOp1" "Copilot.Core.PrettyPrint"
 
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
