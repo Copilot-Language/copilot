@@ -44,27 +44,29 @@ ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
 
 ppOp1 :: Op1 a b -> Doc -> Doc
 ppOp1 op = case op of
-  Not      -> ppPrefix "not"
-  Abs _    -> ppPrefix "abs"
-  Sign _   -> ppPrefix "signum"
-  Recip _  -> ppPrefix "recip"
-  Exp _    -> ppPrefix "exp"
-  Sqrt _   -> ppPrefix "sqrt"
-  Log _    -> ppPrefix "log"
-  Sin _    -> ppPrefix "sin"
-  Tan _    -> ppPrefix "tan"
-  Cos _    -> ppPrefix "cos"
-  Asin _   -> ppPrefix "asin"
-  Atan _   -> ppPrefix "atan"
-  Acos _   -> ppPrefix "acos"
-  Sinh _   -> ppPrefix "sinh"
-  Tanh _   -> ppPrefix "tanh"
-  Cosh _   -> ppPrefix "cosh"
-  Asinh _  -> ppPrefix "asinh"
-  Atanh _  -> ppPrefix "atanh"
-  Acosh _  -> ppPrefix "acosh"
-  BwNot _  -> ppPrefix "~"
-  Cast _ _ -> ppPrefix "(cast)"
+  Not                     -> ppPrefix "not"
+  Abs _                   -> ppPrefix "abs"
+  Sign _                  -> ppPrefix "signum"
+  Recip _                 -> ppPrefix "recip"
+  Exp _                   -> ppPrefix "exp"
+  Sqrt _                  -> ppPrefix "sqrt"
+  Log _                   -> ppPrefix "log"
+  Sin _                   -> ppPrefix "sin"
+  Tan _                   -> ppPrefix "tan"
+  Cos _                   -> ppPrefix "cos"
+  Asin _                  -> ppPrefix "asin"
+  Atan _                  -> ppPrefix "atan"
+  Acos _                  -> ppPrefix "acos"
+  Sinh _                  -> ppPrefix "sinh"
+  Tanh _                  -> ppPrefix "tanh"
+  Cosh _                  -> ppPrefix "cosh"
+  Asinh _                 -> ppPrefix "asinh"
+  Atanh _                 -> ppPrefix "atanh"
+  Acosh _                 -> ppPrefix "acosh"
+  BwNot _                 -> ppPrefix "~"
+  Cast _ _                -> ppPrefix "(cast)"
+  GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
+  GetField _ _ _          -> impossible "ppOp1" "Copilot.Core.PrettyPrint"
 
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
@@ -89,7 +91,6 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
-  --GetField _ _ -> ppInfix "."
 
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
