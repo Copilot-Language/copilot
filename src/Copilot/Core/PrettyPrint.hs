@@ -65,6 +65,7 @@ ppOp1 op = case op of
   Acosh _  -> ppPrefix "acosh"
   BwNot _  -> ppPrefix "~"
   Cast _ _ -> ppPrefix "(cast)"
+  GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
 
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
@@ -89,7 +90,6 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
-  --GetField _ _ -> ppInfix "."
 
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
