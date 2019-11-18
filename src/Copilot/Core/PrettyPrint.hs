@@ -91,6 +91,7 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
+  Index    _   -> ppInfix ".!!"
 
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
