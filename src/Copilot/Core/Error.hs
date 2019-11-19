@@ -12,8 +12,9 @@ impossible :: String -> String -> a
 impossible function package =
   error $ "\"Impossible\" error in function "
     ++ function ++ ", in package " ++ package
-    ++ ".  Please email Lee Pike at <lee pike @ gmail . com> " ++
-       "(remove spaces) or file a bug report on github.com."
+    ++ ". Please file an issue at "
+    ++ "https://github.com/Copilot-Language/copilot/issues"
+    ++ "or email the maintainers at <dev@dedden.net>"
 
 badUsage :: String -> a
 badUsage msg = error $ "Copilot error: " ++ msg
