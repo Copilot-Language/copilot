@@ -42,4 +42,5 @@ gatherexts streams triggers = streamsexts `extunion` triggersexts where
     Op1 _ e             -> rec e
     Op2 _ e1 e2         -> rec e1 `extunion` rec e2
     Op3 _ e1 e2 e3      -> rec e1 `extunion` rec e2 `extunion` rec e3
+    Label _ _ e         -> rec e
     _                   -> []

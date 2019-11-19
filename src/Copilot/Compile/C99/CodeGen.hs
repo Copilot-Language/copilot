@@ -137,6 +137,7 @@ exprtypes e = case e of
   Op1 _ e1              -> exprtypes e1
   Op2 _ e1 e2           -> exprtypes e1 `union` exprtypes e2
   Op3 _ e1 e2 e3        -> exprtypes e1 `union` exprtypes e2 `union` exprtypes e3
+  Label ty _ _          -> typetypes ty
 
 -- | List all types of an type, returns items uniquely.
 typetypes :: Typeable a => Type a -> [UType]
