@@ -48,8 +48,8 @@ Copilot:
 * Building from source (typically done for development):
 
   ```bash
-  git clone https://github.com/Copilot-Language/Copilot.git
-  cd Copilot
+  git clone https://github.com/Copilot-Language/copilot.git
+  cd copilot
   git submodule update --init --remote
   ```
 
