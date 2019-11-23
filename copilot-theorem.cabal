@@ -6,7 +6,7 @@ description:
   Some tools to prove properties on Copilot programs with k-induction model
   checking.
 
-version                   : 3.0
+version                   : 3.1
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : jonathan.laurent@ens.fr
