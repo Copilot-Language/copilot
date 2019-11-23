@@ -1,0 +1,5 @@
+2019-11-22 Ivan Perez <ivan.perez@nianet.org>
+        * Version bump (3.1).
+        * Eliminate random modules and generators (#9).
+        * Updated contact information for 'impossible' error (#12).
+        * Implement missing pretty printer for Index operator (#11).
