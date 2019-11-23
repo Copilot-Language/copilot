@@ -25,7 +25,6 @@ extra-source-files:
   README.md
   Examples/Heater.hs
   Examples/Array.hs
-  Examples/Struct.hs
   Examples/Counter.hs
 
 source-repository head
