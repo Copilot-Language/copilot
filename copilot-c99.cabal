@@ -21,6 +21,7 @@ stability                 : Experimental
 category                  : Language, Embedded
 build-type                : Simple
 extra-source-files        : README.md
+                          , CHANGELOG
 
 author                    : Frank Dedden
                           , Alwyn Goodloe
