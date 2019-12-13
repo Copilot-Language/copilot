@@ -179,4 +179,4 @@ the following people have helped develop Copilot (in no particular order):
 * Ryan Spring
 * Lauren Pick
 * Frank Dedden (maintainer: contact at dev@dedden.net)
-* Ivan Perez
+* Ivan Perez (maintainer)
