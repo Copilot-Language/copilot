@@ -122,6 +122,12 @@ constty ty = case ty of
   Word64 -> C.LitInt . fromIntegral
   Float  -> C.LitFloat
   Double -> C.LitDouble
+  Struct _ -> \v -> C.InitVal (transtypename ty) (map fieldinit (toValues v))
+    where
+      fieldinit (Value ty (Field val)) = C.InitExpr $ constty ty val
+  Array ty' -> \v -> C.InitVal (transtypename ty) (map valinit (arrayelems v))
+    where
+      valinit = C.InitExpr . constty ty'
 
 -- | Translate a Copilot type to a C99 type.
 transtype :: Type a -> C.Type
