@@ -1,3 +1,6 @@
+2019-12-23 Frank Dedden <dev@dedden.net>
+        * Fixed bug with constant structs and arrays.(#13).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
         * Remove ExternFun (#6).
