@@ -43,7 +43,7 @@ mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals where
   name     = streamname sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
-  initvals = Just $ C.InitArray $ map (mkinit ty) xs
+  initvals = Just $ C.InitArray $ map (C.InitExpr . constty ty) xs
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
@@ -51,13 +51,6 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   name    = indexname sid
   cty     = C.TypeSpec $ C.TypedefName "size_t"
   initval = Just $ C.InitExpr $ C.LitInt 0
-
--- | Make an initial declaration from a single value.
-mkinit :: Type a -> a -> C.Init
-mkinit (Array ty') xs = C.InitArray $ map (mkinit ty') (arrayelems xs)
-mkinit (Struct _)  x  = C.InitArray $ map fieldinit (toValues x) where
-  fieldinit (Value ty (Field val)) = mkinit ty val
-mkinit ty          x  = C.InitExpr  $ constty ty x
 
 -- | The step function updates all streams,a
 mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
