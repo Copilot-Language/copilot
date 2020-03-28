@@ -61,37 +61,39 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
          ++ tmpassigns
          ++ bufferupdates
          ++ indexupdates
-  (declns, tmpassigns, bufferupdates, indexupdates) = unzip4 $ map mkupdateglobals streams
+  (declns, tmpassigns, bufferupdates, indexupdates) =
+    unzip4 $ map mkupdateglobals streams
 
   -- Write code to update global stream buffers and index.
   mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
-  mkupdateglobals (Stream sid buff expr ty) = (tmpdecln, tmpassign, bufferupdate, indexupdate)
-    where
-      tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
+  mkupdateglobals (Stream sid buff expr ty) =
+    (tmpdecln, tmpassign, bufferupdate, indexupdate)
+      where
+        tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
 
-      tmpassign = case ty of
-        Array _ -> C.Expr $ memcpy (C.Ident tmp_var) val size
+        tmpassign = case ty of
+          Array _ -> C.Expr $ memcpy (C.Ident tmp_var) val size
+            where
+              size = C.LitInt $ fromIntegral $ tysize ty
+          _       -> C.Expr $ C.Ident tmp_var C..= val
+
+        bufferupdate = case ty of
+          Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
+            where
+              dest = C.Index buff_var index_var
+              size = C.LitInt $ fromIntegral $ tysize ty
+          _       -> C.Expr $ C.Index buff_var index_var C..= (C.Ident tmp_var)
+
+        indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
           where
-            size = C.LitInt $ fromIntegral $ tysize ty
-        _       -> C.Expr $ C.Ident tmp_var C..= val
+            bufflength = C.LitInt $ fromIntegral $ length buff
+            incindex   = (C..++) index_var
 
-      bufferupdate = case ty of
-        Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
-          where
-            dest  = C.Index buff_var index_var
-            size = C.LitInt $ fromIntegral $ tysize ty
-        _       -> C.Expr $ C.Index buff_var index_var C..= (C.Ident tmp_var)
-
-      indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
-        where
-          bufflength = C.LitInt $ fromIntegral $ length buff
-          incindex   = (C..++) index_var
-
-      tmp_var   = streamname sid ++ "_tmp"
-      buff_var  = C.Ident $ streamname sid
-      index_var = C.Ident $ indexname sid
-      val       = C.Funcall (C.Ident $ generatorname sid) []
-      cty       = transtype ty
+        tmp_var   = streamname sid ++ "_tmp"
+        buff_var  = C.Ident $ streamname sid
+        index_var = C.Ident $ indexname sid
+        val       = C.Funcall (C.Ident $ generatorname sid) []
+        cty       = transtype ty
 
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
