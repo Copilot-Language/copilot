@@ -59,8 +59,29 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   declns = []
   stmts  =  map mkexcopy exts
          ++ map mktriggercheck triggers
-         ++ map mkupdatebuffer streams
-         ++ map mkupdateindex streams
+         ++ bufferupdates
+         ++ indexupdates
+  (bufferupdates, indexupdates) = unzip $ map mkupdateglobals streams
+
+  -- Write code to global stream buffers and index.
+  mkupdateglobals :: Stream -> (C.Stmt, C.Stmt)
+  mkupdateglobals (Stream sid buff expr ty) = (bufferupdate, indexupdate)
+    where
+      bufferupdate = case ty of
+        Array _ -> C.Expr $ memcpy dest val size
+          where
+            dest  = C.Index buff_var index_var
+            size = C.LitInt $ fromIntegral $ tysize ty
+        _       -> C.Expr $ C.Index buff_var index_var C..= val
+
+      indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
+        where
+          bufflength = C.LitInt $ fromIntegral $ length buff
+          incindex   = (C..++) index_var
+
+      buff_var  = C.Ident $ streamname sid
+      index_var = C.Ident $ indexname sid
+      val       = C.Funcall (C.Ident $ generatorname sid) []
 
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
@@ -78,26 +99,6 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
     firetrigger = [C.Expr $ C.Funcall (C.Ident name) args'] where
       args'        = take (length args) (map argcall (argnames name))
       argcall name = C.Funcall (C.Ident name) []
-
-  -- Code to update the global buffer.
-  mkupdatebuffer :: Stream -> C.Stmt
-  mkupdatebuffer (Stream sid buff expr ty) = case ty of
-    Array _ -> C.Expr $ memcpy dest src size where
-      dest = C.Index (C.Ident $ streamname sid) (C.Ident $ indexname sid)
-      src  = C.Funcall (C.Ident $ generatorname sid) []
-      size = C.LitInt $ fromIntegral $ tysize ty
-    _ -> C.Expr $ C.Index var index C..= val where
-      var   = C.Ident $ streamname sid
-      index = C.Ident $ indexname sid
-      val   = C.Funcall (C.Ident $ generatorname sid) []
-
-  -- Code to update the index.
-  mkupdateindex :: Stream -> C.Stmt
-  mkupdateindex (Stream sid buff expr ty) = C.Expr $ globvar C..= val where
-    globvar = C.Ident $ indexname sid
-    index   = (C..++) (C.Ident $ indexname sid)
-    val     = index C..% (C.LitInt $ fromIntegral len)
-    len     = length buff
 
   -- Write a call to the memcpy function.
   memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
