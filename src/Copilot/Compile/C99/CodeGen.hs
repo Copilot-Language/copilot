@@ -4,7 +4,7 @@
 module Copilot.Compile.C99.CodeGen where
 
 import Control.Monad.State  (runState)
-import Data.List            (union)
+import Data.List            (union, unzip4)
 import Data.Typeable        (Typeable)
 
 import qualified Language.C99.Simple as C
@@ -58,22 +58,29 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   void = C.TypeSpec C.Void
   stmts  =  map mkexcopy exts
          ++ map mktriggercheck triggers
+         ++ tmpassigns
          ++ bufferupdates
          ++ indexupdates
-  (declns, bufferupdates, indexupdates) = unzip3 $ map mkupdateglobals streams
+  (declns, tmpassigns, bufferupdates, indexupdates) = unzip4 $ map mkupdateglobals streams
 
   -- Write code to global stream buffers and index.
-  mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt)
-  mkupdateglobals (Stream sid buff expr ty) = (tmpdecln, bufferupdate, indexupdate)
+  mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
+  mkupdateglobals (Stream sid buff expr ty) = (tmpdecln, tmpassign, bufferupdate, indexupdate)
     where
       tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
 
+      tmpassign = case ty of
+        Array _ -> C.Expr $ memcpy (C.Ident tmp_var) val size
+          where
+            size = C.LitInt $ fromIntegral $ tysize ty
+        _       -> C.Expr $ C.Ident tmp_var C..= val
+
       bufferupdate = case ty of
-        Array _ -> C.Expr $ memcpy dest val size
+        Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
           where
             dest  = C.Index buff_var index_var
             size = C.LitInt $ fromIntegral $ tysize ty
-        _       -> C.Expr $ C.Index buff_var index_var C..= val
+        _       -> C.Expr $ C.Index buff_var index_var C..= (C.Ident tmp_var)
 
       indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
         where
