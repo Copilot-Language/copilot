@@ -56,17 +56,18 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
 mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   void = C.TypeSpec C.Void
-  declns = []
   stmts  =  map mkexcopy exts
          ++ map mktriggercheck triggers
          ++ bufferupdates
          ++ indexupdates
-  (bufferupdates, indexupdates) = unzip $ map mkupdateglobals streams
+  (declns, bufferupdates, indexupdates) = unzip3 $ map mkupdateglobals streams
 
   -- Write code to global stream buffers and index.
-  mkupdateglobals :: Stream -> (C.Stmt, C.Stmt)
-  mkupdateglobals (Stream sid buff expr ty) = (bufferupdate, indexupdate)
+  mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt)
+  mkupdateglobals (Stream sid buff expr ty) = (tmpdecln, bufferupdate, indexupdate)
     where
+      tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
+
       bufferupdate = case ty of
         Array _ -> C.Expr $ memcpy dest val size
           where
@@ -79,9 +80,11 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
           bufflength = C.LitInt $ fromIntegral $ length buff
           incindex   = (C..++) index_var
 
+      tmp_var   = streamname sid ++ "_tmp"
       buff_var  = C.Ident $ streamname sid
       index_var = C.Ident $ indexname sid
       val       = C.Funcall (C.Ident $ generatorname sid) []
+      cty       = transtype ty
 
   -- Make code that copies an external variable to its local one.
   mkexcopy :: External -> C.Stmt
