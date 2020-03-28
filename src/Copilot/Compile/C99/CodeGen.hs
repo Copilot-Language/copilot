@@ -63,7 +63,7 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
          ++ indexupdates
   (declns, tmpassigns, bufferupdates, indexupdates) = unzip4 $ map mkupdateglobals streams
 
-  -- Write code to global stream buffers and index.
+  -- Write code to update global stream buffers and index.
   mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
   mkupdateglobals (Stream sid buff expr ty) = (tmpdecln, tmpassign, bufferupdate, indexupdate)
     where
