@@ -19,6 +19,7 @@ license                   : BSD3
 license-file              : LICENSE
 maintainer                : jonathan.laurent@ens.fr
 homepage                  : https://copilot-language.github.io
+bug-reports               : https://github.com/Copilot-Language/copilot-theorem/issues
 stability                 : Experimental
 category                  : Language, Embedded
 build-type                : Simple
