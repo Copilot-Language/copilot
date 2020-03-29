@@ -9,6 +9,7 @@ build-type:          Simple
 maintainer:          Frank Dedden <dev@dedden.net>
 category:            Language, Embedded
 homepage:            https://copilot-language.github.io
+bug-reports:         https://github.com/Copilot-Language/copilot/issues
 stability:           Experimental
 description:
   This package is the main entry-point for using Copilot.
