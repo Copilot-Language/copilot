@@ -19,6 +19,7 @@ license                   : BSD3
 license-file              : LICENSE
 maintainer                : Frank Dedden <dev@dedden.net>
 homepage                  : https://copilot-language.github.io
+bug-reports               : https://github.com/Copilot-Language/copilot-c99/issues
 stability                 : Experimental
 category                  : Language, Embedded
 build-type                : Simple
