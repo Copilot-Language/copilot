@@ -22,7 +22,7 @@ bug-reports:         https://github.com/Copilot-Language/copilot-core/issues
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  README.md, CHANGELOG
 
 source-repository head
     type:       git
