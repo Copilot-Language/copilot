@@ -5,6 +5,14 @@ description:
 
   Some tools to prove properties on Copilot programs with k-induction model
   checking.
+  .
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.
+  .
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
+
 
 version                   : 3.1
 license                   : BSD3
