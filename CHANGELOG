@@ -1,8 +1,8 @@
-2019-12-23 Frank Dedden <dev@dedden.net>
+2019-12-23
         * Version bump (3.1.1).
         * Fixed bug with constant structs and arrays.(#13).
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
+2019-11-22
         * Version bump (3.1).
         * Remove ExternFun (#6).
         * Fix bug in code generation for local expression (#15).
