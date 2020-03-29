@@ -18,6 +18,7 @@ license-file:        LICENSE
 author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
                      Sebastian Niller, Nis Nordby Wegmann
 maintainer:          Frank Dedden <dev@dedden.net>
+homepage:            https://copilot-language.github.io
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
