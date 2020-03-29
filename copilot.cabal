@@ -9,17 +9,17 @@ build-type:          Simple
 maintainer:          Frank Dedden <dev@dedden.net>
 category:            Language, Embedded
 homepage:            https://copilot-language.github.io
+bug-reports:         https://github.com/Copilot-Language/copilot/issues
 stability:           Experimental
 description:
   This package is the main entry-point for using Copilot.
   .
   Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
-  multiple back-end compilers, and other verification tools.  A tutorial, bug
-  reports, and todos are available at
-  <https://github.com/Copilot-Language/copilot-discussion>.
+  multiple back-end compilers, and other verification tools.
   .
-  Examples are available at <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
 
 extra-source-files:
   README.md
