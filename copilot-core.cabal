@@ -17,6 +17,7 @@ author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
 license:             BSD3
 license-file:        LICENSE
 maintainer:          Frank Dedden <dev@dedden.net>
+homepage:            https://copilot-language.github.io
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
