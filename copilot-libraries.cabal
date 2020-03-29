@@ -7,12 +7,10 @@ description:
   .
   Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
   Haskell that compiles into embedded C.  Copilot contains an interpreter,
-  multiple back-end compilers, and other verification tools.  A tutorial, bug
-  reports, and todos are available at
-  <https://github.com/Copilot-Language/copilot-discussion>.
+  multiple back-end compilers, and other verification tools.
   .
-  Examples are available at
-  <https://github.com/Copilot-Language/Copilot/tree/master/Examples>.
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
 
 license:             BSD3
 license-file:        LICENSE
