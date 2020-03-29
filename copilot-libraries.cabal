@@ -19,6 +19,7 @@ author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
 homepage:            https://github.com/Copilot-Language/copilot-libraries
 maintainer:          Frank Dedden <dev@dedden.net>
 homepage:            https://copilot-language.github.io
+bug-reports:         https://github.com/Copilot-Language/copilot-libraries/issues
 stability:           Experimental
 category:            Language, Embedded
 build-type:          Simple
