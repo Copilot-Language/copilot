@@ -1,3 +1,8 @@
+2020-03-30
+        * Version bump (3.1.2)
+        * Fixed bug where stream buffers are updated too soon. (#21)
+        * Updated description of cabal package. (#17)
+
 2019-12-23
         * Version bump (3.1.1).
         * Fixed bug with constant structs and arrays.(#13).
