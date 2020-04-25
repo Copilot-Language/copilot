@@ -4,6 +4,15 @@ import Language.C99.Simple
 
 import Copilot.Core       as Core     (Spec (..))
 
+
+-- | Write a C driver mimicking Copilot's interpreter.
+mkdriver :: Spec -> TransUnit
+mkdriver spec = TransUnit vardefs fundefs
+  where
+    vardefs = []
+    fundefs = [ mkmain 30 spec ]
+
+
 -- | Write the main function. The purpose of this function is to call the
 -- step-function a number of times.
 mkmain :: Int -> Spec -> FunDef
