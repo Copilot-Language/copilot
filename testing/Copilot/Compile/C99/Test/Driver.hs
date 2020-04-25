@@ -99,4 +99,5 @@ mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
     mkidents (name, UExpr ty _) = case ty of
       Core.Struct _ -> error "mkidents: Struct not implemented yet."
       Core.Array  _ -> error "mkindents: Array not implemented yet."
+      Core.Bool     -> Cond (Ident name) (LitString "true") (LitString "false")
       _             -> Ident name
