@@ -1,4 +1,8 @@
+{-# LANGUAGE GADTs #-}
+
 module Copilot.Compile.C99.Test.Driver where
+
+import Data.List                      (intersperse)
 
 import Language.C99.Simple as C99
 
@@ -53,4 +57,16 @@ mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
 
 -- | Write a call to printf with a format resembling CSV.
 mkprintfcsv :: [(String, UExpr)] -> Expr
-mkprintfcsv = error "mkprintfcsv not implemented yet."
+mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
+  where
+    fmt  = LitString $ concat $ intersperse "," $ map (uexprfmt.snd) namedargs
+    vals = map mkidents namedargs
+
+    uexprfmt :: UExpr -> String
+    uexprfmt (UExpr ty _) = tyfmt ty
+
+    mkidents :: (String, UExpr) -> Expr
+    mkidents = error "mkidents not implemented yet."
+
+    tyfmt :: Core.Type a -> String
+    tyfmt = error "tyfmt not implemented yet."
