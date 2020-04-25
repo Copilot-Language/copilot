@@ -61,4 +61,5 @@ test-suite test
   other-modules:    Copilot.Compile.C99.Test.Driver
   build-depends:    base
                   , copilot-core
+                  , copilot-c99         >= 3.1 && < 3.2
                   , language-c99-simple
