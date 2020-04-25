@@ -55,7 +55,9 @@ mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
     body   = [For (Ident "i" .= LitInt 0)
                   (Ident "i" .< LitInt (fromIntegral iters))
                   (UnaryOp Inc (Ident "i"))
-                  [Expr $ Funcall (Ident "step") []]
+                  [ Expr $ Funcall (Ident "printf") [LitString "#\n"]
+                  , Expr $ Funcall (Ident "step") []
+                  ]
              ]
 
 
