@@ -1,11 +1,12 @@
 module Copilot.Compile.C99.Test.Driver where
 
-import Language.C99.Simple
+import Language.C99.Simple as C99
 
 import Copilot.Core       as Core
   ( Spec    (..)
   , UExpr   (..)
   , Trigger (..)
+  , Type    (..)
   )
 import Copilot.Compile.C99.Translate  (transtype)
 import Copilot.Compile.C99.Util       (argnames)
@@ -40,7 +41,7 @@ mkmain :: Int -> Spec -> FunDef
 mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
   where
     params = [ Param (TypeSpec Int) "argv"
-             , Param (Const $ Array (Ptr $ TypeSpec Char) Nothing) "argc"
+             , Param (Const $ C99.Array (Ptr $ TypeSpec Char) Nothing) "argc"
              ]
     decln  = [VarDecln Nothing (TypeSpec Int) "i" (Just $ InitExpr $ LitInt 0)]
     body   = [For (Ident "i" .= LitInt 0)
