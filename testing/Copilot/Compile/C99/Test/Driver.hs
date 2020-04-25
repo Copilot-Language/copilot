@@ -11,6 +11,10 @@ import Copilot.Core       as Core
   , UExpr   (..)
   , Trigger (..)
   , Type    (..)
+  , Value   (..)
+  , toValues
+  , fieldname
+  , tylength
   )
 import Copilot.Compile.C99.Translate  (transtype)
 import Copilot.Compile.C99.Util       (argnames)
@@ -72,4 +76,24 @@ mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
       _             -> Ident name
 
     tyfmt :: Core.Type a -> String
-    tyfmt = error "tyfmt not implemented yet."
+    tyfmt ty = case ty of
+      Core.Bool       -> "%s"
+      Core.Int8       -> "%d"
+      Core.Int16      -> "%d"
+      Core.Int32      -> "%d"
+      Core.Int64      -> "%d"
+      Core.Word8      -> "%d"
+      Core.Word16     -> "%d"
+      Core.Word32     -> "%d"
+      Core.Word64     -> "%d"
+      Core.Float      -> "%f"
+      Core.Double     -> "%f"
+      Core.Struct s   -> "<" ++ elems ++ ">"
+        where
+          elems = concat $ intersperse "," $ map fieldfmt (toValues s)
+          fieldfmt :: Core.Value a -> String
+          fieldfmt (Core.Value ty f) = Core.fieldname f ++ ":" ++ tyfmt ty
+      Core.Array  ty' -> "[" ++ elems ++ "]"
+        where
+          elems = concat $ intersperse "," $ map tyfmt types
+          types = replicate (Core.tylength ty) ty'
