@@ -58,4 +58,7 @@ test-suite test
   default-language: Haskell2010
   hs-source-dirs:   testing
   main-is:          Main.hs
+  other-modules:    Copilot.Compile.C99.Test.Driver
   build-depends:    base
+                  , copilot-core
+                  , language-c99-simple
