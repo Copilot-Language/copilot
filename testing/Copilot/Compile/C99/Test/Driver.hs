@@ -69,12 +69,6 @@ mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
     uexprfmt :: UExpr -> String
     uexprfmt (UExpr ty _) = tyfmt ty
 
-    mkidents :: (String, UExpr) -> Expr
-    mkidents (name, UExpr ty _) = case ty of
-      Core.Struct _ -> error "mkidents: Struct not implemented yet."
-      Core.Array  _ -> error "mkindents: Array not implemented yet."
-      _             -> Ident name
-
     tyfmt :: Core.Type a -> String
     tyfmt ty = case ty of
       Core.Bool       -> "%s"
@@ -97,3 +91,9 @@ mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
         where
           elems = concat $ intersperse "," $ map tyfmt types
           types = replicate (Core.tylength ty) ty'
+
+    mkidents :: (String, UExpr) -> Expr
+    mkidents (name, UExpr ty _) = case ty of
+      Core.Struct _ -> error "mkidents: Struct not implemented yet."
+      Core.Array  _ -> error "mkindents: Array not implemented yet."
+      _             -> Ident name
