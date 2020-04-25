@@ -37,7 +37,7 @@ mktrigger (Trigger name guard args) = FunDef returntype name params [] body
     returntype = TypeSpec Void
     namedargs  = zip (argnames name) args
     params     = map mkparam namedargs
-    body       = [Expr $ mkprintfcsv namedargs]
+    body       = [Expr $ mkprintfcsv name namedargs]
 
     mkparam :: (String, UExpr) -> Param
     mkparam (name, UExpr ty _) = Param (transtype ty) name
@@ -60,10 +60,10 @@ mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
 
 
 -- | Write a call to printf with a format resembling CSV.
-mkprintfcsv :: [(String, UExpr)] -> Expr
-mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
+mkprintfcsv :: String -> [(String, UExpr)] -> Expr
+mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
   where
-    fmt  = LitString $ concat $ intersperse "," $ map (uexprfmt.snd) namedargs
+    fmt  = LitString $ concat $ intersperse "," $ trigname : map (uexprfmt.snd) namedargs
     vals = map mkidents namedargs
 
     uexprfmt :: UExpr -> String
