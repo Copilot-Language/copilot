@@ -66,7 +66,10 @@ mkprintfcsv namedargs = Funcall (Ident "printf") (fmt:vals)
     uexprfmt (UExpr ty _) = tyfmt ty
 
     mkidents :: (String, UExpr) -> Expr
-    mkidents = error "mkidents not implemented yet."
+    mkidents (name, UExpr ty _) = case ty of
+      Core.Struct _ -> error "mkidents: Struct not implemented yet."
+      Core.Array  _ -> error "mkindents: Array not implemented yet."
+      _             -> Ident name
 
     tyfmt :: Core.Type a -> String
     tyfmt = error "tyfmt not implemented yet."
