@@ -48,8 +48,8 @@ mktrigger (Trigger name guard args) = FunDef returntype name params [] body
 mkmain :: Int -> Spec -> FunDef
 mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
   where
-    params = [ Param (TypeSpec Int) "argv"
-             , Param (Const $ C99.Array (Ptr $ TypeSpec Char) Nothing) "argc"
+    params = [ Param (TypeSpec Int) "argc"
+             , Param (Const $ C99.Array (Ptr $ TypeSpec Char) Nothing) "argv"
              ]
     decln  = [VarDecln Nothing (TypeSpec Int) "i" (Just $ InitExpr $ LitInt 0)]
     body   = [For (Ident "i" .= LitInt 0)
