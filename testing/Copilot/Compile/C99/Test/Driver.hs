@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module Copilot.Compile.C99.Test.Driver where
+module Copilot.Compile.C99.Test.Driver (writedriver) where
 
 import Data.List                      (intersperse)
 
