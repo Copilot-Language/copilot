@@ -21,8 +21,8 @@ import Copilot.Compile.C99.Util       (argnames)
 
 
 -- | Write a C driver mimicking Copilot's interpreter.
-mkdriver :: Spec -> Int -> TransUnit
-mkdriver spec iters = TransUnit vardefs fundefs
+mktransunit :: Spec -> Int -> TransUnit
+mktransunit spec iters = TransUnit vardefs fundefs
   where
     vardefs   = []
     fundefs   = ctriggers ++ [ mkmain iters spec ]
