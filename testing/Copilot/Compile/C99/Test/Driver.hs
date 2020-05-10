@@ -19,6 +19,22 @@ import Copilot.Core       as Core
 import Copilot.Compile.C99.Translate  (transtype)
 import Copilot.Compile.C99.Util       (argnames)
 
+import Text.PrettyPrint               (render)
+import Language.C99.Simple            (translate)
+import Language.C99.Pretty            (pretty)
+
+
+-- | Write the complete driver .c file code based on the specification.
+writedriver :: String -> Spec -> Int -> String
+writedriver specname spec iters = unlines (includes) ++ code
+  where
+    includes = [ "#include <stdio.h>"
+               , "#include <stdint.h>"
+               , "#include <stdbool.h>"
+               , "#include \"" ++ specname ++ ".h\""
+               ]
+    code = render $ pretty $ translate $ mktransunit spec iters
+
 
 -- | Write a C driver mimicking Copilot's interpreter.
 mktransunit :: Spec -> Int -> TransUnit
