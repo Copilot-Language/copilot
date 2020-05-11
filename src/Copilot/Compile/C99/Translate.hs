@@ -112,22 +112,25 @@ transop3 op e1 e2 e3 = case op of
 constty :: Type a -> a -> C.Expr
 constty ty = case ty of
   Bool   -> C.LitBool
-  Int8   -> C.LitInt . fromIntegral
-  Int16  -> C.LitInt . fromIntegral
-  Int32  -> C.LitInt . fromIntegral
-  Int64  -> C.LitInt . fromIntegral
-  Word8  -> C.LitInt . fromIntegral
-  Word16 -> C.LitInt . fromIntegral
-  Word32 -> C.LitInt . fromIntegral
-  Word64 -> C.LitInt . fromIntegral
-  Float  -> C.LitFloat
-  Double -> C.LitDouble
+  Int8   -> explicitty ty . C.LitInt . fromIntegral
+  Int16  -> explicitty ty . C.LitInt . fromIntegral
+  Int32  -> explicitty ty . C.LitInt . fromIntegral
+  Int64  -> explicitty ty . C.LitInt . fromIntegral
+  Word8  -> explicitty ty . C.LitInt . fromIntegral
+  Word16 -> explicitty ty . C.LitInt . fromIntegral
+  Word32 -> explicitty ty . C.LitInt . fromIntegral
+  Word64 -> explicitty ty . C.LitInt . fromIntegral
+  Float  -> explicitty ty . C.LitFloat
+  Double -> explicitty ty . C.LitDouble
   Struct _ -> \v -> C.InitVal (transtypename ty) (map fieldinit (toValues v))
     where
       fieldinit (Value ty (Field val)) = C.InitExpr $ constty ty val
   Array ty' -> \v -> C.InitVal (transtypename ty) (map valinit (arrayelems v))
     where
       valinit = C.InitExpr . constty ty'
+
+explicitty :: Type a -> C.Expr -> C.Expr
+explicitty ty = C.Cast (transtypename ty)
 
 -- | Translate a Copilot type to a C99 type.
 transtype :: Type a -> C.Type
