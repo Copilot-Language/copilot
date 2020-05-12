@@ -1,5 +1,7 @@
 module Copilot.Compile.C99.Test.Property where
 
+import System.Process                   (readProcess)
+
 import Copilot.Core                     (Spec)
 import Copilot.Compile.C99              (compile)
 
@@ -13,3 +15,14 @@ writetest specname mainfile spec = do
   let drivercode = writedriver specname spec 30
   writeFile mainfile drivercode
   compile specname spec
+
+
+-- | Compile the C code to using GCC to a binary.
+-- This function fails if the files names specname.c and mainfile do not exist.
+compiletest :: String -> String -> IO String
+compiletest specname mainfile = do
+  let cflags = ["-Wall", "-pedantic-errors"]
+      output = ["-o", specname]
+      cfiles = [mainfile, specname ++ ".c"]
+      args   = cflags ++ output ++ cfiles
+  readProcess "gcc" args ""
