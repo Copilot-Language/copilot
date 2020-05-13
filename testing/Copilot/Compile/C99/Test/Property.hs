@@ -26,3 +26,8 @@ compiletest specname mainfile = do
       cfiles = [mainfile, specname ++ ".c"]
       args   = cflags ++ output ++ cfiles
   readProcess "gcc" args ""
+
+
+-- | Run the compiled specification and driver.
+runtest :: String -> IO String
+runtest specname = readProcess ("./" ++ specname) [] ""
