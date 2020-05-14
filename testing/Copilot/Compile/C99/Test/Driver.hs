@@ -81,7 +81,7 @@ mkmain iters spec = FunDef (TypeSpec Int) "main" params decln body
 mkprintfcsv :: String -> [(String, UExpr)] -> Expr
 mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
   where
-    fmt    = LitString $ concat (intersperse "," $ trigname:argfmt) ++ "\n"
+    fmt    = LitString $ trigname ++ "," ++ concat (intersperse "," argfmt) ++ "\n"
     argfmt = map (uexprfmt.snd) namedargs
     vals   = map mkidents namedargs
 
