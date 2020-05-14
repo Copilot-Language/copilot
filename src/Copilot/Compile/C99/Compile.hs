@@ -22,9 +22,13 @@ compile prefix spec = do
       hfile = render $ pretty $ C.translate $ compileh spec
 
       -- TODO: find a nicer solution using annotated AST's
+      -- Should figure out exactly which headers are needed, based on what
+      -- is used.
       cmacros = unlines [ "#include <stdint.h>"
                         , "#include <stdbool.h>"
                         , "#include <string.h>"
+                        , "#include <stdlib.h>"
+                        , "#include <math.h>"
                         , ""
                         , "#include \"" ++ prefix ++ ".h\""
                         , ""
