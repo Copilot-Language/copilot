@@ -1,3 +1,6 @@
+2020-05-14
+        * Implemented basic quickcheck based testing. (#28)
+
 2020-03-30
         * Version bump (3.1.2)
         * Fixed bug where stream buffers are updated too soon. (#21)
