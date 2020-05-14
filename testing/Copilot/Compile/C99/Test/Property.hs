@@ -63,7 +63,7 @@ prop_matching_output langspec = monadicIO $ do
 
   -- Run the test and parse CSV.
   c99out <- run $ runtest specname
-  let c99csv    = parseCSV "" c99out
+  let c99csv    = init <$> parseCSV "" c99out
       c99parsed = counterexample "C99 output parse failed." (isRight c99csv)
 
   return $ c99parsed .&&. interpparsed .&&. c99csv === interpcsv
