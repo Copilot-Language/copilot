@@ -30,10 +30,9 @@ writetest specname mainfile spec iters = do
 
 -- | Compile the C code to using GCC to a binary.
 -- This function fails if the files names specname.c and mainfile do not exist.
-compiletest :: String -> String -> IO String
-compiletest specname mainfile = do
-  let cflags = ["-Wall", "-pedantic-errors"]
-      output = ["-o", specname]
+compiletest :: String -> String -> [String] -> IO String
+compiletest specname mainfile cflags = do
+  let output = ["-o", specname]
       cfiles = [mainfile, specname ++ ".c"]
       args   = cflags ++ output ++ cfiles
   readProcess "gcc" args ""
@@ -53,7 +52,7 @@ prop_matching_output langspec = monadicIO $ do
       iters    = 30
   spec <- run $ reify langspec
   run $ writetest   specname mainfile spec iters
-  run $ compiletest specname mainfile
+  run $ compiletest specname mainfile ["-Wall", "-pedantic-errors"]
 
   -- Run the interpreter and parse CSV.
   let interpout    = interpret CSV iters spec
