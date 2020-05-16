@@ -87,7 +87,7 @@ mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
         indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
           where
             bufflength = C.LitInt $ fromIntegral $ length buff
-            incindex   = (C..++) index_var
+            incindex   = index_var C..+ C.LitInt 1
 
         tmp_var   = streamname sid ++ "_tmp"
         buff_var  = C.Ident $ streamname sid
