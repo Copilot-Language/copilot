@@ -16,7 +16,7 @@ import Copilot.Language.Reify           (reify)
 import Copilot.Language.Arbitrary
 import Copilot.Compile.C99              (compile)
 
-import Copilot.Compile.C99.Test.Driver
+import Copilot.Compile.C99.Driver
 
 
 -- | Compile the specification and generate the test driver, then write these
