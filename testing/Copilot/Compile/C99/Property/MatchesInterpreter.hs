@@ -1,4 +1,4 @@
-module Copilot.Compile.C99.Property (prop_matching_output) where
+module Copilot.Compile.C99.Property.MatchesInterpreter (prop_matching_output) where
 
 import Data.Either                      (isRight)
 import System.Process                   (readProcess)
