@@ -59,6 +59,7 @@ test-suite test
   hs-source-dirs:   testing
   main-is:          Main.hs
   other-modules:    Copilot.Compile.C99.Driver
+                  , Copilot.Compile.C99.Test
                   , Copilot.Compile.C99.Property.MatchesInterpreter
   build-depends:    base
                   , copilot-core
