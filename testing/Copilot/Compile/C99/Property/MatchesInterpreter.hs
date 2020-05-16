@@ -1,4 +1,4 @@
-module Copilot.Compile.C99.Property.MatchesInterpreter (prop_matching_output) where
+module Copilot.Compile.C99.Property.MatchesInterpreter where
 
 import Data.Either                      (isRight)
 
@@ -18,8 +18,8 @@ import Copilot.Compile.C99.Test
 
 -- | For a given specification, the output of the driver should match the
 -- output of Copilots interpreter.
-prop_matching_output :: Spec -> Property
-prop_matching_output langspec = monadicIO $ do
+prop_matches_interpreter :: Spec -> Property
+prop_matches_interpreter langspec = monadicIO $ do
   let specname = "testspec"
       mainfile = specname ++ "_main.c"
       iters    = 30
