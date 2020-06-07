@@ -30,7 +30,6 @@ module Copilot.Language.Spec
 import Prelude hiding (not)
 
 import Control.Monad.Writer
-import Data.List (foldl')
 --import Data.Maybe (fromMaybe)
 
 --import Copilot.Core (Typed, Struct)
