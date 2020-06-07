@@ -1,3 +1,6 @@
+2020-06-07
+        * Removed sorting of interpreter output #(19).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
         * Eliminate random modules and generators (#9).
