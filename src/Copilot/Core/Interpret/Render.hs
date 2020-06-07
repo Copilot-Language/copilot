@@ -34,20 +34,20 @@ renderAsTable
      where
 
      ppTriggerNames :: [Doc]
-     ppTriggerNames  = map (text . (++ ":")) (M.keys trigs)
+     ppTriggerNames  = map (text . (++ ":")) (map fst trigs)
 
      ppObserverNames :: [Doc]
-     ppObserverNames = map (text . (++ ":")) (M.keys obsvs)
+     ppObserverNames = map (text . (++ ":")) (map fst obsvs)
 
      ppTriggerOutputs :: [[Doc]]
-     ppTriggerOutputs = map (map ppTriggerOutput) (M.elems trigs)
+     ppTriggerOutputs = map (map ppTriggerOutput) (map snd trigs)
 
      ppTriggerOutput :: Maybe [Output] -> Doc
      ppTriggerOutput (Just vs) = text $ "(" ++ concat (intersperse "," vs) ++ ")"
      ppTriggerOutput Nothing   = text "--"
 
      ppObserverOutputs :: [[Doc]]
-     ppObserverOutputs = map (map text) (M.elems obsvs)
+     ppObserverOutputs = map (map text) (map snd obsvs)
 
 --------------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ step :: ExecTrace -> (Doc, Maybe ExecTrace)
 step ExecTrace
        { interpTriggers  = trigs
        } =
-  if M.null trigs then (empty, Nothing)
+  if null trigs then (empty, Nothing)
     else (foldl' ($$) empty (text "#" : ppTriggerOutputs), tails)
 
   where
@@ -73,8 +73,7 @@ step ExecTrace
   ppTriggerOutputs =
       catMaybes
     . fmap ppTriggerOutput
-    . M.assocs
-    . fmap head
+    . map (fmap head)
     $ trigs
 
   ppTriggerOutput :: (String, Maybe [Output]) -> Maybe Doc
@@ -85,12 +84,12 @@ step ExecTrace
 
   tails :: Maybe ExecTrace
   tails =
-    if any null (M.elems (fmap tail trigs))
+    if any null (fmap (tail.snd) trigs)
       then Nothing
       else Just
         ExecTrace
-          { interpTriggers  = fmap tail trigs
-          , interpObservers = M.empty
+          { interpTriggers  = map (fmap tail) trigs
+          , interpObservers = []
           }
 
 --------------------------------------------------------------------------------

@@ -105,9 +105,9 @@ data ExecTrace = ExecTrace
     -- representing their values.  (Nothing output if the guard for the trigger
     -- is false).  The order is important, since we compare the arg lists
     -- between the interpreter and backends.
-  { interpTriggers  :: Map String [Maybe [Output]]
+  { interpTriggers  :: [(String, [Maybe [Output]])]
     -- map from observer names to their outputs.  We also show observer outputs.
-  , interpObservers :: Map String [Output] }
+  , interpObservers :: [(String, [Output])] }
   deriving Show
 
 --------------------------------------------------------------------------------
@@ -146,9 +146,9 @@ eval showType k spec =
                   (specObservers spec)                        in
 
   strms `seq` ExecTrace
-                { interpTriggers  = M.fromList $
+                { interpTriggers  =
                     zip (map triggerName  (specTriggers  spec)) trigs
-                , interpObservers = M.fromList $
+                , interpObservers =
                     zip (map observerName (specObservers spec)) obsvs
                 }
 
