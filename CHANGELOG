@@ -1,3 +1,6 @@
+2020-05-07
+        * Fixed the reverse order of triggers (#11).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
         * Remove ExternFun (#6).

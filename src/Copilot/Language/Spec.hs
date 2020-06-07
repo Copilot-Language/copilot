@@ -30,7 +30,6 @@ module Copilot.Language.Spec
 import Prelude hiding (not)
 
 import Control.Monad.Writer
-import Data.List (foldl')
 --import Data.Maybe (fromMaybe)
 
 --import Copilot.Core (Typed, Struct)
@@ -54,36 +53,36 @@ runSpec = execWriter
 
 observers :: [SpecItem] -> [Observer]
 observers =
-  foldl' lets' []
+  foldr lets' []
   where
-  lets' ls e =
+  lets' e ls =
     case e of
       ObserverItem l -> l : ls
       _              -> ls
 
 triggers :: [SpecItem] -> [Trigger]
 triggers =
-  foldl' triggers' []
+  foldr triggers' []
   where
-  triggers' ls e =
+  triggers' e ls =
     case e of
       TriggerItem t -> t : ls
       _             -> ls
 
 properties :: [SpecItem] -> [Property]
 properties =
-  foldl' properties' []
+  foldr properties' []
   where
-  properties' ls e =
+  properties' e ls =
     case e of
       PropertyItem p -> p : ls
       _              -> ls
 
 theorems :: [SpecItem] -> [(Property, UProof)]
 theorems =
-  foldl' theorems' []
+  foldr theorems' []
   where
-  theorems' ls e =
+  theorems' e ls =
     case e of
       TheoremItem p -> p : ls
       _              -> ls
