@@ -41,7 +41,6 @@ library
 
   build-depends:
     base       >= 4.9 && < 5,
-    containers >= 0.4 && < 0.7,
     pretty     >= 1.0 && < 1.2,
     mtl        >= 2.0 && < 2.3,
     dlist

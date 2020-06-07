@@ -14,7 +14,6 @@ module Copilot.Core.Interpret.Render
 import Data.List (intersperse, transpose, foldl')
 import Data.Maybe (catMaybes)
 import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
-import qualified Data.Map as M
 import Text.PrettyPrint
 
 import Prelude hiding ((<>))

@@ -22,8 +22,6 @@ import Prelude hiding (id)
 import qualified Prelude as P
 
 import Data.List (transpose)
-import qualified Data.Map as M
-import Data.Map (Map)
 import Data.Maybe (fromJust)
 import Data.Bits
 import Control.Exception (Exception, throw)
