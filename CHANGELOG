@@ -1,3 +1,7 @@
+2020-07-01
+        * Update optparse-applicative dependency version for newer base
+          versions. (#61).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
         * Update multiple examples (#41).
