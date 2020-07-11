@@ -95,7 +95,7 @@ tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
 
 -- Get the total (nested) size of an array from its type
 tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
-tysize ty@(Array ty'@(Array _)) = tylength ty * tylength ty'
+tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
 tysize ty@(Array _            ) = tylength ty
 
 instance EqualType Type where
