@@ -1,4 +1,5 @@
-2020-05-20
+2020-07-11
+        * Fixed length of buffer allocation for n-dimensional arrays. (#39).
         * Fixed printing of long ints in test suite. (#36)
         * Fixed printing of unsigned ints in test suite. (#36)
         * Fixed '-Wsequence-point' warnings from GCC. (#34)
