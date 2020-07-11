@@ -147,7 +147,7 @@ transtype ty = case ty of
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
   Array ty' -> C.Array (transtype ty') size where
-    size = Just $ C.LitInt $ fromIntegral $ tysize ty
+    size = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
 -- | Translate a Copilot type intro a C typename
