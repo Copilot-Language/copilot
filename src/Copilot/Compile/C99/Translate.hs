@@ -125,9 +125,15 @@ constty ty = case ty of
   Struct _ -> \v -> C.InitVal (transtypename ty) (map fieldinit (toValues v))
     where
       fieldinit (Value ty (Field val)) = C.InitExpr $ constty ty val
-  Array ty' -> \v -> C.InitVal (transtypename ty) (map valinit (arrayelems v))
+  Array ty' -> \v -> C.InitVal (transtypename ty) (vals v)
     where
-      valinit = C.InitExpr . constty ty'
+      vals v = constarray ty' (arrayelems v)
+
+      constarray :: Type a -> [a] -> [C.Init]
+      constarray ty xs = case ty of
+        Array ty' -> constarray ty' (concatMap arrayelems xs)
+        _         -> map (C.InitExpr . constty ty) xs
+
 
 explicitty :: Type a -> C.Expr -> C.Expr
 explicitty ty = C.Cast (transtypename ty)
