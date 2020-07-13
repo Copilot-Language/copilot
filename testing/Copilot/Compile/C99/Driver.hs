@@ -114,6 +114,15 @@ mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
     mkidents :: String -> Core.Type a -> [Expr]
     mkidents name ty = case ty of
       Core.Struct _ -> error "mkidents: Struct not implemented yet."
-      Core.Array  _ -> error "mkindents: Array not implemented yet."
+      Core.Array  _ -> idents ty [Ident name]
+        where
+          idents :: Core.Type a -> [Expr] -> [Expr]
+          idents ty' es = case ty' of
+            Core.Array ty'' -> idents ty'' [ Index es' (LitInt i)
+                                           | es' <- es
+                                           , i <- take (tylength ty') [0..]
+                                           ]
+            Core.Bool -> [Cond g (LitString "True") (LitString "False") | g <- es]
+            _         -> es
       Core.Bool     -> [Cond (Ident name) (LitString "true") (LitString "false")]
       _             -> [Ident name]
