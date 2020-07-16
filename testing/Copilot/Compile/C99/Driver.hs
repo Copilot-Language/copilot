@@ -83,7 +83,7 @@ mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
   where
     fmt    = LitString $ trigname ++ "," ++ concat (intersperse "," argfmt) ++ "\n"
     argfmt = map (uexprfmt.snd) namedargs
-    vals   = map mkidents namedargs
+    vals   = concatMap (\(name, UExpr ty _) -> mkidents name ty) namedargs
 
     uexprfmt :: UExpr -> String
     uexprfmt (UExpr ty _) = tyfmt ty
@@ -111,9 +111,18 @@ mkprintfcsv trigname namedargs = Funcall (Ident "printf") (fmt:vals)
           elems = concat $ intersperse "," $ map tyfmt types
           types = replicate (Core.tylength ty) ty'
 
-    mkidents :: (String, UExpr) -> Expr
-    mkidents (name, UExpr ty _) = case ty of
+    mkidents :: String -> Core.Type a -> [Expr]
+    mkidents name ty = case ty of
       Core.Struct _ -> error "mkidents: Struct not implemented yet."
-      Core.Array  _ -> error "mkindents: Array not implemented yet."
-      Core.Bool     -> Cond (Ident name) (LitString "true") (LitString "false")
-      _             -> Ident name
+      Core.Array  _ -> idents ty [Ident name]
+        where
+          idents :: Core.Type a -> [Expr] -> [Expr]
+          idents ty' es = case ty' of
+            Core.Array ty'' -> idents ty'' [ Index es' (LitInt i)
+                                           | es' <- es
+                                           , i <- take (tylength ty') [0..]
+                                           ]
+            Core.Bool -> [Cond g (LitString "True") (LitString "False") | g <- es]
+            _         -> es
+      Core.Bool     -> [Cond (Ident name) (LitString "true") (LitString "false")]
+      _             -> [Ident name]

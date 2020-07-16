@@ -1,4 +1,5 @@
-2020-07-12
+2020-07-16
+        * Implemented arrays in test driver. (#37).
         * Fixed nested array initialisation bug. (#40).
         * Fixed length of buffer allocation for n-dimensional arrays. (#39).
         * Fixed printing of long ints in test suite. (#36)
