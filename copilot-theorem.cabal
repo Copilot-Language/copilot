@@ -107,3 +107,5 @@ library
                           , Copilot.Theorem.TransSys.Invariants
                           , Copilot.Theorem.TransSys.Operators
                           , Copilot.Theorem.TransSys.Type
+
+                          , Copilot.Theorem.What4
