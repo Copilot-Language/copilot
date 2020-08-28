@@ -378,11 +378,42 @@ translateOp1 sym op xe = case (op, xe) of
   (CE.BwNot _, xe) -> case xe of
     XBool e -> XBool <$> WI.notPred sym e
     _ -> bvOp (WI.bvNotBits sym) xe
-  -- (CE.Cast _ tp, xe) -> case (xe, tp) of
-  --   (XFloat _, CT.Float) -> return xe
-  --   (XDouble _, CT.Double) -> return xe
-  --   (XFloat e, CT.Double) -> XDouble <$> WI.floatCast sym knownRepr fpRM e
-  --   (XDouble e, CT.Float) -> XFloat <$> WI.floatCast sym knownRepr fpRM e
+  (CE.Cast _ tp, xe) -> case (xe, tp) of
+    (XBool e, CT.Bool) -> return $ XBool e
+    (XBool e, CT.Word8) -> XWord8 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Word16) -> XWord16 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Word32) -> XWord32 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Word64) -> XWord64 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Int8) -> XInt8 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Int16) -> XInt16 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Int32) -> XInt32 <$> WI.predToBV sym e knownNat
+    (XBool e, CT.Int64) -> XInt64 <$> WI.predToBV sym e knownNat
+    (XInt8 e, CT.Int8) -> return $ XInt8 e
+    (XInt8 e, CT.Int16) -> XInt16 <$> WI.bvSext sym knownNat e
+    (XInt8 e, CT.Int32) -> XInt32 <$> WI.bvSext sym knownNat e
+    (XInt8 e, CT.Int64) -> XInt64 <$> WI.bvSext sym knownNat e
+    (XInt16 e, CT.Int16) -> return $ XInt16 e
+    (XInt16 e, CT.Int32) -> XInt32 <$> WI.bvSext sym knownNat e
+    (XInt16 e, CT.Int64) -> XInt64 <$> WI.bvSext sym knownNat e
+    (XInt32 e, CT.Int32) -> return $ XInt32 e
+    (XInt32 e, CT.Int64) -> XInt64 <$> WI.bvSext sym knownNat e
+    (XInt64 e, CT.Int64) -> return $ XInt64 e
+    (XWord8 e, CT.Int16) -> XInt16 <$> WI.bvZext sym knownNat e
+    (XWord8 e, CT.Int32) -> XInt32 <$> WI.bvZext sym knownNat e
+    (XWord8 e, CT.Int64) -> XInt64 <$> WI.bvZext sym knownNat e
+    (XWord8 e, CT.Word8) -> return $ XWord8 e
+    (XWord8 e, CT.Word16) -> XWord16 <$> WI.bvZext sym knownNat e
+    (XWord8 e, CT.Word32) -> XWord32 <$> WI.bvZext sym knownNat e
+    (XWord8 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
+    (XWord16 e, CT.Int32) -> XInt32 <$> WI.bvZext sym knownNat e
+    (XWord16 e, CT.Int64) -> XInt64 <$> WI.bvZext sym knownNat e
+    (XWord16 e, CT.Word16) -> return $ XWord16 e
+    (XWord16 e, CT.Word32) -> XWord32 <$> WI.bvZext sym knownNat e
+    (XWord16 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
+    (XWord32 e, CT.Int64) -> XInt64 <$> WI.bvZext sym knownNat e
+    (XWord32 e, CT.Word32) -> return $ XWord32 e
+    (XWord32 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
+    (XWord64 e, CT.Word64) -> return $ XWord64 e
   where numOp :: (forall w . BVOp1 w t)
               -> (forall fpp . FPOp1 fpp t)
               -> XExpr t
