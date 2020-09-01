@@ -71,6 +71,7 @@ import qualified Data.BitVector.Sized as BV
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 import Data.Parameterized.Classes
+import Data.Parameterized.Context
 import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
@@ -97,7 +98,9 @@ data TransState t = TransState {
   -- | Map from stream ids to the streams themselves. This value is never
   -- modified, but I didn't want to make this an RWS, so it's represented as a
   -- stateful value.
-  streams :: Map.Map CE.Id CS.Stream
+  streams :: Map.Map CE.Id CS.Stream,
+  -- | Power operator, represented as an uninterpreted function.
+  pow :: WB.ExprSymFn t (WB.Expr t) (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType) WT.BaseRealType
   }
 
 newtype TransM t a = TransM { unTransM :: StateT (TransState t) IO a }
@@ -122,7 +125,8 @@ prove z3path spec = do
   WC.extendConfig WS.z3Options (WI.getConfiguration sym)
   let streamMap = Map.fromList $
         (\stream -> (CS.streamId stream, stream)) <$> CS.specStreams spec
-  let st = TransState Map.empty Map.empty streamMap
+  pow <- WI.freshTotalUninterpFn sym (WI.safeSymbol "pow") knownRepr knownRepr
+  let st = TransState Map.empty Map.empty streamMap pow
   -- TODO: This should be done within TransM
   forM (CS.specProperties spec) $ \pr -> do
     (XBool p, _) <- runStateT (unTransM $ translateExpr sym 0 (CS.propertyExpr pr)) st
@@ -311,7 +315,8 @@ translateExpr sym offset e = case e of
   CE.Op2 op e1 e2 -> do
     xe1 <- translateExpr sym offset e1
     xe2 <- translateExpr sym offset e2
-    liftIO $ translateOp2 sym op xe1 xe2
+    powFn <- gets pow
+    liftIO $ translateOp2 sym powFn op xe1 xe2
   CE.Op3 op e1 e2 e3 -> do
     xe1 <- translateExpr sym offset e1
     xe2 <- translateExpr sym offset e2
@@ -325,7 +330,11 @@ type FPOp1 fpp t = KnownRepr WT.FloatPrecisionRepr fpp => WB.Expr t (WT.BaseFloa
 
 type RealOp1 t = WB.Expr t WT.BaseRealType -> IO (WB.Expr t WT.BaseRealType)
 
-translateOp1 :: forall t st fs a b . WB.ExprBuilder t st fs -> CE.Op1 a b -> XExpr t -> IO (XExpr t)
+translateOp1 :: forall t st fs a b .
+                WB.ExprBuilder t st fs
+             -> CE.Op1 a b
+             -> XExpr t
+             -> IO (XExpr t)
 translateOp1 sym op xe = case (op, xe) of
   (CE.Not, XBool e) -> XBool <$> WI.notPred sym e
   (CE.Abs _, xe) -> numOp bvAbs fpAbs xe
@@ -418,17 +427,17 @@ translateOp1 sym op xe = case (op, xe) of
               -> (forall fpp . FPOp1 fpp t)
               -> XExpr t
               -> IO (XExpr t)
-        numOp f g xe = case xe of
-          XInt8 e -> XInt8 <$> f e
-          XInt16 e -> XInt16 <$> f e
-          XInt32 e -> XInt32 <$> f e
-          XInt64 e -> XInt64 <$> f e
-          XWord8 e -> XWord8 <$> f e
-          XWord16 e -> XWord16 <$> f e
-          XWord32 e -> XWord32 <$> f e
-          XWord64 e -> XWord64 <$> f e
-          XFloat e -> XFloat <$> g e
-          XDouble e -> XDouble <$> g e
+        numOp bvOp fpOp xe = case xe of
+          XInt8 e -> XInt8 <$> bvOp e
+          XInt16 e -> XInt16 <$> bvOp e
+          XInt32 e -> XInt32 <$> bvOp e
+          XInt64 e -> XInt64 <$> bvOp e
+          XWord8 e -> XWord8 <$> bvOp e
+          XWord16 e -> XWord16 <$> bvOp e
+          XWord32 e -> XWord32 <$> bvOp e
+          XWord64 e -> XWord64 <$> bvOp e
+          XFloat e -> XFloat <$> fpOp e
+          XDouble e -> XDouble <$> fpOp e
 
         bvOp :: (forall w . BVOp1 w t) -> XExpr t -> IO (XExpr t)
         bvOp f xe = case xe of
@@ -457,11 +466,77 @@ translateOp1 sym op xe = case (op, xe) of
         realRecip e = do one <- WI.realLit sym 1
                          WI.realDiv sym one e
 
-translateOp2 :: forall t st fs a b c . WB.ExprBuilder t st fs -> CE.Op2 a b c -> XExpr t -> XExpr t -> IO (XExpr t)
-translateOp2 sym op xe1 xe2 = case (op, xe1, xe2) of
+type BVOp2 w t = (KnownNat w, 1 <= w) => WB.BVExpr t w -> WB.BVExpr t w -> IO (WB.BVExpr t w)
+
+type FPOp2 fpp t = KnownRepr WT.FloatPrecisionRepr fpp => WB.Expr t (WT.BaseFloatType fpp) -> WB.Expr t (WT.BaseFloatType fpp) -> IO (WB.Expr t (WT.BaseFloatType fpp))
+
+type RealOp2 t = WB.Expr t WT.BaseRealType -> WB.Expr t WT.BaseRealType -> IO (WB.Expr t WT.BaseRealType)
+
+translateOp2 :: forall t st fs a b c .
+                WB.ExprBuilder t st fs
+             -> (WB.ExprSymFn t (WB.Expr t)
+                 (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
+                 WT.BaseRealType)
+             -> CE.Op2 a b c
+             -> XExpr t
+             -> XExpr t
+             -> IO (XExpr t)
+translateOp2 sym powFn op xe1 xe2 = case (op, xe1, xe2) of
   (CE.And, XBool e1, XBool e2) -> XBool <$> WI.andPred sym e1 e2
   (CE.Or, XBool e1, XBool e2) -> XBool <$> WI.orPred sym e1 e2
+  (CE.Add _, xe1, xe2) -> numOp (WI.bvAdd sym) (WI.floatAdd sym fpRM) xe1 xe2
+  (CE.Sub _, xe1, xe2) -> numOp (WI.bvSub sym) (WI.floatSub sym fpRM) xe1 xe2
+  (CE.Mul _, xe1, xe2) -> numOp (WI.bvMul sym) (WI.floatMul sym fpRM) xe1 xe2
+  (CE.Mod _, xe1, xe2) -> bvOp (WI.bvSrem sym) (WI.bvUrem sym) xe1 xe2
+  (CE.Div _, xe1, xe2) -> bvOp (WI.bvSdiv sym) (WI.bvUdiv sym) xe1 xe2
+  (CE.Fdiv _, xe1, xe2) -> fpOp (WI.floatDiv sym fpRM) xe1 xe2
+  (CE.Pow _, xe1, xe2) -> fpOp powFn' xe1 xe2
+    where powFn' :: FPOp2 fpp t
+          powFn' e1 e2 = do re1 <- WI.floatToReal sym e1
+                            re2 <- WI.floatToReal sym e2
+                            let args = (Empty :> re1 :> re2)
+                            rpow <- WI.applySymFn sym powFn args
+                            WI.realToFloat sym knownRepr fpRM rpow
   _ -> undefined
+  where numOp :: (forall w . BVOp2 w t)
+              -> (forall fpp . FPOp2 fpp t)
+              -> XExpr t
+              -> XExpr t
+              -> IO (XExpr t)
+        numOp bvOp fpOp xe1 xe2 = case (xe1, xe2) of
+          (XInt8 e1, XInt8 e2) -> XInt8 <$> bvOp e1 e2
+          (XInt16 e1, XInt16 e2) -> XInt16 <$> bvOp e1 e2
+          (XInt32 e1, XInt32 e2)-> XInt32 <$> bvOp e1 e2
+          (XInt64 e1, XInt64 e2)-> XInt64 <$> bvOp e1 e2
+          (XWord8 e1, XWord8 e2)-> XWord8 <$> bvOp e1 e2
+          (XWord16 e1, XWord16 e2)-> XWord16 <$> bvOp e1 e2
+          (XWord32 e1, XWord32 e2)-> XWord32 <$> bvOp e1 e2
+          (XWord64 e1, XWord64 e2)-> XWord64 <$> bvOp e1 e2
+          (XFloat e1, XFloat e2)-> XFloat <$> fpOp e1 e2
+          (XDouble e1, XDouble e2)-> XDouble <$> fpOp e1 e2
+
+        bvOp :: (forall w . BVOp2 w t)
+             -> (forall w . BVOp2 w t)
+             -> XExpr t
+             -> XExpr t
+             -> IO (XExpr t)
+        bvOp opS opU xe1 xe2 = case (xe1, xe2) of
+          (XInt8 e1, XInt8 e2) -> XInt8 <$> opS e1 e2
+          (XInt16 e1, XInt16 e2) -> XInt16 <$> opS e1 e2
+          (XInt32 e1, XInt32 e2) -> XInt32 <$> opS e1 e2
+          (XInt64 e1, XInt64 e2) -> XInt64 <$> opS e1 e2
+          (XWord8 e1, XWord8 e2) -> XWord8 <$> opU e1 e2
+          (XWord16 e1, XWord16 e2) -> XWord16 <$> opU e1 e2
+          (XWord32 e1, XWord32 e2) -> XWord32 <$> opU e1 e2
+          (XWord64 e1, XWord64 e2) -> XWord64 <$> opU e1 e2
+
+        fpOp :: (forall fpp . FPOp2 fpp t)
+             -> XExpr t
+             -> XExpr t
+             -> IO (XExpr t)
+        fpOp op xe1 xe2 = case (xe1, xe2) of
+          (XFloat e1, XFloat e2) -> XFloat <$> op e1 e2
+          (XDouble e1, XDouble e2) -> XDouble <$> op e1 e2
 
 translateOp3 :: forall t st fs a b c d . WB.ExprBuilder t st fs -> CE.Op3 a b c d -> XExpr t -> XExpr t -> XExpr t -> IO (XExpr t)
 translateOp3 = undefined
