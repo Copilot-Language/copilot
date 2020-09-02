@@ -499,9 +499,11 @@ translateOp2 :: forall t st fs a b c .
              -> (WB.ExprSymFn t (WB.Expr t)
                  (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
                  WT.BaseRealType)
+             -- ^ Pow function
              -> (WB.ExprSymFn t (WB.Expr t)
                  (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
                  WT.BaseRealType)
+             -- ^ Logb function
              -> CE.Op2 a b c
              -> XExpr t
              -> XExpr t
@@ -645,5 +647,22 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XFloat e1, XFloat e2)-> XBool <$> fpOp e1 e2
           (XDouble e1, XDouble e2)-> XBool <$> fpOp e1 e2
 
-translateOp3 :: forall t st fs a b c d . WB.ExprBuilder t st fs -> CE.Op3 a b c d -> XExpr t -> XExpr t -> XExpr t -> IO (XExpr t)
-translateOp3 = undefined
+translateOp3 :: forall t st fs a b c d .
+                WB.ExprBuilder t st fs
+             -> CE.Op3 a b c d
+             -> XExpr t
+             -> XExpr t
+             -> XExpr t
+             -> IO (XExpr t)
+translateOp3 sym (CE.Mux _) (XBool te) xe1 xe2 = case (xe1, xe2) of
+  (XBool e1, XBool e2) -> XBool <$> WI.itePred sym te e1 e2
+  (XInt8 e1, XInt8 e2) -> XInt8 <$> WI.bvIte sym te e1 e2
+  (XInt16 e1, XInt16 e2) -> XInt16 <$> WI.bvIte sym te e1 e2
+  (XInt32 e1, XInt32 e2) -> XInt32 <$> WI.bvIte sym te e1 e2
+  (XInt64 e1, XInt64 e2) -> XInt64 <$> WI.bvIte sym te e1 e2
+  (XWord8 e1, XWord8 e2) -> XWord8 <$> WI.bvIte sym te e1 e2
+  (XWord16 e1, XWord16 e2) -> XWord16 <$> WI.bvIte sym te e1 e2
+  (XWord32 e1, XWord32 e2) -> XWord32 <$> WI.bvIte sym te e1 e2
+  (XWord64 e1, XWord64 e2) -> XWord64 <$> WI.bvIte sym te e1 e2
+  (XFloat e1, XFloat e2) -> XFloat <$> WI.floatIte sym te e1 e2
+  (XDouble e1, XDouble e2) -> XDouble <$> WI.floatIte sym te e1 e2
