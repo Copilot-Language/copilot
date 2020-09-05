@@ -48,9 +48,17 @@
 -- By allocating a fresh constant, @b_-1@, standing for "the value of @b@ one
 -- timestep in the past", the equation for @a || b@ at some arbitrary point in
 -- the future reduces to @b_-1 || not b_-1@, which is always true.
+--
+-- IMPORTANT: This algorithm only proves that the stream expressions are always
+-- true. Streams can have constant prefixes of finite length, and the properties
+-- are not checked for those prefixes. Therefore, the property could in fact be
+-- false for the first @k@ elements, where @k = max (prefix length)@ over all
+-- the streams. However, if the @prove@ function returns @Valid@, we know that
+-- the property holds for all clock values greater than @k@. This can be
+-- interpreted as "eventually always true."
 
 module Copilot.Theorem.What4
-  ( prove, SatResult(..)
+  ( prove, Solver(..), SatResult(..)
   ) where
 
 import qualified Copilot.Core.Expr       as CE
@@ -76,15 +84,95 @@ import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
 import qualified Data.Parameterized.Vector as V
+import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import GHC.TypeNats (KnownNat)
 
+--------------------------------------------------------------------------------
+-- 'prove' function
+--
+-- To prove properties of a spec, we translate them into What4 using the TransM
+-- monad (transformer on top of IO), then negate each property and ask a backend
+-- solver to produce a model for the negation.
+
+-- | We assume round-near-even throughout, but this variable can be changed if
+-- needed.
 fpRM :: WI.RoundingMode
 fpRM = WI.RNE
 
+-- | No builder state needed.
 data BuilderState a = EmptyState
 
+-- | The solvers supported by the what4 backend.
+data Solver = CVC4 | Yices | Z3
+
+-- | The 'prove' function returns results of this form for each property in a
+-- spec.
 data SatResult = Valid | Invalid | Unknown
 
+type CounterExample = [(String, Some CopilotValue)]
+
+prove :: Solver
+      -- ^ Solver to use
+      -> CS.Spec
+      -- ^ Spec
+      -> IO [(CE.Name, SatResult)]
+prove solver spec = do
+  -- Setup symbolic backend
+  Some ng <- newIONonceGenerator
+  sym <- WB.newExprBuilder WB.FloatIEEERepr EmptyState ng
+
+  -- Solver-specific options
+  case solver of
+    CVC4 -> WC.extendConfig WS.cvc4Options (WI.getConfiguration sym)
+    Yices -> WC.extendConfig WS.yicesOptions (WI.getConfiguration sym)
+    Z3 -> WC.extendConfig WS.z3Options (WI.getConfiguration sym)
+
+  -- Build up initial translation state
+  let streamMap = Map.fromList $
+        (\stream -> (CS.streamId stream, stream)) <$> CS.specStreams spec
+  pow <- WI.freshTotalUninterpFn sym (WI.safeSymbol "pow") knownRepr knownRepr
+  logb <- WI.freshTotalUninterpFn sym (WI.safeSymbol "logb") knownRepr knownRepr
+  let st = TransState Map.empty Map.empty streamMap pow logb
+
+  -- Define TransM action for proving properties. Doing this in TransM rather
+  -- than IO allows us to reuse the state for each property.
+  let proveProperties = forM (CS.specProperties spec) $ \pr -> do
+        XBool p <- translateExpr sym 0 (CS.propertyExpr pr)
+        not_p <- liftIO $ WI.notPred sym p
+        case solver of
+          Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData [not_p] $ \case
+            WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
+            WS.Unsat _ -> return (CS.propertyName pr, Valid)
+            WS.Unknown -> return (CS.propertyName pr, Unknown)
+          Yices -> liftIO $ WS.runYicesInOverride sym WS.defaultLogData [not_p] $ \case
+            WS.Sat _ge -> return (CS.propertyName pr, Invalid)
+            WS.Unsat _ -> return (CS.propertyName pr, Valid)
+            WS.Unknown -> return (CS.propertyName pr, Unknown)
+          CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData [not_p] $ \case
+            WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
+            WS.Unsat _ -> return (CS.propertyName pr, Valid)
+            WS.Unknown -> return (CS.propertyName pr, Unknown)
+
+  -- Execute the action and return the results for each property
+  (res, _) <- runStateT (unTransM proveProperties) st
+  return res
+
+--------------------------------------------------------------------------------
+-- What4 translation
+
+-- | the state for translating Copilot expressions into What4 expressions. As we
+-- translate, we generate fresh symbolic constants for external variables and
+-- for stream variables. We need to only generate one constant per variable, so
+-- we allocate them in a map. When we need the constant for a particular
+-- variable, we check if it is already in the map, and return it if it is; if it
+-- isn't, we generate a fresh constant at that point, store it in the map, and
+-- return it.
+--
+-- We also store three immutable fields in this state, rather than wrap them up
+-- in another monad transformer layer. These are initialized prior to
+-- translation and are never modified. They are the map from stream ids to the
+-- core stream definitions, a symbolic uninterpreted function for "pow", and a
+-- symbolic uninterpreted function for "logb".
 data TransState t = TransState {
   -- | Map of all external variables we encounter during translation. These are
   -- just fresh constants. The offset indicates how many timesteps in the past
@@ -120,52 +208,55 @@ newtype TransM t a = TransM { unTransM :: StateT (TransState t) IO a }
 instance MonadFail (TransM t) where
   fail = error
 
-prove :: FilePath
-      -- ^ Path to z3 executable
-      -> CS.Spec
-      -- ^ Spec
-      -> IO [(CE.Name, SatResult)]
-prove z3path spec = do
-  Some ng <- newIONonceGenerator
-  sym <- WB.newExprBuilder WB.FloatIEEERepr EmptyState ng
-  WC.extendConfig WS.z3Options (WI.getConfiguration sym)
-  let streamMap = Map.fromList $
-        (\stream -> (CS.streamId stream, stream)) <$> CS.specStreams spec
-  pow <- WI.freshTotalUninterpFn sym (WI.safeSymbol "pow") knownRepr knownRepr
-  logb <- WI.freshTotalUninterpFn sym (WI.safeSymbol "logb") knownRepr knownRepr
-  let st = TransState Map.empty Map.empty streamMap pow logb
-  -- TODO: This should be done within TransM
-  forM (CS.specProperties spec) $ \pr -> do
-    (XBool p, _) <- runStateT (unTransM $ translateExpr sym 0 (CS.propertyExpr pr)) st
-    not_p <- WI.notPred sym p
-    WS.withZ3 sym z3path WS.defaultLogData $ \session -> do
-      WS.assume (WS.sessionWriter session) not_p
-      fmap (CS.propertyName pr, ) $ WS.runCheckSat session $ \case
-        WS.Sat (_ge, _) -> return Invalid
-        WS.Unsat _ -> return Valid
-        WS.Unknown -> return Unknown
-
--- | The What4 representation of a copilot expression.
+-- | The What4 representation of a copilot expression. We do not attempt to
+-- track the type of the inner expression at the type level, but instead lump
+-- everything together into the 'XExpr t' type. The only reason this is a GADT
+-- is for the array case; we need to know that the array length is strictly
+-- positive.
 data XExpr t where
-  XBool :: WB.Expr t WT.BaseBoolType -> XExpr t
-  XInt8 :: WB.Expr t (WT.BaseBVType 8) -> XExpr t
-  XInt16 :: WB.Expr t (WT.BaseBVType 16) -> XExpr t
-  XInt32 :: WB.Expr t (WT.BaseBVType 32) -> XExpr t
-  XInt64 :: WB.Expr t (WT.BaseBVType 64) -> XExpr t
-  XWord8 :: WB.Expr t (WT.BaseBVType 8) -> XExpr t
-  XWord16 :: WB.Expr t (WT.BaseBVType 16) -> XExpr t
-  XWord32 :: WB.Expr t (WT.BaseBVType 32) -> XExpr t
-  XWord64 :: WB.Expr t (WT.BaseBVType 64) -> XExpr t
-  XFloat :: WB.Expr t (WT.BaseFloatType WT.Prec32) -> XExpr t
-  XDouble :: WB.Expr t (WT.BaseFloatType WT.Prec64) -> XExpr t
+  XBool       :: WB.Expr t WT.BaseBoolType -> XExpr t
+  XInt8       :: WB.Expr t (WT.BaseBVType 8) -> XExpr t
+  XInt16      :: WB.Expr t (WT.BaseBVType 16) -> XExpr t
+  XInt32      :: WB.Expr t (WT.BaseBVType 32) -> XExpr t
+  XInt64      :: WB.Expr t (WT.BaseBVType 64) -> XExpr t
+  XWord8      :: WB.Expr t (WT.BaseBVType 8) -> XExpr t
+  XWord16     :: WB.Expr t (WT.BaseBVType 16) -> XExpr t
+  XWord32     :: WB.Expr t (WT.BaseBVType 32) -> XExpr t
+  XWord64     :: WB.Expr t (WT.BaseBVType 64) -> XExpr t
+  XFloat      :: WB.Expr t (WT.BaseFloatType WT.Prec32) -> XExpr t
+  XDouble     :: WB.Expr t (WT.BaseFloatType WT.Prec64) -> XExpr t
   XEmptyArray :: XExpr t
-  XArray :: 1 <= n => V.Vector n (XExpr t) -> XExpr t
-  XStruct :: [XExpr t] -> XExpr t
+  XArray      :: 1 <= n => V.Vector n (XExpr t) -> XExpr t
+  XStruct     :: [XExpr t] -> XExpr t
 
 deriving instance Show (XExpr t)
 
-data BVSign = Signed | Unsigned
+data CopilotValue a = CopilotValue { cvType :: CT.Type a
+                                   , cvVal :: a
+                                   }
 
+valFromExpr :: WG.GroundEvalFn t -> XExpr t -> IO (Some CopilotValue)
+valFromExpr ge xe = case xe of
+  XBool e -> Some . CopilotValue CT.Bool <$> WG.groundEval ge e
+  XInt8 e -> Some . CopilotValue CT.Int8 . fromBV <$> WG.groundEval ge e
+  XInt16 e -> Some . CopilotValue CT.Int16 . fromBV <$> WG.groundEval ge e
+  XInt32 e -> Some . CopilotValue CT.Int32 . fromBV <$> WG.groundEval ge e
+  XInt64 e -> Some . CopilotValue CT.Int64 . fromBV <$> WG.groundEval ge e
+  XWord8 e -> Some . CopilotValue CT.Word8 . fromBV <$> WG.groundEval ge e
+  XWord16 e -> Some . CopilotValue CT.Word16 . fromBV <$> WG.groundEval ge e
+  XWord32 e -> Some . CopilotValue CT.Word32 . fromBV <$> WG.groundEval ge e
+  XWord64 e -> Some . CopilotValue CT.Word64 . fromBV <$> WG.groundEval ge e
+  XFloat e ->
+    Some . CopilotValue CT.Float . castWord32ToFloat . fromBV <$> WG.groundEval ge e
+  XDouble e ->
+    Some . CopilotValue CT.Double . castWord64ToDouble . fromBV <$> WG.groundEval ge e
+  where fromBV :: forall a w . Num a => BV.BV w -> a
+        fromBV = fromInteger . BV.asUnsigned
+
+-- | A view of an XExpr as a bitvector expression, a natrepr for its width, its
+-- signed/unsigned status, and the constructor used to reconstruct an XExpr from
+-- it. This is a useful view for translation, as many of the operations can be
+-- grouped together for all words\/ints\/floats.
 data SomeBVExpr t where
   SomeBVExpr :: 1 <= w
              => WB.BVExpr t w
@@ -174,6 +265,12 @@ data SomeBVExpr t where
              -> (WB.BVExpr t w -> XExpr t)
              -> SomeBVExpr t
 
+-- | The sign of a bitvector -- this indicates whether it is to be interpreted
+-- as a signed 'Int' or an unsigned 'Word'.
+data BVSign = Signed | Unsigned
+
+-- | If the inner expression can be viewed as a bitvector, we project out a view
+-- of it as such.
 asBVExpr :: XExpr t -> Maybe (SomeBVExpr t)
 asBVExpr xe = case xe of
   XInt8 e -> Just (SomeBVExpr e knownNat Signed XInt8)
@@ -186,14 +283,8 @@ asBVExpr xe = case xe of
   XWord64 e -> Just (SomeBVExpr e knownNat Unsigned XWord64)
   _ -> Nothing
 
-data SomeFPExpr t = forall fpp . SomeFPExpr (WB.Expr t (WT.BaseFloatType fpp))
-
-asFPExpr :: XExpr t -> Maybe (SomeFPExpr t)
-asFPExpr xe = case xe of
-  XFloat e -> Just (SomeFPExpr e)
-  XDouble e -> Just (SomeFPExpr e)
-  _ -> Nothing
-
+-- | Translate a constant expression by creating a what4 literal and packaging
+-- it up into an 'XExpr'.
 translateConstExpr :: forall a t st fs .
                       WB.ExprBuilder t st fs
                    -> CT.Type a
@@ -229,6 +320,10 @@ translateConstExpr sym tp a = case tp of
 arrayLen :: KnownNat n => CT.Type (CT.Array n t) -> NatRepr n
 arrayLen _ = knownNat
 
+-- | Generate a fresh constant for a given copilot type. This will be called
+-- whenever we attempt to get the constant for a given external variable or
+-- stream variable, but that variable has not been accessed yet and therefore
+-- has no constant allocated.
 freshCPConstant :: forall t st fs a .
                    WB.ExprBuilder t st fs
                 -> String
