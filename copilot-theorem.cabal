@@ -61,6 +61,7 @@ library
                           , directory     >= 1.3 && < 1.4
                           , filepath
                           , mtl           >= 2.0 && < 2.3
+                          , panic
                           , parsec        >= 2.0 && < 3.2
                           , parameterized-utils
                           , pretty        >= 1.0 && < 1.2

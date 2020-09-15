@@ -7,6 +7,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
@@ -49,7 +50,7 @@
 -- timestep in the past", the equation for @a || b@ at some arbitrary point in
 -- the future reduces to @b_-1 || not b_-1@, which is always true.
 --
--- IMPORTANT: This algorithm only proves that the stream expressions are always
+-- IMPORTANT: This algorithm only proves that the stream /expressions/ are always
 -- true. Streams can have constant prefixes of finite length, and the properties
 -- are not checked for those prefixes. Therefore, the property could in fact be
 -- false for the first @k@ elements, where @k = max (prefix length)@ over all
@@ -69,6 +70,7 @@ import qualified Copilot.Core.Type.Array as CT
 
 import qualified What4.Config           as WC
 import qualified What4.Expr.Builder     as WB
+import qualified What4.Expr.GroundEval  as WG
 import qualified What4.Interface        as WI
 import qualified What4.BaseTypes        as WT
 import qualified What4.Protocol.SMTLib2 as WS
@@ -86,6 +88,7 @@ import Data.Parameterized.Some
 import qualified Data.Parameterized.Vector as V
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import GHC.TypeNats (KnownNat)
+import qualified Panic as Panic
 
 --------------------------------------------------------------------------------
 -- 'prove' function
@@ -111,6 +114,9 @@ data SatResult = Valid | Invalid | Unknown
 
 type CounterExample = [(String, Some CopilotValue)]
 
+-- | Attempt to prove all of the properties in a spec via an SMT solver (which
+-- must be installed locally on the host). Return an association list mapping
+-- the names of each property to the result returned by the solver.
 prove :: Solver
       -- ^ Solver to use
       -> CS.Spec
@@ -208,6 +214,19 @@ newtype TransM t a = TransM { unTransM :: StateT (TransState t) IO a }
 instance MonadFail (TransM t) where
   fail = error
 
+data CopilotWhat4 = CopilotWhat4
+
+instance Panic.PanicComponent CopilotWhat4 where
+  panicComponentName _ = "Copilot/What4 translation"
+  panicComponentIssues _ = "https://github.com/Copilot-Language/copilot-theorem/issues"
+
+  {-# NOINLINE Panic.panicComponentRevision #-}
+  panicComponentRevision = $(Panic.useGitRevision)
+
+panic :: MonadIO m => m a
+panic = Panic.panic CopilotWhat4 "Copilot.Theorem.What4"
+        [ "Ill-typed core expression" ]
+
 -- | The What4 representation of a copilot expression. We do not attempt to
 -- track the type of the inner expression at the type level, but instead lump
 -- everything together into the 'XExpr t' type. The only reason this is a GADT
@@ -250,6 +269,7 @@ valFromExpr ge xe = case xe of
     Some . CopilotValue CT.Float . castWord32ToFloat . fromBV <$> WG.groundEval ge e
   XDouble e ->
     Some . CopilotValue CT.Double . castWord64ToDouble . fromBV <$> WG.groundEval ge e
+  _ -> error "valFromExpr unhandled case"
   where fromBV :: forall a w . Num a => BV.BV w -> a
         fromBV = fromInteger . BV.asUnsigned
 
@@ -435,6 +455,49 @@ translateExpr sym offset e = case e of
     liftIO $ translateOp3 sym op xe1 xe2 xe3
   CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
 
+-- | Translate an expression into a what4 representation at a /specific/ clock
+-- cycle, rather than "at some indeterminate point in the future."
+translateExprAt :: WB.ExprBuilder t st fs
+                -> Int
+                -- ^ Index of clock cycle
+                -> Int
+                -- ^ number of timesteps in the past we are currently looking
+                -- (must always be <= 0)
+                -> CE.Expr a
+                -- ^ stream expression
+                -> TransM t (XExpr t)
+translateExprAt sym _k _offset e = case e of
+  CE.Const tp a -> liftIO $ translateConstExpr sym tp a
+  _ -> error "translateExprAt unimplemented"
+  -- CE.Drop _tp ix streamId
+  --   -- If we are referencing a past value of this stream, just return an
+  --   -- unconstrained constant.
+  --   | offset + fromIntegral ix < 0 ->
+  --       getStreamConstant sym streamId (offset + fromIntegral ix)
+  --   -- If we are referencing a current or future value of this stream, we need
+  --   -- to translate the stream's expression, using an offset computed based on
+  --   -- the current offset (negative or 0), the drop index (positive or 0), and
+  --   -- the length of the stream's buffer (subtracted).
+  --   | otherwise -> do
+  --     CS.Stream _ buf e _ <- getStreamDef streamId
+  --     translateExpr sym (offset + fromIntegral ix - length buf) e
+  -- CE.Local _ _ _ _ _ -> error "translateExpr: Local unimplemented"
+  -- CE.Var _ _ -> error "translateExpr: Var unimplemented"
+  -- CE.ExternVar tp nm _prefix -> getExternConstant sym tp nm offset
+  -- CE.Op1 op e -> liftIO . translateOp1 sym op =<< translateExpr sym offset e
+  -- CE.Op2 op e1 e2 -> do
+  --   xe1 <- translateExpr sym offset e1
+  --   xe2 <- translateExpr sym offset e2
+  --   powFn <- gets pow
+  --   logbFn <- gets logb
+  --   liftIO $ translateOp2 sym powFn logbFn op xe1 xe2
+  -- CE.Op3 op e1 e2 e3 -> do
+  --   xe1 <- translateExpr sym offset e1
+  --   xe2 <- translateExpr sym offset e2
+  --   xe3 <- translateExpr sym offset e3
+  --   liftIO $ translateOp3 sym op xe1 xe2 xe3
+  -- CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
+
 type BVOp1 w t = (KnownNat w, 1 <= w) => WB.BVExpr t w -> IO (WB.BVExpr t w)
 
 type FPOp1 fpp t = KnownRepr WT.FloatPrecisionRepr fpp => WB.Expr t (WT.BaseFloatType fpp) -> IO (WB.Expr t (WT.BaseFloatType fpp))
@@ -534,6 +597,8 @@ translateOp1 sym op xe = case (op, xe) of
     (XWord32 e, CT.Word32) -> return $ XWord32 e
     (XWord32 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
     (XWord64 e, CT.Word64) -> return $ XWord64 e
+    _ -> panic
+  _ -> panic
   where numOp :: (forall w . BVOp1 w t)
               -> (forall fpp . FPOp1 fpp t)
               -> XExpr t
@@ -549,6 +614,7 @@ translateOp1 sym op xe = case (op, xe) of
           XWord64 e -> XWord64 <$> bvOp e
           XFloat e -> XFloat <$> fpOp e
           XDouble e -> XDouble <$> fpOp e
+          _ -> panic
 
         bvOp :: (forall w . BVOp1 w t) -> XExpr t -> IO (XExpr t)
         bvOp f xe = case xe of
@@ -560,11 +626,13 @@ translateOp1 sym op xe = case (op, xe) of
           XWord16 e -> XWord16 <$> f e
           XWord32 e -> XWord32 <$> f e
           XWord64 e -> XWord64 <$> f e
+          _ -> panic
 
         fpOp :: (forall fpp . FPOp1 fpp t) -> XExpr t -> IO (XExpr t)
         fpOp g xe = case xe of
           XFloat e -> XFloat <$> g e
           XDouble e -> XDouble <$> g e
+          _ -> panic
 
         realOp :: RealOp1 t -> XExpr t -> IO (XExpr t)
         realOp h xe = fpOp hf xe
@@ -664,7 +732,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
     ctor1 <$> case sgn1 of
       Signed -> WI.bvAshr sym e1 e2'
       Unsigned -> WI.bvLshr sym e1 e2'
-  _ -> undefined
+  _ -> panic
   where numOp :: (forall w . BVOp2 w t)
               -> (forall fpp . FPOp2 fpp t)
               -> XExpr t
@@ -681,6 +749,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XWord64 e1, XWord64 e2)-> XWord64 <$> bvOp e1 e2
           (XFloat e1, XFloat e2)-> XFloat <$> fpOp e1 e2
           (XDouble e1, XDouble e2)-> XDouble <$> fpOp e1 e2
+          _ -> panic
 
         bvOp :: (forall w . BVOp2 w t)
              -> (forall w . BVOp2 w t)
@@ -696,6 +765,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XWord16 e1, XWord16 e2) -> XWord16 <$> opU e1 e2
           (XWord32 e1, XWord32 e2) -> XWord32 <$> opU e1 e2
           (XWord64 e1, XWord64 e2) -> XWord64 <$> opU e1 e2
+          _ -> panic
 
         fpOp :: (forall fpp . FPOp2 fpp t)
              -> XExpr t
@@ -704,6 +774,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
         fpOp op xe1 xe2 = case (xe1, xe2) of
           (XFloat e1, XFloat e2) -> XFloat <$> op e1 e2
           (XDouble e1, XDouble e2) -> XDouble <$> op e1 e2
+          _ -> panic
 
         cmp :: BoolCmp2 t
             -> (forall w . BVCmp2 w t)
@@ -723,6 +794,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XWord64 e1, XWord64 e2)-> XBool <$> bvOp e1 e2
           (XFloat e1, XFloat e2)-> XBool <$> fpOp e1 e2
           (XDouble e1, XDouble e2)-> XBool <$> fpOp e1 e2
+          _ -> panic
 
         numCmp :: (forall w . BVCmp2 w t)
                -> (forall w . BVCmp2 w t)
@@ -741,6 +813,7 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XWord64 e1, XWord64 e2)-> XBool <$> bvUOp e1 e2
           (XFloat e1, XFloat e2)-> XBool <$> fpOp e1 e2
           (XDouble e1, XDouble e2)-> XBool <$> fpOp e1 e2
+          _ -> panic
 
 translateOp3 :: forall t st fs a b c d .
                 WB.ExprBuilder t st fs
@@ -761,3 +834,4 @@ translateOp3 sym (CE.Mux _) (XBool te) xe1 xe2 = case (xe1, xe2) of
   (XWord64 e1, XWord64 e2) -> XWord64 <$> WI.bvIte sym te e1 e2
   (XFloat e1, XFloat e2) -> XFloat <$> WI.floatIte sym te e1 e2
   (XDouble e1, XDouble e2) -> XDouble <$> WI.floatIte sym te e1 e2
+  _ -> panic
