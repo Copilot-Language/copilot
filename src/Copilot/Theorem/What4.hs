@@ -73,7 +73,6 @@ import qualified What4.Expr.Builder     as WB
 import qualified What4.Expr.GroundEval  as WG
 import qualified What4.Interface        as WI
 import qualified What4.BaseTypes        as WT
-import qualified What4.Protocol.SMTLib2 as WS
 import qualified What4.Solver           as WS
 
 import Control.Monad.State
