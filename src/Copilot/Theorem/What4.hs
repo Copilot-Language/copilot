@@ -834,3 +834,4 @@ translateOp3 sym (CE.Mux _) (XBool te) xe1 xe2 = case (xe1, xe2) of
   (XFloat e1, XFloat e2) -> XFloat <$> WI.floatIte sym te e1 e2
   (XDouble e1, XDouble e2) -> XDouble <$> WI.floatIte sym te e1 e2
   _ -> panic
+translateOp3 _ _ _ _ _ = panic
