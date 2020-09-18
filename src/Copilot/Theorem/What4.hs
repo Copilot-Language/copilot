@@ -4,6 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -50,13 +51,11 @@
 -- timestep in the past", the equation for @a || b@ at some arbitrary point in
 -- the future reduces to @b_-1 || not b_-1@, which is always true.
 --
--- IMPORTANT: This algorithm only proves that the stream /expressions/ are always
--- true. Streams can have constant prefixes of finite length, and the properties
--- are not checked for those prefixes. Therefore, the property could in fact be
--- false for the first @k@ elements, where @k = max (prefix length)@ over all
--- the streams. However, if the @prove@ function returns @Valid@, we know that
--- the property holds for all clock values greater than @k@. This can be
--- interpreted as "eventually always true."
+-- In addition to proving that the stream expression is true at some arbitrary
+-- point in the future, we also prove it for the first @k@ timesteps, where @k@
+-- is the maximum buffer length of all streams in the given spec. This amounts
+-- to simply interpreting the spec, although external variables are still
+-- represented as constants with unknown values.
 
 module Copilot.Theorem.What4
   ( prove, Solver(..), SatResult(..)
@@ -137,23 +136,31 @@ prove solver spec = do
         (\stream -> (CS.streamId stream, stream)) <$> CS.specStreams spec
   pow <- WI.freshTotalUninterpFn sym (WI.safeSymbol "pow") knownRepr knownRepr
   logb <- WI.freshTotalUninterpFn sym (WI.safeSymbol "logb") knownRepr knownRepr
-  let st = TransState Map.empty Map.empty streamMap pow logb
+  let st = TransState Map.empty Map.empty Map.empty streamMap pow logb
 
   -- Define TransM action for proving properties. Doing this in TransM rather
   -- than IO allows us to reuse the state for each property.
   let proveProperties = forM (CS.specProperties spec) $ \pr -> do
+        let bufLen (CS.Stream _ buf _ _) = length buf
+            maxBufLen = maximum (bufLen <$> CS.specStreams spec)
+        liftIO $ putStrLn $ "max buffer length: " ++ show maxBufLen
+        not_prefix <- forM [0 .. maxBufLen - 1] $ \k -> do
+          XBool p <- translateExprAt sym k (CS.propertyExpr pr)
+          liftIO $ WI.notPred sym p
         XBool p <- translateExpr sym 0 (CS.propertyExpr pr)
         not_p <- liftIO $ WI.notPred sym p
+
+        let clauses = not_p : not_prefix
         case solver of
-          Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData [not_p] $ \case
+          Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \case
             WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
-          Yices -> liftIO $ WS.runYicesInOverride sym WS.defaultLogData [not_p] $ \case
+          Yices -> liftIO $ WS.runYicesInOverride sym WS.defaultLogData clauses $ \case
             WS.Sat _ge -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
-          CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData [not_p] $ \case
+          CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData clauses $ \case
             WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
@@ -183,6 +190,10 @@ data TransState t = TransState {
   -- just fresh constants. The offset indicates how many timesteps in the past
   -- this constant represents for that stream.
   externVars :: Map.Map (CE.Name, Int) (XExpr t),
+  -- | Map of external variables at specific indices (positive), rather than
+  -- offset into the past. This is for interpreting properties at specific
+  -- offsets.
+  externVarsAt :: Map.Map (CE.Name, Int) (XExpr t),
   -- | Map from (stream id, negative offset) to fresh constant. These are all
   -- constants representing the values of a stream at some point in the past.
   -- The offset (ALWAYS NEGATIVE) indicates how many timesteps in the past
@@ -408,6 +419,20 @@ getExternConstant sym tp var offset = do
       modify (\st -> st { externVars = Map.insert (var, offset) xe es} )
       return xe
 
+getExternConstantAt :: WB.ExprBuilder t st fs
+                    -> CT.Type a
+                    -> CE.Name
+                    -> Int
+                    -> TransM t (XExpr t)
+getExternConstantAt sym tp var ix = do
+  es <- gets externVarsAt
+  case Map.lookup (var, ix) es of
+    Just xe -> return xe
+    Nothing -> do
+      xe <- liftIO $ freshCPConstant sym var tp
+      modify (\st -> st { externVars = Map.insert (var, ix) xe es} )
+      return xe
+
 -- | Retrieve a stream definition given its id.
 getStreamDef :: CE.Id -> TransM t CS.Stream
 getStreamDef streamId = fromJust <$> gets (Map.lookup streamId . streams)
@@ -454,48 +479,38 @@ translateExpr sym offset e = case e of
     liftIO $ translateOp3 sym op xe1 xe2 xe3
   CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
 
--- | Translate an expression into a what4 representation at a /specific/ clock
--- cycle, rather than "at some indeterminate point in the future."
+-- | Translate an expression into a what4 representation at a /specific/
+-- timestep, rather than "at some indeterminate point in the future."
 translateExprAt :: WB.ExprBuilder t st fs
                 -> Int
-                -- ^ Index of clock cycle
-                -> Int
-                -- ^ number of timesteps in the past we are currently looking
-                -- (must always be <= 0)
+                -- ^ Index of timestep
                 -> CE.Expr a
                 -- ^ stream expression
                 -> TransM t (XExpr t)
-translateExprAt sym _k _offset e = case e of
+translateExprAt sym k e = case e of
   CE.Const tp a -> liftIO $ translateConstExpr sym tp a
-  _ -> error "translateExprAt unimplemented"
-  -- CE.Drop _tp ix streamId
-  --   -- If we are referencing a past value of this stream, just return an
-  --   -- unconstrained constant.
-  --   | offset + fromIntegral ix < 0 ->
-  --       getStreamConstant sym streamId (offset + fromIntegral ix)
-  --   -- If we are referencing a current or future value of this stream, we need
-  --   -- to translate the stream's expression, using an offset computed based on
-  --   -- the current offset (negative or 0), the drop index (positive or 0), and
-  --   -- the length of the stream's buffer (subtracted).
-  --   | otherwise -> do
-  --     CS.Stream _ buf e _ <- getStreamDef streamId
-  --     translateExpr sym (offset + fromIntegral ix - length buf) e
-  -- CE.Local _ _ _ _ _ -> error "translateExpr: Local unimplemented"
-  -- CE.Var _ _ -> error "translateExpr: Var unimplemented"
-  -- CE.ExternVar tp nm _prefix -> getExternConstant sym tp nm offset
-  -- CE.Op1 op e -> liftIO . translateOp1 sym op =<< translateExpr sym offset e
-  -- CE.Op2 op e1 e2 -> do
-  --   xe1 <- translateExpr sym offset e1
-  --   xe2 <- translateExpr sym offset e2
-  --   powFn <- gets pow
-  --   logbFn <- gets logb
-  --   liftIO $ translateOp2 sym powFn logbFn op xe1 xe2
-  -- CE.Op3 op e1 e2 e3 -> do
-  --   xe1 <- translateExpr sym offset e1
-  --   xe2 <- translateExpr sym offset e2
-  --   xe3 <- translateExpr sym offset e3
-  --   liftIO $ translateOp3 sym op xe1 xe2 xe3
-  -- CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
+  CE.Drop _tp ix streamId -> do
+    CS.Stream _ buf e tp <- getStreamDef streamId
+    if k' < length buf
+      then liftIO $ translateConstExpr sym tp (buf !! k')
+      else translateExprAt sym k' e
+    where k' = k + fromIntegral ix
+  CE.Local _ _ _ _ _ -> error "translateExpr: Local unimplemented"
+  CE.Var _ _ -> error "translateExpr: Var unimplemented"
+  CE.ExternVar tp nm _prefix -> getExternConstantAt sym tp nm k
+  CE.Op1 op e -> liftIO . translateOp1 sym op =<< translateExprAt sym k e
+  CE.Op2 op e1 e2 -> do
+    xe1 <- translateExprAt sym k e1
+    xe2 <- translateExprAt sym k e2
+    powFn <- gets pow
+    logbFn <- gets logb
+    liftIO $ translateOp2 sym powFn logbFn op xe1 xe2
+  CE.Op3 op e1 e2 e3 -> do
+    xe1 <- translateExprAt sym k e1
+    xe2 <- translateExprAt sym k e2
+    xe3 <- translateExprAt sym k e3
+    liftIO $ translateOp3 sym op xe1 xe2 xe3
+  CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
 
 type BVOp1 w t = (KnownNat w, 1 <= w) => WB.BVExpr t w -> IO (WB.BVExpr t w)
 
