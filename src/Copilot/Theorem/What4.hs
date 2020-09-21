@@ -76,6 +76,7 @@ import qualified What4.Solver           as WS
 
 import Control.Monad.State
 import qualified Data.BitVector.Sized as BV
+import Data.Foldable (foldrM)
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 import Data.Parameterized.Classes
@@ -142,15 +143,15 @@ prove solver spec = do
   -- than IO allows us to reuse the state for each property.
   let proveProperties = forM (CS.specProperties spec) $ \pr -> do
         let bufLen (CS.Stream _ buf _ _) = length buf
-            maxBufLen = maximum (bufLen <$> CS.specStreams spec)
-        liftIO $ putStrLn $ "max buffer length: " ++ show maxBufLen
-        not_prefix <- forM [0 .. maxBufLen - 1] $ \k -> do
+            maxBufLen = maximum (0 : (bufLen <$> CS.specStreams spec))
+        prefix <- forM [0 .. maxBufLen - 1] $ \k -> do
           XBool p <- translateExprAt sym k (CS.propertyExpr pr)
-          liftIO $ WI.notPred sym p
+          return p
         XBool p <- translateExpr sym 0 (CS.propertyExpr pr)
-        not_p <- liftIO $ WI.notPred sym p
+        p_and_prefix <- liftIO $ foldrM (WI.andPred sym) p prefix
+        not_p_and_prefix <- liftIO $ WI.notPred sym p_and_prefix
 
-        let clauses = not_p : not_prefix
+        let clauses = [not_p_and_prefix]
         case solver of
           Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \case
             WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
@@ -257,6 +258,12 @@ data XExpr t where
   XEmptyArray :: XExpr t
   XArray      :: 1 <= n => V.Vector n (XExpr t) -> XExpr t
   XStruct     :: [XExpr t] -> XExpr t
+  -- XArray      :: NatRepr n
+  --             -> BaseTypeRepr tp
+  --             -> Some (WB.Expr t)
+  -- XStruct     :: Assignment BaseTypeRepr tps
+  --             -> WB.Expr t (BaseStructType tps)
+  --             -> XExpr t
 
 deriving instance Show (XExpr t)
 
@@ -487,30 +494,31 @@ translateExprAt :: WB.ExprBuilder t st fs
                 -> CE.Expr a
                 -- ^ stream expression
                 -> TransM t (XExpr t)
-translateExprAt sym k e = case e of
-  CE.Const tp a -> liftIO $ translateConstExpr sym tp a
-  CE.Drop _tp ix streamId -> do
-    CS.Stream _ buf e tp <- getStreamDef streamId
-    if k' < length buf
-      then liftIO $ translateConstExpr sym tp (buf !! k')
-      else translateExprAt sym k' e
-    where k' = k + fromIntegral ix
-  CE.Local _ _ _ _ _ -> error "translateExpr: Local unimplemented"
-  CE.Var _ _ -> error "translateExpr: Var unimplemented"
-  CE.ExternVar tp nm _prefix -> getExternConstantAt sym tp nm k
-  CE.Op1 op e -> liftIO . translateOp1 sym op =<< translateExprAt sym k e
-  CE.Op2 op e1 e2 -> do
-    xe1 <- translateExprAt sym k e1
-    xe2 <- translateExprAt sym k e2
-    powFn <- gets pow
-    logbFn <- gets logb
-    liftIO $ translateOp2 sym powFn logbFn op xe1 xe2
-  CE.Op3 op e1 e2 e3 -> do
-    xe1 <- translateExprAt sym k e1
-    xe2 <- translateExprAt sym k e2
-    xe3 <- translateExprAt sym k e3
-    liftIO $ translateOp3 sym op xe1 xe2 xe3
-  CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
+translateExprAt sym k e = do
+  case e of
+    CE.Const tp a -> liftIO $ translateConstExpr sym tp a
+    CE.Drop _tp ix streamId -> do
+      CS.Stream _ buf e tp <- getStreamDef streamId
+      if k' < length buf
+        then liftIO $ translateConstExpr sym tp (buf !! k')
+        else translateExprAt sym (k' - length buf) e
+      where k' = k + fromIntegral ix
+    CE.Local _ _ _ _ _ -> error "translateExpr: Local unimplemented"
+    CE.Var _ _ -> error "translateExpr: Var unimplemented"
+    CE.ExternVar tp nm _prefix -> getExternConstantAt sym tp nm k
+    CE.Op1 op e -> liftIO . translateOp1 sym op =<< translateExprAt sym k e
+    CE.Op2 op e1 e2 -> do
+      xe1 <- translateExprAt sym k e1
+      xe2 <- translateExprAt sym k e2
+      powFn <- gets pow
+      logbFn <- gets logb
+      liftIO $ translateOp2 sym powFn logbFn op xe1 xe2
+    CE.Op3 op e1 e2 e3 -> do
+      xe1 <- translateExprAt sym k e1
+      xe2 <- translateExprAt sym k e2
+      xe3 <- translateExprAt sym k e3
+      liftIO $ translateOp3 sym op xe1 xe2 xe3
+    CE.Label _ _ _ -> error "translateExpr: Label unimplemented"
 
 type BVOp1 w t = (KnownNat w, 1 <= w) => WB.BVExpr t w -> IO (WB.BVExpr t w)
 
