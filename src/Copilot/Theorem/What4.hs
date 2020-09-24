@@ -437,7 +437,7 @@ getExternConstantAt sym tp var ix = do
     Just xe -> return xe
     Nothing -> do
       xe <- liftIO $ freshCPConstant sym var tp
-      modify (\st -> st { externVars = Map.insert (var, ix) xe es} )
+      modify (\st -> st { externVarsAt = Map.insert (var, ix) xe es} )
       return xe
 
 -- | Retrieve a stream definition given its id.
