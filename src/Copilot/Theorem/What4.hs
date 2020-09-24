@@ -73,6 +73,7 @@ import qualified What4.Expr.GroundEval  as WG
 import qualified What4.Interface        as WI
 import qualified What4.BaseTypes        as WT
 import qualified What4.Solver           as WS
+import qualified What4.Solver.DReal     as WS
 
 import Control.Monad.State
 import qualified Data.BitVector.Sized as BV
@@ -105,7 +106,7 @@ fpRM = WI.RNE
 data BuilderState a = EmptyState
 
 -- | The solvers supported by the what4 backend.
-data Solver = CVC4 | Yices | Z3
+data Solver = CVC4 | DReal | Yices | Z3
 
 -- | The 'prove' function returns results of this form for each property in a
 -- spec.
@@ -129,6 +130,7 @@ prove solver spec = do
   -- Solver-specific options
   case solver of
     CVC4 -> WC.extendConfig WS.cvc4Options (WI.getConfiguration sym)
+    DReal -> WC.extendConfig WS.drealOptions (WI.getConfiguration sym)
     Yices -> WC.extendConfig WS.yicesOptions (WI.getConfiguration sym)
     Z3 -> WC.extendConfig WS.z3Options (WI.getConfiguration sym)
 
@@ -153,7 +155,11 @@ prove solver spec = do
 
         let clauses = [not_p_and_prefix]
         case solver of
-          Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \case
+          CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData clauses $ \case
+            WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
+            WS.Unsat _ -> return (CS.propertyName pr, Valid)
+            WS.Unknown -> return (CS.propertyName pr, Unknown)
+          DReal -> liftIO $ WS.runDRealInOverride sym WS.defaultLogData clauses $ \case
             WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
@@ -161,7 +167,7 @@ prove solver spec = do
             WS.Sat _ge -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
-          CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData clauses $ \case
+          Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \case
             WS.Sat (_ge, _) -> return (CS.propertyName pr, Invalid)
             WS.Unsat _ -> return (CS.propertyName pr, Valid)
             WS.Unknown -> return (CS.propertyName pr, Unknown)
