@@ -111,6 +111,7 @@ data Solver = CVC4 | DReal | Yices | Z3
 -- | The 'prove' function returns results of this form for each property in a
 -- spec.
 data SatResult = Valid | Invalid | Unknown
+  deriving Show
 
 type CounterExample = [(String, Some CopilotValue)]
 
