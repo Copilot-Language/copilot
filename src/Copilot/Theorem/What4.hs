@@ -199,8 +199,7 @@ data TransState t = TransState {
   -- this constant represents for that stream.
   externVars :: Map.Map (CE.Name, Int) (XExpr t),
   -- | Map of external variables at specific indices (positive), rather than
-  -- offset into the past. This is for interpreting properties at specific
-  -- offsets.
+  -- offset into the past. This is for interpreting streams at specific offsets.
   externVarsAt :: Map.Map (CE.Name, Int) (XExpr t),
   -- | Map from (stream id, negative offset) to fresh constant. These are all
   -- constants representing the values of a stream at some point in the past.
@@ -241,6 +240,8 @@ instance Panic.PanicComponent CopilotWhat4 where
   {-# NOINLINE Panic.panicComponentRevision #-}
   panicComponentRevision = $(Panic.useGitRevision)
 
+-- | Use this function rather than an error monad since it indicates that
+-- copilot-core's "reify" function did something incorrectly.
 panic :: MonadIO m => m a
 panic = Panic.panic CopilotWhat4 "Copilot.Theorem.What4"
         [ "Ill-typed core expression" ]
@@ -415,7 +416,7 @@ getStreamConstant sym streamId offset = do
       return xe
 
 -- | Get the constant for a given external variable and some offset into the
--- past. This hsould only be called with a strictly negative offset. When this
+-- past. This should only be called with a strictly negative offset. When this
 -- function gets called for the first time for a given (var, offset) pair, it
 -- generates a fresh constant and stores it in an internal map. Thereafter, this
 -- function will just return that constant when called with the same pair.
@@ -433,6 +434,7 @@ getExternConstant sym tp var offset = do
       modify (\st -> st { externVars = Map.insert (var, offset) xe es} )
       return xe
 
+-- | Get the constant for a given external variable at some specific timestep.
 getExternConstantAt :: WB.ExprBuilder t st fs
                     -> CT.Type a
                     -> CE.Name

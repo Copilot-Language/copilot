@@ -4,10 +4,12 @@
 # test only against the last release in a major GHC version. Feel free to omit
 # lines listings versions you don't need/want testing for.
 env:
-  - CABALVER=1.24 GHCVER=8.0.2
-  - CABALVER=1.24 GHCVER=8.2.2
-  - CABALVER=1.24 GHCVER=8.4.2
-  - CABALVER=1.24 GHCVER=8.6.4
+  # - CABALVER=1.24 GHCVER=8.0.2
+  # - CABALVER=1.24 GHCVER=8.2.2
+  # - CABALVER=1.24 GHCVER=8.4.2
+  # - CABALVER=1.24 GHCVER=8.6.4
+  - CABALVER=3.2  GHCVER=8.8
+  - CABALVER=3.2  GHCVER=8.10
 # - CABALVER=head GHCVER=head   # see section about GHC HEAD snapshots
 
 # Note: the distinction between `before_install` and `install` is not important.
