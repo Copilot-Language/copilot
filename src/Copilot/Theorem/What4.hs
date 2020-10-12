@@ -78,6 +78,7 @@ import qualified What4.Solver.DReal     as WS
 import Control.Monad.State
 import qualified Data.BitVector.Sized as BV
 import Data.Foldable (foldrM)
+import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 import Data.Parameterized.Classes
@@ -85,6 +86,7 @@ import Data.Parameterized.Context
 import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
+import Data.Parameterized.SymbolRepr
 import qualified Data.Parameterized.Vector as V
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import GHC.TypeNats (KnownNat)
@@ -535,6 +537,12 @@ type FPOp1 fpp t = KnownRepr WT.FloatPrecisionRepr fpp => WB.Expr t (WT.BaseFloa
 
 type RealOp1 t = WB.Expr t WT.BaseRealType -> IO (WB.Expr t WT.BaseRealType)
 
+fieldName :: KnownSymbol s => CT.Field s a -> SymbolRepr s
+fieldName _ = knownSymbol
+
+valueName :: CT.Value a -> Some SymbolRepr
+valueName (CT.Value _ f) = Some (fieldName f)
+
 translateOp1 :: forall t st fs a b .
                 WB.ExprBuilder t st fs
              -> CE.Op1 a b
@@ -629,7 +637,13 @@ translateOp1 sym op xe = case (op, xe) of
     (XWord32 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
     (XWord64 e, CT.Word64) -> return $ XWord64 e
     _ -> panic
-  _ -> panic
+  (CE.GetField (CT.Struct s) ftp extractor, XStruct xes) -> do
+    let fieldNameRepr = fieldName (extractor undefined)
+    let structFieldNameReprs = valueName <$> CT.toValues s
+    let mIx = elemIndex (Some fieldNameRepr) structFieldNameReprs
+    case mIx of
+      Just ix -> return $ xes !! ix
+      Nothing -> panic
   where numOp :: (forall w . BVOp1 w t)
               -> (forall fpp . FPOp1 fpp t)
               -> XExpr t
