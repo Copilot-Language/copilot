@@ -780,6 +780,13 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
     ctor1 <$> case sgn1 of
       Signed -> WI.bvAshr sym e1 e2'
       Unsigned -> WI.bvLshr sym e1 e2'
+  -- Note: Currently, copilot does not check if array indices are out of bounds,
+  -- even for constant expressions. The method of translation we are using
+  -- simply creates a nest of if-then-else expression to check the index
+  -- expression against all possible indices. If the index expression is known
+  -- by the solver to be out of bounds (for instance, if it is a constant 5 for
+  -- an array of 5 elements), then the if-then-else will trivially resolve to
+  -- true.
   (CE.Index _, xe1, xe2) -> do
     case (xe1, xe2) of
       (XArray xes, XWord32 ix) -> buildIndexExpr sym 0 ix xes
