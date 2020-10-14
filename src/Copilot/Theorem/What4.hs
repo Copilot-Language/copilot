@@ -82,7 +82,7 @@ import Data.List (elemIndex)
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 import Data.Parameterized.Classes
-import Data.Parameterized.Context
+import Data.Parameterized.Context hiding (zipWithM)
 import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
@@ -883,21 +883,33 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
             rstExpr <- buildIndexExpr sym (curIx+1) ix xelts'
             curIxExpr <- WI.bvLit sym knownNat (BV.word32 curIx)
             ixEq <- WI.bvEq sym curIxExpr ix
-            case (xe, rstExpr) of
-              (XBool e, XBool rstExpr) -> XBool <$> WI.itePred sym ixEq e rstExpr
-              (XInt8 e, XInt8 rstExpr) -> XInt8 <$> WI.bvIte sym ixEq e rstExpr
-              (XInt16 e, XInt16 rstExpr) -> XInt16 <$> WI.bvIte sym ixEq e rstExpr
-              (XInt32 e, XInt32 rstExpr) -> XInt32 <$> WI.bvIte sym ixEq e rstExpr
-              (XInt64 e, XInt64 rstExpr) -> XInt64 <$> WI.bvIte sym ixEq e rstExpr
-              (XWord8 e, XWord8 rstExpr) -> XWord8 <$> WI.bvIte sym ixEq e rstExpr
-              (XWord16 e, XWord16 rstExpr) -> XWord16 <$> WI.bvIte sym ixEq e rstExpr
-              (XWord32 e, XWord32 rstExpr) -> XWord32 <$> WI.bvIte sym ixEq e rstExpr
-              (XWord64 e, XWord64 rstExpr) -> XWord64 <$> WI.bvIte sym ixEq e rstExpr
-              (XFloat e, XFloat rstExpr) -> XFloat <$> WI.floatIte sym ixEq e rstExpr
-              (XDouble e, XDouble rstExpr) -> XDouble <$> WI.floatIte sym ixEq e rstExpr
-              (XStruct _, XStruct _) -> error "buildIndexExpr: arrays of structs unsupported"
-              (XArray _, XArray _) -> error "buildIndexExpr: arrays of arrays unsupported"
+            mkIte sym ixEq xe rstExpr
+
+        mkIte :: WB.ExprBuilder t st fs
+              -> WB.Expr t WT.BaseBoolType
+              -> XExpr t
+              -> XExpr t
+              -> IO (XExpr t)
+        mkIte sym pred xe1 xe2 = case (xe1, xe2) of
+              (XBool e1, XBool e2) -> XBool <$> WI.itePred sym pred e1 e2
+              (XInt8 e1, XInt8 e2) -> XInt8 <$> WI.bvIte sym pred e1 e2
+              (XInt16 e1, XInt16 e2) -> XInt16 <$> WI.bvIte sym pred e1 e2
+              (XInt32 e1, XInt32 e2) -> XInt32 <$> WI.bvIte sym pred e1 e2
+              (XInt64 e1, XInt64 e2) -> XInt64 <$> WI.bvIte sym pred e1 e2
+              (XWord8 e1, XWord8 e2) -> XWord8 <$> WI.bvIte sym pred e1 e2
+              (XWord16 e1, XWord16 e2) -> XWord16 <$> WI.bvIte sym pred e1 e2
+              (XWord32 e1, XWord32 e2) -> XWord32 <$> WI.bvIte sym pred e1 e2
+              (XWord64 e1, XWord64 e2) -> XWord64 <$> WI.bvIte sym pred e1 e2
+              (XFloat e1, XFloat e2) -> XFloat <$> WI.floatIte sym pred e1 e2
+              (XDouble e1, XDouble e2) -> XDouble <$> WI.floatIte sym pred e1 e2
+              (XStruct xes1, XStruct xes2) ->
+                XStruct <$> zipWithM (mkIte sym pred) xes1 xes2
+              (XArray xes1, XArray xes2) ->
+                case V.length xes1 `testEquality` V.length xes2 of
+                  Just Refl -> XArray <$> V.zipWithM (mkIte sym pred) xes1 xes2
+                  Nothing -> panic
               _ -> panic
+
 
 translateOp3 :: forall t st fs a b c d .
                 WB.ExprBuilder t st fs
