@@ -88,6 +88,7 @@ import Data.Parameterized.Nonce
 import Data.Parameterized.Some
 import Data.Parameterized.SymbolRepr
 import qualified Data.Parameterized.Vector as V
+import Data.Word
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import GHC.TypeNats (KnownNat)
 import qualified Panic as Panic
@@ -550,6 +551,7 @@ translateOp1 :: forall t st fs a b .
              -> IO (XExpr t)
 translateOp1 sym op xe = case (op, xe) of
   (CE.Not, XBool e) -> XBool <$> WI.notPred sym e
+  (CE.Not, _) -> panic
   (CE.Abs _, xe) -> numOp bvAbs fpAbs xe
     where bvAbs :: BVOp1 w t
           bvAbs e = do zero <- WI.bvLit sym knownNat (BV.zero knownNat)
@@ -637,13 +639,14 @@ translateOp1 sym op xe = case (op, xe) of
     (XWord32 e, CT.Word64) -> XWord64 <$> WI.bvZext sym knownNat e
     (XWord64 e, CT.Word64) -> return $ XWord64 e
     _ -> panic
-  (CE.GetField (CT.Struct s) ftp extractor, XStruct xes) -> do
+  (CE.GetField (CT.Struct s) _ftp extractor, XStruct xes) -> do
     let fieldNameRepr = fieldName (extractor undefined)
     let structFieldNameReprs = valueName <$> CT.toValues s
     let mIx = elemIndex (Some fieldNameRepr) structFieldNameReprs
     case mIx of
       Just ix -> return $ xes !! ix
       Nothing -> panic
+  _ -> panic
   where numOp :: (forall w . BVOp1 w t)
               -> (forall fpp . FPOp1 fpp t)
               -> XExpr t
@@ -777,6 +780,10 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
     ctor1 <$> case sgn1 of
       Signed -> WI.bvAshr sym e1 e2'
       Unsigned -> WI.bvLshr sym e1 e2'
+  (CE.Index _, xe1, xe2) -> do
+    case (xe1, xe2) of
+      (XArray xes, XWord32 ix) -> buildIndexExpr sym 0 ix xes
+      _ -> panic
   _ -> panic
   where numOp :: (forall w . BVOp2 w t)
               -> (forall fpp . FPOp2 fpp t)
@@ -859,6 +866,38 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
           (XFloat e1, XFloat e2)-> XBool <$> fpOp e1 e2
           (XDouble e1, XDouble e2)-> XBool <$> fpOp e1 e2
           _ -> panic
+
+        buildIndexExpr :: 1 <= n
+                       => WB.ExprBuilder t st fs
+                       -> Word32
+                       -- ^ Index
+                       -> WB.Expr t (WT.BaseBVType 32)
+                       -- ^ Index
+                       -> V.Vector n (XExpr t)
+                       -- ^ Elements
+                       -> IO (XExpr t)
+        buildIndexExpr sym curIx ix xelts = case V.uncons xelts of
+          (xe, Left Refl) -> return xe
+          (xe, Right xelts') -> do
+            LeqProof <- return $ V.nonEmpty xelts'
+            rstExpr <- buildIndexExpr sym (curIx+1) ix xelts'
+            curIxExpr <- WI.bvLit sym knownNat (BV.word32 curIx)
+            ixEq <- WI.bvEq sym curIxExpr ix
+            case (xe, rstExpr) of
+              (XBool e, XBool rstExpr) -> XBool <$> WI.itePred sym ixEq e rstExpr
+              (XInt8 e, XInt8 rstExpr) -> XInt8 <$> WI.bvIte sym ixEq e rstExpr
+              (XInt16 e, XInt16 rstExpr) -> XInt16 <$> WI.bvIte sym ixEq e rstExpr
+              (XInt32 e, XInt32 rstExpr) -> XInt32 <$> WI.bvIte sym ixEq e rstExpr
+              (XInt64 e, XInt64 rstExpr) -> XInt64 <$> WI.bvIte sym ixEq e rstExpr
+              (XWord8 e, XWord8 rstExpr) -> XWord8 <$> WI.bvIte sym ixEq e rstExpr
+              (XWord16 e, XWord16 rstExpr) -> XWord16 <$> WI.bvIte sym ixEq e rstExpr
+              (XWord32 e, XWord32 rstExpr) -> XWord32 <$> WI.bvIte sym ixEq e rstExpr
+              (XWord64 e, XWord64 rstExpr) -> XWord64 <$> WI.bvIte sym ixEq e rstExpr
+              (XFloat e, XFloat rstExpr) -> XFloat <$> WI.floatIte sym ixEq e rstExpr
+              (XDouble e, XDouble rstExpr) -> XDouble <$> WI.floatIte sym ixEq e rstExpr
+              (XStruct _, XStruct _) -> error "buildIndexExpr: arrays of structs unsupported"
+              (XArray _, XArray _) -> error "buildIndexExpr: arrays of arrays unsupported"
+              _ -> panic
 
 translateOp3 :: forall t st fs a b c d .
                 WB.ExprBuilder t st fs
