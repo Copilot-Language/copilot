@@ -75,6 +75,7 @@ import qualified What4.BaseTypes        as WT
 import qualified What4.Solver           as WS
 import qualified What4.Solver.DReal     as WS
 
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.State
 import qualified Data.BitVector.Sized as BV
 import Data.Foldable (foldrM)
@@ -231,7 +232,7 @@ newtype TransM t a = TransM { unTransM :: StateT (TransState t) IO a }
            , MonadState (TransState t)
            )
 
-instance MonadFail (TransM t) where
+instance Fail.MonadFail (TransM t) where
   fail = error
 
 data CopilotWhat4 = CopilotWhat4
@@ -394,8 +395,8 @@ freshCPConstant sym nm tp = case tp of
     case isZeroOrGT1 n of
       Left Refl -> return XEmptyArray
       Right LeqProof -> do
-        elts :: V.Vector n (XExpr t) <- V.generateM (decNat n) (const (freshCPConstant sym "" itp))
         Refl <- return $ minusPlusCancel n (knownNat @1)
+        elts :: V.Vector n (XExpr t) <- V.generateM (decNat n) (const (freshCPConstant sym "" itp))
         return $ XArray elts
   CT.Struct stp -> do
     elts <- forM (CT.toValues stp) $ \(CT.Value ftp _) -> freshCPConstant sym "" ftp
