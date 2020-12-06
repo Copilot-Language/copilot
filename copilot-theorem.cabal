@@ -14,7 +14,7 @@ description:
   <https://copilot-language.github.io>.
 
 
-version                   : 3.1
+version                   : 3.2
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : jonathan.laurent@ens.fr
@@ -66,7 +66,7 @@ library
                           , transformers  >= 0.5 && < 0.6
                           , xml           >= 1.3 && < 1.4
 
-                          , copilot-core  >= 3.1 && < 3.2
+                          , copilot-core  >= 3.2 && < 3.3
 
   exposed-modules         : Copilot.Theorem
                           , Copilot.Theorem.Prove
