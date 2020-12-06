@@ -1,3 +1,8 @@
+2020-12-06
+        * Version bump (3.2).
+        * Update description, bug-reports and homepage field in cabal file
+          (#8).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
         * Remove ExternFun (#6).
