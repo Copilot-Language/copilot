@@ -1,16 +1,17 @@
-2020-07-16
-        * Implemented arrays in test driver. (#37).
-        * Fixed nested array initialisation bug. (#40).
-        * Fixed length of buffer allocation for n-dimensional arrays. (#39).
-        * Fixed printing of long ints in test suite. (#36)
-        * Fixed printing of unsigned ints in test suite. (#36)
-        * Fixed '-Wsequence-point' warnings from GCC. (#34)
-        * Split Property.hs. (#33)
-        * Removed 'Test' from module paths. (#32)
-        * Made compiletest take compiler options as an argument. (#31)
-        * Fixed problem with property and empty string in driver CSV. (#30)
-        * Added comma to output of driver to match the interpreter. (#29)
-        * Implemented basic quickcheck based testing. (#28)
+2020-12-06
+        * Version bump (3.2).
+        * Implemented arrays in test driver (#37).
+        * Fixed nested array initialisation bug (#40).
+        * Fixed length of buffer allocation for n-dimensional arrays (#39).
+        * Fixed printing of long ints in test suite (#36).
+        * Fixed printing of unsigned ints in test suite (#36).
+        * Fixed '-Wsequence-point' warnings from GCC (#34).
+        * Split Property.hs (#33).
+        * Removed 'Test' from module paths (#32).
+        * Made compiletest take compiler options as an argument (#31).
+        * Fixed problem with property and empty string in driver CSV (#30).
+        * Added comma to output of driver to match the interpreter (#29).
+        * Implemented basic quickcheck based testing (#28).
 
 2020-03-30
         * Version bump (3.1.2)
