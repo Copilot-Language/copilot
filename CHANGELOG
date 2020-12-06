@@ -1,6 +1,9 @@
-2020-07-11
+2020-12-06 Ivan Perez <ivan.perez@acm.org>
+        * Version bump (3.2).
         * Fixed implementation of tysize for n-dimensional arrays. (#20).
-        * Removed sorting of interpreter output #(19).
+        * Removed sorting of interpreter output (#19).
+        * Minor documentation fixes (#17, #15).
+        * Credits: @fdedden.
 
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
