@@ -1,2 +1,6 @@
+2020-12-06
+        * Version bump (3.2).
+        * Update description, bug-reports, homepage fields in cabal file (#7).
+
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
