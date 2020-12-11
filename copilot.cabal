@@ -82,7 +82,7 @@ executable wcv
     main-is:            WCV.hs
     hs-source-dirs:     Examples
     build-depends:      base        >= 4.9  && < 5
-                      , copilot     >= 3.1  && < 3.2
+                      , copilot     >= 3.2  && < 3.3
                       , copilot-core
                       , copilot-theorem
                       , parameterized-utils
