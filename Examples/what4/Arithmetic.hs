@@ -3,17 +3,18 @@
 
 module Main where
 
-import Language.Copilot
-import Copilot.Theorem.What4
 import qualified Prelude as P
 import Control.Monad (void, forM_)
+
+import Language.Copilot
+import Copilot.Theorem.What4
 
 spec :: Spec
 spec = do
   -- Define some external streams. Their values are not important, so external
   -- streams suffice.
-  let eint8 :: Stream Int8
-      eint8 = extern "eint8" Nothing
+  let eint8  :: Stream Int8
+      eint8  = extern "eint8" Nothing
       eword8 :: Stream Word8
       eword8 = extern "eword8" Nothing
       efloat :: Stream Float
@@ -37,6 +38,7 @@ spec = do
   -- Another example with floats. This fails, because it isn't true.
   void $ prop "Example 6" (forall ((efloat + 1) /= efloat))
 
+
 main :: IO ()
 main = do
   spec' <- reify spec
@@ -48,7 +50,7 @@ main = do
   forM_ results $ \(nm, res) -> do
     putStr $ nm <> ": "
     case res of
-      Valid -> putStrLn "valid"
+      Valid   -> putStrLn "valid"
       Invalid -> putStrLn "invalid"
       Unknown -> putStrLn "unknown"
 
