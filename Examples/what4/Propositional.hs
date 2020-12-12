@@ -1,3 +1,6 @@
+-- | An example showing the usage of the What4 backend in copilot-theorem for
+-- propositional logic on boolean streams.
+
 module Main where
 
 import Language.Copilot
@@ -46,8 +49,11 @@ spec = do
 main :: IO ()
 main = do
   spec' <- reify spec
+
+  -- Use Z3 to prove the properties.
   results <- prove Z3 spec'
 
+  -- Print the results.
   forM_ results $ \(nm, res) -> do
     putStr $ nm <> ": "
     case res of
