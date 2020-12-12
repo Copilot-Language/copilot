@@ -1,3 +1,6 @@
+-- | An example showing the usage of the What4 backend in copilot-theorem for
+-- simple arithmetic.
+
 module Main where
 
 import Language.Copilot
@@ -7,7 +10,8 @@ import Control.Monad (void, forM_)
 
 spec :: Spec
 spec = do
-
+  -- Define some external streams. Their values are not important, so external
+  -- streams suffice.
   let eint8 :: Stream Int8
       eint8 = extern "eint8" Nothing
       eword8 :: Stream Word8
@@ -36,8 +40,11 @@ spec = do
 main :: IO ()
 main = do
   spec' <- reify spec
+
+  -- Use Z3 to prove the properties.
   results <- prove Z3 spec'
 
+  -- Print the results.
   forM_ results $ \(nm, res) -> do
     putStr $ nm <> ": "
     case res of
