@@ -3,14 +3,14 @@
 
 module Main where
 
-import Language.Copilot
-import Copilot.Theorem.What4
 import qualified Prelude as P
 import Control.Monad (void, forM_)
 
+import Language.Copilot
+import Copilot.Theorem.What4
+
 spec :: Spec
 spec = do
-
   -- The constant value true, which is translated as the corresponding SMT
   -- boolean literal.
   void $ prop "Example 1" (forall true)
@@ -46,6 +46,7 @@ spec = do
   let a = extern "a" Nothing
   void $ prop "Example 7" (forall (a || not a))
 
+
 main :: IO ()
 main = do
   spec' <- reify spec
@@ -57,7 +58,7 @@ main = do
   forM_ results $ \(nm, res) -> do
     putStr $ nm <> ": "
     case res of
-      Valid -> putStrLn "valid"
+      Valid   -> putStrLn "valid"
       Invalid -> putStrLn "invalid"
       Unknown -> putStrLn "unknown"
 
