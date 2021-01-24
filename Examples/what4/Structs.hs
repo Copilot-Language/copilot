@@ -80,5 +80,3 @@ main = do
       Valid   -> putStrLn "valid"
       Invalid -> putStrLn "invalid"
       Unknown -> putStrLn "unknown"
-
-  interpret 10 spec
