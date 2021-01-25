@@ -1,3 +1,7 @@
+2021-01-25
+        * Merged and updated examples from
+          benjaminselfridge:feature/what4-updates. (#63)
+
 2020-12-06
         * Update optparse-applicative dependency version for newer base
           versions. (#61).
