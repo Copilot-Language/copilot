@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE RebindableSyntax #-}
 
 module Main where
 
@@ -65,18 +66,24 @@ neg (x, y) = (negate x, negate y)
 --------------------
 
 tau :: Vect2 -> Vect2 -> Stream Double
-tau s v = mux (s |*| v < 0) ((-(sq s)) / (s |*| v)) (-1)
+tau s v = if s |*| v < 0
+            then (-(sq s)) / (s |*| v)
+            else -1
 
 tcpa :: Vect2 -> Vect2 -> Stream Double
-tcpa s v@(vx, vy) = mux (vx ~= 0 && vy ~= 0) 0 (-(s |*| v)/(sq v))
+tcpa s v@(vx, vy) = if vx ~= 0 && vy ~= 0
+                      then 0
+                      else -(s |*| v)/(sq v)
 
 taumod :: Vect2 -> Vect2 -> Stream Double
-taumod s v = mux (s |*| v < 0) ((dthr * dthr - (sq s))/(s |*| v)) (-1)
+taumod s v = if s |*| v < 0
+               then (dthr * dthr - (sq s))/(s |*| v)
+               else -1
 
 tep :: Vect2 -> Vect2 -> Stream Double
-tep s v = mux ((s |*| v < 0) && ((delta s v dthr) >= 0))
-  (theta s v dthr (-1))
-  (-1)
+tep s v = if (s |*| v < 0) && ((delta s v dthr) >= 0)
+            then theta s v dthr (-1)
+            else -1
 
 delta :: Vect2 -> Vect2 -> Stream Double -> Stream Double
 delta s v d = (d*d) * (sq v) - ((det s v)*(det s v))
@@ -90,7 +97,9 @@ theta s v d e = (-(s |*| v) + e * (sqrt $ delta s v d)) / (sq v)
 --------------------------
 
 tcoa :: Stream Double -> Stream Double -> Stream Double
-tcoa sz vz = mux ((sz * vz) < 0) ((-sz) / vz) (-1)
+tcoa sz vz = if (sz * vz) < 0
+               then (-sz) / vz
+               else -1
 
 dcpa :: Vect2 -> Vect2 -> Stream Double
 dcpa s@(sx, sy) v@(vx, vy) = norm (sx + (tcpa s v) * vx, sy + (tcpa s v) * vy)
@@ -122,7 +131,11 @@ spec = do
 main :: IO ()
 main = do
   spec' <- reify spec
+
+  -- Use Z3 to prove the properties.
   results <- CT.prove CT.Z3 spec'
+
+  -- Print the results.
   forM_ results $ \(nm, res) -> do
     putStr $ nm <> ": "
     case res of
