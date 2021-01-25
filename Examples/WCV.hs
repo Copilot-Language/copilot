@@ -186,4 +186,3 @@ main = do
       CT.Valid -> putStrLn "valid"
       CT.Invalid -> putStrLn "invalid"
       CT.Unknown -> putStrLn "unknown"
-  interpret 10 spec
