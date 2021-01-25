@@ -9,11 +9,9 @@
 module Main where
 
 import Language.Copilot
-import qualified Copilot.Core as Core
 import qualified Copilot.Theorem.What4 as CT
 import qualified Prelude as P
 import Data.Foldable (forM_)
-import Data.Parameterized.Some
 import qualified Control.Monad as Monad
 
 

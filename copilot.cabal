@@ -85,7 +85,6 @@ executable wcv
                       , copilot     >= 3.2  && < 3.3
                       , copilot-core
                       , copilot-theorem
-                      , parameterized-utils
     default-language:   Haskell2010
 
 executable addmult
