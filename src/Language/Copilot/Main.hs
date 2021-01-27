@@ -1,3 +1,5 @@
+-- | Create Copilot executables that generate code or interpret streams and
+-- print the results to stdout.
 module Language.Copilot.Main ( copilotMain, defaultMain ) where
 
 import qualified Copilot.Core as C (Spec)
@@ -9,12 +11,19 @@ import Options.Applicative
 import Data.Semigroup ((<>))
 import Control.Monad (when)
 
-
+-- | An interpreter of Copilot specifications for a given
+-- number of simulation steps.
 type Interpreter  = Integer   ->   Spec -> IO ()
+
+-- | A compiler from
+-- <https://hackage.haskell.org/package/copilot-core Copilot Core>
+-- specifications.
 type Compiler     = FilePath  -> C.Spec -> IO ()
+
+-- | A pretty printer of Copilot specifications.
 type Printer      =                Spec -> IO ()
 
-
+-- | Command line arguments supported by all commands in 'cmdargs'.
 data CmdArgs = CmdArgs
   { aoutput     :: String
   , acompile    :: Bool
@@ -22,6 +31,19 @@ data CmdArgs = CmdArgs
   , ainterpret  :: Int
   }
 
+-- | Command line arguments handled by the Copilot main function.
+--
+-- This parser supports four main commands:
+--
+--     * @--output/-o@: use the given compiler to produce C code.
+--
+--     * @--justrun/-c@: execute a dry-run, which parses and converts the
+--       specification to core but does not produce any output.
+--
+--     * @--print/-p@: pretty print the specification.
+--
+--     * @--interpret/-i NUM@: interpret the specification for a given number
+--       of steps.
 cmdargs :: Parser CmdArgs
 cmdargs = CmdArgs
   <$> strOption (long "output"  <> short 'o' <> value "."
@@ -35,6 +57,11 @@ cmdargs = CmdArgs
                                     <> help "Interpret specification and write result to output")
 
 
+-- | Create a main to either compile or interpret a copilot specification.
+--
+-- This function must be provided an auxiliary function capable of compiling
+-- <https://hackage.haskell.org/package/copilot-core Copilot Core>
+-- specifications for some target.
 copilotMain :: Interpreter -> Printer -> Compiler -> Spec -> IO ()
 copilotMain interp pretty comp spec = main =<< execParser opts where
   opts = info (cmdargs <**> helper) fullDesc
@@ -49,5 +76,10 @@ copilotMain interp pretty comp spec = main =<< execParser opts where
       spec' <- reify spec
       comp (aoutput args) spec'
 
+-- | Create a main function with a default interpreter and pretty printer.
+--
+-- This function must be provided an auxiliary function capable of compiling
+-- <https://hackage.haskell.org/package/copilot-core Copilot Core>
+-- specifications for some target.
 defaultMain :: Compiler -> Spec -> IO ()
 defaultMain = copilotMain interpret prettyPrint
