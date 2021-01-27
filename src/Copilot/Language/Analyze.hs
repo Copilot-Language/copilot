@@ -31,6 +31,8 @@ import Control.Exception (Exception, throw)
 
 --------------------------------------------------------------------------------
 
+-- | Exceptions or kinds of errors in Copilot specifications that the analysis
+-- implemented is able to detect.
 data AnalyzeException
   = DropAppliedToNonAppend
   | DropIndexOverflow
@@ -45,6 +47,7 @@ data AnalyzeException
   | BadFunctionArgType String
   deriving Typeable
 
+-- | Show instance that prints a detailed message for each kind of exception.
 instance Show AnalyzeException where
   show DropAppliedToNonAppend = badUsage $  "Drop applied to non-append operation!"
   show DropIndexOverflow      = badUsage $  "Drop index overflow!"
@@ -66,17 +69,24 @@ instance Show AnalyzeException where
   show (BadFunctionArgType name) = badUsage $
     "The function symbol \'" ++ name ++ "\' has been redeclared to an argument with different types."
 
+-- | 'Exception' instance so we can throw and catch 'AnalyzeExcetion's.
 instance Exception AnalyzeException
 
+-- | Max level of recursion supported. Any level above this constant
+-- will result in a 'TooMuchRecursion' exception.
 maxRecursion :: Int
 maxRecursion = 100000
 
 --------------------------------------------------------------------------------
 
+-- | An environment that contains the nodes visited.
 type Env = Map ()
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot specification and report any errors detected.
+--
+-- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyze :: Spec' a -> IO ()
 analyze spec = do
   refStreams <- newIORef M.empty
@@ -88,6 +98,9 @@ analyze spec = do
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot trigger and report any errors detected.
+--
+-- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeTrigger :: IORef Env -> Trigger -> IO ()
 analyzeTrigger refStreams (Trigger _ e0 args) =
   analyzeExpr refStreams e0 >> mapM_ analyzeTriggerArg args
@@ -98,11 +111,17 @@ analyzeTrigger refStreams (Trigger _ e0 args) =
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot observer and report any errors detected.
+--
+-- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeObserver :: IORef Env -> Observer -> IO ()
 analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot property and report any errors detected.
+--
+-- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeProperty :: IORef Env -> Property -> IO ()
 analyzeProperty refStreams (Property _ e) = analyzeExpr refStreams e
 
@@ -115,6 +134,9 @@ data SeenExtern = NoExtern
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot stream and report any errors detected.
+--
+-- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeExpr :: IORef Env -> Stream a -> IO ()
 analyzeExpr refStreams s = do
   b <- mapCheck refStreams
@@ -145,6 +167,10 @@ analyzeExpr refStreams s = do
 
 --------------------------------------------------------------------------------
 
+-- | Detect whether the given stream name has already been visited.
+--
+-- This function throws a 'ReferentialCycle' exception if the second argument
+-- represents a name that has already been visited.
 assertNotVisited :: Stream a -> DynStableName -> Env -> IO ()
 assertNotVisited (Append _ _ _) _    _     = return ()
 assertNotVisited _              dstn nodes =
@@ -154,6 +180,7 @@ assertNotVisited _              dstn nodes =
 
 --------------------------------------------------------------------------------
 
+-- | Check that the level of recursion is not above the max recursion allowed.
 mapCheck :: IORef Env -> IO Bool
 mapCheck refStreams = do
   ref <- readIORef refStreams
@@ -161,6 +188,7 @@ mapCheck refStreams = do
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot stream append and report any errors detected.
 analyzeAppend ::
      IORef Env -> DynStableName -> Stream a -> b
   -> (IORef Env -> Stream a -> IO b) -> IO b
@@ -174,6 +202,11 @@ analyzeAppend refStreams dstn e b f = do
 
 --------------------------------------------------------------------------------
 
+-- | Analyze a Copilot stream drop and report any errors detected.
+--
+-- This function can fail if the drop is exercised over a stream that is not an
+-- append, or if the length of the drop is larger than that of the subsequent
+-- append.
 analyzeDrop :: Int -> Stream a -> IO ()
 analyzeDrop k (Append xs _ _)
   | k >= length xs                         = throw DropIndexOverflow
@@ -188,9 +221,9 @@ analyzeDrop _ _                            = throw DropAppliedToNonAppend
 -- typed arguments.
 --------------------------------------------------------------------------------
 
--- An environment to store external variables, arrays, functions and structs, so that we
--- can check types in the expression---e.g., if we declare the same external to
--- have two different types.
+-- | An environment to store external variables, arrays, functions and structs,
+-- so that we can check types in the expression---e.g., if we declare the same
+-- external to have two different types.
 data ExternEnv = ExternEnv
   { externVarEnv  :: [(String, C.SimpleType)]
   , externArrEnv  :: [(String, C.SimpleType)]
@@ -200,8 +233,8 @@ data ExternEnv = ExternEnv
 
 --------------------------------------------------------------------------------
 
--- Make sure external variables, functions, arrays, and structs are correctly typed.
-
+-- | Make sure external variables, functions, arrays, and structs are correctly
+-- typed.
 analyzeExts :: ExternEnv -> IO ()
 analyzeExts ExternEnv { externVarEnv  = vars
                       , externArrEnv  = arrs
@@ -271,6 +304,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the externs in a specification.
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
   env <- foldM triggerExts
@@ -288,6 +322,7 @@ specExts refStreams spec = do
     foldM (\env'' (Arg arg_) -> collectExts refStreams arg_ env'')
           env' args
 
+-- | Obtain all the externs in a stream.
 collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
 collectExts refStreams stream_ env_ = do
   b <- mapCheck refStreams
@@ -321,6 +356,8 @@ collectExts refStreams stream_ env_ = do
 
 --------------------------------------------------------------------------------
 
+-- | Return the simple C type representation of the type of the values carried
+-- by a stream.
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
 
