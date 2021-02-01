@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Transforms a Copilot Language specification into a Copilot Core
+-- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
 
 {-# LANGUAGE Safe #-}
@@ -30,6 +30,8 @@ import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM, unless)
 --------------------------------------------------------------------------------
 
+-- | Transform a Copilot Language specification into a Copilot Core
+-- specification.
 reify :: Spec' a -> IO Core.Spec
 reify spec = do
   analyze spec
@@ -61,6 +63,8 @@ reify spec = do
 
 --------------------------------------------------------------------------------
 
+-- | Transform a Copilot observer specification into a Copilot Core
+-- observer specification.
 {-# INLINE mkObserver #-}
 mkObserver
   :: IORef Int
@@ -77,6 +81,8 @@ mkObserver refMkId refStreams refMap (Observer name e) = do
 
 --------------------------------------------------------------------------------
 
+-- | Transform a Copilot trigger specification into a Copilot Core
+-- trigger specification.
 {-# INLINE mkTrigger #-}
 mkTrigger
   :: IORef Int
@@ -101,6 +107,8 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
 
 --------------------------------------------------------------------------------
 
+-- | Transform a Copilot property specification into a Copilot Core
+-- property specification.
 {-# INLINE mkProperty #-}
 mkProperty
   :: IORef Int
@@ -140,6 +148,7 @@ mkStruct refMkId refStreams refMap (StructData name fields) = do
 --------------------------------------------------------------------------------
 
 
+-- | Transform a Copilot stream expression into a Copilot Core expression.
 {-# INLINE mkExpr #-}
 mkExpr
   :: Typed a
@@ -257,6 +266,8 @@ mkStruct refMkId refStreams refMap (StructData name sargs) = trace (show name) $
 
 --------------------------------------------------------------------------------
 
+-- | Transform a Copilot stream expression into a Copilot Core stream
+-- expression.
 {-# INLINE mkStream #-}
 mkStream
   :: Typed a
@@ -302,5 +313,6 @@ mkStream refMkId refStreams refMap e0 = do
 
 --------------------------------------------------------------------------------
 
+-- | Create a fresh, unused 'Id'.
 mkId :: IORef Int -> IO Id
 mkId refMkId = atomicModifyIORef refMkId $ \ n -> (succ n, n)
