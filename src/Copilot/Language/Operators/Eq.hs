@@ -18,7 +18,7 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
--- | Compare two streams point-wise.
+-- | Compare two streams point-wise for equality.
 --
 -- The output stream contains the value True at a point in time if both
 -- argument streams contain the same value at that point in time.
