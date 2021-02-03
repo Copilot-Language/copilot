@@ -1,3 +1,4 @@
+-- | Auxiliary helper functions to generate C99 code.
 module Copilot.Compile.C99.Util where
 
 import Control.Monad.State
@@ -50,5 +51,6 @@ argname name n = name ++ "_arg" ++ show n
 argnames :: String -> [String]
 argnames base = [aname | n <- [0..], let aname = argname base n]
 
+-- | Define a C expression that calls a function with arguments.
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args
