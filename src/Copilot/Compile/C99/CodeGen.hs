@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+-- | High-level translation of Copilot Core into C99.
 module Copilot.Compile.C99.CodeGen where
 
 import Control.Monad.State  (runState)
