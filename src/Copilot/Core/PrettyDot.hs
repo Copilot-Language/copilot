@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | A pretty printer for Copilot specifications.
+-- | A pretty printer for Copilot specifications as GraphViz/dot graphs.
 
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
@@ -19,6 +19,7 @@ import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
 import Text.Printf
 
+-- | Create a temporary/internal name from an extern variable name.
 mkExtTmpVar :: String -> String
 mkExtTmpVar = ("ext_" ++)
 
@@ -31,7 +32,15 @@ tagExtract (Just tag) = tag
 
 --------------------------------------------------------------------------------
 
-ppExprDot :: Int -> Int -> Bool -> Expr a -> (Doc,Int)
+-- | Pretty print a Copilot Expression as a GraphViz graph part.
+--
+-- See the
+-- <https://github.com/Copilot-Language/copilot-discussion/tree/master/TutorialAndDevGuide/DevGuide development guide> for details.
+ppExprDot :: Int       -- ^ Index or ID of the next node in the graph.
+          -> Int       -- ^ Index or ID of the parent node in the graph.
+          -> Bool      -- ^ Mark externs with the prefix @externV:@.
+          -> Expr a    -- ^ The expression to pretty print.
+          -> (Doc,Int)
 ppExprDot ii pere bb e0 = case e0 of
   Const t x                  -> (text (printf "%s [label=\"const: %s\",color=red1, style=filled]\n" (show ii::String) ((showWithType Haskell t x)::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
@@ -39,7 +48,9 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
   Drop _ i id                ->  (text (printf "%s [label=\"drop %s: \nstream: %s\",color=crimson, style=filled]\n" (show ii::String) (show i::String) (show id::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
-  ExternVar _ name _         -> (if bb then (text (printf "%s [label=\"externV: %s\",color=cyan1, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))) else (text (printf "%s [label=\"%s\",color=cyan1, style=filled]\n" (show ii::String) (mkExtTmpVar name)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
+  ExternVar _ name _         -> (if bb
+                                   then (text (printf "%s [label=\"externV: %s\",color=cyan1, style=filled]\n" (show ii::String) (name::String)) <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
+                                   else (text (printf "%s [label=\"%s\",color=cyan1, style=filled]\n" (show ii::String) (mkExtTmpVar name))      <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)))
                   ,ii+1)
   Local _ _ name e1 e2       -> let (r1, i1) = ppExprDot (ii+2) (ii+1) bb e1
                                 in let (r2, i2) = ppExprDot (i1) ii bb e2
@@ -78,9 +89,18 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1,i1)
 
-ppUExpr :: Int -> Int -> Bool -> UExpr -> (Doc, Int)
+-- | Pretty print an untyped Copilot Expression as a graphiViz graph part.
+--
+-- See the
+-- <https://github.com/Copilot-Language/copilot-discussion/tree/master/TutorialAndDevGuide/DevGuide development guide> for details.
+ppUExpr :: Int        -- ^ Index or ID of the next node in the graph.
+        -> Int        -- ^ Index or ID of the parent node in the graph.
+        -> Bool       -- ^ Mark externs with the prefix @externV:@.
+        -> UExpr      -- ^ The expression to pretty print.
+        -> (Doc, Int)
 ppUExpr i pere bb UExpr { uExprExpr = e0 } = ppExprDot i pere bb e0
 
+-- | Pretty print a unary operator.
 ppOp1 :: Op1 a b -> String
 ppOp1 op = case op of
   Not      -> "not"
@@ -105,6 +125,7 @@ ppOp1 op = case op of
   BwNot _  -> "~"
   Cast _ _ -> "(cast)"
 
+-- | Pretty print a binary operator.
 ppOp2 :: Op2 a b c -> String
 ppOp2 op = case op of
   And          -> "&&"
@@ -129,13 +150,17 @@ ppOp2 op = case op of
   BwShiftL _ _ -> "<<"
   BwShiftR _ _ -> ">>"
 
+-- | Pretty print a ternary operator.
 ppOp3 :: Op3 a b c d -> String
 ppOp3 op = case op of
   Mux _    -> "mux"
 
 --------------------------------------------------------------------------------
 
-ppStream :: Int -> Stream -> (Doc, Int)
+-- | Pretty print a stream as a GraphViz graph part.
+ppStream :: Int        -- ^ Index or ID of the next node in the graph.
+         -> Stream     -- ^ Stream to pretty print
+         -> (Doc, Int)
 ppStream i
   Stream
     { streamId       = id
@@ -153,7 +178,10 @@ ppStream i
     where (r1, i1) = ppExprDot (i+3) (i+1) True e
 --------------------------------------------------------------------------------
 
-ppTrigger :: Int -> Trigger -> (Doc, Int)
+-- | Pretty print a trigger as a GraphViz graph part.
+ppTrigger :: Int        -- ^ Index or ID of the next node in the graph.
+          -> Trigger    -- ^ Trigger to pretty print
+          -> (Doc, Int)
 ppTrigger i
   Trigger
     { triggerName  = name
@@ -171,7 +199,13 @@ ppTrigger i
     (r1, i1) = ppExprDot (i+2) (i+1) True e
     (r2, i2) = ppUExprL (i1+1) (i1) True args
 
-ppUExprL :: Int -> Int -> Bool -> [UExpr] -> ([Doc], Int)
+-- | Pretty print a list of untyped Copilot Expressions as a GraphViz graph
+-- part.
+ppUExprL :: Int           -- ^ Index or ID of the next node in the graph.
+         -> Int           -- ^ Index or ID of the parent node in the graph.
+         -> Bool          -- ^ Mark externs with the prefix @externV:@.
+         -> [UExpr]       -- ^ The list of expressions to pretty print.
+         -> ([Doc], Int)
 ppUExprL i _ _ [] = ([], i)
 
 ppUExprL i pere bb (a:b) = ((r1:r2), i2)
@@ -181,7 +215,10 @@ ppUExprL i pere bb (a:b) = ((r1:r2), i2)
 
 --------------------------------------------------------------------------------
 
-ppObserver :: Int -> Observer -> (Doc, Int)
+-- | Pretty print an observer as a GraphViz graph part.
+ppObserver :: Int         -- ^ Index or ID of the next node in the graph.
+           -> Observer    -- ^ Observer to pretty print
+           -> (Doc, Int)
 ppObserver i
   Observer
     { observerName     = name
@@ -192,7 +229,10 @@ ppObserver i
   where (r1, i1) = ppExprDot (i+1) i True e
 --------------------------------------------------------------------------------
 
-ppProperty :: Int -> Property -> (Doc, Int)
+-- | Pretty print a property as a GraphViz graph part.
+ppProperty :: Int         -- ^ Index or ID of the next node in the graph.
+           -> Property    -- ^ Property to pretty print
+           -> (Doc, Int)
 ppProperty i
   Property
     { propertyName     = name
@@ -207,7 +247,10 @@ ppProperty i
 
 --------------------------------------------------------------------------------
 
-ppStreamL :: Int -> [Stream] -> (Doc, Int)
+-- | Pretty print a list of streams as a GraphViz graph part.
+ppStreamL :: Int        -- ^ Index or ID of the next node in the graph.
+          -> [Stream]   -- ^ List of streams to pretty print
+          -> (Doc, Int)
 ppStreamL i [] = (empty,i)
 
 ppStreamL i (a:b) = ((s1$$s2),(i2))
@@ -217,7 +260,10 @@ ppStreamL i (a:b) = ((s1$$s2),(i2))
 
 --------------------------------------------------------------------------------
 
-ppTriggerL :: Int -> [Trigger] -> (Doc, Int)
+-- | Pretty print a list of triggers as a GraphViz graph part.
+ppTriggerL :: Int        -- ^ Index or ID of the next node in the graph.
+           -> [Trigger]  -- ^ List of triggers to pretty print
+           -> (Doc, Int)
 ppTriggerL i [] = (empty,i)
 
 ppTriggerL i (a:b) = ((s1$$s2),(i2))
@@ -227,7 +273,10 @@ ppTriggerL i (a:b) = ((s1$$s2),(i2))
 
 --------------------------------------------------------------------------------
 
-ppObserverL :: Int -> [Observer] -> (Doc, Int)
+-- | Pretty print a list of observers as a GraphViz graph part.
+ppObserverL :: Int         -- ^ Index or ID of the next node in the graph.
+            -> [Observer]  -- ^ List of observers to pretty print
+            -> (Doc, Int)
 ppObserverL i [] = (empty,i)
 
 ppObserverL i (a:b) = ((s1$$s2),(i2))
@@ -238,7 +287,10 @@ ppObserverL i (a:b) = ((s1$$s2),(i2))
 
 --------------------------------------------------------------------------------
 
-ppPropertyL :: Int -> [Property] -> (Doc, Int)
+-- | Pretty print a list of properties as a GraphViz graph part.
+ppPropertyL :: Int         -- ^ Index or ID of the next node in the graph.
+            -> [Property]  -- ^ List of properties to pretty print
+            -> (Doc, Int)
 ppPropertyL i [] = (empty,i)
 
 ppPropertyL i (a:b) = ((s1$$s2),(i2))
@@ -248,7 +300,10 @@ ppPropertyL i (a:b) = ((s1$$s2),(i2))
 
 --------------------------------------------------------------------------------
 
-ppSpecDot :: Int -> Spec -> (Doc, Int)
+-- | Pretty-print a Copilot specification as a GraphViz/dot graph.
+ppSpecDot :: Int        -- ^ Index or ID of the next node in the graph.
+          -> Spec       -- ^ Spec to pretty print.
+          -> (Doc, Int)
 ppSpecDot i spec =
   ((aa $$ cs $$ ds $$ es $$ fs $$ bb),i4)
   where
@@ -261,14 +316,18 @@ ppSpecDot i spec =
 
 --------------------------------------------------------------------------------
 
--- | Pretty-prints a Copilot expression.
-prettyPrintExprDot :: Bool -> Expr a -> String
+-- | Pretty-print a Copilot expression as a GraphViz/dot graph.
+--
+-- bb go through the external functions (print parameters recursively, ..., True for yes, False for no)
+prettyPrintExprDot :: Bool     -- ^ Mark externs with the prefix @externV:@.
+                   -> Expr a   -- ^ The expression to pretty print.
+                   -> String
 prettyPrintExprDot bb s = render rr
   where
     (r1, _) = ppExprDot 1 0 bb s
     rr = text "digraph G {\nnode [shape=box]\n" $$ (text "0 [label=\"file: \n?????\",color=red, style=filled]\n") <> r1 $$ text "\n}\n"
 
--- | Pretty-prints a Copilot specification.
+-- | Pretty-print a Copilot specification as a GraphViz/dot graph.
 prettyPrintDot :: Spec -> String
 prettyPrintDot s = render r1
   where (r1, _) = ppSpecDot 0 s
