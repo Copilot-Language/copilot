@@ -6,6 +6,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
 
+-- | Internal Copilot Core representation of Copilot externs.
 module Copilot.Core.External
   ( ExtVar (..)
   , externVars
@@ -22,12 +23,15 @@ import Data.Typeable    (Typeable)
 
 --------------------------------------------------------------------------------
 
+-- | An extern variable declaration, together with the type of the underlying
+-- extern.
 data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
 
 --------------------------------------------------------------------------------
 
+-- | List of all externs used in a specification.
 externVars :: Spec -> [ExtVar]
 externVars = nubBy eqExt . toList . all externVarsExpr
   where
@@ -35,6 +39,7 @@ externVars = nubBy eqExt . toList . all externVarsExpr
   eqExt ExtVar { externVarName = name1 } ExtVar { externVarName = name2 } =
     name1 == name2
 
+-- | Extract all externs used in a Copilot expression.
 externVarsExpr :: Expr a -> DList ExtVar
 externVarsExpr e0 = case e0 of
   Const  _ _                -> empty
@@ -49,11 +54,14 @@ externVarsExpr e0 = case e0 of
                                externVarsExpr e3
   Label _ _ e               -> externVarsExpr e
 
+-- | Extract all expressions used in an untyped Copilot expression.
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
 
 --------------------------------------------------------------------------------
 
+-- | Apply a function to all expressions in a specification, concatenating the
+-- results.
 all :: (forall a . Expr a -> DList b) -> Spec -> DList b
 all f spec =
   concat (fmap (allStream) (specStreams   spec)) `append`
