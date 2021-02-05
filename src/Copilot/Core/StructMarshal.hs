@@ -4,6 +4,7 @@
 
 {-# LANGUAGE Safe #-}
 
+-- | Auxiliary functions to work with structs as vectors.
 module Copilot.Core.StructMarshal
   ( marshalFields
   , demarshalField
