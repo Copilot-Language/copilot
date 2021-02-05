@@ -6,7 +6,9 @@ import Control.Monad.State
 import Copilot.Core  (Id)
 import qualified Language.C99.Simple.AST as C
 
-
+-- | Auxiliary type used to collect all the declarations of all the variables
+-- used in a function to be generated, since variable declarations are always
+-- listed first at the top of the function body.
 type FunEnv = ([C.Decln], [C.Ident])
 
 -- | `tell` equivalent for `State`.
