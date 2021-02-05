@@ -13,7 +13,7 @@
 -- and their handling functions, or streams to observe, or a theorem that must
 -- be proved.
 --
--- In order to be executed, 'Spec's must be turned into Copilot code (see
+-- In order to be executed, 'Spec's must be turned into Copilot Core (see
 -- 'Reify') and either simulated or converted into C99 code to be executed.
 module Copilot.Language.Spec
   ( Spec, Spec'
