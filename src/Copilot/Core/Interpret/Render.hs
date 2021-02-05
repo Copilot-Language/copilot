@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | An tagless interpreter for Copilot specifications.
+-- | Pretty-print the results of a simulation.
 
 {-# LANGUAGE Safe #-}
 
@@ -20,6 +20,7 @@ import Prelude hiding ((<>))
 
 --------------------------------------------------------------------------------
 
+-- | Render an execution trace as a table, formatted to faciliate readability.
 renderAsTable :: ExecTrace -> String
 renderAsTable
   ExecTrace
@@ -50,15 +51,20 @@ renderAsTable
 
 --------------------------------------------------------------------------------
 
+-- | Render an execution trace as using comma-separate value (CSV) format.
 renderAsCSV :: ExecTrace -> String
 renderAsCSV = render . unfold
 
+-- | Pretty print all the steps of the execution trace and concatenate the
+-- results.
 unfold :: ExecTrace -> Doc
 unfold r =
   case step r of
     (cs, Nothing) -> cs
     (cs, Just r') -> cs $$ unfold r'
 
+-- | Pretty print the state of the triggers, and provide a continuation
+-- for the execution trace at the next point in time.
 step :: ExecTrace -> (Doc, Maybe ExecTrace)
 step ExecTrace
        { interpTriggers  = trigs
@@ -101,18 +107,24 @@ asColumns = flip asColumnsWithBuff $ 1
 
 asColumnsWithBuff :: [[Doc]] -> Int -> Doc
 asColumnsWithBuff lls q = normalize
-        where normalize = vcat $ map hsep 
-                        $ map (\x -> pad (length x) longColumnLen empty x) 
+        where normalize = vcat $ map hsep
+                        $ map (\x -> pad (length x) longColumnLen empty x)
                         $ pad' longEntryLen q
                         $ transpose lls -- normalize column height
               longColumnLen = maximum (map length lls)
               longEntryLen = maximum $ map docLen (concat lls)
 
-docLen d = length $ render d 
+docLen d = length $ render d
 
+-- | Pad a string on the right to reach an expected length.
 pad :: Int -> Int -> a -> [a] -> [a]
 pad lx max b ls = ls ++ replicate (max - lx) b
 
+-- | Pad a list of strings on the right with spaces.
+pad' :: Int      -- ^ Mininum number of spaces to add
+     -> Int      -- ^ Maximum number of spaces to add
+     -> [[Doc]]  -- ^ List of documents to pad
+     -> [[Doc]]
 pad' _ _ []       = []
-pad' mx q (ls:xs) = map buf ls : pad' mx q xs 
+pad' mx q (ls:xs) = map buf ls : pad' mx q xs
         where buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)
