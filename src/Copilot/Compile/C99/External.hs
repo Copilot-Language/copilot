@@ -16,11 +16,15 @@ data External = forall a. External
   , exttype    :: Type a
   }
 
--- | Union over lists of External, we solely base the equality on the extname's.
+-- | Union over lists of External, we solely base the equality on the
+-- extname's.
 extunion :: [External] -> [External] -> [External]
 extunion = unionBy (\a b -> extname a == extname b)
 
 -- | Collect all external variables from the streams and triggers.
+--
+-- Although Copilot specifications can contain also properties and theorems,
+-- the C99 backend currently only generates code for streams and triggers.
 gatherexts :: [Stream] -> [Trigger] -> [External]
 gatherexts streams triggers = streamsexts `extunion` triggersexts where
   streamsexts  = foldr extunion mempty $ map streamexts streams
