@@ -4,6 +4,7 @@
              LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
+-- | Translate Copilot specifications into IL specifications.
 module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
 
 import Copilot.Theorem.IL.Spec
@@ -273,6 +274,7 @@ trType = \case
 
 --------------------------------------------------------------------------------
 
+-- | Translation state.
 data TransST = TransST
   { localConstraints :: [Expr]
   , muxes            :: [(Expr, (Expr, Type, Expr, Expr))]
@@ -299,6 +301,7 @@ getMuxes = muxes <$> get >>= return . concat . (map toConstraints)
           , Op2 Bool Or c (Op2 Bool Eq v e2)
           ]
 
+-- | A state monad over the translation state ('TransST').
 type Trans = State TransST
 
 fresh :: Trans Integer

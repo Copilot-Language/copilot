@@ -1,11 +1,17 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
+-- | Simplify IL expressions by partly evaluating operations on booleans.
 module Copilot.Theorem.IL.Transform ( bsimpl ) where
 
 import Copilot.Theorem.IL.Spec
 
--- | A transformation intended to remove boolean literals.
+-- | Simplify IL expressions by partly evaluating operations on booleans,
+-- eliminating some boolean literals.
+--
+-- For example, an if-then-else in which the condition is literally the
+-- constant True or the constant False can be reduced to an operation without
+-- choice in which the appropriate branch of the if-then-else is used instead.
 bsimpl :: Expr -> Expr
 bsimpl = until (\x -> bsimpl' x == x) bsimpl'
   where

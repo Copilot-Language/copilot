@@ -3,6 +3,18 @@
 {-# LANGUAGE ExistentialQuantification, GADTs, LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
+-- | This module implements the specification language for the IL format, an
+-- intermediate representation used in copilot-theorem to facilitate model
+-- checking.
+--
+-- A Copilot program is translated into a list of quantifier-free equations
+-- over integer sequences, implicitly universally quantified by a free variable
+-- n. Each sequence roughly corresponds to a stream.
+--
+-- This representation is partly inspired by the IL language described in
+-- Hagen, G.E., /VERIFYING SAFETY PROPERTIES OF LUSTRE PROGRAMS: AN SMT-BASED
+-- APPROACH/, 2008.
+
 module Copilot.Theorem.IL.Spec
   ( Type (..)
   , Op1  (..)
@@ -30,6 +42,8 @@ type SeqId    =  String
 data SeqIndex = Fixed Integer | Var Integer
   deriving (Eq, Ord, Show)
 
+-- | Idealized types. These differ from Copilot types in that, notionally,
+-- reals actually denote real numbers.
 data Type = Bool  | Real
   | SBV8 | SBV16 | SBV32 | SBV64
   | BV8  | BV16 | BV32 | BV64
@@ -48,6 +62,7 @@ instance Show Type where
     BV32  -> "BV32"
     BV64  -> "BV64"
 
+-- | Idealized representation of a Copilot expression.
 data Expr
   = ConstB Bool
   | ConstR Double
@@ -91,10 +106,12 @@ data IL = IL
 
 --------------------------------------------------------------------------------
 
+-- | Unary operators.
 data Op1 = Not | Neg | Abs | Exp | Sqrt | Log | Sin | Tan | Cos | Asin | Atan
          | Acos | Sinh | Tanh | Cosh | Asinh | Atanh | Acosh
          deriving (Eq, Ord)
 
+-- | Binary operators.
 data Op2 = Eq | And | Or | Le | Lt | Ge | Gt | Add | Sub | Mul | Mod | Fdiv | Pow
          deriving (Eq, Ord)
 
@@ -145,6 +162,7 @@ instance Show Op2 where
 
 -------------------------------------------------------------------------------
 
+-- | Return the type of an expression.
 typeOf :: Expr -> Type
 typeOf e = case e of
   ConstB _       -> Bool
