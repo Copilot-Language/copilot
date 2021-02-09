@@ -1,7 +1,11 @@
--- | 
+-- |
 -- Module: Libraries
 -- Description: Main import module for libraries
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- This is a convenience module that re-exports a useful subset of modules from
+-- @copilot-library@. Not all modules are exported due to name clashes (e.g.,
+-- in temporal logics implementations).
 
 module Copilot.Library.Libraries (
     module Copilot.Library.Clocks
