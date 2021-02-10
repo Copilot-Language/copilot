@@ -45,11 +45,13 @@ ncMux n = "mux" ++ show n
 
 --------------------------------------------------------------------------------
 
--- | Translates a Copilot specification to an IL specification
-
+-- | Translate a Copilot specification to an IL specification.
 translate :: C.Spec -> IL
 translate = translate' False
 
+-- | Translate a Copilot specification to an IL specification, adding
+-- constraints for limiting the values of numeric expressions to known bounds
+-- based on their specific types (only for integers or natural numbers).
 translateWithBounds :: C.Spec -> IL
 translateWithBounds = translate' True
 
