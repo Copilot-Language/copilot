@@ -3,6 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
+-- | Parse output of Kind2.
 module Copilot.Theorem.Kind2.Output (parseOutput) where
 
 import Text.XML.Light       hiding (findChild)
@@ -15,7 +16,10 @@ import qualified Copilot.Theorem.Misc.Error as Err
 
 simpleName s = QName s Nothing Nothing
 
-parseOutput :: String -> String -> P.Output
+-- | Parse output of Kind2.
+parseOutput :: String    -- ^ Property whose validity is being checked.
+            -> String    -- ^ XML output of Kind2
+            -> P.Output
 parseOutput prop xml = fromJust $ do
   root <- parseXMLDoc xml
   case findAnswer . findPropTag $ root of
