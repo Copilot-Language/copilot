@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Trustworthy #-}
 
+-- | A prover backend based on Kind2.
 module Copilot.Theorem.Kind2.Prover
   ( module Data.Default
   , Options (..)
@@ -27,9 +28,13 @@ import qualified Copilot.Theorem.TransSys as TS
 
 --------------------------------------------------------------------------------
 
+-- | Options for Kind2
 data Options = Options
-  { bmcMax :: Int }
+  { bmcMax :: Int -- ^ Upper bound on the number of unrolling that base and
+                  --   step will perform. A value of 0 means /unlimited/.
+  }
 
+-- | Default options with unlinmited unrolling for base and step.
 instance Default Options where
   def = Options { bmcMax = 0 }
 
@@ -37,6 +42,9 @@ data ProverST = ProverST
   { options  :: Options
   , transSys :: TS.TransSys }
 
+-- | A prover backend based on Kind2.
+--
+-- The executable @kind2@ must exist and its location be in the @PATH@.
 kind2Prover :: Options -> Prover
 kind2Prover opts = Prover
   { proverName =  "Kind2"
