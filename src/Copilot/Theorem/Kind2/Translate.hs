@@ -3,6 +3,8 @@
 {-# LANGUAGE RankNTypes, ViewPatterns, NamedFieldPuns, GADTs #-}
 {-# LANGUAGE Safe #-}
 
+-- | Convert modular transition systems ('TransSys') into Kind2 file
+-- specifications.
 module Copilot.Theorem.Kind2.Translate
   ( toKind2
   , Style (..)
@@ -36,9 +38,23 @@ type DepGraph = Map NodeId [NodeId]
 
 --------------------------------------------------------------------------------
 
+-- | Style of the Kind2 files produced: modular (with multiple separate nodes),
+-- or all inlined (with only one node).
+--
+-- In the modular style, the graph is simplified to remove cycles by collapsing
+-- all nodes participating in a strongly connected components.
+--
+-- In the inlined style, the structure of the modular transition system is
+-- discarded and the graph is first turned into a /non-modular transition
+-- system/ with only one node, which can be then converted into a Kind2 file.
 data Style = Inlined | Modular
 
-toKind2 :: Style -> [PropId] -> [PropId] -> TransSys -> K.File
+-- | Produce a Kind2 file that checks the properties specified.
+toKind2 :: Style     -- ^ Style of the file (modular or inlined).
+        -> [PropId]  -- ^ Assumptions
+        -> [PropId]  -- ^ Properties to be checked
+        -> TransSys  -- ^ Modular transition system holding the system spec
+        -> K.File
 toKind2 style assumptions checkedProps spec =
   addAssumptions spec assumptions
   $ trSpec (complete spec') predCallsGraph assumptions checkedProps
