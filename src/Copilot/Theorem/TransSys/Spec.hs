@@ -3,6 +3,7 @@
 {-# LANGUAGE ExistentialQuantification, GADTs, RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
+-- | Specification of Copilot streams as modular transition systems.
 module Copilot.Theorem.TransSys.Spec
   ( module Copilot.Theorem.TransSys.Operators
   , module Copilot.Theorem.TransSys.Type
@@ -45,35 +46,56 @@ import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
 
+-- | Unique name that identifies a node.
 type NodeId = String
+
+-- | Unique name that identifies a property.
 type PropId = String
 
+-- | A modular transition system is defined by a graph of nodes and a series
+-- of properties, each mapped to a variable.
 data TransSys = TransSys
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
   , specProps         :: Map PropId ExtVar }
 
-
+-- | A node is a set of variables living in a local namespace and corresponding
+-- to the 'Var' type.
 data Node = Node
   { nodeId            :: NodeId
-  , nodeDependencies  :: [NodeId]
-  , nodeLocalVars     :: Map Var VarDescr
-  , nodeImportedVars  :: Bimap Var ExtVar
+  , nodeDependencies  :: [NodeId]          -- ^ Nodes from which variables are
+                                           --   imported.
+  , nodeLocalVars     :: Map Var VarDescr  -- ^ Locally defined variables,
+                                           --   either as the previous value of
+                                           --   another variable (using 'Pre'),
+                                           --   an expression involving
+                                           --   variables (using 'Expr') or a
+                                           --   set of constraints (using
+                                           --   'Constrs').
+  , nodeImportedVars  :: Bimap Var ExtVar  -- ^ Binds each imported variable to
+                                           --   its local name.
   , nodeConstrs       :: [Expr Bool] }
 
 
+-- | Identifer of a variable in the local (within one node) namespace.
 data Var      =  Var {varName :: String}
   deriving (Eq, Show, Ord)
 
+-- | Identifer of a variable in the global namespace by specifying both a node
+-- name and a variable.
 data ExtVar   =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var }
   deriving (Eq, Ord)
 
+-- | A description of a variable together with its type.
 data VarDescr = forall t . VarDescr
   { varType :: Type t
   , varDef  :: VarDef t }
 
+-- | A variable definition either as a delay, an operation on variables, or
+-- a constraint.
 data VarDef t = Pre t Var | Expr (Expr t) | Constrs [Expr Bool]
 
+-- | A point-wise (time-wise) expression.
 data Expr t where
   Const :: Type t -> t -> Expr t
   Ite   :: Type t -> Expr Bool -> Expr t -> Expr t -> Expr t
@@ -83,6 +105,7 @@ data Expr t where
 
 --------------------------------------------------------------------------------
 
+-- | Constructor for variables identifiers in the global namespace.
 mkExtVar node name = ExtVar node (Var name)
 
 foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> Expr a -> m
@@ -97,6 +120,7 @@ foldExpr f expr = f expr <> fargs
 foldUExpr :: (Monoid m) => (forall t . Expr t -> m) -> U Expr -> m
 foldUExpr f (U e) = foldExpr f e
 
+-- | Apply an arbitrary transformation to the leafs of an expression.
 transformExpr :: (forall a . Expr a -> Expr a) -> Expr t -> Expr t
 transformExpr f = tre
   where
@@ -108,6 +132,8 @@ transformExpr f = tre
 
 --------------------------------------------------------------------------------
 
+-- | The set of variables related to a node (union of the local variables and
+-- the imported variables after deferencing them).
 nodeVarsSet :: Node -> Set Var
 nodeVarsSet = liftA2 Set.union
   nodeLocalVarsSet
@@ -157,10 +183,13 @@ instance HasInvariants Node where
 specNodesIds :: TransSys -> Set NodeId
 specNodesIds s = Set.fromList . map nodeId $ specNodes s
 
+-- | Given a modular transition system, produce a map from each node to its
+-- dependencies.
 specDependenciesGraph :: TransSys -> Map NodeId [NodeId]
 specDependenciesGraph s =
   Map.fromList [ (nodeId n, nodeDependencies n) | n <- specNodes s ]
 
+-- | Return the top node of a modular transition system.
 specTopNode :: TransSys -> Node
 specTopNode spec = fromJust $ List.find
   ((== specTopNodeId spec) . nodeId)
@@ -183,6 +212,9 @@ instance HasInvariants TransSys where
     , prop "The nodes invariants hold" $ all checkInvs (specNodes s)
     ]
 
+-- | True if the graph is topologically sorted (i.e., if the dependencies of a
+-- node appear in the list of 'specNodes' before the node that depends on
+-- them).
 isTopologicallySorted :: TransSys -> Bool
 isTopologicallySorted spec =
   isJust $ foldM inspect Set.empty (specNodes spec)
