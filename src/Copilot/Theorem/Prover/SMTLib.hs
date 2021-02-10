@@ -3,6 +3,8 @@
 {-# LANGUAGE GADTs, FlexibleInstances #-}
 {-# LANGUAGE Safe #-}
 
+-- | A backend to the SMT-Lib format, enabling to produce commands for SMT-Lib
+-- implementing solvers, and parse results.
 module Copilot.Theorem.Prover.SMTLib (SmtLib, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
@@ -14,6 +16,9 @@ import Text.Printf
 
 --------------------------------------------------------------------------------
 
+-- | Type used to represent SMT-lib commands.
+--
+-- Use the interface in 'SmtFormat' to create such commands.
 newtype SmtLib = SmtLib (SExpr String)
 
 instance Show SmtLib where
@@ -26,6 +31,7 @@ smtTy _       = "Int"
 
 --------------------------------------------------------------------------------
 
+-- | Interface for SMT-Lib conforming backends.
 instance SmtFormat SmtLib where
   push = SmtLib $ node "push" [atom "1"]
   pop = SmtLib $ node "pop" [atom "1"]
@@ -36,6 +42,7 @@ instance SmtFormat SmtLib where
     node "declare-fun" [atom name, (list $ map (atom . smtTy) args), atom (smtTy retTy)]
   assert c = SmtLib $ node "assert" [expr c]
 
+-- | Parse a satisfiability result.
 interpret :: String -> Maybe SatResult
 interpret "sat"   = Just Sat
 interpret "unsat" = Just Unsat

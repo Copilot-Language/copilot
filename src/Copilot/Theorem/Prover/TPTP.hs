@@ -3,6 +3,8 @@
 {-# LANGUAGE GADTs, LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
+-- | A backend to TPTP, enabling to produce assertions and to parse the
+-- results from TPTP.
 module Copilot.Theorem.Prover.TPTP (Tptp, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
@@ -12,6 +14,10 @@ import Data.List
 
 --------------------------------------------------------------------------------
 
+-- | Type used to represent TPTP expressions.
+--
+-- Although this type implements the 'SmtFormat' interface, only 'assert' is
+-- actually used.
 data Tptp = Ax TptpExpr | Null
 
 data TptpExpr = Bin TptpExpr String TptpExpr | Un String TptpExpr
@@ -37,6 +43,7 @@ instance SmtFormat Tptp where
   declFun  = const $ const $ const Null
   assert c = Ax $ expr c
 
+-- | Parse a satisfiability result.
 interpret :: String -> Maybe SatResult
 interpret str
   | "SZS status Unsatisfiable" `isPrefixOf` str = Just Unsat
