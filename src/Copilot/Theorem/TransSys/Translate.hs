@@ -4,6 +4,41 @@
              ScopedTypeVariables, GADTs, FlexibleContexts #-}
 {-# LANGUAGE Safe #-}
 
+-- | Translate Copilot specifications into a modular transition system.
+--
+-- Each stream is associated to a node. The most significant task of this
+-- translation process is to /flatten/ the copilot specification so the value
+-- of all streams at time @n@ only depends on the values of all the streams at
+-- time @n - 1@. For example, for the following Fibonacci implementation in
+-- Copilot:
+--
+-- @
+-- fib = [1, 1] ++ (fib + drop 1 fib)
+-- @
+--
+-- the translation, converts it into:
+--
+-- @
+-- fib0 = [1] ++ fib1
+-- fib1 = [1] ++ (fib1 + fib0)
+-- @
+--
+-- and then into the node:
+--
+-- @
+-- NODE 'fib' DEPENDS ON []
+-- DEFINES
+--     out : Int =
+--         1 -> pre out.1
+--     out.1 : Int =
+--         1 -> pre out.2
+--     out.2 : Int =
+--         (out) + (out.1)
+-- @
+--
+-- This flattening process is made easier by the fact that the @++@ Copilot
+-- operator only occurs leftmost in a stream definition after the reification
+-- process.
 module Copilot.Theorem.TransSys.Translate ( translate ) where
 
 import Copilot.Theorem.TransSys.Spec
@@ -47,6 +82,7 @@ ncTimeAnnot s d
 
 --------------------------------------------------------------------------------
 
+-- | Translate Copilot specifications into a modular transition system.
 translate :: C.Spec -> TransSys
 translate cspec =
 
