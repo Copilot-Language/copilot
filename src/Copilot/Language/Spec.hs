@@ -140,8 +140,14 @@ data Observer where
 
 --------------------------------------------------------------------------------
 
--- | Define a new observer as part of a specification.
-observer :: Typed a => String -> Stream a -> Spec
+-- | Define a new observer as part of a specification. This allows someone to
+-- print the value at every iteration during interpretation. Observers do not
+-- have any functionality outside the interpreter.
+observer :: Typed a
+         => String    -- ^ Name used to identify the stream monitored in the
+                      -- output produced during interpretation.
+         -> Stream a  -- ^ The stream being monitored.
+         -> Spec
 observer name e = tell [ObserverItem $ Observer name e]
 
 --------------------------------------------------------------------------------
@@ -153,8 +159,13 @@ data Trigger where
 
 --------------------------------------------------------------------------------
 
--- | Define a new trigger as part of a specification.
-trigger :: String -> Stream Bool -> [Arg] -> Spec
+-- | Define a new trigger as part of a specification. A trigger declares which
+-- external function, or handler, will be called when a guard defined by a
+-- boolean stream becomes true.
+trigger :: String       -- ^ Name of the handler to be called.
+        -> Stream Bool  -- ^ The stream used as the guard for the trigger.
+        -> [Arg]        -- ^ List of arguments to the handler.
+        -> Spec
 trigger name e args = tell [TriggerItem $ Trigger name e args]
 
 --------------------------------------------------------------------------------
@@ -212,9 +223,9 @@ theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
 --
 -- 'Arg's can be used to pass arguments to handlers or trigger functions, to
 -- provide additional information to monitor handlers in order to address
--- property violations. At any given point (i.e., when the trigger must be
--- called due to a violation), the arguments passed using arg will contain the
--- current samples of the given streams.
+-- property violations. At any given point (e.g., when the trigger must be
+-- called due to a violation), the arguments passed using 'arg' will contain
+-- the current samples of the given streams.
 arg :: Typed a => Stream a -> Arg
 arg = Arg
 
