@@ -32,18 +32,6 @@ data CmdArgs = CmdArgs
   }
 
 -- | Command line arguments handled by the Copilot main function.
---
--- This parser supports four main commands:
---
---     * @--output/-o@: use the given compiler to produce C code.
---
---     * @--justrun/-c@: execute a dry-run, which parses and converts the
---       specification to core but does not produce any output.
---
---     * @--print/-p@: pretty print the specification.
---
---     * @--interpret/-i NUM@: interpret the specification for a given number
---       of steps.
 cmdargs :: Parser CmdArgs
 cmdargs = CmdArgs
   <$> strOption (long "output"  <> short 'o' <> value "."
@@ -62,6 +50,18 @@ cmdargs = CmdArgs
 -- This function must be provided an auxiliary function capable of compiling
 -- <https://hackage.haskell.org/package/copilot-core Copilot Core>
 -- specifications for some target.
+--
+-- The command line program supports four main commands:
+--
+--     * @--output/-o@: use the given compiler to produce C code.
+--
+--     * @--justrun/-c@: execute a dry-run, which parses and converts the
+--       specification to core but does not produce any output.
+--
+--     * @--print/-p@: pretty print the specification.
+--
+--     * @--interpret/-i NUM@: interpret the specification for a given number
+--       of steps.
 copilotMain :: Interpreter -> Printer -> Compiler -> Spec -> IO ()
 copilotMain interp pretty comp spec = main =<< execParser opts where
   opts = info (cmdargs <**> helper) fullDesc
@@ -81,5 +81,8 @@ copilotMain interp pretty comp spec = main =<< execParser opts where
 -- This function must be provided an auxiliary function capable of compiling
 -- <https://hackage.haskell.org/package/copilot-core Copilot Core>
 -- specifications for some target.
+--
+-- This function relies on 'copilotMain', please refer to that function for the
+-- command line options.
 defaultMain :: Compiler -> Spec -> IO ()
 defaultMain = copilotMain interpret prettyPrint
