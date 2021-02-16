@@ -12,11 +12,14 @@ homepage:            https://copilot-language.github.io
 bug-reports:         https://github.com/Copilot-Language/copilot/issues
 stability:           Experimental
 description:
-  This package is the main entry-point for using Copilot.
+  Copilot is a stream-based runtime verification framewor implemented as an
+  embedded domain-specific language (EDSL) in Haskell. Programs can be
+  interpreted for testing, or translated into C99 code to be incorporated in a
+  project, or as a standalone application. The C99 backend output is constant
+  in memory and time, making it suitable for systems with hard realtime
+  requirements.
   .
-  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
-  Haskell that compiles into embedded C.  Copilot contains an interpreter,
-  multiple back-end compilers, and other verification tools.
+  This package is the main entry-point for using Copilot.
   .
   A tutorial, examples, and other information are available at
   <https://copilot-language.github.io>.
