@@ -18,7 +18,7 @@ module Copilot.Language.Operators.Extern
   , externI32
   , externI64
   , externD
-  , funArg -- * Deprecated.
+  , funArg
   ) where
 
 import Copilot.Core (Typed)
