@@ -1,3 +1,4 @@
+-- | Compile Copilot specifications to C99 code.
 module Copilot.Compile.C99.Compile
   ( compile
   ) where
@@ -15,7 +16,9 @@ import Copilot.Compile.C99.External
 import Copilot.Compile.C99.Translate
 import Copilot.Compile.C99.CodeGen
 
--- | Compile the specification to a .h and a .c file.
+-- | Compile a specification to a .h and a .c file.
+--
+-- The first argument is used as prefix for the .h and .c files generated.
 compile :: String -> Spec -> IO ()
 compile prefix spec = do
   let cfile = render $ pretty $ C.translate $ compilec spec
@@ -37,12 +40,14 @@ compile prefix spec = do
   writeFile (prefix ++ ".c") $ cmacros ++ cfile
   writeFile (prefix ++ ".h") hfile
 
--- | Generate the .c file from a spec. It has the following structure:
--- |
--- | * Include .h file
--- | * Declarations of global buffers and indices.
--- | * Generator functions for streams, guards and trigger args.
--- | * Declaration of step() function.
+-- | Generate the .c file from a 'Spec'.
+--
+-- The generated C file has the following structure:
+--
+-- * Include .h file.
+-- * Declarations of global buffers and indices.
+-- * Generator functions for streams, guards and trigger arguments.
+-- * Declaration of the @step()@ function.
 compilec :: Spec -> C.TransUnit
 compilec spec = C.TransUnit declns funs where
   streams  = specStreams spec
@@ -87,7 +92,7 @@ compilec spec = C.TransUnit declns funs where
       arggen :: (String, UExpr) -> C.FunDef
       arggen (argname, UExpr ty expr) = genfun argname expr ty
 
--- | Generate the .h file from a spec.
+-- | Generate the .h file from a 'Spec'.
 compileh :: Spec -> C.TransUnit
 compileh spec = C.TransUnit declns [] where
   streams  = specStreams spec

@@ -1,3 +1,4 @@
+-- | Auxiliary helper functions to generate C99 code.
 module Copilot.Compile.C99.Util where
 
 import Control.Monad.State
@@ -5,7 +6,9 @@ import Control.Monad.State
 import Copilot.Core  (Id)
 import qualified Language.C99.Simple.AST as C
 
-
+-- | Auxiliary type used to collect all the declarations of all the variables
+-- used in a function to be generated, since variable declarations are always
+-- listed first at the top of the function body.
 type FunEnv = ([C.Decln], [C.Ident])
 
 -- | `tell` equivalent for `State`.
@@ -38,7 +41,7 @@ excpyname name = name ++ "_cpy"
 generatorname :: Id -> String
 generatorname sid = streamname sid ++ "_gen"
 
--- | Turn a the name of a trigger into a guard generator.
+-- | Turn the name of a trigger into a guard generator.
 guardname :: String -> String
 guardname name = name ++ "_guard"
 
@@ -50,5 +53,6 @@ argname name n = name ++ "_arg" ++ show n
 argnames :: String -> [String]
 argnames base = [aname | n <- [0..], let aname = argname base n]
 
+-- | Define a C expression that calls a function with arguments.
 funcall :: C.Ident -> [C.Expr] -> C.Expr
 funcall name args = C.Funcall (C.Ident name) args

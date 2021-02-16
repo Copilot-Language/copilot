@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+-- | High-level translation of Copilot Core into C99.
 module Copilot.Compile.C99.CodeGen where
 
 import Control.Monad.State  (runState)
@@ -25,7 +26,7 @@ genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
   cty = C.decay $ transtype ty
   (cexpr, (cvars, _)) = runState (transexpr expr) mempty
 
--- | Make a extern declaration of an variable.
+-- | Make a extern declaration of a variable.
 mkextdecln :: External -> C.Decln
 mkextdecln (External name _ ty) = decln where
   decln = C.VarDecln (Just C.Extern) cty name Nothing
@@ -52,7 +53,7 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   cty     = C.TypeSpec $ C.TypedefName "size_t"
   initval = Just $ C.InitExpr $ C.LitInt 0
 
--- | The step function updates all streams,a
+-- | Writes the step function, that updates all streams.
 mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
   void = C.TypeSpec C.Void
@@ -126,7 +127,7 @@ mkstructdecln (Struct x) = C.TypeDecln struct where
   mkfield :: Value a -> C.FieldDecln
   mkfield (Value ty field) = C.FieldDecln (transtype ty) (fieldname field)
 
--- | Write a forward struct decralration.
+-- | Write a forward struct declaration.
 mkstructforwdecln :: Struct a => Type a -> C.Decln
 mkstructforwdecln (Struct x) = C.TypeDecln struct where
   struct = C.TypeSpec $ C.Struct (typename x)
@@ -145,7 +146,7 @@ exprtypes e = case e of
   Op3 _ e1 e2 e3        -> exprtypes e1 `union` exprtypes e2 `union` exprtypes e3
   Label ty _ _          -> typetypes ty
 
--- | List all types of an type, returns items uniquely.
+-- | List all types of a type, returns items uniquely.
 typetypes :: Typeable a => Type a -> [UType]
 typetypes ty = case ty of
   Array ty' -> [UType ty] `union` typetypes ty'

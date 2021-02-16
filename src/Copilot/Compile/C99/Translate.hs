@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
+-- | Translate Copilot Core expressions and operators to C99.
 module Copilot.Compile.C99.Translate where
 
 import Control.Monad.State
@@ -9,7 +10,7 @@ import Copilot.Compile.C99.Util
 
 import qualified Language.C99.Simple as C
 
--- | Translates a Copilot expression into a C99 expression.
+-- | Translates a Copilot Core expression into a C99 expression.
 transexpr :: Expr a -> State FunEnv C.Expr
 transexpr (Const ty x) = return $ constty ty x
 
@@ -51,7 +52,8 @@ transexpr (Op3 op e1 e2 e3) = do
   return $ transop3 op e1' e2' e3'
 
 
--- | Translates a Copilot unary operator and arguments into a C99 expression.
+-- | Translates a Copilot unary operator and its argument into a C99
+-- expression.
 transop1 :: Op1 a b -> C.Expr -> C.Expr
 transop1 op e = case op of
   Not             -> (C..!) e
@@ -77,7 +79,8 @@ transop1 op e = case op of
   Cast     _ ty  -> C.Cast (transtypename ty) e
   GetField (Struct _)  _ f -> C.Dot e (accessorname f)
 
--- | Translates a Copilot binary operator and arguments into a C99 expression.
+-- | Translates a Copilot binary operator and its arguments into a C99
+-- expression.
 transop2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
 transop2 op e1 e2 = case op of
   And          -> e1 C..&& e2
@@ -103,12 +106,14 @@ transop2 op e1 e2 = case op of
   BwShiftR _ _ -> e1 C..>> e2
   Index    _   -> C.Index e1 e2
 
--- | Translates a Copilot ternaty operator and arguments into a C99 expression.
+-- | Translates a Copilot ternary operator and its arguments into a C99
+-- expression.
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
 
--- | Give a C99 literal expression based on a value and a type.
+-- | Transform a Copilot Core literal, based on its value and type, into a C99
+-- literal.
 constty :: Type a -> a -> C.Expr
 constty ty = case ty of
   Bool   -> C.LitBool
@@ -135,6 +140,7 @@ constty ty = case ty of
         _         -> map (C.InitExpr . constty ty) xs
 
 
+-- | Explicitly cast a C99 value to a type.
 explicitty :: Type a -> C.Expr -> C.Expr
 explicitty ty = C.Cast (transtypename ty)
 
