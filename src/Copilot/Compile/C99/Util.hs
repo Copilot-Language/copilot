@@ -41,7 +41,7 @@ excpyname name = name ++ "_cpy"
 generatorname :: Id -> String
 generatorname sid = streamname sid ++ "_gen"
 
--- | Turn a the name of a trigger into a guard generator.
+-- | Turn the name of a trigger into a guard generator.
 guardname :: String -> String
 guardname name = name ++ "_guard"
 
