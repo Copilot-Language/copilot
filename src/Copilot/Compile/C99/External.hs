@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
--- | Obtain information about externs needed in the generation of C99 code for
--- stream declarations and triggers.
+-- | Represent information about externs needed in the generation of C99 code
+-- for stream declarations and triggers.
 module Copilot.Compile.C99.External where
 
 import Data.List  (unionBy)
