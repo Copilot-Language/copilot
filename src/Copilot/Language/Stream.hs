@@ -52,6 +52,7 @@ data Stream :: * -> * where
 
 --------------------------------------------------------------------------------
 
+-- | Wrapper to use 'Stream's as arguments to triggers.
 data Arg where
   Arg :: Typed a => Stream a -> Arg
 
