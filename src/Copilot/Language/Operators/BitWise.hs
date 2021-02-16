@@ -2,12 +2,11 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Bitwise operators.
-
 {-# LANGUAGE Safe #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Bitwise operators applied on streams, pointwise.
 module Copilot.Language.Operators.BitWise
   ( Bits ((.&.), complement, (.|.))
   , (.^.)
@@ -21,6 +20,9 @@ import Copilot.Language.Stream
 import qualified Prelude as P
 import Data.Bits
 
+-- | Instance of the 'Bits' class for 'Stream's.
+--
+-- Only the methods '.&.', 'complement', '.|.' and 'xor' are defined.
 instance (Typed a, Bits a) => Bits (Stream a) where
   (.&.)        = Op2 (Core.BwAnd typeOf)
   complement   = Op1 (Core.BwNot typeOf)
@@ -36,11 +38,16 @@ instance (Typed a, Bits a) => Bits (Stream a) where
   bit          = P.error "tbd: bit"
   popCount     = P.error "tbd: popCount"
 
--- Avoid redefinition of the Operators.Boolean xor
+-- | See 'xor'.
 (.^.) :: Bits a => a -> a -> a
-(.^.) = xor
+(.^.) = xor -- Avoid redefinition of the Operators.Boolean xor
 
-(.<<.), (.>>.) :: (Bits a, Typed a, Typed b, P.Integral b)
-               => Stream a -> Stream b -> Stream a
+-- | Shifting values of a stream to the left.
+(.<<.) :: (Bits a, Typed a, Typed b, P.Integral b)
+       => Stream a -> Stream b -> Stream a
 (.<<.) = Op2 (Core.BwShiftL typeOf typeOf)
+
+-- | Shifting values of a stream to the right.
+(.>>.) :: (Bits a, Typed a, Typed b, P.Integral b)
+       => Stream a -> Stream b -> Stream a
 (.>>.) = Op2 (Core.BwShiftR typeOf typeOf)

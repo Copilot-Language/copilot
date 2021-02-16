@@ -2,10 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Equality operator.
-
 {-# LANGUAGE Safe #-}
 
+-- | Equality applied point-wise on streams.
 module Copilot.Language.Operators.Eq
   ( (==)
   , (/=)
@@ -19,10 +18,18 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
+-- | Compare two streams point-wise for equality.
+--
+-- The output stream contains the value True at a point in time if both
+-- argument streams contain the same value at that point in time.
 (==) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) == (Const y) = Const (x P.== y)
 x == y = Op2 (Core.Eq typeOf) x y
 
+-- | Compare two streams point-wise for inequality.
+--
+-- The output stream contains the value True at a point in time if both
+-- argument streams contain different values at that point in time.
 (/=) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) /= (Const y) = Const (x P./= y)
 x /= y = Op2 (Core.Ne typeOf) x y

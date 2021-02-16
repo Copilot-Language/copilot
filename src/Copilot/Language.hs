@@ -3,6 +3,10 @@
 --------------------------------------------------------------------------------
 
 -- | Main Copilot language export file.
+--
+-- This is mainly a meta-module that re-exports most definitions in this
+-- library. It also provides a default pretty printer that prints a
+-- specification to stdout.
 
 {-# LANGUAGE Safe #-}
 
@@ -69,6 +73,8 @@ import Copilot.Language.Stream (Stream)
 
 --------------------------------------------------------------------------------
 
+-- | Transform a high-level Copilot Language specification into a low-level
+-- Copilot Core specification and pretty-print it to stdout.
 prettyPrint :: Spec -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
 

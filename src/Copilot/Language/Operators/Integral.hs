@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Integral class operators.
+-- | Integral class operators applied point-wise on streams.
 
 {-# LANGUAGE Safe #-}
 
@@ -23,18 +23,24 @@ import Data.List (foldl', replicate)
 
 --------------------------------------------------------------------------------
 
+-- | Apply the 'Prelude.div' operation to two streams, point-wise.
 div :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 (Const 0) `div` _ = Const 0
 _ `div` (Const 0) = Core.badUsage "in div: division by zero."
 x `div` (Const 1) = x
 x `div` y = Op2 (Core.Div typeOf) x y
 
+-- | Apply the 'Prelude.mod' operation to two streams, point-wise.
 mod :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 _         `mod` (Const 0) = Core.badUsage "in mod: division by zero."
 (Const 0) `mod` _         = (Const 0)
 (Const x) `mod` (Const y) = Const (x `P.mod` y)
 x `mod` y = Op2 (Core.Mod typeOf) x y
 
+-- | Apply a limited form of exponentiation (@^@) to two streams, point-wise.
+--
+-- Either the first stream must be the constant 2, or the second must be a
+-- constant stream.
 (^) :: (Typed a, Typed b, P.Num a, B.Bits a, P.Integral b)
     => Stream a -> Stream b -> Stream a
 (Const 0) ^ (Const 0)  = Const 1

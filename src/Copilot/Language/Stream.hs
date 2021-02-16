@@ -23,6 +23,13 @@ import qualified Prelude as P
 
 --------------------------------------------------------------------------------
 
+-- | A stream in Copilot is an infinite succession of values of the same type.
+--
+-- Streams can be built using simple primities (e.g., 'Const'), by applying
+-- step-wise (e.g., 'Op1') or temporal transformations (e.g., 'Append', 'Drop')
+-- to streams, or by combining existing streams to form new streams (e.g.,
+-- 'Op2', 'Op3').
+
 data Stream :: * -> * where
   Append      :: Typed a
               => [a] -> Maybe (Stream Bool) -> Stream a -> Stream a
@@ -45,6 +52,7 @@ data Stream :: * -> * where
 
 --------------------------------------------------------------------------------
 
+-- | Wrapper to use 'Stream's as arguments to triggers.
 data Arg where
   Arg :: Typed a => Stream a -> Arg
 
@@ -65,6 +73,8 @@ instance P.Eq (Stream a) where
 
 --------------------------------------------------------------------------------
 
+-- | Streams carrying numbers are instances of 'Num', and you can apply to them
+-- the 'Num' functions, point-wise.
 instance (Typed a, P.Eq a, Num a) => Num (Stream a) where
   (Const x) + (Const y)   = Const (x + y)
   (Const 0) + y           = y
@@ -92,6 +102,9 @@ instance (Typed a, P.Eq a, Num a) => Num (Stream a) where
 
 --------------------------------------------------------------------------------
 
+-- | Streams carrying fractional numbers are instances of 'Fractional', and you can
+-- apply to them the 'Fractional' functions, point-wise.
+
 -- XXX we may not want to precompute these if they're constants if someone is
 -- relying on certain floating-point behavior.
 instance (Typed a, P.Eq a, Fractional a) => Fractional (Stream a) where
@@ -103,6 +116,9 @@ instance (Typed a, P.Eq a, Fractional a) => Fractional (Stream a) where
   fromRational            = Const . fromRational
 
 --------------------------------------------------------------------------------
+
+-- | Streams carrying floating point numbers are instances of 'Floating', and
+-- you can apply to them the 'Floating' functions, point-wise.
 
 -- XXX we may not want to precompute these if they're constants if someone is
 -- relying on certain floating-point behavior.

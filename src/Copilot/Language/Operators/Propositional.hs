@@ -4,6 +4,9 @@
 
 {-# LANGUAGE Safe, FlexibleInstances, GADTs, MultiParamTypeClasses #-}
 
+-- | Implement negation over quantified extensions of boolean streams.
+--
+-- For details, see 'Prop'.
 module Copilot.Language.Operators.Propositional (not) where
 
 import Prelude (($))
@@ -15,12 +18,16 @@ import Copilot.Theorem
 
 --------------------------------------------------------------------------------
 
+-- | A proposition that can be negated.
 class Negatable a b where
+  -- | Negate a proposition.
   not :: a -> b
 
+-- | Negation of an existentially quantified proposition.
 instance Negatable (Prop Existential) (Prop Universal) where
   not (Exists p)  = Forall $ B.not p
 
+-- | Negation of a universally quantified proposition.
 instance Negatable (Prop Universal) (Prop Existential) where
   not (Forall p)  = Exists $ B.not p
 
