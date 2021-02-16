@@ -21,11 +21,13 @@ import Data.Word
 -- | Class to capture casting between types for which it can be performed
 -- safely.
 class Cast a b where
+  -- | Perform a safe cast from @Stream a@ to @Stream b@.
   cast :: (Typed a, Typed b) => Stream a -> Stream b
 
 -- | Class to capture casting between types for which casting may be unsafe
 -- and/or result in a loss of precision or information.
 class UnsafeCast a b where
+  -- | Perform an unsafe cast from @Stream a@ to @Stream b@.
   unsafeCast :: (Typed a, Typed b) => Stream a -> Stream b
 
 --------------------------------------------------------------------------------
