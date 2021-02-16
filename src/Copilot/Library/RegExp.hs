@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
--- | 
+-- |
 -- Module: RegExp
 -- Description: Regular expression library
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
 --
 -- A regular expression library.
 --
--- For examples, see @Examples/RegExpExamples.hs@ in the
--- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
+-- For an example, see
+-- <https://github.com/Copilot-Language/examplesForACSL/blob/master/example15/main.hs>
 
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -27,24 +27,26 @@ import Control.Monad.State ( evalState, get, modify )
 
 import qualified Copilot.Language as C
 
--- The symbols in a regular expression, "Any" is any value of type t
--- (matches any symbol, the "point" character in a regular expression).
+-- | The symbols in a regular expression.
+--
+-- 'Any' is any value of type @t@ (matches any symbol, the "point" character in
+-- a regular expression).
 data Sym t = Any | Sym t
              deriving ( Eq, Ord, Show )
 
--- A symbol's value can occur multiple times in a regular expression,
--- e.g. "t(tfft)*". A running number "symbolNum" is used to make all
--- symbols in a regular expression unique.
-type NumT     = Int
+-- | A symbol's value can occur multiple times in a regular expression, e.g.
+-- "t(tfft)*". A running number "symbolNum" is used to make all symbols in a
+-- regular expression unique.
 data NumSym t = NumSym { symbolNum :: Maybe NumT
                        , symbol    :: Sym t
                        } deriving ( Eq, Show )
+type NumT     = Int
 
--- The regular expression data type. For our use
--- regular expressions describing a language with
--- no word is not supported since empty languages
--- would not match anything and just yield a
--- copilot stream of constant false values.
+-- | The regular expression data type.
+--
+-- For our use, regular expressions describing a language with no words are not
+-- supported since empty languages would not match anything and just yield a
+-- Copilot stream of constant false values.
 data RegExp t = REpsilon
               | RSymbol  ( NumSym t )
               | ROr      ( RegExp t ) ( RegExp t )
@@ -53,7 +55,7 @@ data RegExp t = REpsilon
                 deriving Show
 
 
--- Parsers for single characters.
+-- | Parsers for single characters.
 lquote, rquote, lparen, rparen,
   star, plus, qmark, point, minus,
   nondigit :: CharParser () Char
@@ -69,37 +71,35 @@ minus  = char '-'
 
 nondigit = char '_' <|> letter
 
--- A "followedBy" combinator for parsing, parses
--- p, then p' and returns the result of p.
+-- | A "followedBy" combinator for parsing, parses p, then p' and returns the
+-- result of p.
 followedBy :: GenParser tok () a
            -> GenParser tok () b
            -> GenParser tok () a
 followedBy p p' = p >>= \ r -> p' >> return r
 
 
--- Parsing a string p' with prefix p, returning
--- both in order
+-- | Parsing a string p' with prefix p, returning both in order.
 cPrefix, optCPrefix :: GenParser tok () Char
                     -> GenParser tok () String
                     -> GenParser tok () String
 cPrefix p p' = p  >>= \ c -> fmap ( c : ) p'
 
--- Parsing a string p' with the character p as an
--- optional prefix, return the result with the
--- optional prefix.
+-- | Parsing a string @p'@ with the character @p@ as an optional prefix, return
+-- the result with the optional prefix.
 optCPrefix p p' = optionMaybe p
                   >>= \ r -> case r of
                                Nothing -> p'
                                Just c  -> fmap ( c : ) p'
 
--- The ci function ("case insensitive") takes one argument of
--- type string, parses for the string in a case insensitive
--- manner and yields the parsed string (preserving its case).
+-- | "case insensitive". Take one argument of type string, parses for the
+-- string in a case insensitive manner and yields the parsed string (preserving
+-- its case).
 ci :: String -> GenParser Char () String
 ci = mapM ( \ c -> ( char . toLower ) c <|> ( char . toUpper ) c )
 
 
--- the parser for regular expressions
+-- | Parser for regular expressions
 regexp  :: ( SymbolParser t ) => GenParser Char () ( RegExp t )
 regexp  = chainr1 term opOr
 
@@ -114,7 +114,7 @@ factor' = between lparen rparen regexp
           <|> anySym
           <|> parseSym
 
--- Parses the "." - point character used to match any symbol.
+-- | Parses the "." - point character used to match any symbol.
 anySym  :: ( SymbolParser t ) => GenParser Char () ( RegExp t )
 anySym  = point >> ( return . RSymbol ) ( NumSym Nothing Any )
 
@@ -199,7 +199,7 @@ opConcat   = return RConcat
 
 opSuffix   :: GenParser Char () ( RegExp t )
            -> GenParser Char () ( RegExp t )
-opSuffix r = do 
+opSuffix r = do
   subexp   <- r
   suffixes <- many $ choice [ star, plus, qmark ]
   let transform rexp suffix =
@@ -333,8 +333,13 @@ regexp2CopilotNFA inStream rexp reset =
     in outStream
 
 
+-- | Regular expression matching over an arbitrary stream
 copilotRegexp :: ( C.Typed t, SymbolParser t, Eq t )
-                 => C.Stream t -> SourceName -> C.Stream Bool -> C.Stream Bool
+              => C.Stream t     -- ^ The stream to monitor.
+              -> SourceName     -- ^ The regular expression.
+              -> C.Stream Bool  -- ^ A stream indicating when to reset the
+                                --   monitor.
+              -> C.Stream Bool
 copilotRegexp inStream rexp reset =
   case parse parser rexp rexp of
     Left  err -> C.badUsage ("parsing regular exp: " ++ show err)
@@ -393,8 +398,28 @@ regexp2CopilotNFAB rexp propositions reset =
     in outStream
 
 
-copilotRegexpB :: SourceName -> [ ( StreamName, C.Stream Bool ) ]
-                  -> C.Stream Bool -> C.Stream Bool
+-- | Regular expression matching over a collection of boolean streams.
+--
+-- Regular expressions can contain symbols, which are expanded to match
+-- specific streams.
+--
+-- For example, the regular expression:
+--
+-- @
+-- "\<s0\>(\<s1\>)+"
+-- @
+--
+-- would match if you provide a map (association list) that assigns, to the
+-- symbol @"s0"@, a stream that is true at the first sample, and to @"s1"@, a
+-- stream that is true at every sample after the first sample.
+copilotRegexpB :: SourceName                         -- ^ Regular expression
+               -> [ ( StreamName, C.Stream Bool ) ]  -- ^ A table with the
+                                                     -- stream associated to
+                                                     -- each symbol.
+               -> C.Stream Bool                      -- ^ A stream indicating
+                                                     -- when to reset the
+                                                     -- monitor.
+               -> C.Stream Bool
 copilotRegexpB rexp propositions reset =
   case parse parser rexp rexp of
     Left  err -> C.badUsage ("parsing regular exp: " ++ show err)

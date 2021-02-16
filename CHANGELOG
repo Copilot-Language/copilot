@@ -1,3 +1,6 @@
+2021-02-16
+        * Completed the documentation. (#9)
+
 2020-12-06
         * Version bump (3.2).
         * Update description, bug-reports, homepage fields in cabal file (#7).
