@@ -20,6 +20,7 @@ import Copilot.Theorem
 
 -- | A proposition that can be negated.
 class Negatable a b where
+  -- | Negate a proposition.
   not :: a -> b
 
 -- | Negation of an existentially quantified proposition.
