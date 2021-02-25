@@ -38,7 +38,7 @@ instance Show t => Show (Array n t) where
   show (Array xs) = show xs
 
 -- | Smart array constructor that only type checks if the length of the given
--- list marches the length of the array at type level.
+-- list matches the length of the array at type level.
 array :: forall n t. KnownNat n => [t] -> Array n t
 array xs | datalen == typelen = Array xs
          | otherwise          = error errmsg where
@@ -69,10 +69,10 @@ instance Flatten a b => Flatten (Array n a) b where
 instance Foldable (Array n) where
   foldr f base (Array xs) = foldr f base xs
 
--- | Total number of elements in the array after flattening.
+-- | Total number of elements in a possibly nested array.
 size :: forall a n b. (Flatten a b, b ~ InnerType a) => Array n a -> Int
 size xs = length $ (flatten xs :: [b])
 
--- | Total number of elements in the array without flattening.
+-- | Return the elemts of an array.
 arrayelems :: Array n a -> [a]
 arrayelems (Array xs) = xs
