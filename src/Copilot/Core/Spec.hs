@@ -41,8 +41,8 @@ data Stream = forall a. (Typeable a, Typed a) => Stream
 
 --------------------------------------------------------------------------------
 
--- | An observer, representing a stream that we observe during execution at
--- every sample.
+-- | An observer, representing a stream that we observe during interpretation
+-- at every sample.
 data Observer = forall a. Typeable a => Observer
   { observerName     :: Name
   , observerExpr     :: Expr a
@@ -67,9 +67,8 @@ data Property = Property
 
 --------------------------------------------------------------------------------
 
--- | A Copilot specification consists of a list of variables bound to anonymous
--- streams, a list of anonymous streams, a list of observers, a list of
--- triggers, and a list of structs.
+-- | A Copilot specification is a list of streams, together with monitors on
+-- these streams implemented as observers, triggers or properties.
 data Spec = Spec
   { specStreams      :: [Stream]
   , specObservers    :: [Observer]
