@@ -55,7 +55,9 @@ import Data.List (intercalate)
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
 class Struct a where
+  -- | Returns the name of struct in the target language.
   typename :: a -> String
+  -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
 
 -- | The field of a struct, together with a representation of its type.
