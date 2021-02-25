@@ -62,8 +62,8 @@ data Expr a where
 --------------------------------------------------------------------------------
 
 -- | A untyped expression that carries the information about the type of the
--- expression as a value, as opposed to exposing it at type level (using a
--- phantom type).
+-- expression as a value, as opposed to exposing it at type level (using an
+-- existential).
 data UExpr = forall a. Typeable a => UExpr
   { uExprType :: Type a
   , uExprExpr :: Expr a }
