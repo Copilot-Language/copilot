@@ -5,7 +5,7 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
--- | Copilot specifications consistute the main declaration of Copilot modules.
+-- | Copilot specifications constitute the main declaration of Copilot modules.
 --
 -- A specification normally contains the association between streams to monitor
 -- and their handling functions, or streams to observe, or a theorem that must
@@ -68,7 +68,7 @@ data Property = Property
 --------------------------------------------------------------------------------
 
 -- | A Copilot specification consists of a list of variables bound to anonymous
--- streams, a list of anomymous streams, a list of observers, a list of
+-- streams, a list of anonymous streams, a list of observers, a list of
 -- triggers, and a list of structs.
 data Spec = Spec
   { specStreams      :: [Stream]
