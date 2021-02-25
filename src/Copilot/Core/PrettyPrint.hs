@@ -27,9 +27,9 @@ strmName id = text "s" <> int id
 
 --------------------------------------------------------------------------------
 
--- | Pretty print a Copilot expression.
+-- | Pretty-print a Copilot expression.
 --
--- The type is ignored, and only the expression is pretty printed.
+-- The type is ignored, and only the expression is pretty-printed.
 ppExpr :: Expr a -> Doc
 ppExpr e0 = case e0 of
   Const t x                  -> text (showWithType Haskell t x)
@@ -44,13 +44,13 @@ ppExpr e0 = case e0 of
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
   Label _ s e                -> text "label "<> doubleQuotes (text s) <+> (ppExpr e)
 
--- | Pretty print an untyped expression.
+-- | Pretty-print an untyped expression.
 --
--- The type is ignored, and only the expression is pretty printed.
+-- The type is ignored, and only the expression is pretty-printed.
 ppUExpr :: UExpr -> Doc
 ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
 
--- | Pretty print a unary operation.
+-- | Pretty-print a unary operation.
 ppOp1 :: Op1 a b -> Doc -> Doc
 ppOp1 op = case op of
   Not                     -> ppPrefix "not"
@@ -77,7 +77,7 @@ ppOp1 op = case op of
   GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
   GetField _ _ _          -> impossible "ppOp1" "Copilot.Core.PrettyPrint"
 
--- | Pretty print a binary operation.
+-- | Pretty-print a binary operation.
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
   And          -> ppInfix "&&"
@@ -103,7 +103,7 @@ ppOp2 op = case op of
   BwShiftR _ _ -> ppInfix ">>"
   Index    _   -> ppInfix ".!!"
 
--- | Pretty print a ternary operation.
+-- | Pretty-print a ternary operation.
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
   Mux _    -> \ doc1 doc2 doc3 ->
