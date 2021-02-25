@@ -5,9 +5,9 @@
 -- | Let expressions.
 --
 -- Although Copilot is a DSL embedded in Haskell and Haskell does support let
--- expressions, we want Copilot to be able to implement sharing, to detect when
--- the same stream is being used in multiple places in a specification and
--- avoid recomputing it unnecessarily.
+-- expressions, we want Copilot to be able to implement explicit sharing, to
+-- detect when the same stream is being used in multiple places in a
+-- specification and avoid recomputing it unnecessarily.
 
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ExistentialQuantification #-}
