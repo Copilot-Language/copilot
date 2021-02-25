@@ -18,10 +18,12 @@ import Copilot.Core.Type
 
 --------------------------------------------------------------------------------
 
+-- | Witness datatype for showing a value, used by 'showWithType'.
 data ShowWit a = Show a => ShowWit
 
 --------------------------------------------------------------------------------
 
+-- | Turn a type into a show witness.
 showWit :: Type a -> ShowWit a
 showWit t =
   case t of
