@@ -3,14 +3,12 @@
 --------------------------------------------------------------------------------
 
 -- | Intermediate representation for Copilot specifications.
--- The form of the representation is based on this paper:
+-- The following articles might also be useful:
 --
 -- * Carette, Jacques and Kiselyov, Oleg and Shan, Chung-chieh,
 -- \"/Finally tagless, partially evaluated: Tagless staged/
 -- /interpreters for simpler typed languages/\",
 -- Journal of Functional Programming vol. 19, p. 509-543, 2009.
---
--- The following article might also be useful:
 --
 -- * Guillemette, Louis-Julien and Monnier, Stefan,
 -- \"/Type-Safe Code Transformations in Haskell/\",
