@@ -150,7 +150,7 @@ eval k exts spec =
 -- We take a more brute-force appraoch below.
 
 -- | Evaluate a specification for a number of steps.
-eval :: ShowType   -- ^ Show booleans as @0@/@1@ (C) or @True@/@False@
+eval :: ShowType   -- ^ Show booleans as @0@\/@1@ (C) or @True@\/@False@
                    --   (Haskell).
      -> Int        -- ^ Number of steps to evaluate.
      -> Spec       -- ^ Specification to evaluate.
