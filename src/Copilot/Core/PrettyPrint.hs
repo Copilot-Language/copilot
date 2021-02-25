@@ -20,11 +20,16 @@ import Data.List (intersperse)
 
 --------------------------------------------------------------------------------
 
+-- | Create a unique stream name by prefixing the given ID by a lowercase
+-- letter @"s"@.
 strmName :: Int -> Doc
 strmName id = text "s" <> int id
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot expression.
+--
+-- The type is ignored, and only the expression is pretty-printed.
 ppExpr :: Expr a -> Doc
 ppExpr e0 = case e0 of
   Const t x                  -> text (showWithType Haskell t x)
@@ -39,9 +44,13 @@ ppExpr e0 = case e0 of
   Op3 op e1 e2 e3            -> ppOp3 op (ppExpr e1) (ppExpr e2) (ppExpr e3)
   Label _ s e                -> text "label "<> doubleQuotes (text s) <+> (ppExpr e)
 
+-- | Pretty-print an untyped expression.
+--
+-- The type is ignored, and only the expression is pretty-printed.
 ppUExpr :: UExpr -> Doc
 ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
 
+-- | Pretty-print a unary operation.
 ppOp1 :: Op1 a b -> Doc -> Doc
 ppOp1 op = case op of
   Not                     -> ppPrefix "not"
@@ -68,6 +77,7 @@ ppOp1 op = case op of
   GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
   GetField _ _ _          -> impossible "ppOp1" "Copilot.Core.PrettyPrint"
 
+-- | Pretty-print a binary operation.
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc
 ppOp2 op = case op of
   And          -> ppInfix "&&"
@@ -93,6 +103,7 @@ ppOp2 op = case op of
   BwShiftR _ _ -> ppInfix ">>"
   Index    _   -> ppInfix ".!!"
 
+-- | Pretty-print a ternary operation.
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
 ppOp3 op = case op of
   Mux _    -> \ doc1 doc2 doc3 ->
@@ -102,14 +113,18 @@ ppOp3 op = case op of
 
 --------------------------------------------------------------------------------
 
+-- | Parenthesize two 'Doc's, separated by an infix 'String'.
 ppInfix :: String -> Doc -> Doc -> Doc
 ppInfix cs doc1 doc2 = parens $ doc1 <+> text cs <+> doc2
 
+-- | Prefix a 'Doc' by a 'String'.
 ppPrefix :: String -> Doc -> Doc
 ppPrefix cs = (text cs <+>)
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot stream as a case of a top-level function for
+-- streams of that type, by pattern matching on the stream name.
 ppStream :: Stream -> Doc
 ppStream
   Stream
@@ -130,6 +145,8 @@ ppStream
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot trigger as a case of a top-level @trigger@
+-- function, by pattern matching on the trigger name.
 ppTrigger :: Trigger -> Doc
 ppTrigger
   Trigger
@@ -146,6 +163,8 @@ ppTrigger
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot observer as a case of a top-level @observer@
+-- function, by pattern matching on the observer name.
 ppObserver :: Observer -> Doc
 ppObserver
   Observer
@@ -157,6 +176,8 @@ ppObserver
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot property as a case of a top-level @property@
+-- function, by pattern matching on the property name.
 ppProperty :: Property -> Doc
 ppProperty
   Property
@@ -168,6 +189,12 @@ ppProperty
 
 --------------------------------------------------------------------------------
 
+-- | Pretty-print a Copilot specification, in the following order:
+--
+-- - Streams definitions
+-- - Trigger definitions
+-- - Observer definitions
+-- - Property definitions
 ppSpec :: Spec -> Doc
 ppSpec spec = cs $$ ds $$ es $$ fs
   where
@@ -178,7 +205,7 @@ ppSpec spec = cs $$ ds $$ es $$ fs
 
 --------------------------------------------------------------------------------
 
--- | Pretty-prints a Copilot specification.
+-- | Pretty-print a Copilot specification.
 prettyPrint :: Spec -> String
 prettyPrint = render . ppSpec
 

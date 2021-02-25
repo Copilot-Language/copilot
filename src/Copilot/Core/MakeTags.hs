@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Sets a unique tags for each external array/function/struct call.
+-- | Sets a unique tags for each external array\/function\/struct call.
 
 {-# LANGUAGE Safe #-}
 

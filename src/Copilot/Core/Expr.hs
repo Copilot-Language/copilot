@@ -5,6 +5,7 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, ExistentialQuantification #-}
 
+-- | Internal representation of Copilot stream expressions.
 module Copilot.Core.Expr
   ( Id
   , Name
@@ -42,6 +43,11 @@ type Tag = Int
 
 --------------------------------------------------------------------------------
 
+-- | Internal representation of Copilot stream expressions.
+--
+-- The Core representation mimics the high-level Copilot stream, but the Core
+-- representation contains information about the types of elements in the
+-- stream.
 data Expr a where
   Const        :: Typeable a => Type a -> a -> Expr a
   Drop         :: Typeable a => Type a -> DropIdx -> Id -> Expr a
@@ -55,7 +61,9 @@ data Expr a where
 
 --------------------------------------------------------------------------------
 
--- | A untyped expression (no phantom type).
+-- | A untyped expression that carries the information about the type of the
+-- expression as a value, as opposed to exposing it at type level (using an
+-- existential).
 data UExpr = forall a. Typeable a => UExpr
   { uExprType :: Type a
   , uExprExpr :: Expr a }

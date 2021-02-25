@@ -31,17 +31,25 @@ import Data.Typeable (Typeable)
 
 --------------------------------------------------------------------------------
 
+-- | Exceptions that may be thrown during interpretation of a Copilot
+-- specification.
 data InterpException
   = -- NoValues Name
 --  | BadType Name
-    ArrayWrongSize Name Int
-  | ArrayIdxOutofBounds Name Int Int
-  | DivideByZero
-  | NotEnoughValues Name Int
+    ArrayWrongSize Name Int           -- ^ Extern array has incorrect size.
+  | ArrayIdxOutofBounds Name Int Int  -- ^ Index out-of-bounds exception.
+  | DivideByZero                      -- ^ Division by zero.
+  | NotEnoughValues Name Int          -- ^ For one or more streams, not enough
+                                      --   values are available to simulate the
+                                      --   number of steps requested.
 --  | NoExtFunEval Name
-  | NoExtsInterp Name
+  | NoExtsInterp Name                 -- ^ One of the externs used by the
+                                      --   specification does not declare
+                                      --   sample values to be used during
+                                      --   simulation.
   deriving Typeable
 
+-- | Show a descriptive message of the exception.
 instance Show InterpException where
   ---------------------------------------
   -- show (NoValues name)                                                         =
@@ -79,10 +87,14 @@ instance Show InterpException where
       ++ "some stream with which to simulate the function."
   ---------------------------------------
 
+-- | Allow throwing and catching 'InterpException' using Haskell's standard
+-- exception mechanisms.
 instance Exception InterpException
 
 --------------------------------------------------------------------------------
 
+-- | An environment that contains an association between (stream or extern)
+-- names and their values.
 type Env nm = [(nm, Dynamic)]
 
 -- -- | External arrays environment.
@@ -96,16 +108,23 @@ type Env nm = [(nm, Dynamic)]
 
 --------------------------------------------------------------------------------
 
+-- | The simulation output is defined as a string. Different backends may
+-- choose to format their results differently.
 type Output = String
 
+-- | An execution trace, containing the traces associated to each individual
+-- monitor trigger and observer.
 data ExecTrace = ExecTrace
-    -- map from trigger names to their maybe output, which is a list of strings
-    -- representing their values.  (Nothing output if the guard for the trigger
-    -- is false).  The order is important, since we compare the arg lists
-    -- between the interpreter and backends.
   { interpTriggers  :: [(String, [Maybe [Output]])]
-    -- map from observer names to their outputs.  We also show observer outputs.
-  , interpObservers :: [(String, [Output])] }
+
+    -- ^ Map from trigger names to their optional output, which is a list of
+    -- strings representing their values. The output may be 'Nothing' if the
+    -- guard for the trigger was false. The order is important, since we
+    -- compare the arg lists between the interpreter and backends.
+
+  , interpObservers :: [(String, [Output])]
+    -- ^ Map from observer names to their outputs.
+  }
   deriving Show
 
 --------------------------------------------------------------------------------
@@ -129,7 +148,13 @@ eval k exts spec =
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
-eval :: ShowType -> Int -> Spec -> ExecTrace
+
+-- | Evaluate a specification for a number of steps.
+eval :: ShowType   -- ^ Show booleans as @0@\/@1@ (C) or @True@\/@False@
+                   --   (Haskell).
+     -> Int        -- ^ Number of steps to evaluate.
+     -> Spec       -- ^ Specification to evaluate.
+     -> ExecTrace
 eval showType k spec =
 --  let exts  = take k $ reverse exts'                          in
 
@@ -152,8 +177,12 @@ eval showType k spec =
 
 --------------------------------------------------------------------------------
 
+-- | An environment that contains an association between (stream or extern)
+-- names and their values.
 type LocalEnv = [(Name, Dynamic)]
 
+-- | Evaluate an expression for a number of steps, obtaining the value
+-- of the sample at that time.
 evalExpr_ :: Typeable a => Int -> Expr a -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 locs strms = case e0 of
   Const _ x                          -> x
@@ -187,6 +216,8 @@ evalExpr_ k e0 locs strms = case e0 of
 
 --------------------------------------------------------------------------------
 
+-- | Evaluate an extern stream for a number of steps, obtaining the value of
+-- the sample at that time.
 evalExternVar :: Int -> Name -> Maybe [a] -> a
 evalExternVar k name exts =
   case exts of
@@ -222,6 +253,9 @@ evalExternVar k name exts =
 
 --------------------------------------------------------------------------------
 
+-- | Evaluate an 'Copilot.Core.Operators.Op1' by producing an equivalent
+-- Haskell function operating on the same types as the
+-- 'Copilot.Core.Operators.Op1'.
 evalOp1 :: Op1 a b -> (a -> b)
 evalOp1 op = case op of
   Not        -> P.not
@@ -250,6 +284,9 @@ evalOp1 op = case op of
 
 --------------------------------------------------------------------------------
 
+-- | Evaluate an 'Copilot.Core.Operators.Op2' by producing an equivalent
+-- Haskell function operating on the same types as the
+-- 'Copilot.Core.Operators.Op2'.
 evalOp2 :: Op2 a b c -> (a -> b -> c)
 evalOp2 op = case op of
   And          -> (&&)
@@ -275,27 +312,39 @@ evalOp2 op = case op of
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
   Index    _   -> \xs n -> (arrayelems xs) !! (fromIntegral n)
 
+-- | Apply a function to two numbers, so long as the second one is
+-- not zero.
+--
+-- Used to detect attempts at dividing by zero and produce the appropriate
+-- 'InterpException'.
 catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = throw DivideByZero
 catchZero f x y = f x y
 
 --------------------------------------------------------------------------------
 
+-- | Evaluate an 'Copilot.Core.Operators.Op3' by producing an equivalent
+-- Haskell function operating on the same types as the
+-- 'Copilot.Core.Operators.Op3'.
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
 evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
 
 --------------------------------------------------------------------------------
 
+-- | Turn a stream into a key-value pair that can be added to an 'Env' for
+-- simulation.
 initStrm :: Stream -> (Id, Dynamic)
 initStrm Stream { streamId       = id
                 , streamBuffer   = buffer
                 , streamExprType = t } =
   (id, toDyn (reverse buffer))
 
--- XXX actually only need to compute until shortest stream is of length k
--- XXX this should just be a foldl' over [0,1..k]
+-- | Evaluate several streams for a number of steps, producing the environment
+-- at the end of the evaluation.
 evalStreams :: Int -> [Stream] -> Env Id -> Env Id
 evalStreams top specStrms initStrms =
+  -- XXX actually only need to compute until shortest stream is of length k
+  -- XXX this should just be a foldl' over [0,1..k]
   evalStreams_ 0 initStrms
   where
   evalStreams_ :: Int -> Env Id -> Env Id
@@ -314,8 +363,14 @@ evalStreams top specStrms initStrms =
 
 --------------------------------------------------------------------------------
 
-evalTrigger ::
-  ShowType -> Int -> Env Id -> Trigger -> [Maybe [Output]]
+-- | Evaluate a trigger for a number of steps.
+evalTrigger :: ShowType          -- ^ Show booleans as @0@/@1@ (C) or
+                                 --   @True@/@False@ (Haskell).
+            -> Int               -- ^ Number of steps to evaluate.
+            -> Env Id            -- ^ Environment to use with known
+                                 --   stream-value associations.
+            -> Trigger           -- ^ Trigger to evaluate.
+            -> [Maybe [Output]]
 evalTrigger showType k strms
   Trigger
     { triggerGuard = e
@@ -341,7 +396,15 @@ evalTrigger showType k strms
     map (showWithType showType t) (evalExprs_ k e1 strms)
 
 --------------------------------------------------------------------------------
-evalObserver :: ShowType -> Int -> Env Id -> Observer -> [Output]
+
+-- | Evaluate an observer for a number of steps.
+evalObserver :: ShowType  -- ^ Show booleans as @0@/@1@ (C) or @True@/@False@
+                          --   (Haskell).
+             -> Int       -- ^ Number of steps to evaluate.
+             -> Env Id    -- ^ Environment to use with known stream-value
+                          --   associations.
+             -> Observer  -- ^ Observer to evaluate.
+             -> [Output]
 evalObserver showType k strms
   Observer
     { observerExpr     = e
@@ -350,6 +413,8 @@ evalObserver showType k strms
 
 --------------------------------------------------------------------------------
 
+-- | Evaluate an expression for a number of steps, producing a list with the
+-- changing value of the expression until that time.
 evalExprs_ :: Typeable a => Int -> Expr a -> Env Id -> [a]
 evalExprs_ k e strms =
   map (\i -> evalExpr_ i e [] strms) [0..(k-1)]

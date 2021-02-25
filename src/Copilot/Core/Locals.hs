@@ -3,6 +3,11 @@
 --------------------------------------------------------------------------------
 
 -- | Let expressions.
+--
+-- Although Copilot is a DSL embedded in Haskell and Haskell does support let
+-- expressions, we want Copilot to be able to implement explicit sharing, to
+-- detect when the same stream is being used in multiple places in a
+-- specification and avoid recomputing it unnecessarily.
 
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ExistentialQuantification #-}
@@ -19,15 +24,18 @@ import Prelude hiding (concat, foldr)
 
 --------------------------------------------------------------------------------
 
+-- | A local definition, with a given stream name and stream type.
 data Loc = forall a . Loc
   { localName :: Name
   , localType :: Type a }
 
+-- | Show the underlying stream name.
 instance Show Loc where
   show Loc { localName = name } = name
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the local definitions in a specification.
 locals :: Spec -> [Loc]
 locals
   Spec
@@ -47,11 +55,13 @@ locals
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the local definitions in a stream.
 locsStream :: Stream -> DList Loc
 locsStream Stream { streamExpr = e } = locsExpr e
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the local definitions in a trigger.
 locsTrigger :: Trigger -> DList Loc
 locsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
   locsExpr e `append` concat (fmap locsUExpr args)
@@ -63,11 +73,13 @@ locsTrigger Trigger { triggerGuard = e, triggerArgs = args } =
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the local definitions in an observer.
 locsObserver :: Observer -> DList Loc
 locsObserver Observer { observerExpr = e } = locsExpr e
 
 --------------------------------------------------------------------------------
 
+-- | Obtain all the local definitions in an expression.
 locsExpr :: Expr a -> DList Loc
 locsExpr e0 = case e0 of
   Const  _ _             -> empty

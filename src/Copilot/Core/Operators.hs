@@ -5,6 +5,7 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs, Rank2Types #-}
 
+-- | Internal representation of Copilot operators.
 module Copilot.Core.Operators
   ( Op1 (..)
   , Op2 (..)
@@ -20,7 +21,7 @@ import Data.Word                (Word32)
 
 --------------------------------------------------------------------------------
 
--- Unary operators.
+-- | Unary operators.
 data Op1 a b where
   -- Boolean operators.
   Not      :: Op1 Bool Bool
@@ -49,8 +50,11 @@ data Op1 a b where
   BwNot    :: Bits     a => Type a -> Op1 a a
   -- Casting operator.
   Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
+              -- ^ Casting operator.
+
   -- Struct operator.
   GetField :: KnownSymbol s => Type a -> Type b -> (a -> Field s b) -> Op1 a b
+              -- ^ Projection of a struct field.
 
 -- | Binary operators.
 data Op2 a b c where
@@ -84,7 +88,9 @@ data Op2 a b c where
   BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
   BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
   -- Array operator.
+
   Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
+              -- ^ Array access/projection of an array element.
 
 -- | Ternary operators.
 data Op3 a b c d where

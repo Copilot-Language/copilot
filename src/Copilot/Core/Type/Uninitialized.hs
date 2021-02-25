@@ -2,7 +2,7 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
--- | Initial values for give types.
+-- | Initial values for a given type.
 
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
@@ -15,6 +15,9 @@ import Copilot.Core.Type
 
 --------------------------------------------------------------------------------
 
+-- | Initial value for a given type.
+--
+-- Does not support structs or arrays.
 uninitialized :: Type a -> a
 uninitialized t =
   case t of

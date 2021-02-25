@@ -3,6 +3,12 @@
 --------------------------------------------------------------------------------
 
 -- | Typing for Core.
+--
+-- All expressions and streams in Core are accompanied by a representation of
+-- the types of the underlying expressions used or carried by the streams.
+-- This information is needed by the compiler to generate code, since it must
+-- initialize variables and equivalent representations for those types in
+-- the target languages.
 
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE  ExistentialQuantification
@@ -46,18 +52,27 @@ import Data.Proxy   (Proxy (..))
 
 import Data.List (intercalate)
 
-
+-- | The value of that is a product or struct, defined as a constructor with
+-- several fields.
 class Struct a where
+  -- | Returns the name of struct in the target language.
   typename :: a -> String
+  -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
 
+-- | The field of a struct, together with a representation of its type.
 data Value a = forall s t. (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
 
+-- | A field in a struct. The name of the field is a literal at the type
+-- level.
 data Field (s :: Symbol) t = Field t
 
+-- | Extract the name of a field.
 fieldname :: forall s t. KnownSymbol s => Field s t -> String
 fieldname _ = symbolVal (Proxy :: Proxy s)
 
+-- | Extract the name of an accessor (a function that returns a field of a
+-- struct).
 accessorname :: forall a s t. (Struct a, KnownSymbol s) => (a -> Field s t) -> String
 accessorname _ = symbolVal (Proxy :: Proxy s)
 
@@ -69,7 +84,12 @@ instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
     fields = intercalate "," $ map showfield (toValues t)
     showfield (Value _ field) = show field
 
-
+-- | A Type representing the types of expressions or values handled by
+-- Copilot Core.
+--
+-- Note that both arrays and structs use dependently typed features. In the
+-- former, the length of the array is part of the type. In the latter, the
+-- names of the fields are part of the type.
 data Type :: * -> * where
   Bool    :: Type Bool
   Int8    :: Type Int8
@@ -89,11 +109,11 @@ data Type :: * -> * where
                          ) => Type t -> Type (Array n t)
   Struct  :: (Typed a, Struct a) => a -> Type a
 
--- Get the length of an array from its type
+-- | Return the length of an array from its type
 tylength :: forall n t. KnownNat n => Type (Array n t) -> Int
 tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
 
--- Get the total (nested) size of an array from its type
+-- | Return the total (nested) size of an array from its type
 tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
 tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
 tysize ty@(Array _            ) = tylength ty
@@ -114,6 +134,9 @@ instance EqualType Type where
 
 --------------------------------------------------------------------------------
 
+-- | A simple, monomorphic representation of types that facilitates putting
+-- variables in heterogeneous lists and environments in spite of their types
+-- being different.
 data SimpleType where
   SBool   :: SimpleType
   SInt8   :: SimpleType
@@ -129,7 +152,10 @@ data SimpleType where
   SArray  :: Type t -> SimpleType
   SStruct :: SimpleType
 
+-- | Type equality, used to help type inference.
+
 {- This instance is necessary, otherwise the type of SArray can't be inferred -}
+
 instance Eq SimpleType where
   SBool   == SBool    = True
   SInt8   == SInt8    = True
@@ -149,6 +175,8 @@ instance Eq SimpleType where
 
 --------------------------------------------------------------------------------
 
+-- | A typed expression, from which we can obtain the two type representations
+-- used by Copilot: 'Type' and 'SimpleType'.
 class (Show a, Typeable a) => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType

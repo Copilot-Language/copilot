@@ -5,6 +5,7 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
+-- | Show Copilot Core types and typed values.
 module Copilot.Core.Type.Show
   ( ShowWit (..)
   , showWit
@@ -17,10 +18,12 @@ import Copilot.Core.Type
 
 --------------------------------------------------------------------------------
 
+-- | Witness datatype for showing a value, used by 'showWithType'.
 data ShowWit a = Show a => ShowWit
 
 --------------------------------------------------------------------------------
 
+-- | Turn a type into a show witness.
 showWit :: Type a -> ShowWit a
 showWit t =
   case t of
@@ -40,6 +43,7 @@ showWit t =
 
 --------------------------------------------------------------------------------
 
+-- | Show Copilot Core type.
 showType :: Type a -> String
 showType t =
   case t of
@@ -61,10 +65,15 @@ showType t =
 
 -- Are we proving equivalence with a C backend, in which case we want to show
 -- Booleans as '0' and '1'.
+
+-- | Target language for showing a typed value. Used to adapt the
+-- representation of booleans.
 data ShowType = C | Haskell
 
 --------------------------------------------------------------------------------
 
+-- | Show a value. The representation depends on the type and the target
+-- language. Booleans are represented differently depending on the backend.
 showWithType :: ShowType -> Type a -> a -> String
 showWithType showT t x =
   case showT of
@@ -73,7 +82,7 @@ showWithType showT t x =
                    _    -> sw
     Haskell   -> case t of
                    Bool -> if x then "true" else "false"
-                   _    -> sw                   
+                   _    -> sw
   where
   sw = case showWit t of
          ShowWit -> show x

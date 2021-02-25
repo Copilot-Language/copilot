@@ -1,3 +1,6 @@
+2021-02-25
+        * Completed the documentation. (#22)
+
 2020-12-06 Ivan Perez <ivan.perez@acm.org>
         * Version bump (3.2).
         * Fixed implementation of tysize for n-dimensional arrays. (#20).
