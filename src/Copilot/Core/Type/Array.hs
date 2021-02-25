@@ -55,6 +55,7 @@ type family InnerType x where
 
 -- | Flattening or conversion of arrays to lists.
 class Flatten a b where
+  -- | Flatten an array to a list.
   flatten :: Array n a -> [b]
 
 -- | Flattening of plain arrays.
