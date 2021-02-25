@@ -317,8 +317,6 @@ ppSpecDot i spec =
 --------------------------------------------------------------------------------
 
 -- | Pretty-print a Copilot expression as a GraphViz/dot graph.
---
--- bb go through the external functions (print parameters recursively, ..., True for yes, False for no)
 prettyPrintExprDot :: Bool     -- ^ Mark externs with the prefix @externV:@.
                    -> Expr a   -- ^ The expression to pretty print.
                    -> String
