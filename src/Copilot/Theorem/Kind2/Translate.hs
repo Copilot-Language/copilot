@@ -45,8 +45,8 @@ type DepGraph = Map NodeId [NodeId]
 -- all nodes participating in a strongly connected components.
 --
 -- In the inlined style, the structure of the modular transition system is
--- discarded and the graph is first turned into a /non-modular transition
--- system/ with only one node, which can be then converted into a Kind2 file.
+-- discarded and the graph is first turned into a /non-modular transition/
+-- /system/ with only one node, which can be then converted into a Kind2 file.
 data Style = Inlined | Modular
 
 -- | Produce a Kind2 file that checks the properties specified.
