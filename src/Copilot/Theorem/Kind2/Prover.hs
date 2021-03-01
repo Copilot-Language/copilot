@@ -34,7 +34,7 @@ data Options = Options
                   --   step will perform. A value of 0 means /unlimited/.
   }
 
--- | Default options with unlinmited unrolling for base and step.
+-- | Default options with unlimited unrolling for base and step.
 instance Default Options where
   def = Options { bmcMax = 0 }
 
