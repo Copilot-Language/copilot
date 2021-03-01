@@ -53,11 +53,14 @@ data Prover = forall r . Prover
 -- | A unique property identifier
 type PropId = String
 
+-- | Reference to a property.
 data PropRef a where
   PropRef :: PropId -> PropRef a
 
+-- | Empty datatype to mark proofs of universally quantified predicates.
 data Universal
 
+-- | Empty datatype to mark proofs of existentially quantified predicates.
 data Existential
 
 -- | A proof scheme with unit result.
