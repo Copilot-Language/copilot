@@ -4,6 +4,7 @@
              RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
+-- | Operators in modular transition systems and their translation.
 module Copilot.Theorem.TransSys.Operators where
 
 import qualified Copilot.Core as C
@@ -14,6 +15,7 @@ import Copilot.Theorem.Misc.Error as Err
 
 --------------------------------------------------------------------------------
 
+-- | Unary operators.
 data Op1 a where
   Not   :: Op1 Bool
   Neg   :: Op1 a
@@ -34,6 +36,7 @@ data Op1 a where
   Atanh :: Op1 a
   Acosh :: Op1 a
 
+-- | Binary operators.
 data Op2 a b where
   Eq     :: Op2 a    Bool
   And    :: Op2 Bool Bool
@@ -93,36 +96,49 @@ instance Show (Op2 a b) where
 
 -------------------------------------------------------------------------------
 
--- | Some high level utilities to translate a Copilot operator in a standard way
--- | The unhandled operators are monomorphic, and their names are labeled so
--- | that each name corresponds to a unique uninterpreted function with a
--- | monomorphic type.
-
---------------------------------------------------------------------------------
-
+-- | Unhandled unary operator.
+--
+--   Unhandled operators are monomorphic, and their names are labeled so that
+--   each name corresponds to a unique uninterpreted function with a
+--   monomorphic type.
 data UnhandledOp1 = forall a b .
   UnhandledOp1 String (Type a) (Type b)
 
+-- | Unhandled binary operator.
+--
+--   Unhandled operators are monomorphic, and their names are labeled so that
+--   each name corresponds to a unique uninterpreted function with a
+--   monomorphic type.
 data UnhandledOp2 = forall a b c .
   UnhandledOp2 String (Type a) (Type b) (Type c)
 
+-- | Translate an Op1.
+--
+-- This function is parameterized so that it can be used to translate
+-- in different contexts and with different targets.
+--
+-- 'm' is the monad in which the computation is made
+--
+-- 'resT' is the desired return type of the expression being translated
 handleOp1 ::
-  -- 'm' is the monad in which the computation is made
-  -- 'resT' is the desired return type of the expression being translated
-  forall m expr _a _b resT. (Functor m) =>
-  -- The desired return type
-  Type resT ->
-  -- The unary operator encountered and its argument
-  (C.Op1 _a _b, C.Expr _a) ->
-  -- The monadic function to translate an expression
-  -- (for recursive calls to be mmadess)
-  (forall t t'. Type t -> C.Expr t' -> m (expr t)) ->
-  -- A function to deal with a operators not handled by copilot-kind
-  (UnhandledOp1 -> m (expr resT)) ->
-  -- The Op1 constructor of the 'expr' type
-  (forall t . Type t -> Op1 t -> expr t -> expr t) ->
+  forall m expr _a _b resT. (Functor m)
 
-  m (expr resT)
+  => Type resT
+     -- ^ The desired return type
+
+  -> (C.Op1 _a _b, C.Expr _a)
+     -- ^ The unary operator encountered and its argument
+
+  -> (forall t t'. Type t -> C.Expr t' -> m (expr t))
+     -- ^ The monadic function to translate an expression
+
+  -> (UnhandledOp1 -> m (expr resT))
+      -- ^ A function to deal with a operators not handled
+
+  -> (forall t . Type t -> Op1 t -> expr t -> expr t)
+     -- ^ The Op1 constructor of the 'expr' type
+
+  -> m (expr resT)
 
 handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
 
@@ -181,16 +197,36 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
 
 --------------------------------------------------------------------------------
 
--- See the 'handleOp1' function for documentation
+-- | Translate an Op2.
+--
+-- This function is parameterized so that it can be used to translate
+-- in different contexts and with different targets.
+--
+-- 'm' is the monad in which the computation is made
+--
+-- 'resT' is the desired return type of the expression being translated
 handleOp2 ::
-  forall m expr _a _b _c resT . (Monad m) =>
-  Type resT ->
-  (C.Op2 _a _b _c, C.Expr _a, C.Expr _b) ->
-  (forall t t'. Type t -> C.Expr t' -> m (expr t)) ->
-  (UnhandledOp2 -> m (expr resT)) ->
-  (forall t a . Type t -> Op2 a t -> expr a -> expr a -> expr t) ->
-  (expr Bool -> expr Bool) ->
-  m (expr resT)
+  forall m expr _a _b _c resT . (Monad m)
+
+  => Type resT
+     -- ^ The desired return type
+
+  -> (C.Op2 _a _b _c, C.Expr _a, C.Expr _b)
+     -- ^ The binary operator encountered and its arguments
+
+  -> (forall t t'. Type t -> C.Expr t' -> m (expr t))
+     -- ^ The monadic function to translate an expression
+
+  -> (UnhandledOp2 -> m (expr resT))
+      -- ^ A function to deal with a operators not handled
+
+  -> (forall t a . Type t -> Op2 a t -> expr a -> expr a -> expr t)
+     -- ^ The Op2 constructor of the 'expr' type
+
+  -> (expr Bool -> expr Bool)
+     -- ^ The Op1 for boolean negation
+
+  -> m (expr resT)
 
 
 handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
@@ -294,6 +330,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
 
 --------------------------------------------------------------------------------
 
+-- | Error message for unexpected behavior / internal errors.
 typeErrMsg :: String
 typeErrMsg = "Unexpected type error in 'Misc.CoreOperators'"
 

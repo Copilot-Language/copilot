@@ -3,13 +3,23 @@
 {-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs #-}
 {-# LANGUAGE Trustworthy #-}
 
+-- | Connections to various SMT solvers and theorem provers.
 module Copilot.Theorem.Prover.SMT
-  ( module Data.Default
+  (
+
+    -- * Backends
+    Backend
+  , SmtFormat
+  , SmtLib
+  , Tptp
+  , yices, dReal, altErgo, metit, z3, cvc4, mathsat
+
+    -- * Tactics
   , Options (..)
   , induction, kInduction, onlySat, onlyValidity
-  , yices, dReal, altErgo, metit, z3, cvc4, mathsat
-  , Backend, SmtFormat
-  , SmtLib, Tptp
+
+    -- * Auxiliary
+  , module Data.Default
   ) where
 
 import Copilot.Theorem.IL.Translate
@@ -42,19 +52,24 @@ import System.IO (hClose)
 
 --------------------------------------------------------------------------------
 
--- | Tactics
+-- * Tactics
 
+-- | Options to configure the provers.
 data Options = Options
   { startK :: Word32
-  -- The maximum number of steps of the k-induction algorithm the prover runs
-  -- before giving up.
-  , maxK   :: Word32
+    -- ^ Initial @k@ for the k-induction algorithm.
 
-  -- If `debug` is set to `True`, the SMTLib/TPTP queries produced by the
-  -- prover are displayed in the standard output.
-  , debug  :: Bool
+  , maxK :: Word32
+    -- ^ The maximum number of steps of the k-induction algorithm the prover runs
+    -- before giving up.
+
+  , debug :: Bool
+    -- ^ If @debug@ is set to @True@, the SMTLib/TPTP queries produced by the
+    -- prover are displayed in the standard output.
   }
 
+-- | Default 'Options' with a @0@ @k@ and a max of @10@ steps, and that produce
+-- no debugging info.
 instance Default Options where
   def = Options
     { startK = 0
@@ -62,6 +77,7 @@ instance Default Options where
     , debug  = False
     }
 
+-- | Tactic to find only a proof of satisfiability.
 onlySat :: SmtFormat a => Options -> Backend a -> Proof Existential
 onlySat opts backend = check P.Prover
   { P.proverName  = "OnlySat"
@@ -70,6 +86,7 @@ onlySat opts backend = check P.Prover
   , P.closeProver = const $ return ()
   }
 
+-- | Tactic to find only a proof of validity.
 onlyValidity :: SmtFormat a => Options -> Backend a -> Proof Universal
 onlyValidity opts backend = check P.Prover
   { P.proverName  = "OnlyValidity"
@@ -78,6 +95,9 @@ onlyValidity opts backend = check P.Prover
   , P.closeProver = const $ return ()
   }
 
+-- | Tactic to find a proof by standard 1-induction.
+--
+-- The values for @startK@ and @maxK@ in the options are ignored.
 induction :: SmtFormat a => Options -> Backend a -> Proof Universal
 induction opts backend = check P.Prover
   { P.proverName  = "Induction"
@@ -86,6 +106,7 @@ induction opts backend = check P.Prover
   , P.closeProver = const $ return ()
   }
 
+-- | Tactic to find a proof by k-induction.
 kInduction :: SmtFormat a => Options -> Backend a -> Proof Universal
 kInduction opts backend = check P.Prover
   { P.proverName  = "K-Induction"
@@ -96,8 +117,13 @@ kInduction opts backend = check P.Prover
 
 -------------------------------------------------------------------------------
 
--- | Backends
+-- * Backends
 
+-- | Backend to the Yices 2 SMT solver.
+--
+-- It enables non-linear arithmetic (@QF_NRA@), which means MCSat will be used.
+--
+-- The command @yices-smt2@ must be in the user's @PATH@.
 yices :: Backend SmtLib
 yices = Backend
   { name            = "Yices"
@@ -109,6 +135,12 @@ yices = Backend
   , interpret       = SMTLib.interpret
   }
 
+-- | Backend to the cvc4 SMT solver.
+--
+-- It enables support for uninterpreted functions and mixed nonlinear
+-- arithmetic (@QF_NIRA@).
+--
+-- The command @cvc4@ must be in the user's @PATH@.
 cvc4 :: Backend SmtLib
 cvc4 = Backend
   { name            = "CVC4"
@@ -120,6 +152,12 @@ cvc4 = Backend
   , interpret       = SMTLib.interpret
   }
 
+-- | Backend to the Alt-Ergo SMT solver.
+--
+-- It enables support for uninterpreted functions and mixed nonlinear
+-- arithmetic (@QF_NIRA@).
+--
+-- The command @alt-ergo.opt@ must be in the user's @PATH@.
 altErgo :: Backend SmtLib
 altErgo = Backend
   { name            = "Alt-Ergo"
@@ -131,6 +169,9 @@ altErgo = Backend
   , interpret       = SMTLib.interpret
   }
 
+-- | Backend to the Z3 theorem prover.
+--
+-- The command @z3@ must be in the user's @PATH@.
 z3 :: Backend SmtLib
 z3 = Backend
   { name            = "Z3"
@@ -142,6 +183,12 @@ z3 = Backend
   , interpret       = SMTLib.interpret
   }
 
+-- | Backend to the dReal SMT solver.
+--
+-- It enables non-linear arithmetic (@QF_NRA@).
+--
+-- The libraries for dReal must be installed and @perl@ must be in the user's
+-- @PATH@.
 dReal :: Backend SmtLib
 dReal = Backend
   { name            = "dReal"
@@ -153,6 +200,11 @@ dReal = Backend
   , interpret       = SMTLib.interpret
   }
 
+-- | Backend to the Mathsat SMT solver.
+--
+-- It enables non-linear arithmetic (@QF_NRA@).
+--
+-- The command @mathsat@ must be in the user's @PATH@.
 mathsat :: Backend SmtLib
 mathsat = Backend
   { name            = "MathSAT"
@@ -164,7 +216,11 @@ mathsat = Backend
   , interpret       = SMTLib.interpret
   }
 
--- The argument is the path to the "tptp" subdirectory of the metitarski
+-- | Backend to the MetiTaski theorem prover.
+--
+-- The command @metit@ must be in the user's @PATH@.
+--
+-- The argument string is the path to the @tptp@ subdirectory of the metitarski
 -- install location.
 metit :: String -> Backend Tptp
 metit installDir = Backend

@@ -3,6 +3,7 @@
 {-# LANGUAGE NamedFieldPuns, GADTs #-}
 {-# LANGUAGE Safe #-}
 
+-- | Pretty print a TransSys specification as a Kind2/Lustre specification.
 module Copilot.Theorem.TransSys.PrettyPrint ( prettyPrint ) where
 
 import Copilot.Theorem.TransSys.Spec
@@ -19,6 +20,7 @@ import Prelude hiding ((<>))
 indent     = nest 4
 emptyLine  = text ""
 
+-- | Pretty print a TransSys specification as a Kind2/Lustre specification.
 prettyPrint :: TransSys -> String
 prettyPrint = render . pSpec
 

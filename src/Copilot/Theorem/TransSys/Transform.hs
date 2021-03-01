@@ -3,6 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
+-- | Helper module to manipulate and simplify TransSys graphs.
 module Copilot.Theorem.TransSys.Transform
   ( mergeNodes
   , inline
@@ -39,6 +40,9 @@ ncNodeIdSep = "-"
 
 --------------------------------------------------------------------------------
 
+-- | Merge all the given nodes, replacing all references to the given node Ids
+-- with a reference to a fresh node id (unless the nodes given as argument
+-- contain the top node), in which case its ID is chosen instead.
 mergeNodes :: [NodeId] -> TransSys -> TransSys
 mergeNodes toMergeIds spec =
   spec
@@ -70,7 +74,9 @@ mergeNodes toMergeIds spec =
       , id <- nodeDependencies n
       , id `notElem` toMergeIds ]
 
-    -- All the work of renaming is done in the monad with the same name
+    -- All the work of renaming is done in the 'Misc.Renaming' monad. Some code
+    -- complexity has been added so the variable names remains as clear as
+    -- possible after merging two nodes.
     (importedVars, renamingF) = runRenaming $ do
       renameLocalVars toMerge
       redirectLocalImports toMerge
@@ -182,9 +188,27 @@ redirectLocalImports toMerge = do
 
 --------------------------------------------------------------------------------
 
+-- | Discard all the structure of a /modular transition system/ and turn it
+-- into a /non-modular transition system/ with only one node.
 inline :: TransSys -> TransSys
 inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
 
+-- | Remove cycles by merging nodes participating in strongly connected
+-- components.
+--
+-- The transition system obtained by the 'TransSys.Translate' module is
+-- perfectly consistent. However, it can't be directly translated into the
+-- /Kind2 native file format/. Indeed, it is natural to bind each node to a
+-- predicate but the Kind2 file format requires that each predicate only uses
+-- previously defined predicates. However, some nodes in our transition system
+-- could be mutually recursive. Therefore, the goal of 'removeCycles' is to
+-- remove such dependency cycles.
+--
+-- The function 'removeCycles' computes the strongly connected components of
+-- the dependency graph and merge each one into a single node using
+-- 'mergeNodes'. The complexity of this process is high in the worst case (the
+-- square of the total size of the system times the size of the biggest node)
+-- but good in practice as few nodes are to be merged in most practical cases.
 removeCycles :: TransSys -> TransSys
 removeCycles spec =
   topoSort $ foldr mergeComp spec (buildScc nodeId $ specNodes spec)
@@ -202,11 +226,12 @@ removeCycles spec =
 
 --------------------------------------------------------------------------------
 
--- | Completes each node of a specification with imported variables such
--- | that each node contains a copy of all its dependencies
--- | The given specification should have its node sorted by topological
--- | order.
--- | The top nodes should have all the other nodes as its dependencies
+-- | Completes each node of a specification with imported variables such that
+-- each node contains a copy of all its dependencies.
+--
+-- The given specification should have its node sorted by topological order.
+--
+-- The top nodes should have all the other nodes as its dependencies.
 
 complete :: TransSys -> TransSys
 complete spec =

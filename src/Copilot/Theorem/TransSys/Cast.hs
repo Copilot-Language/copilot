@@ -3,6 +3,9 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, GADTs #-}
 {-# LANGUAGE Safe #-}
 
+-- | Casting of values with dynamic types and translating from Copilot core
+-- types to Copilot theorem types.
+
 module Copilot.Theorem.TransSys.Cast
   ( Dyn
   , toDyn
@@ -23,8 +26,11 @@ import qualified Copilot.Theorem.TransSys.Type as K
 
 --------------------------------------------------------------------------------
 
+-- | Synonym for a dynamic type in Copilot core.
 type Dyn = Dynamic Type
 
+-- | Translation of a Copilot type into Copilot theorem's internal
+-- representation.
 castedType :: Type t -> K.U K.Type
 castedType t = case t of
   Bool    -> K.U K.Bool
@@ -39,6 +45,7 @@ castedType t = case t of
   Float   -> K.U K.Real
   Double  -> K.U K.Real
 
+-- | Cast a dynamic value to a given type.
 cast :: K.Type t -> Dyn -> t
 cast t v
   | K.Integer <- t,  Just (vi :: Integer) <- _cast v = vi
@@ -46,6 +53,8 @@ cast t v
   | K.Real    <- t,  Just (vr :: Double)  <- _cast v = vr
   | otherwise = error "Bad type cast"
 
+-- | Apply function to a corresponding type in Copilot theorem's internal
+-- representation.
 casting :: Type t -> (forall t' . K.Type t' -> a) -> a
 casting t f = case castedType t of
   K.U K.Bool    -> f K.Bool

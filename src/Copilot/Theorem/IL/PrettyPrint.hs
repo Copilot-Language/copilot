@@ -3,6 +3,8 @@
 {-# LANGUAGE NamedFieldPuns, GADTs #-}
 {-# LANGUAGE Safe #-}
 
+-- | This module implements a pretty printer for the IL format, an intermediate
+-- representation used in copilot-theorem to facilitate model checking.
 module Copilot.Theorem.IL.PrettyPrint (prettyPrint, printConstraint) where
 
 import Copilot.Theorem.IL.Spec
@@ -13,9 +15,11 @@ import Prelude hiding ((<>))
 
 --------------------------------------------------------------------------------
 
+-- | Pretty print an IL specification.
 prettyPrint :: IL -> String
 prettyPrint = render . ppSpec
 
+-- | Pretty print an IL constraint expression.
 printConstraint :: Expr -> String
 printConstraint = render . ppExpr
 

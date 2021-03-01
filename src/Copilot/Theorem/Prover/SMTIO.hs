@@ -3,9 +3,13 @@
 {-# LANGUAGE LambdaCase, NamedFieldPuns, RankNTypes, ViewPatterns #-}
 {-# LANGUAGE Safe #-}
 
+-- | Communication with SMT solvers or theorem provers.
+--
+-- A solver is a running process defined by a 'Backend'.
 module Copilot.Theorem.Prover.SMTIO
   ( Solver
-  , startNewSolver, assume, entailed, stop, declVars
+  , startNewSolver, stop
+  , assume, entailed, declVars
   ) where
 
 import Copilot.Theorem.IL
@@ -21,6 +25,7 @@ import Data.Set ((\\), fromList, Set, union, empty, elems)
 
 --------------------------------------------------------------------------------
 
+-- | A connection with a running SMT solver or theorem prover.
 data Solver a = Solver
   { solverName :: String
   , inh        :: Handle
@@ -34,6 +39,7 @@ data Solver a = Solver
 
 --------------------------------------------------------------------------------
 
+-- | Output a debugging message if debugging is enabled for the solver.
 debug :: Bool -> Solver a -> String -> IO ()
 debug printName s str = when (debugMode s) $
   putStrLn $ (if printName then "<" ++ solverName s ++ ">  " else "") ++ str
@@ -60,6 +66,10 @@ receive s = fromJust <$> runMaybeT (msum $ repeat line)
 
 --------------------------------------------------------------------------------
 
+-- | Create a new solver implemented by the backend specified.
+--
+-- The error handle from the backend handle is immediately closed/discarded,
+-- and the logic initialized as specifiied by the backend options.
 startNewSolver :: SmtFormat a => String -> Bool -> Backend a -> IO (Solver a)
 startNewSolver name dbgMode b = do
   (i, o, e, p) <- runInteractiveProcess (cmd b) (cmdOpts b) Nothing Nothing
@@ -68,6 +78,8 @@ startNewSolver name dbgMode b = do
   send s $ setLogic $ logic b
   return s
 
+-- | Stop a solver, closing all communication handles and terminating the
+-- process.
 stop :: Solver a -> IO ()
 stop s = do
   hClose $ inh s
@@ -76,6 +88,7 @@ stop s = do
 
 --------------------------------------------------------------------------------
 
+-- | Register the given expressions as assumptions or axioms with the solver.
 assume :: SmtFormat a => Solver a -> [Expr] -> IO (Solver a)
 assume s@(Solver { model }) cs = do
   let newAxioms = elems $ fromList cs \\ model
@@ -85,6 +98,8 @@ assume s@(Solver { model }) cs = do
 assume' :: SmtFormat a => Solver a -> [Expr] -> IO ()
 assume' s cs = forM_ cs (send s . assert . bsimpl)
 
+-- | Check if a series of expressions are entailed by the axioms or assumptions
+-- already registered with the solver.
 entailed :: SmtFormat a => Solver a -> [Expr] -> IO SatResult
 entailed s cs = do
   when (incremental $ backend s) $ send s push
@@ -97,6 +112,7 @@ entailed s cs = do
   when (incremental $ backend s) $ send s pop
   receive s
 
+-- | Register the given variables with the solver.
 declVars :: SmtFormat a => Solver a -> [VarDescr] -> IO (Solver a)
 declVars s@(Solver { vars }) decls = do
   let newVars = elems $ fromList decls \\ vars
