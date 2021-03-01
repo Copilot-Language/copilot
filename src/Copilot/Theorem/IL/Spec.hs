@@ -12,8 +12,8 @@
 -- n. Each sequence roughly corresponds to a stream.
 --
 -- This representation is partly inspired by the IL language described in
--- Hagen, G.E., /VERIFYING SAFETY PROPERTIES OF LUSTRE PROGRAMS: AN SMT-BASED
--- APPROACH/, 2008.
+-- Hagen, G.E., /VERIFYING SAFETY PROPERTIES OF LUSTRE PROGRAMS: AN SMT-BASED/
+-- /APPROACH/, 2008.
 
 module Copilot.Theorem.IL.Spec
   ( Type (..)
