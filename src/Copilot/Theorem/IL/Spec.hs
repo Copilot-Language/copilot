@@ -37,9 +37,12 @@ import Data.Function (on)
 
 --------------------------------------------------------------------------------
 
+-- | Identifier of a sequence.
 type SeqId    =  String
 
-data SeqIndex = Fixed Integer | Var Integer
+-- | Index within a sequence.
+data SeqIndex = Fixed Integer -- ^ An absolute index in the sequence.
+              | Var Integer   -- ^ An index relative to the current time-step.
   deriving (Eq, Ord, Show)
 
 -- | Idealized types. These differ from Copilot types in that, notionally,
@@ -64,18 +67,19 @@ instance Show Type where
 
 -- | Idealized representation of a Copilot expression.
 data Expr
-  = ConstB Bool
-  | ConstR Double
-  | ConstI Type Integer
-  | Ite    Type Expr Expr Expr
-  | Op1    Type Op1 Expr
-  | Op2    Type Op2 Expr Expr
-  | SVal   Type SeqId SeqIndex
-  | FunApp Type String [Expr]
+  = ConstB Bool                 -- ^ Constant boolean.
+  | ConstR Double               -- ^ Constant real.
+  | ConstI Type Integer         -- ^ Constant integer.
+  | Ite    Type Expr Expr Expr  -- ^ If-then-else.
+  | Op1    Type Op1 Expr        -- ^ Apply a unary operator.
+  | Op2    Type Op2 Expr Expr   -- ^ Apply a binary operator.
+  | SVal   Type SeqId SeqIndex  -- ^ Refer to a value in another sequence.
+  | FunApp Type String [Expr]   -- ^ Function application.
   deriving (Eq, Ord, Show)
 
 --------------------------------------------------------------------------------
 
+-- | A description of a variable (or function) together with its type.
 data VarDescr = VarDescr
   { varName :: String
   , varType :: Type
@@ -90,13 +94,16 @@ instance Ord VarDescr where
 
 --------------------------------------------------------------------------------
 
+-- | Identifier for a property.
 type PropId = String
 
+-- | Description of a sequence.
 data SeqDescr = SeqDescr
   { seqId    :: SeqId
   , seqType  :: Type
   }
 
+-- | An IL specification.
 data IL = IL
   { modelInit   :: [Expr]
   , modelRec    :: [Expr]
@@ -174,12 +181,15 @@ typeOf e = case e of
   SVal   t _ _   -> t
   FunApp t _ _   -> t
 
+-- | An index to the current element of a sequence.
 _n_ :: SeqIndex
 _n_ = Var 0
 
+-- | An index to a future element of a sequence.
 _n_plus :: (Integral a) => a -> SeqIndex
 _n_plus d = Var (toInteger d)
 
+-- | Evaluate an expression at specific index in the sequence.
 evalAt :: SeqIndex -> Expr -> Expr
 evalAt _ e@(ConstB _) = e
 evalAt _ e@(ConstR _) = e
