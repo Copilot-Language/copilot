@@ -3,8 +3,8 @@
 {-# LANGUAGE GADTs, LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
--- | A backend to TPTP, enabling to produce assertions and to parse the
--- results from TPTP.
+-- | A backend to <http://www.tptp.org/ TPTP>, enabling to produce assertions
+-- and to parse the results from TPTP.
 module Copilot.Theorem.Prover.TPTP (Tptp, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
