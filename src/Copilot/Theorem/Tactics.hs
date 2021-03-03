@@ -18,5 +18,6 @@ instantiate (Proof p) = Proof p
 assume :: PropRef Universal -> Proof a
 assume (PropRef p) = Proof $ tell [Assume p]
 
+-- | Assume that the current goal holds.
 admit :: Proof a
 admit = Proof $ tell [Admit]
