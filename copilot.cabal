@@ -99,7 +99,7 @@ executable wcv
     main-is:            WCV.hs
     hs-source-dirs:     Examples
     build-depends:      base        >= 4.9  && < 5
-                      , copilot     >= 3.2  && < 3.3
+                      , copilot
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
@@ -112,7 +112,7 @@ executable addmult
     main-is:            AddMult.hs
     hs-source-dirs:     Examples
     build-depends:      base        >= 4.9  && < 5
-                      , copilot     >= 3.2  && < 3.3
+                      , copilot
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
@@ -125,7 +125,7 @@ executable array
     main-is:            Array.hs
     hs-source-dirs:     Examples
     build-depends:      base        >= 4.9  && < 5
-                      , copilot     >= 3.2  && < 3.3
+                      , copilot
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
@@ -136,7 +136,7 @@ executable cast
     main-is:            Cast.hs
     hs-source-dirs:     Examples
     build-depends:      base        >= 4.9  && < 5
-                      , copilot     >= 3.2  && < 3.3
+                      , copilot
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
@@ -147,8 +147,8 @@ executable clock
     main-is:            Clock.hs
     hs-source-dirs:     Examples
     build-depends:      base              >= 4.9  && < 5
-                      , copilot           >= 3.2  && < 3.3
-                      , copilot-libraries >= 3.2  && < 3.3
+                      , copilot
+                      , copilot-libraries
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
@@ -161,7 +161,7 @@ executable counter
     main-is:            Counter.hs
     hs-source-dirs:     Examples
     build-depends:      base              >= 4.9  && < 5
-                      , copilot           >= 3.2  && < 3.3
+                      , copilot
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
@@ -172,7 +172,7 @@ executable engine
     main-is:            Engine.hs
     hs-source-dirs:     Examples
     build-depends:      base              >= 4.9  && < 5
-                      , copilot           >= 3.2  && < 3.3
+                      , copilot
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
@@ -183,8 +183,8 @@ executable heater
     main-is:            Heater.hs
     hs-source-dirs:     Examples
     build-depends:      base              >= 4.9  && < 5
-                      , copilot           >= 3.2  && < 3.3
-                      , copilot-c99       >= 3.2  && < 3.3
+                      , copilot
+                      , copilot-c99
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
@@ -195,7 +195,7 @@ executable voting
     main-is:            Voting.hs
     hs-source-dirs:     Examples
     build-depends:      base              >= 4.9  && < 5
-                      , copilot           >= 3.2  && < 3.3
+                      , copilot
     default-language:   Haskell2010
     if flag(examples)
       buildable: True
