@@ -35,6 +35,11 @@ source-repository head
     type:       git
     location:   https://github.com/Copilot-Language/Copilot.git
 
+flag examples
+    description: Enable examples
+    default: False
+    manual: True
+
 library
     hs-source-dirs: src
     default-language:  Haskell2010
@@ -64,6 +69,10 @@ executable what4-propositional
                           , copilot
                           , copilot-theorem
     default-language:       Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable what4-arithmetic
     main-is:                Arithmetic.hs
@@ -72,6 +81,10 @@ executable what4-arithmetic
                           , copilot
                           , copilot-theorem
     default-language:       Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable what4-structs
     main-is:                Structs.hs
@@ -80,6 +93,10 @@ executable what4-structs
                           , copilot
                           , copilot-theorem
     default-language:       Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable wcv
     main-is:            WCV.hs
@@ -89,6 +106,10 @@ executable wcv
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable addmult
     main-is:            AddMult.hs
@@ -98,6 +119,10 @@ executable addmult
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable array
     main-is:            Array.hs
@@ -105,6 +130,10 @@ executable array
     build-depends:      base        >= 4.9  && < 5
                       , copilot     >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable cast
     main-is:            Cast.hs
@@ -112,6 +141,10 @@ executable cast
     build-depends:      base        >= 4.9  && < 5
                       , copilot     >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable clock
     main-is:            Clock.hs
@@ -122,6 +155,10 @@ executable clock
                       , copilot-core
                       , copilot-theorem
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable counter
     main-is:            Counter.hs
@@ -129,6 +166,10 @@ executable counter
     build-depends:      base              >= 4.9  && < 5
                       , copilot           >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable engine
     main-is:            Engine.hs
@@ -136,6 +177,10 @@ executable engine
     build-depends:      base              >= 4.9  && < 5
                       , copilot           >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable heater
     main-is:            Heater.hs
@@ -144,6 +189,10 @@ executable heater
                       , copilot           >= 3.2  && < 3.3
                       , copilot-c99       >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
 
 executable voting
     main-is:            Voting.hs
@@ -151,3 +200,7 @@ executable voting
     build-depends:      base              >= 4.9  && < 5
                       , copilot           >= 3.2  && < 3.3
     default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
