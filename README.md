@@ -8,7 +8,7 @@ user to write programs in a simple but powerful way using a stream-based
 approach.
 
 Programs can be interpreted for testing, or translated into C99 code to be
-incorporated in a project, or as a standalone application. The C99 backend
+incorporated in a project or as a standalone application. The C99 backend
 output is constant in memory and time, making it suitable for systems with hard
 realtime requirements.
 
