@@ -1,4 +1,5 @@
 2021-03-05
+        * Remove version bounds for copilot package in examples. (#86)
         * Remove unnecessary duplicates from field in cabal file. (#87)
         * Added how to run examples to README. (#48)
         * Added flag to prevent examples from being built by default. (#48)
