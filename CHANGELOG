@@ -1,4 +1,6 @@
 2021-03-05
+        * Added how to run examples to README. (#48)
+        * Added flag to prevent examples from being built by default. (#48)
         * Fix typo in README. (#49)
         * Completed the documentation. (#67)
         * Merged and updated examples from
