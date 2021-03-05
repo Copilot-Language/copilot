@@ -74,8 +74,8 @@ have trouble building/installing.
 
 ## Example
 Here follows a simple example of a heating system. Other examples can be found
-in the [Examples
-directory](https://github.com/Copilot-Language/Copilot/tree/master/Examples)
+in the [examples
+directory](https://github.com/Copilot-Language/Copilot/tree/master/examples)
 of the main repository.
 
 ```haskell
@@ -111,7 +111,7 @@ spec = do
 main = reify spec >>= compile "heater"
 ```
 
-The examples located in the `Examples/` directory can be run from the root of
+The examples located in the `examples/` directory can be run from the root of
 the project. Each example has a name. As a rule of thumb, the examples are
 named after the filename (without extension) in lowercase letters, and
 directory seperators replaced with a '-'. For example:
