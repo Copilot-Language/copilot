@@ -26,9 +26,6 @@ description:
 
 extra-source-files:
   README.md
-  Examples/Heater.hs
-  Examples/Array.hs
-  Examples/Counter.hs
   CHANGELOG
 
 source-repository head
