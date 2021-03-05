@@ -61,7 +61,7 @@ library
 
 executable what4-propositional
     main-is:                Propositional.hs
-    hs-source-dirs:         Examples/what4
+    hs-source-dirs:         examples/what4
     build-depends:          base
                           , copilot
                           , copilot-theorem
@@ -73,7 +73,7 @@ executable what4-propositional
 
 executable what4-arithmetic
     main-is:                Arithmetic.hs
-    hs-source-dirs:         Examples/what4
+    hs-source-dirs:         examples/what4
     build-depends:          base
                           , copilot
                           , copilot-theorem
@@ -85,7 +85,7 @@ executable what4-arithmetic
 
 executable what4-structs
     main-is:                Structs.hs
-    hs-source-dirs:         Examples/what4
+    hs-source-dirs:         examples/what4
     build-depends:          base
                           , copilot
                           , copilot-theorem
@@ -97,7 +97,7 @@ executable what4-structs
 
 executable wcv
     main-is:            WCV.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base        >= 4.9  && < 5
                       , copilot
                       , copilot-core
@@ -110,7 +110,7 @@ executable wcv
 
 executable addmult
     main-is:            AddMult.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base        >= 4.9  && < 5
                       , copilot
                       , copilot-core
@@ -123,7 +123,7 @@ executable addmult
 
 executable array
     main-is:            Array.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base        >= 4.9  && < 5
                       , copilot
     default-language:   Haskell2010
@@ -134,7 +134,7 @@ executable array
 
 executable cast
     main-is:            Cast.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base        >= 4.9  && < 5
                       , copilot
     default-language:   Haskell2010
@@ -145,7 +145,7 @@ executable cast
 
 executable clock
     main-is:            Clock.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base              >= 4.9  && < 5
                       , copilot
                       , copilot-libraries
@@ -159,7 +159,7 @@ executable clock
 
 executable counter
     main-is:            Counter.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base              >= 4.9  && < 5
                       , copilot
     default-language:   Haskell2010
@@ -170,7 +170,7 @@ executable counter
 
 executable engine
     main-is:            Engine.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base              >= 4.9  && < 5
                       , copilot
     default-language:   Haskell2010
@@ -181,7 +181,7 @@ executable engine
 
 executable heater
     main-is:            Heater.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base              >= 4.9  && < 5
                       , copilot
                       , copilot-c99
@@ -193,7 +193,7 @@ executable heater
 
 executable voting
     main-is:            Voting.hs
-    hs-source-dirs:     Examples
+    hs-source-dirs:     examples
     build-depends:      base              >= 4.9  && < 5
                       , copilot
     default-language:   Haskell2010
