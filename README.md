@@ -117,9 +117,9 @@ named after the filename (without extension) in lowercase letters, and
 directory seperators replaced with a '-'. For example:
 
 ```sh
-$ cabal run addmult -f examples
-$ cabal run counter -f examples
-$ cabal run what4-arithmetic -f examples
+cabal run addmult -f examples
+cabal run counter -f examples
+cabal run what4-arithmetic -f examples
 ```
 
 ## Contributions
