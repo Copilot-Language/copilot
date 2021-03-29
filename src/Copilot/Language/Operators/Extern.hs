@@ -26,8 +26,6 @@ import Copilot.Language.Stream
 import Data.Word
 import Data.Int
 
-type Size = Int
-
 --------------------------------------------------------------------------------
 
 -- | Create a stream populated by an external global variable.
