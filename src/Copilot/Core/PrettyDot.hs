@@ -23,13 +23,6 @@ import Text.Printf
 mkExtTmpVar :: String -> String
 mkExtTmpVar = ("ext_" ++)
 
-mkExtTmpTag :: String -> Maybe Tag -> String
-mkExtTmpTag name tag = "ext_" ++ name ++ "_" ++ show (tagExtract tag)
-
-tagExtract :: Maybe Tag -> Tag
-tagExtract Nothing = impossible "tagExtract" "copilot-sbv"
-tagExtract (Just tag) = tag
-
 --------------------------------------------------------------------------------
 
 -- | Pretty print a Copilot Expression as a GraphViz graph part.
