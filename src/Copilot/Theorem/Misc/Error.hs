@@ -7,7 +7,6 @@ module Copilot.Theorem.Misc.Error
   ( badUse
   , impossible
   , impossible_
-  , notHandled
   , fatal
   ) where
 
@@ -31,9 +30,6 @@ impossible s = error $ errorHeader ++ "Unexpected internal error : " ++ s
 -- | Report an error due to a bug in Copilot.
 impossible_ :: a
 impossible_ = error $ errorHeader ++ "Unexpected internal error"
-
-notHandled :: String -> a
-notHandled s = error $ errorHeader ++ "Not handled : " ++ s
 
 -- | Report an unrecoverable error (e.g., incorrect format).
 fatal :: String -> a
