@@ -45,6 +45,7 @@ extern = Extern
 -- | Deprecated.
 funArg :: Typed a => Stream a -> Arg
 funArg = Arg
+{-# DEPRECATED funArg "funArg is deprecated" #-}
 
 --------------------------------------------------------------------------------
 
