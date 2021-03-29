@@ -6,7 +6,10 @@
 
 {-# LANGUAGE Safe #-}
 
-module Copilot.Core.MakeTags (makeTags) where
+module Copilot.Core.MakeTags
+    {-# DEPRECATED "This module is deprecated in Copilot 3.3." #-}
+    (makeTags)
+  where
 
 import Copilot.Core.Expr
 import Copilot.Core.Spec
