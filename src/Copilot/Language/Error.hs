@@ -14,9 +14,11 @@ impossible :: String -- ^ Name of the function in which the error was detected.
            -> String -- ^ Name of the package in which the function is located.
            -> a
 impossible function package =
-  error $ "Impossible error in function " ++ function ++ ", in package " ++
-    package ++ ".  Please email Lee Pike at <lee pike @ gmail . com> " ++
-    "(remove spaces) or file a bug report on github.com."
+  error $ "Impossible error in function "
+    ++ function ++ ", in package " ++ package
+    ++ ". Please file an issue at "
+    ++ "https://github.com/Copilot-Language/copilot/issues"
+    ++ "or email the maintainers at <dev@dedden.net>"
 
 -- | Report an error due to an error detected by Copilot (e.g., user error).
 badUsage :: String -- ^ Description of the error.
