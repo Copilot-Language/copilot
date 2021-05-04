@@ -1,0 +1,116 @@
+cabal-version             : >= 1.10
+name                      : copilot-theorem
+synopsis: k-induction for Copilot.
+description:
+
+  Some tools to prove properties on Copilot programs with k-induction model
+  checking.
+  .
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.
+  .
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
+
+
+version                   : 3.2.1
+license                   : BSD3
+license-file              : LICENSE
+maintainer                : jonathan.laurent@ens.fr
+homepage                  : https://copilot-language.github.io
+bug-reports               : https://github.com/Copilot-Language/copilot-theorem/issues
+stability                 : Experimental
+category                  : Language, Embedded
+build-type                : Simple
+extra-source-files        : README.md
+                          , CHANGELOG
+
+author                    : Jonathan Laurent
+
+library
+  default-language        : Haskell2010
+  hs-source-dirs          : src
+
+  ghc-options             : -Wall -fwarn-tabs
+                            -fno-warn-name-shadowing
+                            -fno-warn-unused-binds
+                            -fno-warn-missing-signatures
+                            -fcontext-stack=100
+
+                            -- -fpackage-trust
+                            -- -trust=array
+                            -- -trust=base
+                            -- -trust=containers
+                            -- -- -trust=copilot-core
+                            -- -trust=directory
+                            -- -- -trust=exceptions
+                            -- -trust=process
+                            -- -- -trust=random
+                            -- -trust=unix
+                            -- -- -trust=parsec
+                            -- -trust=bytestring
+                            -- -- -trust=text
+
+  build-depends           : base          >= 4.9 && < 5
+                          , ansi-terminal >= 0.8 && < 0.10
+                          , bimap         >= 0.3 && < 0.4
+                          , bv-sized      >= 1.0.2 && < 1.1
+                          , containers    >= 0.4 && < 0.7
+                          , data-default  >= 0.7 && < 0.8
+                          , directory     >= 1.3 && < 1.4
+                          , filepath      >= 1.4.2 && < 1.5
+                          , mtl           >= 2.0 && < 2.3
+                          , panic         >= 0.4.0 && < 0.5
+                          , parsec        >= 2.0 && < 3.2
+                          , parameterized-utils >= 2.1.1 && < 2.2
+                          , pretty        >= 1.0 && < 1.2
+                          , process       >= 1.6 && < 1.7
+                          , random        >= 1.1 && < 1.2
+                          , transformers  >= 0.5 && < 0.6
+                          , xml           >= 1.3 && < 1.4
+                          , what4         >= 1.0 && < 1.1
+
+                          , copilot-core  >= 3.2.1 && < 3.3
+
+  exposed-modules         : Copilot.Theorem
+                          , Copilot.Theorem.Prove
+                          , Copilot.Theorem.Kind2
+                          , Copilot.Theorem.Prover.SMT
+                          -- , Copilot.Theorem.Prover.Z3
+                          , Copilot.Theorem.Kind2.Prover
+                          , Copilot.Theorem.What4
+
+  other-modules           : Copilot.Theorem.Tactics
+
+                          , Copilot.Theorem.IL
+                          , Copilot.Theorem.IL.PrettyPrint
+                          , Copilot.Theorem.IL.Spec
+                          , Copilot.Theorem.IL.Translate
+                          , Copilot.Theorem.IL.Transform
+
+                          , Copilot.Theorem.Kind2.AST
+                          , Copilot.Theorem.Kind2.Output
+                          , Copilot.Theorem.Kind2.PrettyPrint
+                          , Copilot.Theorem.Kind2.Translate
+
+                          , Copilot.Theorem.Prover.SMTIO
+                          , Copilot.Theorem.Prover.SMTLib
+                          , Copilot.Theorem.Prover.TPTP
+                          , Copilot.Theorem.Prover.Backend
+
+                          , Copilot.Theorem.Misc.Error
+                          , Copilot.Theorem.Misc.SExpr
+                          , Copilot.Theorem.Misc.Utils
+
+                          , Copilot.Theorem.TransSys
+                          , Copilot.Theorem.TransSys.Cast
+                          , Copilot.Theorem.TransSys.PrettyPrint
+                          , Copilot.Theorem.TransSys.Renaming
+                          , Copilot.Theorem.TransSys.Spec
+                          , Copilot.Theorem.TransSys.Transform
+                          , Copilot.Theorem.TransSys.Translate
+                          , Copilot.Theorem.TransSys.Invariants
+                          , Copilot.Theorem.TransSys.Operators
+                          , Copilot.Theorem.TransSys.Type
+
