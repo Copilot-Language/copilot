@@ -13,10 +13,6 @@
 [submodule "lib/copilot-discussion"]
 	path = lib/copilot-discussion
 	url = https://github.com/Copilot-Language/copilot-discussion.git
-[submodule "lib/copilot-theorem"]
-	path = lib/copilot-theorem
-	url = https://github.com/Copilot-Language/copilot-theorem
-	branch = master
 [submodule "lib/copilot-c99"]
 	path = lib/copilot-c99
 	url = https://github.com/Copilot-Language/copilot-c99.git
