@@ -239,7 +239,7 @@ data CopilotWhat4 = CopilotWhat4
 
 instance Panic.PanicComponent CopilotWhat4 where
   panicComponentName _ = "Copilot/What4 translation"
-  panicComponentIssues _ = "https://github.com/Copilot-Language/copilot-theorem/issues"
+  panicComponentIssues _ = "https://github.com/Copilot-Language/copilot/issues"
 
   {-# NOINLINE Panic.panicComponentRevision #-}
   panicComponentRevision = $(Panic.useGitRevision)

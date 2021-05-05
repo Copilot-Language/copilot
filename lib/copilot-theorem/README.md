@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Copilot-Language/copilot-theorem.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-theorem)
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot)
 
 # Copilot Theorem
 
