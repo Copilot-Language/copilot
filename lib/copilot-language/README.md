@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Copilot-Language/copilot-language.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-core)
+[![Build Status](https://travis-ci.org/Copilot-Language/copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-core)
 
 # Copilot: a stream DSL
 Copilot-language contains the actual embedded domain specific language that
@@ -34,4 +34,4 @@ the Copilot website:
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/copilot-language/master/LICENSE).
+[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/LICENSE).
