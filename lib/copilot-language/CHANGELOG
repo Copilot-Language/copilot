@@ -1,14 +1,14 @@
 2021-03-07
-        * Version bump (3.2.1). (#20)
-        * Completed the documentation. (#14)
+        * Version bump (3.2.1). (#106)
+        * Completed the documentation. (#112)
 
 2020-05-07
         * Version bump (3.2).
-        * Fixed the reverse order of triggers (#11).
+        * Fixed the reverse order of triggers (#114).
         * Update description, bug-reports, changelog fields in cabal file
-          (#8).
-        * Bump ghc-prim version bounds (#12).
+          (#116).
+        * Bump ghc-prim version bounds (#122).
 
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
         * Version bump (3.1).
-        * Remove ExternFun (#6).
+        * Remove ExternFun (#118).
