@@ -1,0 +1,16 @@
+2021-03-05
+        * Version bump (3.2.1). (#136)
+        * Completed the documentation. (#145)
+
+2020-12-06 Ivan Perez <ivan.perez@acm.org>
+        * Version bump (3.2).
+        * Fixed implementation of tysize for n-dimensional arrays. (#147).
+        * Removed sorting of interpreter output (#148).
+        * Minor documentation fixes (#149, #151).
+        * Credits: @fdedden.
+
+2019-11-22 Ivan Perez <ivan.perez@nianet.org>
+        * Version bump (3.1).
+        * Eliminate random modules and generators (#157).
+        * Updated contact information for 'impossible' error (#154).
+        * Implement missing pretty printer for Index operator (#155).
