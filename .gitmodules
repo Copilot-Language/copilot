@@ -1,7 +1,3 @@
-[submodule "lib/copilot-core"]
-	path = lib/copilot-core
-	url = https://github.com/Copilot-Language/copilot-core.git
-	branch = master
 [submodule "lib/copilot-discussion"]
 	path = lib/copilot-discussion
 	url = https://github.com/Copilot-Language/copilot-discussion.git
