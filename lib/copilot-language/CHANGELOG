@@ -1,5 +1,8 @@
 2021-05-07
         * Version bump (3.3). (#217)
+        * Remove unused type. (#110)
+        * Deprecate funArg. (#109)
+        * Update contact details in error message. (#108)
 
 2021-03-07
         * Version bump (3.2.1). (#106)
