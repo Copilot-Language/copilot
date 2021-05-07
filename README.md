@@ -50,7 +50,6 @@ Copilot:
   ```bash
   git clone https://github.com/Copilot-Language/copilot.git
   cd copilot
-  git submodule update --init --remote
   ```
 
   Compiling can either be done in a Nix-style build, or a traditional one:
