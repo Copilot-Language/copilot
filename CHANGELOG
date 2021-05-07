@@ -1,6 +1,7 @@
 2021-05-07
         * Document installation process without git submodules. (#214)
         * Bump upper constraint on what4 version number. (#90)
+        * Remove support for GHC <= 8.4 from CI. (#89)
 
 2021-03-07
         * Version bump (3.2.1). (#85)
