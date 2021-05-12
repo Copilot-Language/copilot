@@ -5,6 +5,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -90,7 +91,10 @@ import Data.Parameterized.Some
 import Data.Parameterized.SymbolRepr
 import qualified Data.Parameterized.Vector as V
 import Data.Word
-import GHC.Float (castWord32ToFloat, castWord64ToDouble)
+import LibBF ( bfToDouble
+             , bfFromDouble
+             , bfPosZero
+             , pattern NearEven )
 import GHC.TypeNats (KnownNat)
 import qualified Panic as Panic
 
@@ -215,11 +219,11 @@ data TransState t = TransState {
   -- stateful value.
   streams :: Map.Map CE.Id CS.Stream,
   -- | Binary power operator, represented as an uninterpreted function.
-  pow :: WB.ExprSymFn t (WB.Expr t)
+  pow :: WB.ExprSymFn t
          (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
          WT.BaseRealType,
   -- | Binary logarithm operator, represented as an uninterpreted function.
-  logb :: WB.ExprSymFn t (WB.Expr t)
+  logb :: WB.ExprSymFn t
           (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
           WT.BaseRealType
   }
@@ -295,9 +299,9 @@ valFromExpr ge xe = case xe of
   XWord32 e -> Some . CopilotValue CT.Word32 . fromBV <$> WG.groundEval ge e
   XWord64 e -> Some . CopilotValue CT.Word64 . fromBV <$> WG.groundEval ge e
   XFloat e ->
-    Some . CopilotValue CT.Float . castWord32ToFloat . fromBV <$> WG.groundEval ge e
+    Some . CopilotValue CT.Float . realToFrac . fst . bfToDouble NearEven <$> WG.groundEval ge e
   XDouble e ->
-    Some . CopilotValue CT.Double . castWord64ToDouble . fromBV <$> WG.groundEval ge e
+    Some . CopilotValue CT.Double . fst . bfToDouble NearEven <$> WG.groundEval ge e
   _ -> error "valFromExpr unhandled case"
   where fromBV :: forall a w . Num a => BV.BV w -> a
         fromBV = fromInteger . BV.asUnsigned
@@ -351,8 +355,8 @@ translateConstExpr sym tp a = case tp of
   CT.Word16 -> XWord16 <$> WI.bvLit sym knownNat (BV.word16 a)
   CT.Word32 -> XWord32 <$> WI.bvLit sym knownNat (BV.word32 a)
   CT.Word64 -> XWord64 <$> WI.bvLit sym knownNat (BV.word64 a)
-  CT.Float -> XFloat <$> WI.floatLit sym knownRepr (toRational a)
-  CT.Double -> XDouble <$> WI.floatLit sym knownRepr (toRational a)
+  CT.Float -> XFloat <$> WI.floatLit sym knownRepr (bfFromDouble (realToFrac a))
+  CT.Double -> XDouble <$> WI.floatLit sym knownRepr (bfFromDouble a)
   CT.Array tp -> do
     elts <- traverse (translateConstExpr sym tp) (CT.arrayelems a)
     Just (Some n) <- return $ someNat (length elts)
@@ -560,7 +564,7 @@ translateOp1 sym op xe = case (op, xe) of
                        neg_e <- WI.bvSub sym zero e
                        WI.bvIte sym e_neg neg_e e
           fpAbs :: FPOp1 fpp t
-          fpAbs e = do zero <- WI.floatLit sym knownRepr 0
+          fpAbs e = do zero <- WI.floatLit sym knownRepr bfPosZero
                        e_neg <- WI.floatLt sym e zero
                        neg_e <- WI.floatSub sym fpRM zero e
                        WI.floatIte sym e_neg neg_e e
@@ -574,16 +578,16 @@ translateOp1 sym op xe = case (op, xe) of
                         t <- WI.bvIte sym e_neg neg_one pos_one
                         WI.bvIte sym e_zero zero t
           fpSign :: FPOp1 fpp t
-          fpSign e = do zero <- WI.floatLit sym knownRepr 0
-                        neg_one <- WI.floatLit sym knownRepr (-1)
-                        pos_one <- WI.floatLit sym knownRepr 1
+          fpSign e = do zero <- WI.floatLit sym knownRepr bfPosZero
+                        neg_one <- WI.floatLit sym knownRepr (bfFromDouble (-1.0))
+                        pos_one <- WI.floatLit sym knownRepr (bfFromDouble 1.0)
                         e_zero <- WI.floatEq sym e zero
                         e_neg <- WI.floatLt sym e zero
                         t <- WI.floatIte sym e_neg neg_one pos_one
                         WI.floatIte sym e_zero zero t
   (CE.Recip _, xe) -> fpOp recip xe
     where recip :: FPOp1 fpp t
-          recip e = do one <- WI.floatLit sym knownRepr 1
+          recip e = do one <- WI.floatLit sym knownRepr (bfFromDouble 1.0)
                        WI.floatDiv sym fpRM one e
   (CE.Exp _, xe) -> realOp (WI.realExp sym) xe
   (CE.Sqrt _, xe) -> fpOp (WI.floatSqrt sym fpRM) xe
@@ -708,11 +712,11 @@ type FPCmp2 fpp t = KnownRepr WT.FloatPrecisionRepr fpp => WB.Expr t (WT.BaseFlo
 
 translateOp2 :: forall t st fs a b c .
                 WB.ExprBuilder t st fs
-             -> (WB.ExprSymFn t (WB.Expr t)
+             -> (WB.ExprSymFn t
                  (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
                  WT.BaseRealType)
              -- ^ Pow function
-             -> (WB.ExprSymFn t (WB.Expr t)
+             -> (WB.ExprSymFn t
                  (EmptyCtx ::> WT.BaseRealType ::> WT.BaseRealType)
                  WT.BaseRealType)
              -- ^ Logb function
