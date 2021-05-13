@@ -5,6 +5,9 @@
 # lines listings versions you don't need/want testing for.
 env:
   - CABALVER=2.4 GHCVER=8.6.5
+  - CABALVER=3.2 GHCVER=8.8.4
+  - CABALVER=3.2 GHCVER=8.10.4
+  - CABALVER=3.4 GHCVER=9.0.1
 # - CABALVER=head GHCVER=head   # see section about GHC HEAD snapshots
 
 # Note: the distinction between `before_install` and `install` is not important.
