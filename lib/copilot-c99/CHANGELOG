@@ -1,5 +1,7 @@
 2021-05-07
+        * Version bump (3.3). (#217)
         * Fix URL in bug-reports field in cabal file. (#215)
+        * Remove unaccessible code. (#169)
 
 2021-03-07
         * Version bump (3.2.1). (#167)

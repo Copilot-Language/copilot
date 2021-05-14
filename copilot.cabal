@@ -1,5 +1,5 @@
 name:                copilot
-version:             3.2.1
+version:             3.3
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
@@ -50,11 +50,11 @@ library
                      , directory            >= 1.3  && < 1.4
                      , filepath             >= 1.4  && < 1.5
 
-                     , copilot-core         >= 3.2.1  && < 3.3
-                     , copilot-theorem      >= 3.2.1  && < 3.3
-                     , copilot-language     >= 3.2.1  && < 3.3
-                     , copilot-libraries    >= 3.2.1  && < 3.3
-                     , copilot-c99          >= 3.2.1  && < 3.3
+                     , copilot-core         >= 3.3  && < 3.4
+                     , copilot-theorem      >= 3.3  && < 3.4
+                     , copilot-language     >= 3.3  && < 3.4
+                     , copilot-libraries    >= 3.3  && < 3.4
+                     , copilot-c99          >= 3.3  && < 3.4
 
 
     exposed-modules: Language.Copilot, Language.Copilot.Main
