@@ -6,6 +6,7 @@
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Type.Eq
+  {-# DEPRECATED "This module is deprecated." #-}
   ( EqWit (..)
   , eqWit
   , UVal (..)
@@ -47,18 +48,18 @@ data UVal = forall a. UVal
 
 instance Eq UVal where
   (==) UVal { uType = t1
-            , uVal = a } 
+            , uVal = a }
        UVal { uType = t2
             , uVal = b }
     = case eqWit t1 of
-        EqWit -> 
+        EqWit ->
           case eqWit t2 of
-            EqWit -> 
+            EqWit ->
               let dyn1 = toDyn t1 a in
               case fromDyn t2 dyn1 of
                 Nothing -> False
-                Just x  -> 
-                  case t1 of 
+                Just x  ->
+                  case t1 of
                     -- Hacks for QuickChecking between C and Haskell
                     Float  -> case t2 of
                                 Float -> approx floatErr x b
@@ -66,10 +67,10 @@ instance Eq UVal where
                                                     "copilot-core"
                     Double -> case t2 of
                                 Double -> approx doubleErr x b
-                                _      -> impossible "instance Eq UVal" 
+                                _      -> impossible "instance Eq UVal"
                                                      "copilot-core"
                     _      -> x == b
-    where 
+    where
     approx :: (Num a, Ord a) => a -> a -> a -> Bool
     approx err x y = x - y < err && y - x < err
     floatErr  = 0.0001 :: Float
