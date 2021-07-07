@@ -1,3 +1,6 @@
+2021-07-07
+        * Remove broken test. (#232)
+
 2021-05-07
         * Version bump (3.3). (#217)
         * Fix URL in bug-reports field in cabal file. (#215)
