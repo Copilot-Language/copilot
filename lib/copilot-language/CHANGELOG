@@ -1,3 +1,6 @@
+2021-07-07
+        * Remove ghc-prim dependency from copilot-language. (#220)
+
 2021-05-07
         * Version bump (3.3). (#217)
         * Remove unused type. (#110)

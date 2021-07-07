@@ -38,7 +38,6 @@ library
                , containers      >= 0.4 && < 0.7
                , data-reify      >= 0.6 && < 0.7
                , mtl             >= 2.0 && < 3
-               , ghc-prim        >= 0.3 && < 0.7
 
                , copilot-core    >= 3.3 && < 3.4
                , copilot-theorem >= 3.3 && < 3.4
