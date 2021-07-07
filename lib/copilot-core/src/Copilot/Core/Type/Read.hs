@@ -6,6 +6,7 @@
 {-# LANGUAGE ExistentialQuantification, GADTs #-}
 
 module Copilot.Core.Type.Read
+  {-# DEPRECATED "This module is deprecated." #-}
   ( ReadWit (..)
   , readWit
   , readWithType
