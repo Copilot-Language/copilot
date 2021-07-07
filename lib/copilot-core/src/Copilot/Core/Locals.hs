@@ -13,6 +13,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Copilot.Core.Locals
+  {-# DEPRECATED "This module is deprecated." #-}
   ( Loc (..)
   , locals
   ) where

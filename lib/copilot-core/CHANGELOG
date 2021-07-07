@@ -1,4 +1,5 @@
 2021-07-07
+        * Deprecated `Copilot.Core.Locals`. (#141)
         * Deprecated `Copilot.Core.Type.Read` module. (#144)
         * Deprecated `showWit`. (#140)
 
