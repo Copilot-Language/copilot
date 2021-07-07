@@ -3,6 +3,7 @@
         * Deprecated `Copilot.Core.Type.Read` module. (#144)
         * Deprecated `showWit`. (#140)
         * Deprecated `Copilot.Core.Type.Eq`. (#143)
+        * Remove unused module `Copilot.Core.StructMarshal`. (#139)
 
 2021-05-07
         * Version bump (3.3). (#217)
