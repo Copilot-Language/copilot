@@ -7,7 +7,6 @@
 module Copilot.Theorem.TransSys.Type
   ( Type (..)
   , U (..)
-  , U2 (..)
   ) where
 
 import Copilot.Core.Type.Equality
@@ -35,7 +34,6 @@ instance EqualType Type where
 --
 -- For instance, 'U Expr' is the type of an expression of unknown type
 data U f = forall t . U (f t)
-data U2 f g = forall t . U2 (f t) (g t)
 
 --------------------------------------------------------------------------------
 
