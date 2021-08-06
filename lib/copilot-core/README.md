@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Copilot-Language/copilot-core.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-core)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot-core.svg?branch=master)](https://travis-ci.com/Copilot-Language/copilot-core)
 
 # Copilot: a stream DSL
 The core language, which efficiently represents Copilot expressions.  The core
