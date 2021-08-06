@@ -57,6 +57,7 @@ data Arg where
   Arg :: Typed a => Stream a -> Arg
 
 data StructArg = StructArg { name_ :: String, arg' :: Arg }
+{-# DEPRECATED StructArg "StructArg is deprecated" #-}
 
 --------------------------------------------------------------------------------
 
