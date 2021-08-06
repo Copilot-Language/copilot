@@ -24,7 +24,7 @@ gendecln name ty = C.FunDecln Nothing cty name [] where
 genfun :: String -> Expr a -> Type a -> C.FunDef
 genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr] where
   cty = C.decay $ transtype ty
-  (cexpr, (cvars, _)) = runState (transexpr expr) mempty
+  (cexpr, cvars) = runState (transexpr expr) mempty
 
 -- | Make a extern declaration of a variable.
 mkextdecln :: External -> C.Decln
