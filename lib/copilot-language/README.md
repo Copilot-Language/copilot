@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Copilot-Language/copilot.svg?branch=master)](https://travis-ci.org/Copilot-Language/copilot-core)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://travis-ci.com/Copilot-Language/copilot-core)
 
 # Copilot: a stream DSL
 Copilot-language contains the actual embedded domain specific language that
