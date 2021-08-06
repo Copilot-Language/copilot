@@ -36,9 +36,7 @@ module Copilot.Language.Spec
 import Prelude hiding (not)
 
 import Control.Monad.Writer
---import Data.Maybe (fromMaybe)
 
---import Copilot.Core (Typed, Struct)
 import Copilot.Core (Typed)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
@@ -229,22 +227,4 @@ theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
 arg :: Typed a => Stream a -> Arg
 arg = Arg
 
---------------------------------------------------------------------------------
-
-{-
--- | Struct operator.
-
--- Look up the given struct x, and return field y (which should be a stream?)
-(#) :: Typed a => Core.StructData -> String -> Stream a
-(Core.StructData {Core.structName = x, Core.structArgs = y})#z = getField x z
-  where
-    getField struct_nm field_nm =
-      let test = find (\(Core.StructData name _) -> name == struct_nm) structs in
-      case test of
-        Nothing -> error "No struct named \"" ++ struct_nm ++ "\" in the spec"
-        Just element ->
-          fromMaybe (find (\(Core.SExpr name _) -> name == field_nm) (element Core.structArgs))
-            (error "No field by the name of \"" ++ field_nm ++ "\"") element
---(Core.StructData l m)#n = Op2 (Core.GetField Core.typeOf) (Core.StructData l m) n
--}
 --------------------------------------------------------------------------------

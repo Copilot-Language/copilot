@@ -241,17 +241,15 @@ analyzeExts ExternEnv { externVarEnv  = vars
                       , externStructEnv  = datastructs
                       , externStructArgs = struct_args }
     = do
-    -- symbol names redeclared?
     findDups vars arrs
-    --findDups vars struct_args
+
     findDups vars datastructs
-    --findDups arrs struct_args
+
     findDups arrs datastructs
-    -- conflicting types?
+
     conflictingTypes vars
     conflictingTypes arrs
-    -- symbol names given different number of args and right types?
-    --funcArgCheck struct_args
+
     funcArgCheck struct_args
 
   where
@@ -288,10 +286,6 @@ analyzeExts ExternEnv { externVarEnv  = vars
                                         -- result
                else throw (BadFunctionArgType name)
         else throw (BadNumberOfArgs name)
-
-  {-structArgCheck :: [(String, [C.SimpleType])] -> IO ()
-  structArgCheck ls = foldr (\sarg' _ -> findDups (getArgName sarg', sarg') (getArgName sarg', sarg'))
-                        (return ()) $ map snd ls-}
 
   groupByPred :: [(String, a)] -> [[(String, a)]]
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)

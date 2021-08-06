@@ -26,11 +26,11 @@ import qualified Data.Bimap as Bimap
 
 --------------------------------------------------------------------------------
 
-{- The following properties MUST hold for the given transition system :
-   * Nodes are sorted by topological order
-   * Nodes are `completed`, which means the dependency graph is transitive
-     and each node imports all the local variables of its dependencies
--}
+-- The following properties MUST hold for the given transition system :
+-- * Nodes are sorted by topological order
+-- * Nodes are `completed`, which means the dependency graph is transitive
+--   and each node imports all the local variables of its dependencies
+--
 
 --------------------------------------------------------------------------------
 

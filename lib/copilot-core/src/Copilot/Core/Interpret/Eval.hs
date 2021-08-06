@@ -8,8 +8,7 @@
 {-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
 
 module Copilot.Core.Interpret.Eval
-  ( --ExtEnv (..)
-    Env
+  ( Env
   , Output
   , ExecTrace (..)
   , eval
@@ -34,15 +33,12 @@ import Data.Typeable (Typeable)
 -- | Exceptions that may be thrown during interpretation of a Copilot
 -- specification.
 data InterpException
-  = -- NoValues Name
---  | BadType Name
-    ArrayWrongSize Name Int           -- ^ Extern array has incorrect size.
+  = ArrayWrongSize Name Int           -- ^ Extern array has incorrect size.
   | ArrayIdxOutofBounds Name Int Int  -- ^ Index out-of-bounds exception.
   | DivideByZero                      -- ^ Division by zero.
   | NotEnoughValues Name Int          -- ^ For one or more streams, not enough
                                       --   values are available to simulate the
                                       --   number of steps requested.
---  | NoExtFunEval Name
   | NoExtsInterp Name                 -- ^ One of the externs used by the
                                       --   specification does not declare
                                       --   sample values to be used during
@@ -51,16 +47,6 @@ data InterpException
 
 -- | Show a descriptive message of the exception.
 instance Show InterpException where
-  ---------------------------------------
-  -- show (NoValues name)                                                         =
-  --   badUsage $ "you need to supply a list of values for interpreting "
-  --     ++ "external element " ++ name ++ "."
-  ---------------------------------------
-
-  -- -- Should always be caught by Analyze.hs in copilot-language.
-  -- show (BadType name)                                                          =
-  --   badUsage $ "you probably gave the wrong type for external element "
-  --     ++ name ++ ".  Recheck your types and re-evaluate."
   ---------------------------------------
   show (ArrayWrongSize name expectedSize)                                      =
     badUsage $ "in the environment for external array " ++ name
@@ -97,15 +83,6 @@ instance Exception InterpException
 -- names and their values.
 type Env nm = [(nm, Dynamic)]
 
--- -- | External arrays environment.
--- type ArrEnv = [(Name, [DynamicF [] Type])]
-
--- -- | Environment for simulation.
--- data ExtEnv = ExtEnv { varEnv  :: Env Name
---                      , arrEnv  :: ArrEnv
--- --                     , funcEnv :: [(Name, Spec)]
---                      }
-
 --------------------------------------------------------------------------------
 
 -- | The simulation output is defined as a string. Different backends may
@@ -129,22 +106,6 @@ data ExecTrace = ExecTrace
 
 --------------------------------------------------------------------------------
 
-{-
-eval :: Int -> Env Name -> Spec -> ExecTrace
-eval k exts spec =
-  let
-    strms = fmap (evalStream     exts strms) (specStreams   spec)
-    trigs = fmap (evalTrigger  k exts strms) (specTriggers  spec)
-    obsvs = fmap (evalObserver k exts strms) (specObservers spec)
-  in
-    ExecTrace
-      { interpTriggers  = M.fromList $
-          zip (fmap triggerName  (specTriggers  spec)) trigs
-      , interpObservers = M.fromList $
-          zip (fmap observerName (specObservers spec)) obsvs
-      }
--}
-
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
 -- We take a more brute-force appraoch below.
@@ -156,7 +117,6 @@ eval :: ShowType   -- ^ Show booleans as @0@\/@1@ (C) or @True@\/@False@
      -> Spec       -- ^ Specification to evaluate.
      -> ExecTrace
 eval showType k spec =
---  let exts  = take k $ reverse exts'                          in
 
   let initStrms = map initStrm (specStreams spec)             in
 
@@ -228,28 +188,6 @@ evalExternVar k name exts =
         Just x  -> x
 
 --------------------------------------------------------------------------------
-
--- evalFunc :: Int -> Type a -> Name -> Expr a -> ExtEnv -> a
--- evalFunc k t name expr exts  =
---   evalExpr k expr
-
---   case lookup name (funcEnv exts) of
---     Nothing -> throw (NoValues name)
-
---     -- We created this spec in Interpreter.hs, copilot-language, so it should
---     -- contain no triggers and exactly one observer.
---     Just Spec { specStreams   = specStrms
---               , specObservers = obsLs }  ->
---      let initStrms = map initStrm specStrms             in
---      let strms = evalStreams k exts specStrms initStrms in
---      case obsLs of
---        [Observer { observerExpr     = expr_
---                  , observerExprType = t1 }] ->
---          let dyn = toDynF t1 expr_ in
---            case fromDynF t dyn of
---              Nothing    -> throw (BadType name)
---              Just expr  -> evalExpr_ k expr exts [] strms
---        _ -> throw (BadType name)
 
 --------------------------------------------------------------------------------
 

@@ -15,7 +15,6 @@ module Copilot.Language.Reify
 import qualified Copilot.Core as Core
 import Copilot.Core (Typed, Id, typeOf, impossible)
 
---import Copilot.Language.Reify.Sharing (makeSharingExplicit)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream (..), Arg (..))
@@ -39,14 +38,12 @@ reify spec = do
   let obsvs = observers  $ runSpec spec
   let props = properties $ runSpec spec
   let thms  = reverse $ theorems $ runSpec spec
-  --let strs  = structs    $ runSpec spec
   refMkId         <- newIORef 0
   refVisited      <- newIORef M.empty
   refMap          <- newIORef []
   coreTriggers    <- mapM (mkTrigger  refMkId refVisited refMap) trigs
   coreObservers   <- mapM (mkObserver refMkId refVisited refMap) obsvs
   coreProperties  <- mapM (mkProperty refMkId refVisited refMap) $ props ++ (map fst thms)
-  --coreStructs     <- mapM (mkStruct   refMkId refVisited refMap) strs
   coreStreams     <- readIORef refMap
 
   let cspec = Core.Spec
@@ -54,7 +51,6 @@ reify spec = do
         , Core.specObservers  = coreObservers
         , Core.specTriggers   = coreTriggers
         , Core.specProperties = coreProperties }
-        --, Core.specStructs    = coreStructs }
 
   results <- sequence $ zipWith (prove cspec) (map (\(Property n _,_) -> n) thms) $ map snd thms
   unless (and results) $ putStrLn "Warning: failed to check some proofs."
@@ -124,30 +120,6 @@ mkProperty refMkId refStreams refMap (Property name guard) = do
 
 --------------------------------------------------------------------------------
 
---{-# INLINE mkStruct #-}
-{-mkStruct
-  :: IORef Int
-  -> IORef (Map Core.Id)
-  -> IORef [Core.Stream]
-  -> StructData
-  -> IO Core.StructData
-mkStruct refMkId refStreams refMap (StructData name fields) = do
-    fields' <- mapM mkStructField fields
-    return $
-      Core.StructData
-        { Core.structName    = name
-        , Core.structFields  = fields' }
-
-    where
-
-    mkStructField :: String -> Arg -> IO (Core.Name, Core.UExpr)
-    mkStructField cs (Arg e) = do
-      w <- mkExpr refMkId refStreams refMap e
-      return (cs, $ Core.UExpr typeOf w)
--}
---------------------------------------------------------------------------------
-
-
 -- | Transform a Copilot stream expression into a Copilot Core expression.
 {-# INLINE mkExpr #-}
 mkExpr
@@ -158,8 +130,6 @@ mkExpr
   -> Stream a
   -> IO (Core.Expr a)
 mkExpr refMkId refStreams refMap = go
-
---  (>>= go) . makeSharingExplicit refMkId
 
   where
   go :: Typed a => Stream a -> IO (Core.Expr a)
@@ -238,31 +208,6 @@ mkExpr refMkId refStreams refMap = go
   mkStrArg (name, Arg e) = do
     w <- mkExpr refMkId refStreams refMap e
     return $ (name, Core.UExpr typeOf w)
-
-  {-mkStructArg :: StructArg -> IO Core.SExpr
-  mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
-      w <- mkExpr refMkId refStreams refMap a
-      return $ Core.SExpr n $ Core.UExpr typeOf w
--}
---------------------------------------------------------------------------------
-
---{-# INLINE mkStruct #-}
-{-mkStruct
-  :: IORef Int
-  -> IORef (Map Core.Id)
-  -> IORef [Core.Stream]
-  -> StructData
-  -> IO Core.StructData
-mkStruct refMkId refStreams refMap (StructData name sargs) = trace (show name) $ do
-  args' <- mapM mkStructArg sargs
-  return $
-    Core.StructData
-      { Core.structName     = name
-      , Core.structInst     = Core.ExternStruct typeOf "" args' Nothing }
-    where
-      mkStructArg (StructArg { name_ = n, arg' = Arg a }) = do
-        w <- mkExpr refMkId refStreams refMap a
-        return $ Core.SExpr n $ Core.UExpr typeOf w-}
 
 --------------------------------------------------------------------------------
 
