@@ -52,3 +52,4 @@ library
                           , Copilot.Compile.C99.CodeGen
                           , Copilot.Compile.C99.External
                           , Copilot.Compile.C99.Compile
+                          , Copilot.Compile.C99.Settings

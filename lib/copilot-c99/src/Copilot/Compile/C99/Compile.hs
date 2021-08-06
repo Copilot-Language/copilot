@@ -1,6 +1,9 @@
 -- | Compile Copilot specifications to C99 code.
 module Copilot.Compile.C99.Compile
   ( compile
+  , compileWith
+  , CSettings(..)
+  , mkDefaultCSettings
   ) where
 
 import Text.PrettyPrint     (render)
@@ -13,16 +16,19 @@ import qualified Language.C99.Simple as C
 import Copilot.Core
 import Copilot.Compile.C99.Util
 import Copilot.Compile.C99.External
+import Copilot.Compile.C99.Settings
 import Copilot.Compile.C99.Translate
 import Copilot.Compile.C99.CodeGen
 
 -- | Compile a specification to a .h and a .c file.
 --
--- The first argument is used as prefix for the .h and .c files generated.
-compile :: String -> Spec -> IO ()
-compile prefix spec = do
-  let cfile = render $ pretty $ C.translate $ compilec spec
-      hfile = render $ pretty $ C.translate $ compileh spec
+-- The first argument is the settings for the C code generated.
+--
+-- The second argument is used as prefix for the .h and .c files generated.
+compileWith :: CSettings -> String -> Spec -> IO ()
+compileWith cSettings prefix spec = do
+  let cfile = render $ pretty $ C.translate $ compilec cSettings spec
+      hfile = render $ pretty $ C.translate $ compileh cSettings spec
 
       -- TODO: find a nicer solution using annotated AST's
       -- Should figure out exactly which headers are needed, based on what
@@ -40,6 +46,12 @@ compile prefix spec = do
   writeFile (prefix ++ ".c") $ cmacros ++ cfile
   writeFile (prefix ++ ".h") hfile
 
+-- | Compile a specification to a .h and a .c file.
+--
+-- The first argument is used as prefix for the .h and .c files generated.
+compile :: String -> Spec -> IO ()
+compile = compileWith mkDefaultCSettings
+
 -- | Generate the .c file from a 'Spec'.
 --
 -- The generated C file has the following structure:
@@ -48,15 +60,15 @@ compile prefix spec = do
 -- * Declarations of global buffers and indices.
 -- * Generator functions for streams, guards and trigger arguments.
 -- * Declaration of the @step()@ function.
-compilec :: Spec -> C.TransUnit
-compilec spec = C.TransUnit declns funs where
+compilec :: CSettings -> Spec -> C.TransUnit
+compilec cSettings spec = C.TransUnit declns funs where
   streams  = specStreams spec
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
   exprs    = gatherexprs streams triggers
 
   declns = mkstructdeclns exprs ++ mkexts exts ++ mkglobals streams
-  funs   = genfuns streams triggers ++ [mkstep streams triggers exts]
+  funs   = genfuns streams triggers ++ [mkstep cSettings streams triggers exts]
 
   -- Write struct datatypes
   mkstructdeclns :: [UExpr] -> [C.Decln]
@@ -93,8 +105,8 @@ compilec spec = C.TransUnit declns funs where
       arggen (argname, UExpr ty expr) = genfun argname expr ty
 
 -- | Generate the .h file from a 'Spec'.
-compileh :: Spec -> C.TransUnit
-compileh spec = C.TransUnit declns [] where
+compileh :: CSettings -> Spec -> C.TransUnit
+compileh cSettings spec = C.TransUnit declns [] where
   streams  = specStreams spec
   triggers = specTriggers spec
   exts     = gatherexts streams triggers
@@ -127,4 +139,5 @@ compileh spec = C.TransUnit declns [] where
 
   -- Declaration for the step function.
   stepdecln :: C.Decln
-  stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void) "step" []
+  stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void)
+                  (cSettingsStepFunctionName cSettings) []
