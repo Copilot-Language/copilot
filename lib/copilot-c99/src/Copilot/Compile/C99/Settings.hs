@@ -1,5 +1,7 @@
 -- | Settings used by the code generator to customize the code.
-module Copilot.Compile.C99.Settings where
+module Copilot.Compile.C99.Settings
+  {-# DEPRECATED "This module will be hidden in future versions." #-}
+  where
 
 -- | Settings used to customize the code generated.
 data CSettings = CSettings

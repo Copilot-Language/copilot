@@ -2,7 +2,9 @@
 
 -- | Represent information about externs needed in the generation of C99 code
 -- for stream declarations and triggers.
-module Copilot.Compile.C99.External where
+module Copilot.Compile.C99.External
+  {-# DEPRECATED "This module will be hidden in future versions." #-}
+  where
 
 import Data.List  (unionBy)
 

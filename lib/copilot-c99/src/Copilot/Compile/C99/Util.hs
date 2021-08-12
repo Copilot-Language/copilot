@@ -1,5 +1,7 @@
 -- | Auxiliary helper functions to generate C99 code.
-module Copilot.Compile.C99.Util where
+module Copilot.Compile.C99.Util
+  {-# DEPRECATED "This module will be hidden in future versions." #-}
+  where
 
 import Control.Monad.State
 
