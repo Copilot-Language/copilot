@@ -13,6 +13,7 @@ import qualified Language.C99.Simple as C
 import Copilot.Core
 import Copilot.Compile.C99.Util
 import Copilot.Compile.C99.External
+import Copilot.Compile.C99.Settings
 import Copilot.Compile.C99.Translate
 
 -- | Write a declaration for a generator function.
@@ -54,8 +55,10 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   initval = Just $ C.InitExpr $ C.LitInt 0
 
 -- | Writes the step function, that updates all streams.
-mkstep :: [Stream] -> [Trigger] -> [External] -> C.FunDef
-mkstep streams triggers exts = C.FunDef void "step" [] declns stmts where
+mkstep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
+mkstep cSettings streams triggers exts =
+  C.FunDef void (cSettingsStepFunctionName cSettings) [] declns stmts where
+
   void = C.TypeSpec C.Void
   stmts  =  map mkexcopy exts
          ++ map mktriggercheck triggers
