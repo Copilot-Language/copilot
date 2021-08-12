@@ -18,7 +18,7 @@ impossible function package =
     ++ function ++ ", in package " ++ package
     ++ ". Please file an issue at "
     ++ "https://github.com/Copilot-Language/copilot/issues"
-    ++ "or email the maintainers at <dev@dedden.net>"
+    ++ "or email the maintainers at <ivan.perezdominguez@nasa.gov>"
 
 -- | Report an error due to an error detected by Copilot (e.g., user error).
 badUsage :: String -- ^ Description of the error.

@@ -6,7 +6,7 @@ license-file:        LICENSE
 author:              Frank Dedden, Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
 synopsis:            A stream DSL for writing embedded C programs.
 build-type:          Simple
-maintainer:          Frank Dedden <dev@dedden.net>
+maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
 category:            Language, Embedded
 homepage:            https://copilot-language.github.io
 bug-reports:         https://github.com/Copilot-Language/copilot/issues
