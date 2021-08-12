@@ -3,6 +3,7 @@
         * Remove second element of pair FunEnv. (#170)
         * Allow customizing name of step function. (#64)
         * Update official maintainer. (#236)
+        * Deprecate internal modules. (#237)
 
 2021-07-07
         * Version bump (3.4). (#231)
