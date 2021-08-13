@@ -33,6 +33,10 @@ streamname sid = "s" ++ show sid
 indexname :: Id -> String
 indexname sid = streamname sid ++ "_idx"
 
+-- | Turn a stream id into the name of its accessor function
+streamaccessorname :: Id -> String
+streamaccessorname sid = streamname sid ++ "_get"
+
 -- | Add a postfix for copies of external variables the name.
 excpyname :: String -> String
 excpyname name = name ++ "_cpy"
