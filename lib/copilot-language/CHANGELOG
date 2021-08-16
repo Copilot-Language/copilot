@@ -1,8 +1,9 @@
-2021-08-05
+2021-08-16
         * Update travis domain in README. (#222)
         * Remove ghc-prim dependency from copilot-language. (#220)
         * Remove commented code. (#15)
         * Deprecate structArg. (#111)
+        * Update source repo location. (#241)
 
 2021-07-07
         * Version bump (3.4). (#231)
