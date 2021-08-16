@@ -17,7 +17,7 @@ description:
 version                   : 3.4
 license                   : BSD3
 license-file              : LICENSE
-maintainer                : jonathan.laurent@ens.fr
+maintainer                : Ivan Perez <ivan.perezdominguez@nasa.gov>
 homepage                  : https://copilot-language.github.io
 bug-reports               : https://github.com/Copilot-Language/copilot/issues
 stability                 : Experimental
