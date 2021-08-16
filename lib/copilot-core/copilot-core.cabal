@@ -26,7 +26,8 @@ extra-source-files:  README.md, CHANGELOG
 
 source-repository head
     type:       git
-    location:   https://github.com/Copilot-Language/copilot-core.git
+    location:   https://github.com/Copilot-Language/copilot.git
+    subdir:     lib/copilot-core
 
 library
 
