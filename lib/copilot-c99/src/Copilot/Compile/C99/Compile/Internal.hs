@@ -89,8 +89,13 @@ compilec cSettings spec = C.TransUnit declns funs where
 
   -- Make generator functions, including trigger arguments.
   genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
-  genfuns streams triggers =  map streamgen streams
+  genfuns streams triggers =  map accessdecln streams
+                           ++ map streamgen streams
                            ++ concatMap triggergen triggers where
+
+    accessdecln :: Stream -> C.FunDef
+    accessdecln (Stream sid buff _ ty) = mkaccessdecln sid ty buff
+
     streamgen :: Stream -> C.FunDef
     streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
 

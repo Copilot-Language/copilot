@@ -27,12 +27,9 @@ transexpr (Local ty1 _ name e1 e2) = do
 transexpr (Var _ n) = return $ C.Ident n
 
 transexpr (Drop _ amount sid) = do
-  let var    = streamname sid
-      indexvar = indexname sid
-      index  = case amount of
-        0 -> C.Ident indexvar
-        n -> C.Ident indexvar C..+ C.LitInt (fromIntegral n)
-  return $ C.Index (C.Ident var) index
+  let accessvar = streamaccessorname sid
+      index     = C.LitInt (fromIntegral amount)
+  return $ funcall accessvar [index]
 
 transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
 

@@ -56,6 +56,17 @@ mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval where
   cty     = C.TypeSpec $ C.TypedefName "size_t"
   initval = Just $ C.InitExpr $ C.LitInt 0
 
+-- | Define an accessor functions for the ring buffer associated with a stream
+mkaccessdecln :: Id -> Type a -> [a] -> C.FunDef
+mkaccessdecln sid ty xs = C.FunDef cty name params [] [C.Return (Just expr)]
+  where
+    cty        = C.decay $ transtype ty
+    name       = streamaccessorname sid
+    bufflength = C.LitInt $ fromIntegral $ length xs
+    params     = [C.Param (C.TypeSpec $ C.TypedefName "size_t") "x"]
+    index      = (C.Ident (indexname sid) C..+ C.Ident "x") C..% bufflength
+    expr       = C.Index (C.Ident (streamname sid)) index
+
 -- | Writes the step function, that updates all streams.
 mkstep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkstep cSettings streams triggers exts =
