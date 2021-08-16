@@ -12,7 +12,7 @@ homepage:            https://copilot-language.github.io
 bug-reports:         https://github.com/Copilot-Language/copilot/issues
 stability:           Experimental
 description:
-  Copilot is a stream-based runtime verification framewor implemented as an
+  Copilot is a stream-based runtime verification framework implemented as an
   embedded domain-specific language (EDSL) in Haskell. Programs can be
   interpreted for testing, or translated into C99 code to be incorporated in a
   project, or as a standalone application. The C99 backend output is constant

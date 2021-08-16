@@ -1,7 +1,8 @@
-2021-08-12
+2021-08-16
         * Update travis domain in README. (#222)
         * Remove commented code. (#15)
         * Update official maintainer. (#236)
+        * Fix typo in description. (#240)
 
 2021-07-07
         * Version bump (3.4). (#231)
