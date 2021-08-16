@@ -16,7 +16,7 @@ description:
 license:             BSD3
 license-file:        LICENSE
 author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
-                     Sebastian Niller, Nis Nordby Wegmann
+                     Sebastian Niller, Nis Nordby Wegmann, Ivan Perez
 maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
 homepage:            https://copilot-language.github.io
 bug-reports:         https://github.com/Copilot-Language/copilot/issues
