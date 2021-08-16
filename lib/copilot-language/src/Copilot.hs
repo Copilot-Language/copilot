@@ -5,6 +5,7 @@
 {-# LANGUAGE Safe #-}
 
 module Copilot
+  {-# DEPRECATED "This module is deprecated." #-}
   ( module Copilot.Language
   ) where
 
