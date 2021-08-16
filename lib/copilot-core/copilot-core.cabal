@@ -13,7 +13,7 @@ description:
   <https://copilot-language.github.io>.
 
 author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
-                     Sebastian Niller, Nis Nordbyop Wegmann
+                     Sebastian Niller, Nis Nordbyop Wegmann, Ivan Perez
 license:             BSD3
 license-file:        LICENSE
 maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>

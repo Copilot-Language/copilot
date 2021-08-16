@@ -6,6 +6,7 @@
         * Deprecate internal modules. (#237, #242)
         * Update source repo location. (#241)
         * Fix out-of-bounds array access. (#238)
+        * Add I. Perez to author list. (#243)
 
 2021-07-07
         * Version bump (3.4). (#231)

@@ -25,6 +25,7 @@ extra-source-files        : README.md
 
 author                    : Frank Dedden
                           , Alwyn Goodloe
+                          , Ivan Perez
 
 source-repository head
     type:       git

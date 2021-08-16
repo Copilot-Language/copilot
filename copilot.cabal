@@ -3,7 +3,7 @@ version:             3.4
 cabal-version:       >= 1.10
 license:             BSD3
 license-file:        LICENSE
-author:              Frank Dedden, Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe
+author:              Frank Dedden, Nis Nordby Wegmann, Lee Pike, Robin Morisset, Sebastian Niller, Alwyn Goodloe, Ivan Perez
 synopsis:            A stream DSL for writing embedded C programs.
 build-type:          Simple
 maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
