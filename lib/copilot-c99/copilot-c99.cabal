@@ -58,3 +58,6 @@ library
                           , Copilot.Compile.C99.External
                           , Copilot.Compile.C99.Compile
                           , Copilot.Compile.C99.Settings
+
+  other-modules          : Copilot.Compile.C99.Compile.Internal
+                         , Copilot.Compile.C99.Settings.Internal
