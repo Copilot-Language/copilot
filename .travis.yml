@@ -21,4 +21,4 @@ before_install:
   - git submodule update --remote
 
 script:
-  - cabal v2-build
+  - cabal v2-install --lib copilot
