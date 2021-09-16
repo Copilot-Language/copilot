@@ -57,13 +57,15 @@ Copilot:
   _Nix-Style build (Cabal >= 2.x)_
 
   ```bash
-  cabal build       # For Cabal 3.x
-  cabal v2-build    # For Cabal 2.x
+  cabal build copilot-*/    # For Cabal 3.x
+  cabal v2-build copilot-*/ # For Cabal 2.x
   ```
 
   _Traditional build (Cabal 1.x)_
   ```bash
-  cabal install --dependencies-only
+  cd copilot
+  cabal install --dependencies-only . ../copilot-*/
+  cabal install ../copilot-*/
   cabal build
   ```
 
