@@ -6,7 +6,7 @@
 -- Provides past-time linear-temporal logic (ptLTL operators).
 --
 -- /Interface:/ See @Examples/PTLTLExamples.hs@ in the
--- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
+-- <https://github.com/Copilot-Language/copilot/blob/v2.2.1/Examples Copilot repository>.
 --
 -- You can embed a ptLTL specification within a Copilot specification using
 -- the form:

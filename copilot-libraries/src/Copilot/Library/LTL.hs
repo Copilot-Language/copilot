@@ -14,8 +14,8 @@
 -- holds if @p@ holds at least once every four periods (3 transitions).
 --
 -- /Interface:/ See @Examples/LTLExamples.hs@ in the
--- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
--- 
+-- <https://github.com/Copilot-Language/copilot/blob/v2.2.1/Examples Copilot repository>.
+--
 -- You can embed an LTL specification within a Copilot specification using the
 -- form:
 --
