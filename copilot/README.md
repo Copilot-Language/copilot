@@ -76,7 +76,7 @@ have trouble building/installing.
 ## Example
 Here follows a simple example of a heating system. Other examples can be found
 in the [examples
-directory](https://github.com/Copilot-Language/copilot/tree/master/examples)
+directory](https://github.com/Copilot-Language/copilot/tree/master/copilot/examples)
 of the main repository.
 
 ```haskell

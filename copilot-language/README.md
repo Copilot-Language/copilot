@@ -5,7 +5,7 @@ Copilot-language contains the actual embedded domain specific language that
 Copilot provides to its users. It comes with a series of basic operators and
 functionality, typically enough for most applications. Extended functionality
 is provided by the
-[copilot-libraries](https://github.com/Copilot-Language/copilot-libraries)
+[copilot-libraries](https://github.com/Copilot-Language/copilot/tree/master/copilot-libraries)
 module.
 
 Copilot is a runtime verification framework written in Haskell. It allows the
