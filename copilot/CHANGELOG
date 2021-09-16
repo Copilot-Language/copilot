@@ -1,3 +1,7 @@
+2021-09-16
+        * Update installation instructions in README to
+	  match new repo structure. (#248)
+
 2021-08-19
         * Version bump (3.5). (#247)
         * Update travis domain in README. (#222)
