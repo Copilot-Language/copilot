@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/Copilot-Language/copilot-c99.svg?branch=master)](https://travis-ci.com/Copilot-Language/copilot-core)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://app.travis-ci.com/github/Copilot-Language/copilot)
 
 # Copilot: a stream DSL
 Copilot-c99 implements a C99 backend for Copilot, producing high quality code
@@ -30,4 +30,4 @@ the Copilot website:
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/copilot-c99/master/LICENSE).
+[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/copilot-c99/LICENSE).

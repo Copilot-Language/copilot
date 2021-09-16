@@ -1,11 +1,11 @@
-[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://travis-ci.com/Copilot-Language/copilot-core)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://app.travis-ci.com/github/Copilot-Language/copilot)
 
 # Copilot: a stream DSL
 Copilot-language contains the actual embedded domain specific language that
 Copilot provides to its users. It comes with a series of basic operators and
 functionality, typically enough for most applications. Extended functionality
 is provided by the
-[copilot-libraries](https://github.com/Copilot-Language/copilot-libraries)
+[copilot-libraries](https://github.com/Copilot-Language/copilot/tree/master/copilot-libraries)
 module.
 
 Copilot is a runtime verification framework written in Haskell. It allows the
@@ -34,4 +34,4 @@ the Copilot website:
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/LICENSE).
+[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/copilot-language/LICENSE).

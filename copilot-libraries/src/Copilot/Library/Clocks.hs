@@ -6,9 +6,9 @@
 -- This library generates new clocks based on a base period and phase.
 --
 -- = Example Usage
--- 
--- Also see @Examples/ClockExamples.hs@ in the
--- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
+--
+-- Also see @examples/Clock.hs@ in the
+-- <https://github.com/Copilot-Language/copilot/blob/master/copilot/examples/ Copilot repository>.
 --
 -- @
 --     'clk' ( 'period' 3 ) ( 'phase' 1 )

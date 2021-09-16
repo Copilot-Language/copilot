@@ -1,6 +1,6 @@
 # Copilot: Stream DSL for hard real-time runtime verification
 
-[![Build Status](https://travis-ci.com/Copilot-Language/Copilot.svg?branch=master)](https://travis-ci.com/Copilot-Language/Copilot)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://app.travis-ci.com/github/Copilot-Language/copilot)
 [![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
 
 Copilot is a runtime verification framework written in Haskell. It allows the
@@ -76,7 +76,7 @@ have trouble building/installing.
 ## Example
 Here follows a simple example of a heating system. Other examples can be found
 in the [examples
-directory](https://github.com/Copilot-Language/Copilot/tree/master/examples)
+directory](https://github.com/Copilot-Language/copilot/tree/master/copilot/examples)
 of the main repository.
 
 ```haskell
@@ -170,7 +170,7 @@ further development of Copilot.
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/Copilot/master/LICENSE).
+[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/copilot/LICENSE).
 
 
 ## The Copilot Team

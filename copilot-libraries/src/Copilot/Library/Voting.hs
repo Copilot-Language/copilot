@@ -13,8 +13,8 @@
 --
 -- * <ftp://net9.cs.utexas.edu/pub/techreports/tr81-32.pdf Robert S. Boyer and J Strother Moore, \"MJRTY - A Fast Majority Vote Algorithm\", 1981>
 --
--- In addition, <https://github.com/leepike/copilot-discussion/blob/master/tutorial/copilot_tutorial.pdf An Introduction to Copilot> in
--- <https://github.com/leepike/copilot-discussion copilot-discussion> explains
+-- In addition, <https://copilot-language.github.io/downloads/copilot_tutorial.pdf An Introduction to Copilot> and
+-- <https://github.com/Copilot-Language/copilot-discussion copilot-discussion> explain
 -- a form of this code in section 4.
 --
 -- For instance, with four streams passed to 'majority', and the candidate stream
@@ -29,8 +29,8 @@
 -- 1            1            1            1            1            true
 -- @
 --
--- For other examples, see @Examples/VotingExamples.hs@ in the
--- <https://github.com/leepike/Copilot/tree/master/Examples Copilot repository>.
+-- For other examples, see @examples/Voting.hs@ in the
+-- <https://github.com/Copilot-Language/copilot/blob/master/copilot/examples/ Copilot repository>.
 
 {-# LANGUAGE RebindableSyntax #-}
 
