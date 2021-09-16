@@ -55,7 +55,6 @@ library
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Interpret.Render
-    Copilot.Core.MakeTags
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Locals

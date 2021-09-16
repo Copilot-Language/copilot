@@ -18,7 +18,6 @@ module Copilot.Language.Operators.Extern
   , externI32
   , externI64
   , externD
-  , funArg
   ) where
 
 import Copilot.Core (Typed)
@@ -41,11 +40,6 @@ extern :: Typed a
        -> Maybe [a] -- ^ Values to be used exclusively for testing/simulation.
        -> Stream a
 extern = Extern
-
--- | Deprecated.
-funArg :: Typed a => Stream a -> Arg
-funArg = Arg
-{-# DEPRECATED funArg "funArg is deprecated" #-}
 
 --------------------------------------------------------------------------------
 
