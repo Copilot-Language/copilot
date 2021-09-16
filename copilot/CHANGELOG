@@ -1,4 +1,5 @@
 2021-09-16
+        * Fix outdated/broken links. (#252)
         * Update installation instructions in README to
 	  match new repo structure. (#248)
 

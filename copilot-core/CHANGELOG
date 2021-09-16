@@ -1,3 +1,6 @@
+2021-09-16
+        * Fix outdated/broken links. (#252)
+
 2021-08-19
         * Version bump (3.5). (#247)
         * Update travis domain in README. (#222)
