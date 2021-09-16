@@ -1,6 +1,6 @@
 # Copilot: Stream DSL for hard real-time runtime verification
 
-[![Build Status](https://travis-ci.com/Copilot-Language/Copilot.svg?branch=master)](https://travis-ci.com/Copilot-Language/Copilot)
+[![Build Status](https://travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://app.travis-ci.com/github/Copilot-Language/copilot)
 [![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
 
 Copilot is a runtime verification framework written in Haskell. It allows the
