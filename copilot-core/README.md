@@ -30,4 +30,4 @@ the Copilot website:
 
 ## License
 Copilot is distributed under the BSD-3-Clause license, which can be found
-[here](https://raw.githubusercontent.com/Copilot-Language/copilot-core/master/LICENSE).
+[here](https://raw.githubusercontent.com/Copilot-Language/copilot/master/copilot-core/LICENSE).
