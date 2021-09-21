@@ -76,6 +76,10 @@ test-suite unit-tests
   main-is:
     Main.hs
 
+  other-modules:
+    Test.Extra
+    Test.Copilot.Core.Error
+
   build-depends:
       base
     , HUnit
