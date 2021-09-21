@@ -68,3 +68,27 @@ library
     Copilot.Core.Type.Uninitialized
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  build-depends:
+      base
+    , HUnit
+    , test-framework
+    , test-framework-hunit
+
+    , copilot-core
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
