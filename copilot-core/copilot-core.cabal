@@ -79,6 +79,7 @@ test-suite unit-tests
   other-modules:
     Test.Extra
     Test.Copilot.Core.Error
+    Test.Copilot.Core.External
 
   build-depends:
       base
