@@ -80,12 +80,14 @@ test-suite unit-tests
     Test.Extra
     Test.Copilot.Core.Error
     Test.Copilot.Core.External
+    Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type.Array
 
   build-depends:
       base
     , HUnit
     , QuickCheck
+    , pretty
     , test-framework
     , test-framework-hunit
     , test-framework-quickcheck2
