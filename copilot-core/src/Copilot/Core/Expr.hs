@@ -39,6 +39,7 @@ type DropIdx = Word32
 --------------------------------------------------------------------------------
 
 -- | A unique tag for external arrays/function calls.
+{-# DEPRECATED Tag "The type Tag is deprecated in Copilot 3.6." #-}
 type Tag = Int
 
 --------------------------------------------------------------------------------
