@@ -82,6 +82,7 @@ test-suite unit-tests
     Test.Copilot.Core.External
     Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type.Array
+    Test.Copilot.Core.Type.Dynamic
 
   build-depends:
       base
