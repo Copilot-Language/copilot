@@ -12,6 +12,7 @@ import qualified Test.Copilot.Core.Interpret.Eval
 import qualified Test.Copilot.Core.Type
 import qualified Test.Copilot.Core.Type.Array
 import qualified Test.Copilot.Core.Type.Dynamic
+import qualified Test.Copilot.Core.Type.Show
 
 -- | Run all unit tests on copilot-core.
 main :: IO ()
@@ -26,4 +27,5 @@ tests =
   , Test.Copilot.Core.Type.tests
   , Test.Copilot.Core.Type.Array.tests
   , Test.Copilot.Core.Type.Dynamic.tests
+  , Test.Copilot.Core.Type.Show.tests
   ]

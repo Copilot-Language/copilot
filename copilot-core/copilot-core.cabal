@@ -84,6 +84,7 @@ test-suite unit-tests
     Test.Copilot.Core.Type
     Test.Copilot.Core.Type.Array
     Test.Copilot.Core.Type.Dynamic
+    Test.Copilot.Core.Type.Show
 
   build-depends:
       base
