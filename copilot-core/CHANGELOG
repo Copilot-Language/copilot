@@ -1,4 +1,5 @@
 2021-09-24
+        * Add initial support for unit testing. (#256)
         * Deprecate unused type. (#260)
         * Remove deprecated module. (#250)
         * Fix outdated/broken links. (#252)

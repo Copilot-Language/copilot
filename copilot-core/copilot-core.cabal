@@ -68,3 +68,40 @@ library
     Copilot.Core.Type.Uninitialized
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  other-modules:
+    Test.Extra
+    Test.Copilot.Core.Error
+    Test.Copilot.Core.External
+    Test.Copilot.Core.Interpret.Eval
+    Test.Copilot.Core.Type
+    Test.Copilot.Core.Type.Array
+    Test.Copilot.Core.Type.Dynamic
+    Test.Copilot.Core.Type.Show
+
+  build-depends:
+      base
+    , HUnit
+    , QuickCheck
+    , pretty
+    , test-framework
+    , test-framework-hunit
+    , test-framework-quickcheck2
+
+    , copilot-core
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
