@@ -131,6 +131,7 @@ ppOp2 op = case op of
   Fdiv     _   -> "/"
   Pow      _   -> "**"
   Logb     _   -> "logBase"
+  Atan2    _   -> "atan2"
   Eq       _   -> "=="
   Ne       _   -> "/="
   Le       _   -> "<="

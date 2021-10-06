@@ -237,6 +237,7 @@ evalOp2 op = case op of
   Fdiv _       -> (P./)
   Pow _        -> (P.**)
   Logb _       -> P.logBase
+  Atan2 _      -> P.atan2
   Eq _         -> (==)
   Ne _         -> (/=)
   Le _         -> (<=)

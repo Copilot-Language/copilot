@@ -90,6 +90,7 @@ ppOp2 op = case op of
   Fdiv     _   -> ppInfix "/"
   Pow      _   -> ppInfix "**"
   Logb     _   -> ppInfix "logBase"
+  Atan2    _   -> ppInfix "atan2"
   Eq       _   -> ppInfix "=="
   Ne       _   -> ppInfix "/="
   Le       _   -> ppInfix "<="

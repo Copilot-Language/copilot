@@ -13,6 +13,7 @@ module Copilot.Language.Stream
   ( Stream (..)
   , Arg (..)
   , StructArg (..)
+  , Copilot.Language.Stream.atan2
   ) where
 
 import Copilot.Core (Typed, typeOf)
@@ -144,3 +145,15 @@ instance (Typed a, Eq a, Floating a) => Floating (Stream a) where
   acosh        = Op1 (Core.Acosh typeOf)
 
 --------------------------------------------------------------------------------
+
+-- | Point-wise application of @atan2@ to the values of two streams.
+--
+-- For each pair of real floating-point samples @x@ and @y@, one from each
+-- stream, @atan2@ computes the angle of the vector from @(0, 0)@ to the point
+-- @(x, y)@.
+--
+-- This definition clashes with one in 'RealFloat' in Haskell's Prelude,
+-- re-exported from @Language.Copilot@, so you need to import this module
+-- qualified to use this function.
+atan2 :: (Typed a, RealFloat a) => Stream a -> Stream a -> Stream a
+atan2 = Op2 (Core.Atan2 typeOf)
