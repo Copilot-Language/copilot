@@ -48,6 +48,7 @@ data Op1 a b where
   Acosh    :: Floating a => Type a -> Op1 a a
   -- RealFrac operators
   Ceiling  :: RealFrac a => Type a -> Op1 a a
+  Floor    :: RealFrac a => Type a -> Op1 a a
   -- Bitwise operators.
   BwNot    :: Bits     a => Type a -> Op1 a a
   -- Casting operator.

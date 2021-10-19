@@ -116,6 +116,7 @@ ppOp1 op = case op of
   Atanh _   -> "atanh"
   Acosh _   -> "acosh"
   Ceiling _ -> "ceiling"
+  Floor _   -> "floor"
   BwNot _   -> "~"
   Cast _ _  -> "(cast)"
 

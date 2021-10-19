@@ -544,8 +544,10 @@ arbitraryFloatingOp1 = elements
 -- expected meaning.
 arbitraryRealFracOp1 :: (Typed t, RealFrac t)
                      => Gen (Expr t -> Expr t, [t] -> [t])
-arbitraryRealFracOp1 = return
-    (Op1 (Ceiling typeOf), fmap (fromIntegral . idI . ceiling))
+arbitraryRealFracOp1 = elements
+    [ (Op1 (Ceiling typeOf), fmap (fromIntegral . idI . ceiling))
+    , (Op1 (Floor typeOf), fmap (fromIntegral . idI . floor))
+    ]
   where
     -- Auxiliary function to help the compiler determine which integral type
     -- the result of ceiling must be converted to. An Integer ensures that the

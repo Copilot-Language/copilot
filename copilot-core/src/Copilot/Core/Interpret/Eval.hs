@@ -216,11 +216,12 @@ evalOp1 op = case op of
     Atanh _    -> P.atanh
     Acosh _    -> P.acosh
     Ceiling _  -> P.fromIntegral . idI . P.ceiling
+    Floor _    -> P.fromIntegral . idI . P.floor
     BwNot _    -> complement
     Cast _ _   -> P.fromIntegral
     GetField (Struct _) _ f -> unfield . f
   where
-    -- Used to help GHC pick a return type for ceiling
+    -- Used to help GHC pick a return type for ceiling/floor
     idI :: Integer -> Integer
     idI = P.id
 
