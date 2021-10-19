@@ -87,6 +87,10 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word64))
   , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Int8))
@@ -324,6 +328,56 @@ arbitraryFloatingExpr =
                  <*> arbitraryFloatingExpr)
     ]
 
+-- | An arbitrary realfrac expression, paired with its expected meaning.
+arbitraryRealFracExpr :: (Arbitrary t, Typed t, RealFrac t)
+                      => Gen (Expr t, [t])
+arbitraryRealFracExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (2, apply1 <$> arbitraryRealFracOp1 <*> arbitraryRealFracExpr)
+
+    , (5, apply1 <$> arbitraryNumOp1      <*> arbitraryRealFracExpr)
+
+    , (1, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryRealFracExpr
+                 <*> arbitraryRealFracExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryRealFracExpr
+                 <*> arbitraryRealFracExpr)
+    ]
+
+-- | An arbitrary realfloat expression, paired with its expected meaning.
+arbitraryRealFloatExpr :: (Arbitrary t, Typed t, RealFloat t)
+                       => Gen (Expr t, [t])
+arbitraryRealFloatExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (2, apply1 <$> arbitraryNumOp1 <*> arbitraryRealFloatExpr)
+
+    , (5, apply2 <$> arbitraryRealFloatOp2
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+
+    , (1, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+    ]
+
 -- | An arbitrary fractional expression, paired with its expected meaning.
 --
 -- We add the constraint Eq because we sometimes need to make sure numbers are
@@ -486,6 +540,22 @@ arbitraryFloatingOp1 = elements
   , (Op1 (Acosh typeOf), fmap acosh)
   ]
 
+-- | Generator for arbitrary realfrac operators with arity 1, paired with their
+-- expected meaning.
+arbitraryRealFracOp1 :: (Typed t, RealFrac t)
+                     => Gen (Expr t -> Expr t, [t] -> [t])
+arbitraryRealFracOp1 = elements
+    [ (Op1 (Ceiling typeOf), fmap (fromIntegral . idI . ceiling))
+    , (Op1 (Floor typeOf), fmap (fromIntegral . idI . floor))
+    ]
+  where
+    -- Auxiliary function to help the compiler determine which integral type
+    -- the result of ceiling must be converted to. An Integer ensures that the
+    -- result fits and there is no loss of precision due to the intermediate
+    -- casting.
+    idI :: Integer -> Integer
+    idI = id
+
 -- | Generator for arbitrary fractional operators with arity 1, paired with
 -- their expected meaning.
 arbitraryFractionalOp1 :: (Typed t, Fractional t)
@@ -548,6 +618,14 @@ arbitraryFloatingOp2 :: (Typed t, Floating t)
 arbitraryFloatingOp2 = elements
   [ (Op2 (Pow typeOf),  zipWith (**))
   , (Op2 (Logb typeOf), zipWith logBase)
+  ]
+
+-- | Generator for arbitrary floating point operators with arity 2, paired with
+-- their expected meaning.
+arbitraryRealFloatOp2 :: (Typed t, RealFloat t)
+                      => Gen (Expr t -> Expr t -> Expr t, [t] -> [t] -> [t])
+arbitraryRealFloatOp2 = elements
+  [ (Op2 (Atan2 typeOf), zipWith atan2)
   ]
 
 -- | Generator for arbitrary equality operators with arity 2, paired with their

@@ -46,6 +46,9 @@ data Op1 a b where
   Asinh    :: Floating a => Type a -> Op1 a a
   Atanh    :: Floating a => Type a -> Op1 a a
   Acosh    :: Floating a => Type a -> Op1 a a
+  -- RealFrac operators
+  Ceiling  :: RealFrac a => Type a -> Op1 a a
+  Floor    :: RealFrac a => Type a -> Op1 a a
   -- Bitwise operators.
   BwNot    :: Bits     a => Type a -> Op1 a a
   -- Casting operator.
@@ -73,6 +76,8 @@ data Op2 a b c where
   -- Floating operators.
   Pow      :: Floating a => Type a -> Op2 a a a
   Logb     :: Floating a => Type a -> Op2 a a a
+  -- RealFloat operators.
+  Atan2    :: RealFloat a => Type a -> Op2 a a a
   -- Equality operators.
   Eq       :: Eq a => Type a -> Op2 a a Bool
   Ne       :: Eq a => Type a -> Op2 a a Bool
