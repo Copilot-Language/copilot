@@ -74,6 +74,7 @@ transop1 op e = case op of
   Asinh    _      -> funcall "asinh" [e]
   Atanh    _      -> funcall "atanh" [e]
   Acosh    _      -> funcall "acosh" [e]
+  Ceiling  _      -> funcall "ceil"  [e]
   BwNot    _      -> (C..~) e
   Cast     _ ty  -> C.Cast (transtypename ty) e
   GetField (Struct _)  _ f -> C.Dot e (accessorname f)

@@ -13,6 +13,7 @@ module Copilot.Language.Stream
   ( Stream (..)
   , Arg (..)
   , StructArg (..)
+  , Copilot.Language.Stream.ceiling
   , Copilot.Language.Stream.atan2
   ) where
 
@@ -143,6 +144,24 @@ instance (Typed a, Eq a, Floating a) => Floating (Stream a) where
   asinh        = Op1 (Core.Asinh typeOf)
   atanh        = Op1 (Core.Atanh typeOf)
   acosh        = Op1 (Core.Acosh typeOf)
+
+--------------------------------------------------------------------------------
+
+-- | Point-wise application of @ceiling@ to a stream.
+--
+-- Unlike the Haskell variant of this function, this variant takes and returns
+-- two streams of the same type. Use a casting function to convert the result
+-- to an intergral type of your choice.
+--
+-- Note that the result can be too big (or, if negative, too small) for that
+-- type (see the man page of @ceil@ for details), so you must check that the
+-- value fits in the desired integral type before casting it.
+--
+-- This definition clashes with one in 'RealFrac' in Haskell's Prelude,
+-- re-exported from @Language.Copilot@, so you need to import this module
+-- qualified to use this function.
+ceiling :: (Typed a, RealFrac a) => Stream a -> Stream a
+ceiling = Op1 (Core.Ceiling typeOf)
 
 --------------------------------------------------------------------------------
 

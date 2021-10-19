@@ -196,28 +196,35 @@ evalExternVar k name exts =
 -- 'Copilot.Core.Operators.Op1'.
 evalOp1 :: Op1 a b -> (a -> b)
 evalOp1 op = case op of
-  Not        -> P.not
-  Abs _      -> P.abs
-  Sign _     -> P.signum
-  Recip _    -> P.recip
-  Exp _      -> P.exp
-  Sqrt _     -> P.sqrt
-  Log _      -> P.log
-  Sin _      -> P.sin
-  Tan _      -> P.tan
-  Cos _      -> P.cos
-  Asin _     -> P.asin
-  Atan _     -> P.atan
-  Acos _     -> P.acos
-  Sinh _     -> P.sinh
-  Tanh _     -> P.tanh
-  Cosh _     -> P.cosh
-  Asinh _    -> P.asinh
-  Atanh _    -> P.atanh
-  Acosh _    -> P.acosh
-  BwNot _    -> complement
-  Cast _ _   -> P.fromIntegral
-  GetField (Struct _) _ f -> unfield . f where
+    Not        -> P.not
+    Abs _      -> P.abs
+    Sign _     -> P.signum
+    Recip _    -> P.recip
+    Exp _      -> P.exp
+    Sqrt _     -> P.sqrt
+    Log _      -> P.log
+    Sin _      -> P.sin
+    Tan _      -> P.tan
+    Cos _      -> P.cos
+    Asin _     -> P.asin
+    Atan _     -> P.atan
+    Acos _     -> P.acos
+    Sinh _     -> P.sinh
+    Tanh _     -> P.tanh
+    Cosh _     -> P.cosh
+    Asinh _    -> P.asinh
+    Atanh _    -> P.atanh
+    Acosh _    -> P.acosh
+    Ceiling _  -> P.fromIntegral . idI . P.ceiling
+    BwNot _    -> complement
+    Cast _ _   -> P.fromIntegral
+    GetField (Struct _) _ f -> unfield . f
+  where
+    -- Used to help GHC pick a return type for ceiling
+    idI :: Integer -> Integer
+    idI = P.id
+
+    -- Extract value from field
     unfield (Field v) = v
 
 --------------------------------------------------------------------------------

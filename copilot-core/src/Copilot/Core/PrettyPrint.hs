@@ -72,6 +72,7 @@ ppOp1 op = case op of
   Asinh _                 -> ppPrefix "asinh"
   Atanh _                 -> ppPrefix "atanh"
   Acosh _                 -> ppPrefix "acosh"
+  Ceiling _               -> ppPrefix "ceiling"
   BwNot _                 -> ppPrefix "~"
   Cast _ _                -> ppPrefix "(cast)"
   GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
