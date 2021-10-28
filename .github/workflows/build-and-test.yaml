@@ -1,0 +1,57 @@
+name: build-and-test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+        ghc:
+          - "8.8"
+          - "8.10"
+          - "9.0"
+          - latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: haskell/actions/setup@f0ecab9af1c178879d2243035bba5832e5529b43
+        id: setup-haskell-cabal
+        name: Setup Haskell
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+
+      - name: Configure
+        run: |
+          cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+
+      - uses: actions/cache@v2
+        name: Cache ~/.cabal/store and build files
+        with:
+          path: |
+            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+            dist-newstyle
+          key: ${{ runner.os }}-${{ matrix.ghc }}
+
+      - name: Install dependencies
+        run: |
+          cabal build all --only-dependencies
+
+      - name: Build
+        run: |
+          cabal build all
+
+      - name: Test
+        run: |
+          cabal test all
