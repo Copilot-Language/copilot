@@ -8,7 +8,7 @@ jobs:
   build-and-test:
     name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
 
-    continue-on-error: true
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
         os:
@@ -18,8 +18,18 @@ jobs:
         ghc:
           - "8.8"
           - "8.10"
-          - "9.0"
-          - latest
+        experimental:
+          - false
+        include:
+          - ghc: "9.0"
+            os: ubuntu-latest
+            experimental: true
+          - ghc: "9.0"
+            os: macOS-latest
+            experimental: true
+          - ghc: "9.0"
+            os: windows-latest
+            experimental: true
 
     runs-on: ${{ matrix.os }}
 
