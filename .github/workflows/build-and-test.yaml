@@ -8,6 +8,7 @@ jobs:
   build-and-test:
     name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
 
+    continue-on-error: true
     strategy:
       matrix:
         os:
