@@ -18,6 +18,7 @@ import Copilot.Core.Type
 -- | Initial value for a given type.
 --
 -- Does not support structs or arrays.
+{-# DEPRECATED uninitialized "This function is deprecated in Copilot 3.6" #-}
 uninitialized :: Type a -> a
 uninitialized t =
   case t of
