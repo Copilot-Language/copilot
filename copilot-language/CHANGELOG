@@ -1,4 +1,5 @@
-2021-10-19
+2021-11-05
+        * Replace uses of copilot-core's error reporting functions. (#267)
         * Introduce new ops atan2, ceiling, floor. (#246)
         * Remove deprecated function. (#250)
         * Fix outdated/broken links. (#252)
