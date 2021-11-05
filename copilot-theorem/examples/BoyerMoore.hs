@@ -9,7 +9,6 @@ import Copilot.Theorem
 import Copilot.Theorem.Prover.Z3
 
 import Copilot.Core.Type
-import Copilot.Core.Type.Uninitialized
 
 import Prelude ()
 import Control.Monad (forM_)
@@ -84,3 +83,22 @@ spec = do
 induct :: Proof Universal
 induct = induction def { nraNLSat = False, debug = False }
 
+--------------------------------------------------------------------------------
+
+-- | Initial value for a given type.
+--
+-- Does not support structs or arrays.
+uninitialized :: Type a -> a
+uninitialized t =
+  case t of
+    Bool   -> False
+    Int8   -> 0
+    Int16  -> 0
+    Int32  -> 0
+    Int64  -> 0
+    Word8  -> 0
+    Word16 -> 0
+    Word32 -> 0
+    Word64 -> 0
+    Float  -> 0
+    Double -> 0
