@@ -49,11 +49,13 @@ fromDyn t1 (Dynamic x t2) =
     Nothing   -> Nothing
 
 -- | Enclose a function and its type in a container.
+{-# DEPRECATED toDynF "This function is deprecated in Copilot 3.6." #-}
 toDynF :: t a -> f a -> DynamicF f t
 toDynF t fx = DynamicF fx t
 
 -- | Extract a value from a dynamic function container. Return 'Nothing' if
 -- the value is not of the given type.
+{-# DEPRECATED fromDynF "This function is deprecated in Copilot 3.6." #-}
 fromDynF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)
 fromDynF t1 (DynamicF fx t2) =
   case t1 =~= t2 of
