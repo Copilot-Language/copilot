@@ -19,8 +19,8 @@ module Copilot.Language.Stream
   ) where
 
 import Copilot.Core (Typed, typeOf)
-import Copilot.Core.Error
 import qualified Copilot.Core as Core
+import Copilot.Language.Error
 import Copilot.Language.Prelude
 import qualified Prelude as P
 
