@@ -14,7 +14,8 @@ module Copilot.Core.Interpret.Eval
   , eval
   ) where
 
-import Copilot.Core
+import Copilot.Core hiding (badUsage)
+import Copilot.Core.ErrorInternal (badUsage)
 import Copilot.Core.Type.Show (showWithType, ShowType)
 
 import Prelude hiding (id)

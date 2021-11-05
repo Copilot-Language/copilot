@@ -12,7 +12,7 @@ module Copilot.Core.Type.Eq
   , UVal (..)
   ) where
 
-import Copilot.Core.Error (impossible)
+import Copilot.Core.ErrorInternal (impossible)
 import Copilot.Core.Type
 import Copilot.Core.Type.Dynamic (fromDyn, toDyn)
 

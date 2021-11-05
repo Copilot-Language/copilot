@@ -69,6 +69,10 @@ library
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
 
+  other-modules:
+
+    Copilot.Core.ErrorInternal
+
 test-suite unit-tests
   type:
     exitcode-stdio-1.0
