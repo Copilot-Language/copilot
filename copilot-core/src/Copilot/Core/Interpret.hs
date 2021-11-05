@@ -13,7 +13,7 @@ module Copilot.Core.Interpret
 
 import Copilot.Core
 import Copilot.Core.Interpret.Eval
-import Copilot.Core.Interpret.Render
+import Copilot.Core.Interpret.RenderInternal
 import Copilot.Core.Type.Show (ShowType(..))
 
 -- | Output format for the results of a Copilot spec interpretation.
