@@ -13,7 +13,7 @@ module Copilot.Core.Type.Read
   ) where
 
 import Copilot.Core.Type
-import Copilot.Core.Error (badUsage)
+import Copilot.Core.ErrorInternal (badUsage)
 
 --------------------------------------------------------------------------------
 

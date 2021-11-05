@@ -25,7 +25,7 @@ import System.Mem.StableName.Dynamic
 import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap)
 
-import Copilot.Core.Error (impossible)
+import Copilot.Language.Error (impossible)
 
 data Map a = Map { getMap  :: IntMap [(DynStableName, a)]
                  , getSize :: Int }

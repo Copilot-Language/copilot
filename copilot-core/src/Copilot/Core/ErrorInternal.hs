@@ -5,21 +5,22 @@
 {-# LANGUAGE Safe #-}
 
 -- | Custom functions to report error messages to users.
-module Copilot.Core.Error
+module Copilot.Core.ErrorInternal
   ( impossible
   , badUsage ) where
 
-import qualified Copilot.Core.ErrorInternal as Err
-
 -- | Report an error due to a bug in Copilot.
-{-# DEPRECATED impossible "This function is deprecated in Copilot 3.6." #-}
 impossible :: String -- ^ Name of the function in which the error was detected.
            -> String -- ^ Name of the package in which the function is located.
            -> a
-impossible = Err.impossible
+impossible function package =
+  error $ "\"Impossible\" error in function "
+    ++ function ++ ", in package " ++ package
+    ++ ". Please file an issue at "
+    ++ "https://github.com/Copilot-Language/copilot/issues"
+    ++ "or email the maintainers at <ivan.perezdominguez@nasa.gov>"
 
 -- | Report an error due to an error detected by Copilot (e.g., user error).
-{-# DEPRECATED badUsage "This function is deprecated in Copilot 3.6." #-}
 badUsage :: String -- ^ Description of the error.
          -> a
-badUsage = Err.badUsage
+badUsage msg = error $ "Copilot error: " ++ msg

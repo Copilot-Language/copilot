@@ -13,9 +13,10 @@ module Copilot.Language.Reify
   ) where
 
 import qualified Copilot.Core as Core
-import Copilot.Core (Typed, Id, typeOf, impossible)
+import Copilot.Core (Typed, Id, typeOf)
 
 import Copilot.Language.Analyze (analyze)
+import Copilot.Language.Error   (impossible)
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream (..), Arg (..))
 
