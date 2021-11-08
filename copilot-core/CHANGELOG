@@ -1,5 +1,6 @@
-2021-11-05
-        *  Deprecate Copilot.Core.Type.Dynamic.toDynF and fromDynF. (#269)
+2021-11-07
+        * Version bump (3.6). (#264)
+        * Deprecate Copilot.Core.Type.Dynamic.toDynF and fromDynF. (#269)
         * Deprecate copilot-core:Copilot.Core.Type.Uninitialized. (#270)
         * Deprecate export of copilot-core:Copilot.Core.Interpret.Render. (#268)
         * Replace uses of copilot-core's error reporting functions. (#267)
