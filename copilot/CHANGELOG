@@ -1,8 +1,9 @@
-2021-09-16
+2021-11-07
+        * Version bump (3.6). (#264)
         * Fix missing dependency in example executable. (#252)
         * Fix outdated/broken links. (#252)
         * Update installation instructions in README to
-	  match new repo structure. (#248)
+          match new repo structure. (#248)
 
 2021-08-19
         * Version bump (3.5). (#247)
