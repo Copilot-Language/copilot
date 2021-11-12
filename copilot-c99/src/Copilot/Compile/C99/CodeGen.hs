@@ -165,8 +165,8 @@ exprtypes e = case e of
 -- | List all types of a type, returns items uniquely.
 typetypes :: Typeable a => Type a -> [UType]
 typetypes ty = case ty of
-  Array ty' -> [UType ty] `union` typetypes ty'
-  Struct x  -> [UType ty] `union` map (\(Value ty' _) -> UType ty') (toValues x)
+  Array ty' -> typetypes ty' `union` [UType ty]
+  Struct x  -> concatMap (\(Value ty' _) -> typetypes ty') (toValues x) `union` [UType ty]
   _         -> [UType ty]
 
 -- | Collect all expression of a list of streams and triggers and wrap them
