@@ -14,6 +14,7 @@
 module Main where
 
 import Language.Copilot
+import Copilot.Compile.C99
 
 -- Lets define an array of length 2.
 -- Make the buffer of the streams 3 elements long.
@@ -32,4 +33,7 @@ spec = do
 
 -- Compile the spec
 main :: IO ()
-main = interpret 30 spec
+main = do
+  interpret 30 spec
+  spec' <- reify spec
+  compile "array" spec'
