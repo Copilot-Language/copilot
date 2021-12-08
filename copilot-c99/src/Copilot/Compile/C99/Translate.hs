@@ -134,10 +134,41 @@ constty ty = case ty of
     where
       vals v = constarray ty' (arrayelems v)
 
-      constarray :: Type a -> [a] -> [C.Init]
-      constarray ty xs = case ty of
-        Array ty' -> constarray ty' (concatMap arrayelems xs)
-        _         -> map (C.InitExpr . constty ty) xs
+-- | Transform a Copilot Array, based on the element values and their type,
+-- into a list of C99 initializer values.
+constarray :: Type a -> [a] -> [C.Init]
+constarray ty xs = case ty of
+  -- When there are nested arrays, use `InitArray` rather than `InitExpr`.
+  -- To see why, consider what happens in this example array of `int32_t`s:
+  --
+  --   {{0, 1}, {2, 3}, {4, 5}}
+  --
+  -- If this is translated as
+  -- InitArray [ InitArray [InitExpr Int32 0, InitExpr Int32 1]
+  --           , InitArray [InitExpr Int32 2, InitExpr Int32 3]
+  --           , InitArray [InitExpr Int32 4, InitExpr Int32 5] ],
+  -- then the generated code will be pretty-printed as:
+  --
+  --   { {(int32_t)(0), (int32_t)(1)},
+  --     {(int32_t)(2), (int32_t)(3)},
+  --     {(int32_t)(4), (int32_t)(5)} }
+  --
+  -- On the other hand, if this is translated as
+  -- InitArray [ InitExpr (Array 2 Int32) {0, 1}
+  --           , InitExpr (Array 2 Int32) {2, 3}
+  --           , InitExpr (Array 2 Int32) {4, 5} ],
+  -- then the generated code will be pretty-printed as:
+  --
+  --   { (int32_t[2]){(int32_t)(0), (int32_t)(1)},
+  --     (int32_t[2]){(int32_t)(2), (int32_t)(3)},
+  --     (int32_t[2]){(int32_t)(4), (int32_t)(5)} }
+  --
+  -- Note the additional (int32_t[2]) casts. This is not what we intend, since
+  -- a C compiler will interpret that an array of three `int32_t`s. This can
+  -- either lead to compiler errors (if you're lucky) or incorrect runtime
+  -- semantics (if you're unlucky).
+  Array ty' -> map (C.InitArray . constarray ty' . arrayelems) xs
+  _         -> map (C.InitExpr . constty ty) xs
 
 
 -- | Explicitly cast a C99 value to a type.
