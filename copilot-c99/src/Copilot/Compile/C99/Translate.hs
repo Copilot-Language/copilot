@@ -57,7 +57,7 @@ transop1 :: Op1 a b -> C.Expr -> C.Expr
 transop1 op e = case op of
   Not             -> (C..!) e
   Abs      _      -> funcall "abs"      [e]
-  Sign     _      -> funcall "copysign" [C.LitDouble 1.0, e]
+  Sign     ty     -> transsign ty e
   Recip    _      -> C.LitDouble 1.0 C../ e
   Exp      _      -> funcall "exp"   [e]
   Sqrt     _      -> funcall "sqrt"  [e]
@@ -113,6 +113,33 @@ transop2 op e1 e2 = case op of
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
+
+-- | Translates a use of @'signum' e@ in Copilot into a C99 expression. This
+-- expression is translated as @e > 0 ? 1 : (e < 0 ? -1 : e)@. That is:
+--
+-- 1. If @e@ is positive, return @1@.
+--
+-- 2. If @e@ is negative, return @-1@.
+--
+-- 3. Otherwise, return @e@. This handles the case where @e@ is @0@ when the
+--    type is an integral type. If the type is a floating-point type, it also
+--    handles the cases where @e@ is @-0@ or @NaN@.
+--
+-- This implementation is modeled after how GHC implements 'signum'
+-- <https://gitlab.haskell.org/ghc/ghc/-/blob/aed98ddaf72cc38fb570d8415cac5de9d8888818/libraries/base/GHC/Float.hs#L523-L525 here>.
+transsign :: Type a -> C.Expr -> C.Expr
+transsign ty e =
+  C.Cond (C.BinaryOp C.GT e (mkLit 0)) (mkLit 1) $     --  e > 0 ?  1 :
+  C.Cond (C.BinaryOp C.LT e (mkLit 0)) (mkLit (-1)) e  -- (e < 0 ? -1 : e)
+  where
+    mkLit :: Integer -> C.Expr
+    mkLit lit =
+      case ty of
+        -- Ensure that we use an appropriately typed literal depending on the
+        -- type of the argument.
+        Float  -> C.LitFloat (fromInteger lit)
+        Double -> C.LitDouble (fromInteger lit)
+        _      -> C.LitInt lit
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
