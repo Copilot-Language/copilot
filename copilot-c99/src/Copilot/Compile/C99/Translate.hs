@@ -54,26 +54,26 @@ transexpr (Op3 op e1 e2 e3) = do
 transop1 :: Op1 a b -> C.Expr -> C.Expr
 transop1 op e = case op of
   Not             -> (C..!) e
-  Abs      _      -> funcall "abs"      [e]
+  Abs      ty     -> transabs ty e
   Sign     _      -> funcall "copysign" [C.LitDouble 1.0, e]
-  Recip    _      -> C.LitDouble 1.0 C../ e
-  Exp      _      -> funcall "exp"   [e]
-  Sqrt     _      -> funcall "sqrt"  [e]
-  Log      _      -> funcall "log"   [e]
-  Sin      _      -> funcall "sin"   [e]
-  Tan      _      -> funcall "tan"   [e]
-  Cos      _      -> funcall "cos"   [e]
-  Asin     _      -> funcall "asin"  [e]
-  Atan     _      -> funcall "atan"  [e]
-  Acos     _      -> funcall "acos"  [e]
-  Sinh     _      -> funcall "sinh"  [e]
-  Tanh     _      -> funcall "tanh"  [e]
-  Cosh     _      -> funcall "cosh"  [e]
-  Asinh    _      -> funcall "asinh" [e]
-  Atanh    _      -> funcall "atanh" [e]
-  Acosh    _      -> funcall "acosh" [e]
-  Ceiling  _      -> funcall "ceil"  [e]
-  Floor    _      -> funcall "floor" [e]
+  Recip    ty     -> transrecip ty e
+  Exp      ty     -> transopFP "exp"   ty [e]
+  Sqrt     ty     -> transopFP "sqrt"  ty [e]
+  Log      ty     -> transopFP "log"   ty [e]
+  Sin      ty     -> transopFP "sin"   ty [e]
+  Tan      ty     -> transopFP "tan"   ty [e]
+  Cos      ty     -> transopFP "cos"   ty [e]
+  Asin     ty     -> transopFP "asin"  ty [e]
+  Atan     ty     -> transopFP "atan"  ty [e]
+  Acos     ty     -> transopFP "acos"  ty [e]
+  Sinh     ty     -> transopFP "sinh"  ty [e]
+  Tanh     ty     -> transopFP "tanh"  ty [e]
+  Cosh     ty     -> transopFP "cosh"  ty [e]
+  Asinh    ty     -> transopFP "asinh" ty [e]
+  Atanh    ty     -> transopFP "atanh" ty [e]
+  Acosh    ty     -> transopFP "acosh" ty [e]
+  Ceiling  ty     -> transopFP "ceil"  ty [e]
+  Floor    ty     -> transopFP "floor" ty [e]
   BwNot    _      -> (C..~) e
   Cast     _ ty  -> C.Cast (transtypename ty) e
   GetField (Struct _)  _ f -> C.Dot e (accessorname f)
@@ -90,9 +90,9 @@ transop2 op e1 e2 = case op of
   Mod      _   -> e1 C..%  e2
   Div      _   -> e1 C../  e2
   Fdiv     _   -> e1 C../  e2
-  Pow      _   -> funcall "pow" [e1, e2]
-  Logb     _   -> funcall "log" [e2] C../ funcall "log" [e1]
-  Atan2    _   -> funcall "atan2" [e1, e2]
+  Pow      ty  -> transopFP "pow" ty [e1, e2]
+  Logb     ty  -> transopFP "log" ty [e2] C../ transopFP "log" ty [e1]
+  Atan2    ty  -> transopFP "atan2" ty [e1, e2]
   Eq       _   -> e1 C..== e2
   Ne       _   -> e1 C..!= e2
   Le       _   -> e1 C..<= e2
@@ -111,6 +111,47 @@ transop2 op e1 e2 = case op of
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
+
+-- | Translates a Copilot 'Abs' operator and its argument into a C99
+-- expression.
+transabs :: Type a -> C.Expr -> C.Expr
+-- NB: Don't implement this in terms of transopFP, as Abs has a sensible
+-- translation for integral types.
+transabs ty e = case ty of
+  Float  -> funcall "fabsf" [e]
+  Double -> funcall "fabs"  [e]
+  _      -> funcall "abs"   [e]
+
+-- | Translates a Copilot 'Recip' operator and its argument into a C99
+-- expression.
+transrecip :: Type a -> C.Expr -> C.Expr
+transrecip ty e = case ty of
+  Float  -> C.LitFloat  1.0 C../ e
+  Double -> C.LitDouble 1.0 C../ e
+  _      -> error "Recip only supported for floating-point values"
+
+-- | Translates a Copilot operator that takes floating-point arguments into a
+-- C99 expression. This function will error if given a 'Type' besides 'Double'
+-- or 'Float'.
+transopFP ::
+     String   -- ^ The prefix to use for the name of the underlying operation
+              --   in @math.h@. For example, if translating a call to @atan2@
+              --   (for @double@s) or @atan2f@ (for @float@s), pass @\"atan2\"@
+              --   as the prefix. This function will take care of picking
+              --   between @atan2@/@atan2f@ depending on which 'Type' is
+              --   supplied.
+  -> Type a   -- ^ The type of the arguments.
+  -> [C.Expr] -- ^ The argument values.
+  -> C.Expr
+transopFP cFunPrefix ty args = case ty of
+  -- If the argument types are doubles, use the original C function name without
+  -- a suffix.
+  Double -> funcall cFunPrefix args
+  -- If the argument types are floats, attach an `f` suffix to the name to pick
+  -- the float-specific version of the function.
+  Float -> funcall (cFunPrefix ++ "f") args
+  -- If the argument types are anything else, throw an error.
+  _ -> error $ cFunPrefix ++ " only supported for floating-point values"
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
