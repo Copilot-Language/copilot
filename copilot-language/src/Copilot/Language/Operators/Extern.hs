@@ -17,6 +17,7 @@ module Copilot.Language.Operators.Extern
   , externI16
   , externI32
   , externI64
+  , externF
   , externD
   ) where
 
@@ -110,6 +111,13 @@ externI64 :: String    -- ^ Name of the global variable to make accessible.
           -> Maybe [Int64] -- ^ Values to be used exclusively for testing/simulation.
           -> Stream Int64
 externI64 = extern
+
+-- | Create a stream carrying values of type Float, populated by an external
+-- global variable.
+externF :: String        -- ^ Name of the global variable to make accessible.
+        -> Maybe [Float] -- ^ Values to be used exclusively for testing/simulation.
+        -> Stream Float
+externF = extern
 
 -- | Create a stream carrying values of type Double, populated by an external
 -- global variable.
