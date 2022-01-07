@@ -8,7 +8,9 @@ import Text.PrettyPrint     (render)
 import Data.List            (nub)
 import Data.Maybe           (catMaybes)
 import System.Directory     (createDirectoryIfMissing)
+import System.Exit          (exitFailure)
 import System.FilePath      ((</>))
+import System.IO            (hPutStrLn, stderr)
 
 import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
@@ -26,27 +28,34 @@ import Copilot.Compile.C99.CodeGen
 --
 -- The second argument is used as prefix for the .h and .c files generated.
 compileWith :: CSettings -> String -> Spec -> IO ()
-compileWith cSettings prefix spec = do
-  let cfile = render $ pretty $ C.translate $ compilec cSettings spec
-      hfile = render $ pretty $ C.translate $ compileh cSettings spec
+compileWith cSettings prefix spec
+  | null (specTriggers spec)
+  = do hPutStrLn stderr $
+         "Copilot error: attempt at compiling empty specification.\n"
+         ++ "You must define at least one trigger to generate C monitors."
+       exitFailure
 
-      -- TODO: find a nicer solution using annotated AST's
-      -- Should figure out exactly which headers are needed, based on what
-      -- is used.
-      cmacros = unlines [ "#include <stdint.h>"
-                        , "#include <stdbool.h>"
-                        , "#include <string.h>"
-                        , "#include <stdlib.h>"
-                        , "#include <math.h>"
-                        , ""
-                        , "#include \"" ++ prefix ++ ".h\""
-                        , ""
-                        ]
+  | otherwise
+  = do let cfile = render $ pretty $ C.translate $ compilec cSettings spec
+           hfile = render $ pretty $ C.translate $ compileh cSettings spec
 
-  let dir = cSettingsOutputDirectory cSettings
-  createDirectoryIfMissing True dir
-  writeFile (dir </> prefix ++ ".c") $ cmacros ++ cfile
-  writeFile (dir </> prefix ++ ".h") hfile
+           -- TODO: find a nicer solution using annotated AST's
+           -- Should figure out exactly which headers are needed, based on what
+           -- is used.
+           cmacros = unlines [ "#include <stdint.h>"
+                             , "#include <stdbool.h>"
+                             , "#include <string.h>"
+                             , "#include <stdlib.h>"
+                             , "#include <math.h>"
+                             , ""
+                             , "#include \"" ++ prefix ++ ".h\""
+                             , ""
+                             ]
+
+       let dir = cSettingsOutputDirectory cSettings
+       createDirectoryIfMissing True dir
+       writeFile (dir </> prefix ++ ".c") $ cmacros ++ cfile
+       writeFile (dir </> prefix ++ ".h") hfile
 
 -- | Compile a specification to a .h and a .c file.
 --

@@ -1,3 +1,6 @@
+2022-01-07
+        * Guard against empty specs. (#274)
+
 2021-11-07
         * Version bump (3.6). (#264)
         * Introduce new ops atan2, ceiling, floor. (#246)
