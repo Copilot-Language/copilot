@@ -8,7 +8,6 @@
 -- | Show Copilot Core types and typed values.
 module Copilot.Core.Type.Show
   ( ShowWit (..)
-  , showWit
   , showWithType
   , ShowType(..)
   , showType
@@ -24,7 +23,6 @@ data ShowWit a = Show a => ShowWit
 --------------------------------------------------------------------------------
 
 -- | Turn a type into a show witness.
-{-# DEPRECATED showWit "This function is deprecated in Copilot 3.4." #-}
 showWit :: Type a -> ShowWit a
 showWit t =
   case t of
