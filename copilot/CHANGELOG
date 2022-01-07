@@ -1,3 +1,6 @@
+2022-01-07
+        * Add example with nested structs. (#275)
+
 2021-11-07
         * Version bump (3.6). (#264)
         * Fix missing dependency in example executable. (#252)

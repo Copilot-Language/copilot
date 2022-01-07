@@ -1,5 +1,6 @@
 2022-01-07
         * Guard against empty specs. (#274)
+        * Make typetypes respect dependency order. (#275)
 
 2021-11-07
         * Version bump (3.6). (#264)
