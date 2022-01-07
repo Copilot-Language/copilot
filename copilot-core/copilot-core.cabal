@@ -57,7 +57,6 @@ library
     Copilot.Core.Interpret.Render
     Copilot.Core.Operators
     Copilot.Core.Spec
-    Copilot.Core.Locals
     Copilot.Core.Type
     Copilot.Core.Type.Array
     Copilot.Core.Type.Dynamic
