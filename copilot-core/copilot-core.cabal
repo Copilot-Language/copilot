@@ -62,7 +62,6 @@ library
     Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
     Copilot.Core.Type.Show
-    Copilot.Core.Type.Read
     Copilot.Core.Type.Uninitialized
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
