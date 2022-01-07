@@ -1,3 +1,6 @@
+2022-01-07
+        * Relax version contraints on what4. (#277)
+
 2021-11-07
         * Version bump (3.6). (#264)
         * Fix outdated/broken links. (#252)

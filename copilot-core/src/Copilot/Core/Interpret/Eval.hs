@@ -14,20 +14,23 @@ module Copilot.Core.Interpret.Eval
   , eval
   ) where
 
-import Copilot.Core hiding (badUsage)
+import Copilot.Core               (Expr (..), Field (..), Id, Name,
+                                   Observer (..), Op1 (..), Op2 (..), Op3 (..),
+                                   Spec, Stream (..), Trigger (..),
+                                   Type (Struct), UExpr (..), arrayelems,
+                                   specObservers, specStreams, specTriggers)
 import Copilot.Core.ErrorInternal (badUsage)
-import Copilot.Core.Type.Show (showWithType, ShowType)
+import Copilot.Core.Type.Show     (ShowType, showWithType)
 
-import Prelude hiding (id)
+import           Prelude hiding (id)
 import qualified Prelude as P
 
-import Data.List (transpose)
-import Data.Maybe (fromJust)
-import Data.Bits
 import Control.Exception (Exception, throw)
-
-import Data.Dynamic (Dynamic, fromDynamic, toDyn)
-import Data.Typeable (Typeable)
+import Data.Bits         (complement, shiftL, shiftR, xor, (.&.), (.|.))
+import Data.Dynamic      (Dynamic, fromDynamic, toDyn)
+import Data.List         (transpose)
+import Data.Maybe        (fromJust)
+import Data.Typeable     (Typeable)
 
 --------------------------------------------------------------------------------
 
