@@ -1,3 +1,6 @@
+2022-01-07
+        * Bring back externF. (#261)
+
 2021-11-07
         * Version bump (3.6). (#264)
         * Replace uses of copilot-core's error reporting functions. (#267)
