@@ -1,3 +1,6 @@
+2022-01-07
+        * Remove Copilot.Core.Type.Show.showWit. (#282)
+
 2021-11-07
         * Version bump (3.6). (#264)
         * Deprecate Copilot.Core.Type.Dynamic.toDynF and fromDynF. (#269)
