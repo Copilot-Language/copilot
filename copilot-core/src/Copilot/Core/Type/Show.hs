@@ -18,6 +18,7 @@ import Copilot.Core.Type
 --------------------------------------------------------------------------------
 
 -- | Witness datatype for showing a value, used by 'showWithType'.
+{-# DEPRECATED ShowWit "This type is deprecated in Copilot 3.7." #-}
 data ShowWit a = Show a => ShowWit
 
 --------------------------------------------------------------------------------
