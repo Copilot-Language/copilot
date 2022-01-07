@@ -1,4 +1,5 @@
 2022-01-07
+        * Remove Copilot.Core.Type.Read. (#286)
         * Remove Copilot.Core.Type.Eq. (#285)
         * Remove Copilot.Core.Locals. (#284)
         * Deprecate Copilot.Core.Type.Show.ShowWit. (#283)
