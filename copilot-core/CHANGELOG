@@ -1,4 +1,5 @@
 2022-01-07
+        * Deprecate Copilot.Core.Type.Show.ShowWit. (#283)
         * Remove Copilot.Core.Type.Show.showWit. (#282)
 
 2021-11-07
