@@ -2,9 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | High-level translation of Copilot Core into C99.
-module Copilot.Compile.C99.CodeGen
-  {-# DEPRECATED "This module will be hidden in future versions." #-}
-  where
+module Copilot.Compile.C99.CodeGen where
 
 import Control.Monad.State  (runState)
 import Data.List            (union, unzip4)
