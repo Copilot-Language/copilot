@@ -45,8 +45,7 @@ library
                , copilot-core    >= 3.7 && < 3.8
                , copilot-theorem >= 3.7 && < 3.8
 
-  exposed-modules: Copilot
-                 , Copilot.Language
+  exposed-modules: Copilot.Language
                  , Copilot.Language.Operators.BitWise
                  , Copilot.Language.Operators.Boolean
                  , Copilot.Language.Operators.Propositional
