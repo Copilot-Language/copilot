@@ -24,6 +24,8 @@ description:
   A tutorial, examples, and other information are available at
   <https://copilot-language.github.io>.
 
+x-curation: uncurated
+
 extra-source-files:
   README.md
   CHANGELOG

@@ -27,6 +27,8 @@ author                    : Frank Dedden
                           , Alwyn Goodloe
                           , Ivan Perez
 
+x-curation: uncurated
+
 source-repository head
     type:       git
     location:   git://github.com/Copilot-Language/copilot.git
