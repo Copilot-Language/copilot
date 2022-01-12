@@ -16,6 +16,7 @@
 {-# LANGUAGE GADTs, KindSignatures, ScopedTypeVariables #-}
 
 module Copilot.Core.Type.Dynamic
+  {-# DEPRECATED "This module is deprecated in Copilot 3.8." #-}
   ( Dynamic  (..)
   , DynamicF (..)
   , toDyn
