@@ -56,12 +56,12 @@ library
                           , language-c99-simple >= 0.1.1 && < 0.2
 
   exposed-modules         : Copilot.Compile.C99
-                          , Copilot.Compile.C99.Translate
-                          , Copilot.Compile.C99.Util
-                          , Copilot.Compile.C99.CodeGen
-                          , Copilot.Compile.C99.External
-                          , Copilot.Compile.C99.Compile
-                          , Copilot.Compile.C99.Settings
 
-  other-modules          : Copilot.Compile.C99.Compile.Internal
+  other-modules          : Copilot.Compile.C99.Translate
+                         , Copilot.Compile.C99.Util
+                         , Copilot.Compile.C99.CodeGen
+                         , Copilot.Compile.C99.External
+                         , Copilot.Compile.C99.Compile
+                         , Copilot.Compile.C99.Settings
+                         , Copilot.Compile.C99.Compile.Internal
                          , Copilot.Compile.C99.Settings.Internal
