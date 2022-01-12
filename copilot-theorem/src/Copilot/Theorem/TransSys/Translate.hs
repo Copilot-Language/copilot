@@ -161,7 +161,7 @@ stream (C.Stream { C.streamId
 
     let nodeId = ncNode streamId
         outvar i = Var (ncMain `ncTimeAnnot` i)
-        buf = map (cast t . toDyn streamExprType) streamBuffer
+        buf = map (cast t . toDyn) streamBuffer
 
     (e, nodeAuxVars, nodeImportedVars, nodeDependencies) <-
       runExprTrans t nodeId streamExpr
@@ -184,7 +184,7 @@ stream (C.Stream { C.streamId
 
 expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
-expr t (C.Const t' v) = return $ Const t (cast t $ toDyn t' v)
+expr t (C.Const _ v) = return $ Const t (cast t $ toDyn v)
 
 expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
   let node = ncNode id
