@@ -17,9 +17,8 @@ module Copilot.Theorem.TransSys.Cast
 --------------------------------------------------------------------------------
 
 import Copilot.Core as C
-import Copilot.Core.Type.Equality
-import Copilot.Core.Type.Dynamic
 
+import Data.Dynamic (Dynamic(..), fromDynamic, toDyn)
 import GHC.Float
 
 import qualified Copilot.Theorem.TransSys.Type as K
@@ -27,7 +26,7 @@ import qualified Copilot.Theorem.TransSys.Type as K
 --------------------------------------------------------------------------------
 
 -- | Synonym for a dynamic type in Copilot core.
-type Dyn = Dynamic Type
+type Dyn = Dynamic
 
 -- | Translation of a Copilot type into Copilot theorem's internal
 -- representation.
@@ -67,26 +66,26 @@ class Casted b where
   _cast :: Dyn -> Maybe b
 
 instance Casted Integer where
-  _cast (Dynamic v tv)
-    | Just Refl <- tv =~= Int8    = Just $ toInteger v
-    | Just Refl <- tv =~= Int16   = Just $ toInteger v
-    | Just Refl <- tv =~= Int32   = Just $ toInteger v
-    | Just Refl <- tv =~= Int64   = Just $ toInteger v
-    | Just Refl <- tv =~= Word16  = Just $ toInteger v
-    | Just Refl <- tv =~= Word8   = Just $ toInteger v
-    | Just Refl <- tv =~= Word32  = Just $ toInteger v
-    | Just Refl <- tv =~= Word64  = Just $ toInteger v
-    | otherwise                   = Nothing
+  _cast d
+    | Just (v :: Int8)   <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Int16)  <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Int32)  <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Int64)  <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Word8)  <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Word16) <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Word32) <- fromDynamic d = Just $ toInteger v
+    | Just (v :: Word64) <- fromDynamic d = Just $ toInteger v
+    | otherwise                           = Nothing
 
 instance Casted Bool where
-  _cast (Dynamic v tv)
-    | Just Refl <- tv =~= Bool  = Just v
-    | otherwise                 = Nothing
+  _cast d
+    | Just (v :: Bool) <- fromDynamic d = Just v
+    | otherwise                         = Nothing
 
 instance Casted Double where
-  _cast (Dynamic v tv)
-    | Just Refl <- tv =~= Float  = Just $ float2Double v
-    | Just Refl <- tv =~= Double = Just v
-    | otherwise = Nothing
+  _cast d
+    | Just (v :: Float)  <- fromDynamic d = Just $ float2Double v
+    | Just (v :: Double) <- fromDynamic d = Just v
+    | otherwise                           = Nothing
 
 --------------------------------------------------------------------------------
