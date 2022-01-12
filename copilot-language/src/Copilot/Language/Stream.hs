@@ -12,7 +12,6 @@
 module Copilot.Language.Stream
   ( Stream (..)
   , Arg (..)
-  , StructArg (..)
   , Copilot.Language.Stream.ceiling
   , Copilot.Language.Stream.floor
   , Copilot.Language.Stream.atan2
@@ -58,9 +57,6 @@ data Stream :: * -> * where
 -- | Wrapper to use 'Stream's as arguments to triggers.
 data Arg where
   Arg :: Typed a => Stream a -> Arg
-
-data StructArg = StructArg { name_ :: String, arg' :: Arg }
-{-# DEPRECATED StructArg "StructArg is deprecated" #-}
 
 --------------------------------------------------------------------------------
 
