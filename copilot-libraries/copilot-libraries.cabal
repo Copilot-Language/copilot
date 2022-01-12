@@ -24,6 +24,8 @@ category:            Language, Embedded
 build-type:          Simple
 extra-source-files:  README.md, CHANGELOG
 
+x-curation: uncurated
+
 source-repository head
     type:       git
     location:   git://github.com/Copilot-Language/copilot.git
