@@ -1,3 +1,6 @@
+2022-02-09
+        * Added support for GHC 9.0. (#284)
+
 2022-01-07
         * Version bump (3.7). (#287)
         * Add example with nested structs. (#275)
