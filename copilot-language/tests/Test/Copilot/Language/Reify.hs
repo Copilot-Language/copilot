@@ -78,6 +78,8 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word16))
   , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word32))
   , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word64))
+  , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -208,6 +210,34 @@ arbitraryNumExpr =
                  <*> arbitraryNumExpr)
     ]
 
+-- | An arbitrary floating point expression, paired with its expected meaning.
+arbitraryFloatingExpr :: (Arbitrary t, Typed t, Floating t, Eq t)
+                      => Gen (Stream t, [t])
+arbitraryFloatingExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (5, apply1 <$> arbitraryFloatingOp1 <*> arbitraryFloatingExpr)
+
+    , (5, apply1 <$> arbitraryNumOp1 <*> arbitraryFloatingExpr)
+
+    , (2, apply2 <$> arbitraryFloatingOp2
+                 <*> arbitraryFloatingExpr
+                 <*> arbitraryFloatingExpr)
+
+    , (2, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryFloatingExpr
+                 <*> arbitraryFloatingExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryFloatingExpr
+                 <*> arbitraryFloatingExpr)
+    ]
+
 -- *** Primitives
 
 -- | An arbitrary constant expression of any type, paired with its expected
@@ -291,6 +321,28 @@ arbitraryNumOp1 = elements
   , (signum, fmap signum)
   ]
 
+-- | Generator for arbitrary floating point operators with arity 1, paired with
+-- their expected meaning.
+arbitraryFloatingOp1 :: (Typed t, Floating t, Eq t)
+                     => Gen (Stream t -> Stream t, [t] -> [t])
+arbitraryFloatingOp1 = elements
+  [ (exp,   fmap exp)
+  , (sqrt,  fmap sqrt)
+  , (log,   fmap log)
+  , (sin,   fmap sin)
+  , (tan,   fmap tan)
+  , (cos,   fmap cos)
+  , (asin,  fmap asin)
+  , (atan,  fmap atan)
+  , (acos,  fmap acos)
+  , (sinh,  fmap sinh)
+  , (tanh,  fmap tanh)
+  , (cosh,  fmap cosh)
+  , (asinh, fmap asinh)
+  , (atanh, fmap atanh)
+  , (acosh, fmap acosh)
+  ]
+
 -- | Generator for arbitrary bitwise operators with arity 1, paired with their
 -- expected meaning.
 arbitraryBitsOp1 :: (Typed t, Bits t)
@@ -321,6 +373,17 @@ arbitraryNumOp2 = elements
   [ ((+), zipWith (+))
   , ((-), zipWith (-))
   , ((*), zipWith (*))
+  ]
+
+-- | Generator for arbitrary floating point operators with arity 2, paired with
+-- their expected meaning.
+arbitraryFloatingOp2 :: (Typed t, Floating t, Eq t)
+                     => Gen ( Stream t -> Stream t -> Stream t
+                            , [t] -> [t] -> [t]
+                            )
+arbitraryFloatingOp2 = elements
+  [ ((**),    zipWith (**))
+  , (logBase, zipWith logBase)
   ]
 
 -- | Generator for arbitrary equality operators with arity 2, paired with their
