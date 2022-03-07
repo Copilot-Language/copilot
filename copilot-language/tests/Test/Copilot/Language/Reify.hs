@@ -27,6 +27,7 @@ import qualified Copilot.Language.Operators.BitWise  as Copilot
 import qualified Copilot.Language.Operators.Boolean  as Copilot
 import qualified Copilot.Language.Operators.Constant as Copilot
 import qualified Copilot.Language.Operators.Eq       as Copilot
+import qualified Copilot.Language.Operators.Integral as Copilot
 import qualified Copilot.Language.Operators.Mux      as Copilot
 import           Copilot.Language.Reify              (reify)
 import           Copilot.Language.Spec               (observer)
@@ -87,6 +88,14 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Int8))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Int16))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Int32))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Int64))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Word8))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Word16))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Word32))
+  , SemanticsP <$> (arbitraryIntegralExpr     :: Gen (Semantics Word64))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -330,6 +339,43 @@ arbitraryFractionalExpr =
     arbitraryFractionalExprNonZero = arbitraryFractionalExpr
       `suchThat` (notElem 0 . take maxTraceLength . snd)
 
+-- | An arbitrary integral expression, paired with its expected meaning.
+--
+-- We add the constraint Eq because we sometimes need to make sure numbers are
+-- not zero.
+arbitraryIntegralExpr :: (Arbitrary t, Typed t, Integral t, Eq t)
+                      => Gen (Stream t, [t])
+arbitraryIntegralExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (5, apply1 <$> arbitraryNumOp1 <*> arbitraryIntegralExpr)
+
+    , (2, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryIntegralExpr
+                 <*> arbitraryIntegralExpr)
+
+    , (2, apply2 <$> arbitraryIntegralOp2
+                 <*> arbitraryIntegralExpr
+                 <*> arbitraryIntegralExprNonZero)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryIntegralExpr
+                 <*> arbitraryIntegralExpr)
+    ]
+  where
+
+    -- Generator for integral expressions that are never zero.
+    --
+    -- The list is infinite, so this generator checks up to maxTraceLength
+    -- elements.
+    arbitraryIntegralExprNonZero = arbitraryIntegralExpr
+      `suchThat` (notElem 0 . take maxTraceLength . snd)
+
 -- *** Primitives
 
 -- | An arbitrary constant expression of any type, paired with its expected
@@ -489,6 +535,17 @@ arbitraryNumOp2 = elements
   [ ((+), zipWith (+))
   , ((-), zipWith (-))
   , ((*), zipWith (*))
+  ]
+
+-- | Generator for arbitrary integral operators with arity 2, paired with their
+-- expected meaning.
+arbitraryIntegralOp2 :: (Typed t, Integral t)
+                     => Gen ( Stream t -> Stream t -> Stream t
+                            , [t] -> [t] -> [t]
+                            )
+arbitraryIntegralOp2 = elements
+  [ (Copilot.mod, zipWith mod)
+  , (Copilot.div, zipWith quot)
   ]
 
 -- | Generator for arbitrary fractional operators with arity 2, paired with
