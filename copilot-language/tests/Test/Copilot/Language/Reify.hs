@@ -18,7 +18,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck                      (Arbitrary, Gen, Property,
                                              arbitrary, chooseInt, elements,
                                              forAll, forAllShow, frequency,
-                                             oneof)
+                                             oneof, suchThat)
 import Test.QuickCheck.Monadic              (monadicIO, run)
 
 -- Internal imports: library modules being tested
@@ -85,6 +85,8 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryFractionalExpr   :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -293,6 +295,41 @@ arbitraryRealFloatExpr =
                  <*> arbitraryRealFloatExpr)
     ]
 
+-- | An arbitrary fractional expression, paired with its expected meaning.
+--
+-- We add the constraint Eq because we sometimes need to make sure numbers are
+-- not zero.
+arbitraryFractionalExpr :: (Arbitrary t, Typed t, Fractional t, Eq t)
+                        => Gen (Stream t, [t])
+arbitraryFractionalExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (5, apply1 <$> arbitraryFractionalOp1 <*> arbitraryFractionalExpr)
+
+    , (5, apply1 <$> arbitraryNumOp1 <*> arbitraryFractionalExpr)
+
+    , (2, apply2 <$> arbitraryFractionalOp2
+                 <*> arbitraryFractionalExpr
+                 <*> arbitraryFractionalExprNonZero)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryFractionalExpr
+                 <*> arbitraryFractionalExpr)
+    ]
+  where
+
+    -- Generator for fractional expressions that are never zero.
+    --
+    -- The list is infinite, so this generator checks up to maxTraceLength
+    -- elements.
+    arbitraryFractionalExprNonZero = arbitraryFractionalExpr
+      `suchThat` (notElem 0 . take maxTraceLength . snd)
+
 -- *** Primitives
 
 -- | An arbitrary constant expression of any type, paired with its expected
@@ -414,6 +451,14 @@ arbitraryRealFracOp1 = elements
     idI :: Integer -> Integer
     idI = id
 
+-- | Generator for arbitrary fractional operators with arity 1, paired with
+-- their expected meaning.
+arbitraryFractionalOp1 :: (Typed t, Fractional t, Eq t)
+                       => Gen (Stream t -> Stream t, [t] -> [t])
+arbitraryFractionalOp1 = elements
+  [ (recip, fmap recip)
+  ]
+
 -- | Generator for arbitrary bitwise operators with arity 1, paired with their
 -- expected meaning.
 arbitraryBitsOp1 :: (Typed t, Bits t)
@@ -444,6 +489,16 @@ arbitraryNumOp2 = elements
   [ ((+), zipWith (+))
   , ((-), zipWith (-))
   , ((*), zipWith (*))
+  ]
+
+-- | Generator for arbitrary fractional operators with arity 2, paired with
+-- their expected meaning.
+arbitraryFractionalOp2 :: (Typed t, Fractional t, Eq t)
+                       => Gen ( Stream t -> Stream t -> Stream t
+                              , [t] -> [t] -> [t]
+                              )
+arbitraryFractionalOp2 = elements
+  [ ((/), zipWith (/))
   ]
 
 -- | Generator for arbitrary floating point operators with arity 2, paired with
