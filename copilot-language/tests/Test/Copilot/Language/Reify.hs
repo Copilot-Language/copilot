@@ -31,6 +31,7 @@ import qualified Copilot.Language.Operators.Mux      as Copilot
 import           Copilot.Language.Reify              (reify)
 import           Copilot.Language.Spec               (observer)
 import           Copilot.Language.Stream             (Stream)
+import qualified Copilot.Language.Stream             as Copilot
 
 -- Internal imports: functions needed to test after reification
 import Copilot.Core.Type.Show      (ShowType (Haskell))
@@ -80,6 +81,8 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word64))
   , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -238,6 +241,30 @@ arbitraryFloatingExpr =
                  <*> arbitraryFloatingExpr)
     ]
 
+-- | An arbitrary realfrac expression, paired with its expected meaning.
+arbitraryRealFracExpr :: (Arbitrary t, Typed t, RealFrac t)
+                      => Gen (Stream t, [t])
+arbitraryRealFracExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (2, apply1 <$> arbitraryRealFracOp1 <*> arbitraryRealFracExpr)
+
+    , (5, apply1 <$> arbitraryNumOp1      <*> arbitraryRealFracExpr)
+
+    , (1, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryRealFracExpr
+                 <*> arbitraryRealFracExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryRealFracExpr
+                 <*> arbitraryRealFracExpr)
+    ]
+
 -- *** Primitives
 
 -- | An arbitrary constant expression of any type, paired with its expected
@@ -342,6 +369,22 @@ arbitraryFloatingOp1 = elements
   , (atanh, fmap atanh)
   , (acosh, fmap acosh)
   ]
+
+-- | Generator for arbitrary realfrac operators with arity 1, paired with their
+-- expected meaning.
+arbitraryRealFracOp1 :: (Typed t, RealFrac t)
+                     => Gen (Stream t -> Stream t, [t] -> [t])
+arbitraryRealFracOp1 = elements
+    [ (Copilot.ceiling, fmap (fromIntegral . idI . ceiling))
+    , (Copilot.floor,   fmap (fromIntegral . idI . floor))
+    ]
+  where
+    -- Auxiliary function to help the compiler determine which integral type
+    -- the result of ceiling must be converted to. An Integer ensures that the
+    -- result fits and there is no loss of precision due to the intermediate
+    -- casting.
+    idI :: Integer -> Integer
+    idI = id
 
 -- | Generator for arbitrary bitwise operators with arity 1, paired with their
 -- expected meaning.
