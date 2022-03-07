@@ -7,7 +7,8 @@
 module Test.Copilot.Language.Reify where
 
 -- External imports
-import Data.Bits                            (Bits, complement, xor, (.&.), (.|.))
+import Data.Bits                            (Bits, complement, shiftL, shiftR,
+                                             xor, (.&.), (.|.))
 import Data.Int                             (Int16, Int32, Int64, Int8)
 import Data.Maybe                           (fromMaybe)
 import Data.Typeable                        (Typeable)
@@ -22,6 +23,7 @@ import Test.QuickCheck.Monadic              (monadicIO, run)
 
 -- Internal imports: library modules being tested
 import           Copilot.Language                    (Typed)
+import qualified Copilot.Language.Operators.BitWise  as Copilot
 import qualified Copilot.Language.Operators.Boolean  as Copilot
 import qualified Copilot.Language.Operators.Constant as Copilot
 import qualified Copilot.Language.Operators.Eq       as Copilot
@@ -85,6 +87,14 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word16))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word32))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word64))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Int8))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Int16))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Int32))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Int64))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word8))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word16))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word32))
+  , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word64))
   ]
 
 -- | An arbitrary boolean expression, paired with its expected meaning.
@@ -235,6 +245,33 @@ arbitraryBitsExpr =
                  <*> arbitraryBitsExpr <*> arbitraryBitsExpr)
     ]
 
+-- | An arbitrary expression for types that are instances of Bits and Integral,
+-- paired with its expected meaning.
+arbitraryBitsIntegralExpr :: (Arbitrary t, Typed t, Bits t, Integral t)
+                          => Gen (Stream t, [t])
+arbitraryBitsIntegralExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (2, apply1 <$> arbitraryNumOp1 <*> arbitraryBitsIntegralExpr)
+
+    , (1, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryBitsIntegralExpr
+                 <*> arbitraryBitsIntegralExpr)
+
+    , (5, apply2 <$> arbitraryBitsIntegralOp2
+                 <*> arbitraryBitsIntegralExpr
+                 <*> arbitraryBitsIntegralExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryBitsIntegralExpr
+                 <*> arbitraryBitsIntegralExpr)
+    ]
+
 
 -- *** Op 1
 
@@ -305,6 +342,22 @@ arbitraryBitsOp2 = elements
   [ ((.&.), zipWith (.&.))
   , ((.|.), zipWith (.|.))
   , (xor,   zipWith xor)
+  ]
+
+-- | Generator for arbitrary bit shifting operators with arity 2, paired with
+-- their expected meaning.
+--
+-- This generator is a bit more strict in its type signature than the
+-- underlying bit-shifting operators being tested, since it enforces both the
+-- value being manipulated and the value that indicates how much to shift by to
+-- have the same type.
+arbitraryBitsIntegralOp2 :: (Typed t, Bits t, Integral t)
+                         => Gen ( Stream t -> Stream t -> Stream t
+                                , [t] -> [t] -> [t]
+                                )
+arbitraryBitsIntegralOp2 = elements
+  [ ((Copilot..<<.), zipWith (\x y -> shiftL x (fromIntegral y)))
+  , ((Copilot..>>.), zipWith (\x y -> shiftR x (fromIntegral y)))
   ]
 
 -- *** Op 3
