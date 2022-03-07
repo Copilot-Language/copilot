@@ -116,6 +116,24 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word64))
   ]
 
+
+-- ** Random Stream generators
+
+
+-- | An arbitrary constant expression of any type, paired with its expected
+-- meaning.
+arbitraryConst :: (Arbitrary t, Typed t)
+               => Gen (Stream t, [t])
+arbitraryConst = (\v -> (Copilot.constant v, repeat v)) <$> arbitrary
+
+-- | Generator for constant boolean streams, paired with their expected
+-- meaning.
+arbitraryBoolOp0 :: Gen (Stream Bool, [Bool])
+arbitraryBoolOp0 = elements
+  [ (Copilot.false, repeat False)
+  , (Copilot.true,  repeat True)
+  ]
+
 -- | An arbitrary boolean expression, paired with its expected meaning.
 arbitraryBoolExpr :: Gen (Stream Bool, [Bool])
 arbitraryBoolExpr =
@@ -416,22 +434,6 @@ arbitraryIntegralExpr =
     -- elements.
     arbitraryIntegralExprNonZero = arbitraryIntegralExpr
       `suchThat` (notElem 0 . take maxTraceLength . snd)
-
--- *** Primitives
-
--- | An arbitrary constant expression of any type, paired with its expected
--- meaning.
-arbitraryConst :: (Arbitrary t, Typed t)
-               => Gen (Stream t, [t])
-arbitraryConst = (\v -> (Copilot.constant v, repeat v)) <$> arbitrary
-
--- | Generator for constant boolean streams, paired with their expected
--- meaning.
-arbitraryBoolOp0 :: Gen (Stream Bool, [Bool])
-arbitraryBoolOp0 = elements
-  [ (Copilot.false, repeat False)
-  , (Copilot.true,  repeat True)
-  ]
 
 -- | An arbitrary Bits expression, paired with its expected meaning.
 arbitraryBitsExpr :: (Arbitrary t, Typed t, Bits t)
