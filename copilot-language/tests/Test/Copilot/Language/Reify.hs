@@ -29,6 +29,7 @@ import qualified Copilot.Language.Operators.Constant as Copilot
 import qualified Copilot.Language.Operators.Eq       as Copilot
 import qualified Copilot.Language.Operators.Integral as Copilot
 import qualified Copilot.Language.Operators.Mux      as Copilot
+import qualified Copilot.Language.Operators.Ord      as Copilot
 import           Copilot.Language.Reify              (reify)
 import           Copilot.Language.Spec               (observer)
 import           Copilot.Language.Stream             (Stream)
@@ -199,6 +200,46 @@ arbitraryBoolExpr =
     , (1, apply2 <$> arbitraryEqOp2
                  <*> arbitraryNumExpr
                  <*> (arbitraryNumExpr :: Gen (Stream Word64, [Word64])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int8, [Int8])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int16, [Int16])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int32, [Int32])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int64, [Int64])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word8, [Word8])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word16, [Word16])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word32, [Word32])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word64, [Word64])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryFloatingExpr
+                 <*> (arbitraryFloatingExpr :: Gen (Stream Float, [Float])))
+
+    , (1, apply2 <$> arbitraryOrdOp2
+                 <*> arbitraryFloatingExpr
+                 <*> (arbitraryFloatingExpr :: Gen (Stream Double, [Double])))
 
     , (1, apply3 <$> arbitraryITEOp3
                  <*> arbitraryBoolExpr
@@ -588,6 +629,19 @@ arbitraryEqOp2 :: (Typed t, Eq t)
 arbitraryEqOp2 = elements
   [ ((Copilot.==), zipWith (==))
   , ((Copilot./=), zipWith (/=))
+  ]
+
+-- | Generator for arbitrary ordering operators with arity 2, paired with their
+-- expected meaning.
+arbitraryOrdOp2 :: (Typed t, Ord t)
+                => Gen ( Stream t -> Stream t -> Stream Bool
+                       , [t] -> [t] -> [Bool]
+                       )
+arbitraryOrdOp2 = elements
+  [ ((Copilot.<=), zipWith (<=))
+  , ((Copilot.<),  zipWith (<))
+  , ((Copilot.>=), zipWith (>=))
+  , ((Copilot.>),  zipWith (>))
   ]
 
 -- | Generator for arbitrary bitwise operators with arity 2, paired with their
