@@ -68,6 +68,14 @@ testEvalExpr =
 arbitrarySemanticsP :: Gen SemanticsP
 arbitrarySemanticsP = oneof
   [ SemanticsP <$> (arbitraryBoolExpr         :: Gen (Semantics Bool))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Int8))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Int16))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Int32))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Int64))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word8))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word16))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word32))
+  , SemanticsP <$> (arbitraryNumExpr          :: Gen (Semantics Word64))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -132,10 +140,62 @@ arbitraryBoolExpr =
                  <*> arbitraryBitsExpr
                  <*> (arbitraryBitsExpr :: Gen (Stream Word64, [Word64])))
 
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int8, [Int8])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int16, [Int16])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int32, [Int32])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Int64, [Int64])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word8, [Word8])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word16, [Word16])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word32, [Word32])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryNumExpr
+                 <*> (arbitraryNumExpr :: Gen (Stream Word64, [Word64])))
+
     , (1, apply3 <$> arbitraryITEOp3
                  <*> arbitraryBoolExpr
                  <*> arbitraryBoolExpr
                  <*> arbitraryBoolExpr)
+    ]
+
+-- | An arbitrary numeric expression, paired with its expected meaning.
+arbitraryNumExpr :: (Arbitrary t, Typed t, Num t, Eq t)
+                 => Gen (Stream t, [t])
+arbitraryNumExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (5, apply1 <$> arbitraryNumOp1 <*> arbitraryNumExpr)
+
+    , (2, apply2 <$> arbitraryNumOp2 <*> arbitraryNumExpr <*> arbitraryNumExpr)
+
+    , (2, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryNumExpr
+                 <*> arbitraryNumExpr)
     ]
 
 -- *** Primitives
@@ -185,6 +245,15 @@ arbitraryBoolOp1 = elements
   [ (Copilot.not, fmap not)
   ]
 
+-- | Generator for arbitrary numeric operators with arity 1, paired with their
+-- expected meaning.
+arbitraryNumOp1 :: (Typed t, Num t, Eq t)
+                => Gen (Stream t -> Stream t, [t] -> [t])
+arbitraryNumOp1 = elements
+  [ (abs,    fmap abs)
+  , (signum, fmap signum)
+  ]
+
 -- | Generator for arbitrary bitwise operators with arity 1, paired with their
 -- expected meaning.
 arbitraryBitsOp1 :: (Typed t, Bits t)
@@ -205,6 +274,16 @@ arbitraryBoolOp2 = elements
   , ((Copilot.||),  zipWith (||))
   , ((Copilot.==>), zipWith (\x y -> not x || y))
   , ((Copilot.xor), zipWith (\x y -> (x || y) && not (x && y)))
+  ]
+
+-- | Generator for arbitrary numeric operators with arity 2, paired with their
+-- expected meaning.
+arbitraryNumOp2 :: (Typed t, Num t, Eq t)
+                => Gen (Stream t -> Stream t -> Stream t, [t] -> [t] -> [t])
+arbitraryNumOp2 = elements
+  [ ((+), zipWith (+))
+  , ((-), zipWith (-))
+  , ((*), zipWith (*))
   ]
 
 -- | Generator for arbitrary equality operators with arity 2, paired with their
