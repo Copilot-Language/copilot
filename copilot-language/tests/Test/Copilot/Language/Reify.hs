@@ -483,6 +483,7 @@ arbitraryBitsIntegralExpr =
                  <*> arbitraryBitsIntegralExpr)
     ]
 
+-- ** Operators
 
 -- *** Op 1
 
