@@ -7,8 +7,11 @@
 module Test.Copilot.Language.Reify where
 
 -- External imports
+import Data.Bits                            (Bits, complement, xor, (.&.), (.|.))
+import Data.Int                             (Int16, Int32, Int64, Int8)
 import Data.Maybe                           (fromMaybe)
 import Data.Typeable                        (Typeable)
+import Data.Word                            (Word16, Word32, Word64, Word8)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck                      (Arbitrary, Gen, Property,
@@ -65,6 +68,15 @@ testEvalExpr =
 arbitrarySemanticsP :: Gen SemanticsP
 arbitrarySemanticsP = oneof
   [ SemanticsP <$> (arbitraryBoolExpr         :: Gen (Semantics Bool))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int32))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int64))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word8))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word16))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word32))
+  , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Word64))
   ]
 
 -- | An arbitrary boolean expression, paired with its expected meaning.
@@ -88,6 +100,38 @@ arbitraryBoolExpr =
                  <*> arbitraryBoolExpr
                  <*> arbitraryBoolExpr)
 
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Int8, [Int8])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Int16, [Int16])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Int32, [Int32])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Int64, [Int64])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Word8, [Word8])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Word16, [Word16])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Word32, [Word32])))
+
+    , (1, apply2 <$> arbitraryEqOp2
+                 <*> arbitraryBitsExpr
+                 <*> (arbitraryBitsExpr :: Gen (Stream Word64, [Word64])))
+
     , (1, apply3 <$> arbitraryITEOp3
                  <*> arbitraryBoolExpr
                  <*> arbitraryBoolExpr
@@ -110,6 +154,28 @@ arbitraryBoolOp0 = elements
   , (Copilot.true,  repeat True)
   ]
 
+-- | An arbitrary Bits expression, paired with its expected meaning.
+arbitraryBitsExpr :: (Arbitrary t, Typed t, Bits t)
+                  => Gen (Stream t, [t])
+arbitraryBitsExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (5, apply1 <$> arbitraryBitsOp1 <*> arbitraryBitsExpr)
+
+    , (2, apply2 <$> arbitraryBitsOp2
+                 <*> arbitraryBitsExpr
+                 <*> arbitraryBitsExpr)
+
+    , (2, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryBitsExpr <*> arbitraryBitsExpr)
+    ]
+
+
 -- *** Op 1
 
 -- | Generator for arbitrary boolean operators with arity 1, paired with their
@@ -117,6 +183,14 @@ arbitraryBoolOp0 = elements
 arbitraryBoolOp1 :: Gen (Stream Bool -> Stream Bool, [Bool] -> [Bool])
 arbitraryBoolOp1 = elements
   [ (Copilot.not, fmap not)
+  ]
+
+-- | Generator for arbitrary bitwise operators with arity 1, paired with their
+-- expected meaning.
+arbitraryBitsOp1 :: (Typed t, Bits t)
+                 => Gen (Stream t -> Stream t, [t] -> [t])
+arbitraryBitsOp1 = elements
+  [ (complement, fmap complement)
   ]
 
 -- *** Op 2
@@ -142,6 +216,16 @@ arbitraryEqOp2 :: (Typed t, Eq t)
 arbitraryEqOp2 = elements
   [ ((Copilot.==), zipWith (==))
   , ((Copilot./=), zipWith (/=))
+  ]
+
+-- | Generator for arbitrary bitwise operators with arity 2, paired with their
+-- expected meaning.
+arbitraryBitsOp2 :: (Typed t, Bits t)
+                 => Gen (Stream t -> Stream t -> Stream t, [t] -> [t] -> [t])
+arbitraryBitsOp2 = elements
+  [ ((.&.), zipWith (.&.))
+  , ((.|.), zipWith (.|.))
+  , (xor,   zipWith xor)
   ]
 
 -- *** Op 3
