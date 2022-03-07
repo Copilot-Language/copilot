@@ -81,6 +81,10 @@ test-suite unit-tests
   main-is:
     Main.hs
 
+  other-modules:
+    Test.Copilot.Language.Reify
+    Test.Extra
+
   build-depends:
       base
     , HUnit
@@ -90,6 +94,7 @@ test-suite unit-tests
     , test-framework-hunit
     , test-framework-quickcheck2
 
+    , copilot-core
     , copilot-language
 
   hs-source-dirs:
