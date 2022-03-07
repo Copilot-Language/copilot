@@ -83,6 +83,8 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryFloatingExpr     :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Float))
   , SemanticsP <$> (arbitraryRealFracExpr     :: Gen (Semantics Double))
+  , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Float))
+  , SemanticsP <$> (arbitraryRealFloatExpr    :: Gen (Semantics Double))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Bool))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int8))
   , SemanticsP <$> (arbitraryBitsExpr         :: Gen (Semantics Int16))
@@ -265,6 +267,32 @@ arbitraryRealFracExpr =
                  <*> arbitraryRealFracExpr)
     ]
 
+-- | An arbitrary realfloat expression, paired with its expected meaning.
+arbitraryRealFloatExpr :: (Arbitrary t, Typed t, RealFloat t)
+                       => Gen (Stream t, [t])
+arbitraryRealFloatExpr =
+  -- We use frequency instead of oneof because the random expression generator
+  -- seems to generate expressions that are too large and the test fails due
+  -- to running out of memory.
+  frequency
+    [ (10, arbitraryConst)
+
+    , (2, apply1 <$> arbitraryNumOp1 <*> arbitraryRealFloatExpr)
+
+    , (5, apply2 <$> arbitraryRealFloatOp2
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+
+    , (1, apply2 <$> arbitraryNumOp2
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+
+    , (1, apply3 <$> arbitraryITEOp3
+                 <*> arbitraryBoolExpr
+                 <*> arbitraryRealFloatExpr
+                 <*> arbitraryRealFloatExpr)
+    ]
+
 -- *** Primitives
 
 -- | An arbitrary constant expression of any type, paired with its expected
@@ -427,6 +455,16 @@ arbitraryFloatingOp2 :: (Typed t, Floating t, Eq t)
 arbitraryFloatingOp2 = elements
   [ ((**),    zipWith (**))
   , (logBase, zipWith logBase)
+  ]
+
+-- | Generator for arbitrary floating point operators with arity 2, paired with
+-- their expected meaning.
+arbitraryRealFloatOp2 :: (Typed t, RealFloat t)
+                      => Gen ( Stream t -> Stream t -> Stream t
+                             , [t] -> [t] -> [t]
+                             )
+arbitraryRealFloatOp2 = elements
+  [ (Copilot.atan2, zipWith atan2)
   ]
 
 -- | Generator for arbitrary equality operators with arity 2, paired with their
