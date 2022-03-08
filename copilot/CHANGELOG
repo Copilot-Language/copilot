@@ -1,3 +1,7 @@
+2022-03-07
+        * Version bump (3.8). (#298)
+        * Mark package as uncurated to avoid modification. (#288)
+
 2022-01-07
         * Version bump (3.7). (#287)
         * Add example with nested structs. (#275)
