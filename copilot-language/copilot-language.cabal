@@ -73,3 +73,35 @@ library
   ghc-options:
     -fwarn-tabs
     -Wall
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  other-modules:
+    Test.Copilot.Language.Reify
+    Test.Extra
+
+  build-depends:
+      base
+    , HUnit
+    , QuickCheck
+    , pretty
+    , test-framework
+    , test-framework-hunit
+    , test-framework-quickcheck2
+
+    , copilot-core
+    , copilot-language
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
