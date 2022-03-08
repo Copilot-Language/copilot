@@ -1,3 +1,6 @@
+2022-03-07
+        * Introduce testing infrastructure. (#271)
+
 2022-01-07
         * Version bump (3.7). (#287)
         * Bring back externF. (#261)
