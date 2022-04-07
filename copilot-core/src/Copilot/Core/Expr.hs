@@ -12,7 +12,6 @@ module Copilot.Core.Expr
   , Expr (..)
   , UExpr (..)
   , DropIdx
-  , Tag
   ) where
 
 import Copilot.Core.Operators (Op1, Op2, Op3)
@@ -35,12 +34,6 @@ type Name = String
 
 -- | An index for the drop operator.
 type DropIdx = Word32
-
---------------------------------------------------------------------------------
-
--- | A unique tag for external arrays/function calls.
-{-# DEPRECATED Tag "The type Tag is deprecated in Copilot 3.6." #-}
-type Tag = Int
 
 --------------------------------------------------------------------------------
 

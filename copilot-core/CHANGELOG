@@ -1,3 +1,6 @@
+2022-04-07
+        * Remove Copilot.Core.Expr.Tag. (#304)
+
 2022-03-07
         * Version bump (3.8). (#298)
         * Replaces uses of the internal Dynamic with base:Data.Dynamic. (#266)
