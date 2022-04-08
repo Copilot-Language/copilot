@@ -1,4 +1,5 @@
-2022-04-07
+2022-04-08
+        * Remove Copilot.Core.Type.Uninitialized. (#302)
         * Remove Copilot.Core.Expr.Tag. (#304)
 
 2022-03-07
