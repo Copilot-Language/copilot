@@ -1,3 +1,6 @@
+2022-04-14
+        * Fix issue in C99 implementation of signum. (#278)
+
 2022-03-07
         * Version bump (3.8). (#298)
         * Hide internal modules deprecated in Copilot 3.5. (#289)
