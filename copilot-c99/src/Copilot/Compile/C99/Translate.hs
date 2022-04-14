@@ -55,7 +55,7 @@ transop1 :: Op1 a b -> C.Expr -> C.Expr
 transop1 op e = case op of
   Not             -> (C..!) e
   Abs      _      -> funcall "abs"      [e]
-  Sign     _      -> funcall "copysign" [C.LitDouble 1.0, e]
+  Sign     ty     -> transSign ty e
   Recip    _      -> C.LitDouble 1.0 C../ e
   Exp      _      -> funcall "exp"   [e]
   Sqrt     _      -> funcall "sqrt"  [e]
@@ -111,6 +111,58 @@ transop2 op e1 e2 = case op of
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
+
+-- | Translate @'Sign' e@ in Copilot Core into a C99 expression.
+--
+-- Sign is is translated as @e > 0 ? 1 : (e < 0 ? -1 : e)@, that is:
+--
+-- 1. If @e@ is positive, return @1@.
+--
+-- 2. If @e@ is negative, return @-1@.
+--
+-- 3. Otherwise, return @e@. This handles the case where @e@ is @0@ when the
+--    type is an integral type. If the type is a floating-point type, it also
+--    handles the cases where @e@ is @-0@ or @NaN@.
+--
+-- This implementation is modeled after how GHC implements 'signum'
+-- <https://gitlab.haskell.org/ghc/ghc/-/blob/aed98ddaf72cc38fb570d8415cac5de9d8888818/libraries/base/GHC/Float.hs#L523-L525 here>.
+transSign :: Type a -> C.Expr -> C.Expr
+transSign ty e = positiveCase $ negativeCase e
+  where
+    -- If @e@ is positive, return @1@, otherwise fall back to argument.
+    --
+    -- Produces the following code, where @<arg>@ is the argument to this
+    -- function:
+    -- @
+    -- e > 0 ? 1 : <arg>
+    -- @
+    positiveCase :: C.Expr  -- ^ Value returned if @e@ is not positive.
+                 -> C.Expr
+    positiveCase =
+      C.Cond (C.BinaryOp C.GT e (constNumTy ty 0)) (constNumTy ty 1)
+
+    -- If @e@ is negative, return @1@, otherwise fall back to argument.
+    --
+    -- Produces the following code, where @<arg>@ is the argument to this
+    -- function:
+    -- @
+    -- e < 0 ? -1 : <arg>
+    -- @
+    negativeCase :: C.Expr  -- ^ Value returned if @e@ is not negative.
+                 -> C.Expr
+    negativeCase =
+      C.Cond (C.BinaryOp C.LT e (constNumTy ty 0)) (constNumTy ty (-1))
+
+    -- Translate a literal number of type @ty@ into a C99 literal.
+    --
+    -- PRE: The type of PRE is numeric (integer or floating-point), that
+    -- is, not boolean, struct or array.
+    constNumTy :: Type a -> Integer -> C.Expr
+    constNumTy ty =
+      case ty of
+        Float  -> C.LitFloat . fromInteger
+        Double -> C.LitDouble . fromInteger
+        _      -> C.LitInt
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
