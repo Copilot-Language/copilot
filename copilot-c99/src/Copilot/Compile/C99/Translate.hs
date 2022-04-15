@@ -168,28 +168,66 @@ transSign ty e = positiveCase $ negativeCase e
 -- literal.
 constty :: Type a -> a -> C.Expr
 constty ty = case ty of
-  Bool   -> C.LitBool
-  Int8   -> explicitty ty . C.LitInt . fromIntegral
-  Int16  -> explicitty ty . C.LitInt . fromIntegral
-  Int32  -> explicitty ty . C.LitInt . fromIntegral
-  Int64  -> explicitty ty . C.LitInt . fromIntegral
-  Word8  -> explicitty ty . C.LitInt . fromIntegral
-  Word16 -> explicitty ty . C.LitInt . fromIntegral
-  Word32 -> explicitty ty . C.LitInt . fromIntegral
-  Word64 -> explicitty ty . C.LitInt . fromIntegral
-  Float  -> explicitty ty . C.LitFloat
-  Double -> explicitty ty . C.LitDouble
-  Struct _ -> \v -> C.InitVal (transtypename ty) (map fieldinit (toValues v))
-    where
-      fieldinit (Value ty (Field val)) = C.InitExpr $ constty ty val
-  Array ty' -> \v -> C.InitVal (transtypename ty) (vals v)
-    where
-      vals v = constarray ty' (arrayelems v)
+  Bool      -> C.LitBool
+  Int8      -> explicitty ty . C.LitInt . fromIntegral
+  Int16     -> explicitty ty . C.LitInt . fromIntegral
+  Int32     -> explicitty ty . C.LitInt . fromIntegral
+  Int64     -> explicitty ty . C.LitInt . fromIntegral
+  Word8     -> explicitty ty . C.LitInt . fromIntegral
+  Word16    -> explicitty ty . C.LitInt . fromIntegral
+  Word32    -> explicitty ty . C.LitInt . fromIntegral
+  Word64    -> explicitty ty . C.LitInt . fromIntegral
+  Float     -> explicitty ty . C.LitFloat
+  Double    -> explicitty ty . C.LitDouble
+  Struct _  -> \v ->
+    C.InitVal (transtypename ty) (map constfieldinit (toValues v))
+  Array ty' -> \v ->
+    C.InitVal (transtypename ty) (constarray ty' (arrayelems v))
 
-      constarray :: Type a -> [a] -> [C.Init]
-      constarray ty xs = case ty of
-        Array ty' -> constarray ty' (concatMap arrayelems xs)
-        _         -> map (C.InitExpr . constty ty) xs
+-- | Transform a Copilot Core literal, based on its value and type, into a C99
+-- initializer.
+constinit :: Type a -> a -> C.Init
+constinit ty val = case ty of
+  -- We include two special cases for Struct and Array to avoid using constty
+  -- on them.
+  --
+  -- In the default case (i.e., InitExpr (constty ty val)), constant
+  -- initializations are explicitly cast. However, doing so 1) may result in
+  -- incorrect values for arrays, and 2) will be considered a non-constant
+  -- expression in the case of arrays and structs, and thus not allowed as the
+  -- initialization value for a global variable.
+  --
+  -- In particular, wrt. (1), for example, the nested array:
+  --   [[0, 1], [2, 3]] :: Array 2 (Array 2 Int32)
+  --
+  -- with explicit casts, will be initialized in C as:
+  --   { (int32_t[2]){(int32_t)(0), (int32_t)(1)},
+  --     (int32_t[2]){(int32_t)(2), (int32_t)(3)} }
+  --
+  -- Due to the additional (int32_t[2]) casts, a C compiler will interpret the
+  -- whole expression as an array of two int32_t's (as opposed to a nested
+  -- array). This can either lead to compile-time errors (if you're lucky) or
+  -- incorrect runtime semantics (if you're unlucky).
+  Array ty' -> C.InitArray $ constarray ty' $ arrayelems val
+
+  -- We use InitArray to initialize a struct because the syntax used for
+  -- initializing arrays and structs is compatible. For instance, {1, 2} works
+  -- both for initializing an int array of length 2 as well as a struct with
+  -- two int fields, although the two expressions are conceptually different
+  -- (structs can also be initialized as { .a = 1, .b = 2}, but language-c99
+  -- does not support such syntax and does not provide a specialized
+  -- initialization construct for structs).
+  Struct _  -> C.InitArray $ map constfieldinit $ toValues val
+  _         -> C.InitExpr $ constty ty val
+
+-- | Transform a Copilot Core struct field into a C99 initializer.
+constfieldinit :: Value a -> C.Init
+constfieldinit (Value ty (Field val)) = constinit ty val
+
+-- | Transform a Copilot Array, based on the element values and their type,
+-- into a list of C99 initializer values.
+constarray :: Type a -> [a] -> [C.Init]
+constarray ty = map (constinit ty)
 
 
 -- | Explicitly cast a C99 value to a type.
