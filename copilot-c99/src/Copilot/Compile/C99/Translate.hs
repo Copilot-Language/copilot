@@ -179,17 +179,70 @@ constty ty = case ty of
   Word64 -> explicitty ty . C.LitInt . fromIntegral
   Float  -> explicitty ty . C.LitFloat
   Double -> explicitty ty . C.LitDouble
-  Struct _ -> \v -> C.InitVal (transtypename ty) (map fieldinit (toValues v))
-    where
-      fieldinit (Value ty (Field val)) = C.InitExpr $ constty ty val
+  Struct _ -> \v -> C.InitVal (transtypename ty) (map constfieldinit (toValues v))
   Array ty' -> \v -> C.InitVal (transtypename ty) (vals v)
     where
       vals v = constarray ty' (arrayelems v)
 
-      constarray :: Type a -> [a] -> [C.Init]
-      constarray ty xs = case ty of
-        Array ty' -> constarray ty' (concatMap arrayelems xs)
-        _         -> map (C.InitExpr . constty ty) xs
+-- | Transform a Copilot Core literal, based on its value and type, into a C99
+-- initializer.
+constinit :: Type a -> a -> C.Init
+constinit ty val = case ty of
+  -- We include two special cases for Array and Struct to avoid using InitExpr.
+  -- To see why, consider what happens in this example array of `int32_t`s:
+  --
+  --   {{0, 1}, {2, 3}, {4, 5}}
+  --
+  -- If this is translated as
+  -- InitArray [ InitArray [InitExpr Int32 0, InitExpr Int32 1]
+  --           , InitArray [InitExpr Int32 2, InitExpr Int32 3]
+  --           , InitArray [InitExpr Int32 4, InitExpr Int32 5] ],
+  -- then the generated code will be pretty-printed as:
+  --
+  --   { {(int32_t)(0), (int32_t)(1)},
+  --     {(int32_t)(2), (int32_t)(3)},
+  --     {(int32_t)(4), (int32_t)(5)} }
+  --
+  -- On the other hand, if this is translated as
+  -- InitArray [ InitExpr (Array 2 Int32) {0, 1}
+  --           , InitExpr (Array 2 Int32) {2, 3}
+  --           , InitExpr (Array 2 Int32) {4, 5} ],
+  -- then the generated code will be pretty-printed as:
+  --
+  --   { (int32_t[2]){(int32_t)(0), (int32_t)(1)},
+  --     (int32_t[2]){(int32_t)(2), (int32_t)(3)},
+  --     (int32_t[2]){(int32_t)(4), (int32_t)(5)} }
+  --
+  -- Note the additional (int32_t[2]) casts. This is not what we intend, since
+  -- a C compiler will interpret that an array of three `int32_t`s. This can
+  -- either lead to compiler errors (if you're lucky) or incorrect runtime
+  -- semantics (if you're unlucky).
+  --
+  -- Another reason why we do this is because gcc's -Wpedantic flag will
+  -- complain that the latter initializer is not constant. The example above
+  -- uses arrays, but the warning also triggers when the casts involve struct
+  -- expressions, so we include a special case for Struct as well.
+  Array ty' -> C.InitArray $ constarray ty' $ arrayelems val
+  -- Using InitArray here to initialize a struct is a bit peculiar. We do this
+  -- because the same syntax used for initializing arrays also works for
+  -- structs. For instance, {1, 2, 3} works both for initializing an
+  -- `int` array of length 3 as well as a struct with three `int` fields,
+  -- although the two expressions are conceptually different.
+  --
+  -- Better yet would be to use syntax for initializing the fields, e.g.,
+  -- { .a = 1, .b = 2, .c = 3 }. language-c99 does not support this at present,
+  -- however.
+  Struct _  -> C.InitArray $ map constfieldinit $ toValues val
+  _         -> C.InitExpr $ constty ty val
+
+-- | Transform a Copilot Core struct field into a C99 initializer.
+constfieldinit :: Value a -> C.Init
+constfieldinit (Value ty (Field val)) = constinit ty val
+
+-- | Transform a Copilot Array, based on the element values and their type,
+-- into a list of C99 initializer values.
+constarray :: Type a -> [a] -> [C.Init]
+constarray ty = map (constinit ty)
 
 
 -- | Explicitly cast a C99 value to a type.
