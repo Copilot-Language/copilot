@@ -12,8 +12,8 @@ module Copilot.Core.PrettyPrint
   , ppExpr
   ) where
 
-import Copilot.Core hiding (impossible)
-import Copilot.Core.ErrorInternal (impossible)
+import Copilot.Core
+import Copilot.Core.Error (impossible)
 import Copilot.Core.Type.Show (showWithType, ShowType(..), showType)
 import Prelude hiding (id, (<>))
 import Text.PrettyPrint.HughesPJ
