@@ -51,7 +51,6 @@ library
   exposed-modules:
 
     Copilot.Core
-    Copilot.Core.Error
     Copilot.Core.Expr
     Copilot.Core.External
     Copilot.Core.Interpret
@@ -69,6 +68,7 @@ library
 
   other-modules:
 
+    Copilot.Core.Error
     Copilot.Core.ErrorInternal
     Copilot.Core.Interpret.RenderInternal
 
