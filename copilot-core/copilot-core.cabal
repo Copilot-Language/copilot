@@ -69,7 +69,6 @@ library
   other-modules:
 
     Copilot.Core.Error
-    Copilot.Core.ErrorInternal
     Copilot.Core.Interpret.RenderInternal
 
 test-suite unit-tests
