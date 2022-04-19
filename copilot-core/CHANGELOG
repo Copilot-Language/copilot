@@ -1,4 +1,5 @@
-2022-04-08
+2022-04-18
+        * Hide module Copilot.Core.Error. (#300)
         * Remove Copilot.Core.Type.Uninitialized. (#302)
         * Remove Copilot.Core.Expr.Tag. (#304)
 

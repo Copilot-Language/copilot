@@ -51,7 +51,6 @@ library
   exposed-modules:
 
     Copilot.Core
-    Copilot.Core.Error
     Copilot.Core.Expr
     Copilot.Core.External
     Copilot.Core.Interpret
@@ -69,7 +68,7 @@ library
 
   other-modules:
 
-    Copilot.Core.ErrorInternal
+    Copilot.Core.Error
     Copilot.Core.Interpret.RenderInternal
 
 test-suite unit-tests
@@ -81,7 +80,6 @@ test-suite unit-tests
 
   other-modules:
     Test.Extra
-    Test.Copilot.Core.Error
     Test.Copilot.Core.External
     Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type
