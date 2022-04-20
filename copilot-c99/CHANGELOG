@@ -1,4 +1,5 @@
-2022-04-14
+2022-04-20
+        * Fix issue with delays of streams of structs or arrays. (#276)
         * Fix issue in C99 implementation of signum. (#278)
 
 2022-03-07
