@@ -45,7 +45,7 @@ mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals where
   name     = streamname sid
   cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
   buffsize = length xs
-  initvals = Just $ C.InitArray $ map (C.InitExpr . constty ty) xs
+  initvals = Just $ C.InitArray $ constarray ty xs
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
