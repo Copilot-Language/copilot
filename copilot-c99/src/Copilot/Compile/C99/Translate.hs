@@ -55,7 +55,7 @@ transop1 op e = case op of
   Not             -> (C..!) e
   Abs      _      -> funcall "abs"      [e]
   Sign     ty     -> transSign ty e
-  Recip    _      -> C.LitDouble 1.0 C../ e
+  Recip    ty     -> (constNumTy ty 1) C../ e
   Exp      _      -> funcall "exp"   [e]
   Sqrt     _      -> funcall "sqrt"  [e]
   Log      _      -> funcall "log"   [e]
@@ -152,17 +152,6 @@ transSign ty e = positiveCase $ negativeCase e
     negativeCase =
       C.Cond (C.BinaryOp C.LT e (constNumTy ty 0)) (constNumTy ty (-1))
 
-    -- Translate a literal number of type @ty@ into a C99 literal.
-    --
-    -- PRE: The type of PRE is numeric (integer or floating-point), that
-    -- is, not boolean, struct or array.
-    constNumTy :: Type a -> Integer -> C.Expr
-    constNumTy ty =
-      case ty of
-        Float  -> C.LitFloat . fromInteger
-        Double -> C.LitDouble . fromInteger
-        _      -> C.LitInt
-
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
 constty :: Type a -> a -> C.Expr
@@ -254,3 +243,14 @@ transtype ty = case ty of
 -- | Translate a Copilot type intro a C typename
 transtypename :: Type a -> C.TypeName
 transtypename ty = C.TypeName $ transtype ty
+
+-- Translate a literal number of type @ty@ into a C99 literal.
+--
+-- PRE: The type of PRE is numeric (integer or floating-point), that
+-- is, not boolean, struct or array.
+constNumTy :: Type a -> Integer -> C.Expr
+constNumTy ty =
+  case ty of
+    Float  -> C.LitFloat . fromInteger
+    Double -> C.LitDouble . fromInteger
+    _      -> C.LitInt
