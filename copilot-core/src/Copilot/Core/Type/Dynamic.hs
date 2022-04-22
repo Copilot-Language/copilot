@@ -21,8 +21,6 @@ module Copilot.Core.Type.Dynamic
   , DynamicF (..)
   , toDyn
   , fromDyn
-  , toDynF
-  , fromDynF
   ) where
 
 import Copilot.Core.Type.Equality
@@ -47,18 +45,4 @@ fromDyn :: EqualType t => t a -> Dynamic t -> Maybe a
 fromDyn t1 (Dynamic x t2) =
   case t1 =~= t2 of
     Just Refl -> return x
-    Nothing   -> Nothing
-
--- | Enclose a function and its type in a container.
-{-# DEPRECATED toDynF "This function is deprecated in Copilot 3.6." #-}
-toDynF :: t a -> f a -> DynamicF f t
-toDynF t fx = DynamicF fx t
-
--- | Extract a value from a dynamic function container. Return 'Nothing' if
--- the value is not of the given type.
-{-# DEPRECATED fromDynF "This function is deprecated in Copilot 3.6." #-}
-fromDynF :: EqualType t => t a -> DynamicF f t -> Maybe (f a)
-fromDynF t1 (DynamicF fx t2) =
-  case t1 =~= t2 of
-    Just Refl -> return fx
     Nothing   -> Nothing
