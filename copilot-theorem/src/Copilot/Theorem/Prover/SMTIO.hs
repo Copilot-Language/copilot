@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE LambdaCase, NamedFieldPuns, RankNTypes, ViewPatterns #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE Safe #-}
 
 -- | Communication with SMT solvers or theorem provers.
