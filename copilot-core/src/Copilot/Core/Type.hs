@@ -77,9 +77,10 @@ instance (KnownSymbol s, Show t) => Show (Field s t) where
   show f@(Field v) = fieldname f ++ ":" ++ show v
 
 instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
-  show t = "<" ++ fields ++ ">" where
-    fields = intercalate "," $ map showfield (toValues t)
-    showfield (Value _ field) = show field
+  show t = "<" ++ fields ++ ">"
+    where
+      fields = intercalate "," $ map showfield (toValues t)
+      showfield (Value _ field) = show field
 
 -- | A Type representing the types of expressions or values handled by
 -- Copilot Core.
