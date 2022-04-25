@@ -67,6 +67,7 @@ ppTerm (PrimedStateVar v) = list [atom kwPrime, atom v]
 ppTerm (StateVar v) = atom v
 ppTerm (FunApp f args) = node f $ map ppTerm args
 ppTerm (PredApp p t args) = node (p ++ "." ++ ext) $ map ppTerm args
-  where ext = case t of
-         Init -> "init"
-         Trans -> "trans"
+  where
+    ext = case t of
+      Init -> "init"
+      Trans -> "trans"
