@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Each prover first translates the Copilot specification into an
@@ -17,5 +15,3 @@ import Copilot.Theorem.TransSys.Spec as X
 import Copilot.Theorem.TransSys.PrettyPrint as X
 import Copilot.Theorem.TransSys.Translate as X
 import Copilot.Theorem.TransSys.Transform as X
-
---------------------------------------------------------------------------------
