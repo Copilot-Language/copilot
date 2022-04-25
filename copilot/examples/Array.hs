@@ -8,8 +8,8 @@
 -- | Enable compiler extension for type-level data, necesary for the array
 -- length.
 
-{-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE DataKinds        #-}
+{-# LANGUAGE RebindableSyntax #-}
 
 module Main where
 
