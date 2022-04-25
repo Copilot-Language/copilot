@@ -3,8 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE Safe                      #-}
 
 -- | Internal representation of Copilot stream expressions.
 module Copilot.Core.Expr
