@@ -2,9 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Trustworthy #-}
 
 -- | Internal Copilot Core representation of Copilot externs.
 module Copilot.Core.External
