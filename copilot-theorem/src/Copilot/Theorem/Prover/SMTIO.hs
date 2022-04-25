@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes     #-}
@@ -26,8 +24,6 @@ import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Data.Set ((\\), fromList, Set, union, empty, elems)
 
---------------------------------------------------------------------------------
-
 -- | A connection with a running SMT solver or theorem prover.
 data Solver a = Solver
   { solverName :: String
@@ -39,8 +35,6 @@ data Solver a = Solver
   , model      :: Set Expr
   , backend    :: Backend a
   }
-
---------------------------------------------------------------------------------
 
 -- | Output a debugging message if debugging is enabled for the solver.
 debug :: Bool -> Solver a -> String -> IO ()
@@ -67,8 +61,6 @@ receive s = fromJust <$> runMaybeT (msum $ repeat line)
           liftIO $ debug True s $ "[received: " ++ ln ++ "]"
           MaybeT $ return $ (interpret $ backend s) ln
 
---------------------------------------------------------------------------------
-
 -- | Create a new solver implemented by the backend specified.
 --
 -- The error handle from the backend handle is immediately closed/discarded,
@@ -88,8 +80,6 @@ stop s = do
   hClose $ inh s
   hClose $ outh s
   terminateProcess $ process s
-
---------------------------------------------------------------------------------
 
 -- | Register the given expressions as assumptions or axioms with the solver.
 assume :: SmtFormat a => Solver a -> [Expr] -> IO (Solver a)
@@ -122,5 +112,3 @@ declVars s@(Solver { vars }) decls = do
   forM_ newVars $ \(VarDescr {varName, varType, args}) ->
     send s $ declFun varName varType args
   return s { vars = vars `union` fromList newVars }
-
---------------------------------------------------------------------------------
