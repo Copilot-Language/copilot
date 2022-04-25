@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
@@ -21,22 +19,14 @@ import Data.Word (Word32)
 
 import Data.Typeable (Typeable)
 
---------------------------------------------------------------------------------
-
 -- | A stream identifier.
 type Id = Int
-
---------------------------------------------------------------------------------
 
 -- | A name of a trigger, an external variable, or an external function.
 type Name = String
 
---------------------------------------------------------------------------------
-
 -- | An index for the drop operator.
 type DropIdx = Word32
-
---------------------------------------------------------------------------------
 
 -- | Internal representation of Copilot stream expressions.
 --
@@ -53,8 +43,6 @@ data Expr a where
   Op2          :: (Typeable a, Typeable b) => Op2 a b c -> Expr a -> Expr b -> Expr c
   Op3          :: (Typeable a, Typeable b, Typeable c) => Op3 a b c d -> Expr a -> Expr b -> Expr c -> Expr d
   Label        :: Typeable a => Type a -> String -> Expr a -> Expr a
-
---------------------------------------------------------------------------------
 
 -- | A untyped expression that carries the information about the type of the
 -- expression as a value, as opposed to exposing it at type level (using an
