@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | A pretty printer for Copilot specifications as GraphViz/dot graphs.
 
@@ -22,8 +20,6 @@ import Text.Printf
 -- | Create a temporary/internal name from an extern variable name.
 mkExtTmpVar :: String -> String
 mkExtTmpVar = ("ext_" ++)
-
---------------------------------------------------------------------------------
 
 -- | Pretty print a Copilot Expression as a GraphViz graph part.
 --
@@ -151,8 +147,6 @@ ppOp3 :: Op3 a b c d -> String
 ppOp3 op = case op of
   Mux _    -> "mux"
 
---------------------------------------------------------------------------------
-
 -- | Pretty print a stream as a GraphViz graph part.
 ppStream :: Int        -- ^ Index or ID of the next node in the graph.
          -> Stream     -- ^ Stream to pretty print
@@ -172,7 +166,6 @@ ppStream i
     <> text (printf "%s -> %s\n" (show (i+1)::String) ((show $ i+2)::String))
     <> r1, i1)
     where (r1, i1) = ppExprDot (i+3) (i+1) True e
---------------------------------------------------------------------------------
 
 -- | Pretty print a trigger as a GraphViz graph part.
 ppTrigger :: Int        -- ^ Index or ID of the next node in the graph.
@@ -209,8 +202,6 @@ ppUExprL i pere bb (a:b) = ((r1:r2), i2)
     (r1, i1) = ppUExpr i pere bb a
     (r2, i2) = ppUExprL i1 pere bb b
 
---------------------------------------------------------------------------------
-
 -- | Pretty print an observer as a GraphViz graph part.
 ppObserver :: Int         -- ^ Index or ID of the next node in the graph.
            -> Observer    -- ^ Observer to pretty print
@@ -223,7 +214,6 @@ ppObserver i
   (text (printf "%s [label=\"observer: \n%s\",color=mediumblue, style=filled]\n" (show i::String) name::String)
   <> r1, i1)
   where (r1, i1) = ppExprDot (i+1) i True e
---------------------------------------------------------------------------------
 
 -- | Pretty print a property as a GraphViz graph part.
 ppProperty :: Int         -- ^ Index or ID of the next node in the graph.
@@ -238,10 +228,6 @@ ppProperty i
   <> r1, i1)
   where (r1, i1) = ppExprDot (i+1) i True e
 
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
-
 -- | Pretty print a list of streams as a GraphViz graph part.
 ppStreamL :: Int        -- ^ Index or ID of the next node in the graph.
           -> [Stream]   -- ^ List of streams to pretty print
@@ -252,8 +238,6 @@ ppStreamL i (a:b) = ((s1$$s2),(i2))
   where
     (s1,i1) = ppStream i a
     (s2,i2) = ppStreamL i1 b
-
---------------------------------------------------------------------------------
 
 -- | Pretty print a list of triggers as a GraphViz graph part.
 ppTriggerL :: Int        -- ^ Index or ID of the next node in the graph.
@@ -266,8 +250,6 @@ ppTriggerL i (a:b) = ((s1$$s2),(i2))
     (s1,i1) = ppTrigger i a
     (s2,i2) = ppTriggerL i1 b
 
---------------------------------------------------------------------------------
-
 -- | Pretty print a list of observers as a GraphViz graph part.
 ppObserverL :: Int         -- ^ Index or ID of the next node in the graph.
             -> [Observer]  -- ^ List of observers to pretty print
@@ -279,8 +261,6 @@ ppObserverL i (a:b) = ((s1$$s2),(i2))
     (s1,i1) = ppObserver i a
     (s2,i2) = ppObserverL i1 b
 
---------------------------------------------------------------------------------
-
 -- | Pretty print a list of properties as a GraphViz graph part.
 ppPropertyL :: Int         -- ^ Index or ID of the next node in the graph.
             -> [Property]  -- ^ List of properties to pretty print
@@ -291,8 +271,6 @@ ppPropertyL i (a:b) = ((s1$$s2),(i2))
   where
     (s1,i1) = ppProperty i a
     (s2,i2) = ppPropertyL i1 b
-
---------------------------------------------------------------------------------
 
 -- | Pretty-print a Copilot specification as a GraphViz/dot graph.
 ppSpecDot :: Int        -- ^ Index or ID of the next node in the graph.
@@ -308,8 +286,6 @@ ppSpecDot i spec =
     (fs, i4) = ppPropertyL i3 (specProperties spec)
     bb = text "\n}\n"
 
---------------------------------------------------------------------------------
-
 -- | Pretty-print a Copilot expression as a GraphViz/dot graph.
 prettyPrintExprDot :: Bool     -- ^ Mark externs with the prefix @externV:@.
                    -> Expr a   -- ^ The expression to pretty print.
@@ -323,5 +299,3 @@ prettyPrintExprDot bb s = render rr
 prettyPrintDot :: Spec -> String
 prettyPrintDot s = render r1
   where (r1, _) = ppSpecDot 0 s
-
---------------------------------------------------------------------------------
