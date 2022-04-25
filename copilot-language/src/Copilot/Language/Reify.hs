@@ -6,7 +6,8 @@
 -- specification.
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Copilot.Language.Reify
   ( reify
