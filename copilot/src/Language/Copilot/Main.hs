@@ -44,7 +44,6 @@ cmdargs = CmdArgs
                                     <> metavar "INT" <> showDefault
                                     <> help "Interpret specification and write result to output")
 
-
 -- | Create a main to either compile or interpret a copilot specification.
 --
 -- This function must be provided an auxiliary function capable of compiling
