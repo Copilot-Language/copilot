@@ -48,7 +48,6 @@ transexpr (Op3 op e1 e2 e3) = do
   e3' <- transexpr e3
   return $ transop3 op e1' e2' e3'
 
-
 -- | Translates a Copilot unary operator and its argument into a C99
 -- expression.
 transop1 :: Op1 a b -> C.Expr -> C.Expr
@@ -228,7 +227,6 @@ constfieldinit (Value ty (Field val)) = constinit ty val
 -- into a list of C99 initializer values.
 constarray :: Type a -> [a] -> [C.Init]
 constarray ty = map (constinit ty)
-
 
 -- | Explicitly cast a C99 value to a type.
 explicitty :: Type a -> C.Expr -> C.Expr
