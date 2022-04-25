@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -19,8 +17,6 @@ import qualified Copilot.Language.Operators.Boolean as B
 
 import Copilot.Theorem
 
---------------------------------------------------------------------------------
-
 -- | A proposition that can be negated.
 class Negatable a b where
   -- | Negate a proposition.
@@ -33,5 +29,3 @@ instance Negatable (Prop Existential) (Prop Universal) where
 -- | Negation of a universally quantified proposition.
 instance Negatable (Prop Universal) (Prop Existential) where
   not (Forall p)  = Exists $ B.not p
-
---------------------------------------------------------------------------------
