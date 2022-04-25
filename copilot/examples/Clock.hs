@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Example showing usage of clocks to generate periodically recurring truth
 -- values.
