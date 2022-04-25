@@ -2,9 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Internal representation of Copilot operators.
 module Copilot.Core.Operators
