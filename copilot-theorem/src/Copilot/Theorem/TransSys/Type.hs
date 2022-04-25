@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE Safe                      #-}
@@ -11,8 +9,6 @@ module Copilot.Theorem.TransSys.Type
   ) where
 
 import Copilot.Core.Type.Equality
-
---------------------------------------------------------------------------------
 
 -- | A type at both value and type level.
 --
@@ -29,18 +25,12 @@ instance EqualType Type where
   Real    =~= Real     = Just Refl
   _       =~= _        = Nothing
 
---------------------------------------------------------------------------------
-
 -- | Unknown types.
 --
 -- For instance, 'U Expr' is the type of an expression of unknown type
 data U f = forall t . U (f t)
 
---------------------------------------------------------------------------------
-
 instance Show (Type t) where
   show Integer = "Int"
   show Bool    = "Bool"
   show Real    = "Real"
-
---------------------------------------------------------------------------------
