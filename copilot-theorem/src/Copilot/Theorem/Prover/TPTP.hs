@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | A backend to <http://www.tptp.org/ TPTP>, enabling to produce assertions
 -- and to parse the results from TPTP.
