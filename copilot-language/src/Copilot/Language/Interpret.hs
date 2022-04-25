@@ -1,4 +1,4 @@
-{- Copyright (c) 2011 National Institute of Aerospace / Galois, Inc. -}
+-- Copyright (c) 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | This module implements two interpreters, which may be used to simulated or
 -- executed Copilot specifications on a computer to understand their behavior
