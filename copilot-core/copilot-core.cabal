@@ -55,7 +55,6 @@ library
     Copilot.Core.External
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
-    Copilot.Core.Interpret.Render
     Copilot.Core.Operators
     Copilot.Core.Spec
     Copilot.Core.Type
@@ -69,7 +68,7 @@ library
   other-modules:
 
     Copilot.Core.Error
-    Copilot.Core.Interpret.RenderInternal
+    Copilot.Core.Interpret.Render
 
 test-suite unit-tests
   type:

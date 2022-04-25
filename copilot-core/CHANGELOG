@@ -1,4 +1,5 @@
 2022-04-22
+        * Hide module Copilot.Core.Interpret.Render. (#303)
         * Remove Copilot.Core.Type.Dynamic.fromDynF,toDynF. (#301)
         * Hide module Copilot.Core.Error. (#300)
         * Remove Copilot.Core.Type.Uninitialized. (#302)
