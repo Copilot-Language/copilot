@@ -439,7 +439,6 @@ transR = \case
   SVal _ s i       -> getRatVar $ ncVar s i
   e                -> error $ "Encountered unhandled expression (Rat): " ++ show e
 
--- TODO(chathhorn): bleghh
 transBV8 :: Expr -> Trans (SMTExpr BV8)
 transBV8 = \case
   ConstI _ n      -> return $ constant $ BitVector n
