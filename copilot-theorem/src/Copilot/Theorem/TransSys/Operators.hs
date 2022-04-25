@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE LambdaCase                #-}
@@ -15,8 +13,6 @@ import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.TransSys.Type
 
 import Copilot.Theorem.Misc.Error as Err
-
---------------------------------------------------------------------------------
 
 -- | Unary operators.
 data Op1 a where
@@ -58,8 +54,6 @@ data Op2 a b where
 
   Pow    :: (Num a) => Op2 a a
 
--------------------------------------------------------------------------------
-
 instance Show (Op1 a) where
   show op = case op of
     Neg   -> "-"
@@ -96,8 +90,6 @@ instance Show (Op2 a b) where
     Mod  -> "mod"
     Fdiv -> "/"
     Pow  -> "^"
-
--------------------------------------------------------------------------------
 
 -- | Unhandled unary operator.
 --
@@ -197,8 +189,6 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
       C.Type a -> String -> m (expr resT)
     notHandled ta s = casting ta $ \ta' ->
       notHandledF $ UnhandledOp1 s ta' resT
-
---------------------------------------------------------------------------------
 
 -- | Translate an Op2.
 --
@@ -330,10 +320,6 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
     notHandled ta s = casting ta $ \ta' ->
       notHandledF (UnhandledOp2 s ta' ta' ta')
 
---------------------------------------------------------------------------------
-
 -- | Error message for unexpected behavior / internal errors.
 typeErrMsg :: String
 typeErrMsg = "Unexpected type error in 'Misc.CoreOperators'"
-
---------------------------------------------------------------------------------
