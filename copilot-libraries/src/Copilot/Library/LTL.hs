@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: LTL
 -- Description: Bounded Linear Temporal Logic (LTL) operators
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
