@@ -78,7 +78,6 @@ data Node = Node
                                            --   its local name.
   , nodeConstrs       :: [Expr Bool] }
 
-
 -- | Identifer of a variable in the local (within one node) namespace.
 data Var      =  Var {varName :: String}
   deriving (Eq, Show, Ord)
