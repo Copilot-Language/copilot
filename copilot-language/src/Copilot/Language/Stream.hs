@@ -176,7 +176,6 @@ ceiling = Op1 (Core.Ceiling typeOf)
 floor :: (Typed a, RealFrac a) => Stream a -> Stream a
 floor = Op1 (Core.Floor typeOf)
 
-
 --------------------------------------------------------------------------------
 
 -- | Point-wise application of @atan2@ to the values of two streams.
