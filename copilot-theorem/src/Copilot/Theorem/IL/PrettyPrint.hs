@@ -1,8 +1,8 @@
 ---------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs          #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe           #-}
 
 -- | This module implements a pretty printer for the IL format, an intermediate
 -- representation used in copilot-theorem to facilitate model checking.
