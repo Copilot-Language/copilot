@@ -223,12 +223,6 @@ expr t (C.ExternVar _ name _) = do
   newImportedVar localAlias (ExtVar nodeName (Var ncMain))
   return $ VarE t localAlias
 
--- TODO : Use uninterpreted functions to handle
--- * Unhandled operators
--- * Extern functions
--- * Extern arrays
--- For now, the result of these operations is a new unconstrained variable
-
 expr t (C.Op1 op e) = handleOp1
   t (op, e) expr notHandled Op1
   where
