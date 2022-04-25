@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs      #-}
 {-# LANGUAGE Rank2Types #-}
@@ -19,8 +17,6 @@ import Copilot.Core.Type        (Type(..), Field(..))
 import Copilot.Core.Type.Array  (Array)
 import Data.Bits
 import Data.Word                (Word32)
-
---------------------------------------------------------------------------------
 
 -- | Unary operators.
 data Op1 a b where
