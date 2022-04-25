@@ -39,9 +39,6 @@ compileWith cSettings prefix spec
   = do let cfile = render $ pretty $ C.translate $ compilec cSettings spec
            hfile = render $ pretty $ C.translate $ compileh cSettings spec
 
-           -- TODO: find a nicer solution using annotated AST's
-           -- Should figure out exactly which headers are needed, based on what
-           -- is used.
            cmacros = unlines [ "#include <stdint.h>"
                              , "#include <stdbool.h>"
                              , "#include <string.h>"
