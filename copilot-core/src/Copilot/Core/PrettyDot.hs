@@ -52,7 +52,7 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> text (printf "%s [label=\"def: %s\",color=blue, style=filled]\n" ((show $ ii+1)::String) (name::String) )
                   <> text (printf "%s -> %s\n" (show ii::String) (show $ ii+1::String))
                   <> r1
-                  <> r2 ,i2)
+                  <> r2, i2)
 
   Var _ name                 -> (text (printf "%s [label=\"var: %s\",color=blue, style=filled]\n" (show ii::String) (name::String) )
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String)),ii+1)
@@ -67,7 +67,7 @@ ppExprDot ii pere bb e0 = case e0 of
            in (text (printf "%s [label=\"op2: %s\",color=green4, style=filled]\n" (show ii::String) (ppOp2 op::String))
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1
-                  <> r2 ,i2)
+                  <> r2, i2)
   Op3 op e1 e2 e3            -> let (r1,i1) = ppExprDot (ii+1) ii bb e1
                                 in let (r2,i2) = ppExprDot i1 ii bb e2
                                 in let (r3,i3) = ppExprDot i2 ii bb e3
@@ -75,7 +75,7 @@ ppExprDot ii pere bb e0 = case e0 of
                   <> text (printf "%s -> %s\n" (show pere::String) (show ii::String))
                   <> r1
                   <> r2
-                  <> r3 ,i3)
+                  <> r3, i3)
 
   Label _ s e                -> let (r1,i1) = ppExprDot (ii+1) ii bb e
            in (text (printf "%s [label=\"label: %s\",color=plum, style=filled]\n" (show ii::String) (s::String))
