@@ -1,6 +1,8 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification, GADTs, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
 -- | Specification of Copilot streams as modular transition systems.
