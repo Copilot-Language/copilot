@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE Safe                      #-}
 
 -- | This module implements the specification language for the IL format, an
 -- intermediate representation used in copilot-theorem to facilitate model
