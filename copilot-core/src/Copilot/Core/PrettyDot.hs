@@ -165,7 +165,8 @@ ppStream i
     <> text (printf "%s [label=\"[%s]\",color=green, style=filled]\n" ((show $ i+2)::String) ((concat $ intersperse "," $ map (showWithType Haskell t) buffer )) ::String)
     <> text (printf "%s -> %s\n" (show (i+1)::String) ((show $ i+2)::String))
     <> r1, i1)
-    where (r1, i1) = ppExprDot (i+3) (i+1) True e
+    where
+      (r1, i1) = ppExprDot (i+3) (i+1) True e
 
 -- | Pretty print a trigger as a GraphViz graph part.
 ppTrigger :: Int        -- ^ Index or ID of the next node in the graph.
@@ -213,7 +214,8 @@ ppObserver i
   =
   (text (printf "%s [label=\"observer: \n%s\",color=mediumblue, style=filled]\n" (show i::String) name::String)
   <> r1, i1)
-  where (r1, i1) = ppExprDot (i+1) i True e
+  where
+    (r1, i1) = ppExprDot (i+1) i True e
 
 -- | Pretty print a property as a GraphViz graph part.
 ppProperty :: Int         -- ^ Index or ID of the next node in the graph.
@@ -226,7 +228,8 @@ ppProperty i
   =
   (text (printf "%s [label=\"property: \n%s\",color=mediumblue, style=filled]\n" (show i::String) name::String)
   <> r1, i1)
-  where (r1, i1) = ppExprDot (i+1) i True e
+  where
+    (r1, i1) = ppExprDot (i+1) i True e
 
 -- | Pretty print a list of streams as a GraphViz graph part.
 ppStreamL :: Int        -- ^ Index or ID of the next node in the graph.
@@ -298,4 +301,5 @@ prettyPrintExprDot bb s = render rr
 -- | Pretty-print a Copilot specification as a GraphViz/dot graph.
 prettyPrintDot :: Spec -> String
 prettyPrintDot s = render r1
-  where (r1, _) = ppSpecDot 0 s
+  where
+    (r1, _) = ppSpecDot 0 s
