@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE LambdaCase                #-}
@@ -36,8 +34,6 @@ module Copilot.Theorem.IL.Spec
 
 import Data.Map (Map)
 import Data.Function (on)
-
---------------------------------------------------------------------------------
 
 -- | Identifier of a sequence.
 type SeqId    =  String
@@ -79,8 +75,6 @@ data Expr
   | FunApp Type String [Expr]   -- ^ Function application.
   deriving (Eq, Ord, Show)
 
---------------------------------------------------------------------------------
-
 -- | A description of a variable (or function) together with its type.
 data VarDescr = VarDescr
   { varName :: String
@@ -93,8 +87,6 @@ instance Eq VarDescr where
 
 instance Ord VarDescr where
   compare = compare `on` varName
-
---------------------------------------------------------------------------------
 
 -- | Identifier for a property.
 type PropId = String
@@ -113,8 +105,6 @@ data IL = IL
   , inductive   :: Bool
   }
 
---------------------------------------------------------------------------------
-
 -- | Unary operators.
 data Op1 = Not | Neg | Abs | Exp | Sqrt | Log | Sin | Tan | Cos | Asin | Atan
          | Acos | Sinh | Tanh | Cosh | Asinh | Atanh | Acosh
@@ -123,8 +113,6 @@ data Op1 = Not | Neg | Abs | Exp | Sqrt | Log | Sin | Tan | Cos | Asin | Atan
 -- | Binary operators.
 data Op2 = Eq | And | Or | Le | Lt | Ge | Gt | Add | Sub | Mul | Mod | Fdiv | Pow
          deriving (Eq, Ord)
-
--------------------------------------------------------------------------------
 
 instance Show Op1 where
   show op = case op of
@@ -169,8 +157,6 @@ instance Show Op2 where
     Lt   -> "<"
     Gt   -> ">"
 
--------------------------------------------------------------------------------
-
 -- | Return the type of an expression.
 typeOf :: Expr -> Type
 typeOf e = case e of
@@ -204,5 +190,3 @@ evalAt i (FunApp t name args) = FunApp t name $ map (\e -> evalAt i e) args
 evalAt _ e@(SVal _ _ (Fixed _)) = e
 evalAt (Fixed n) (SVal t s (Var d)) = SVal t s (Fixed $ n + d)
 evalAt (Var   k) (SVal t s (Var d)) = SVal t s (Var   $ k + d)
-
---------------------------------------------------------------------------------
