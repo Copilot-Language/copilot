@@ -45,4 +45,3 @@ bsimpl = until (\x -> bsimpl' x == x) bsimpl'
       FunApp t f args             -> FunApp t f (map bsimpl' args)
 
       e                           -> e
-
