@@ -296,7 +296,8 @@ onlyValidity' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
-    where squash (a, b) = (concat a, b)
+    where
+      squash (a, b) = (concat a, b)
 
 -- | This is all very ugly. It might make better sense to go straight from Core to SMTExpr, or maybe use SBV instead.
 
