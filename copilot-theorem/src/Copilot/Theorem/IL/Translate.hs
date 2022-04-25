@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
@@ -27,8 +25,6 @@ import GHC.Float (float2Double)
 
 import Data.Typeable (Typeable)
 
---------------------------------------------------------------------------------
-
 -- 'nc' stands for naming convention.
 ncSeq :: C.Id -> SeqId
 ncSeq = printf "s%d"
@@ -45,8 +41,6 @@ ncUnhandledOp = id
 
 ncMux :: Integer -> SeqId
 ncMux n = "mux" ++ show n
-
---------------------------------------------------------------------------------
 
 -- | Translate a Copilot specification to an IL specification.
 translate :: C.Spec -> IL
@@ -118,8 +112,6 @@ streamRec (C.Stream { C.streamId       = id
   bound s t
   e' <- expr e
   return $ Op2 Bool Eq s e'
-
---------------------------------------------------------------------------------
 
 expr :: Typeable a => C.Expr a -> Trans Expr
 
@@ -277,8 +269,6 @@ trType = \case
   C.Float  -> Real
   C.Double -> Real
 
---------------------------------------------------------------------------------
-
 -- | Translation state.
 data TransST = TransST
   { localConstraints :: [Expr]
@@ -324,5 +314,3 @@ popLocalConstraints = liftM2 (++) (localConstraints <$> get) getMuxes
 
 runTrans :: Bool -> Trans a -> a
 runTrans b m = evalState m $ TransST [] [] 0 b
-
---------------------------------------------------------------------------------
