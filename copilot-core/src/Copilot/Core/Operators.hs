@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, Rank2Types #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE Rank2Types #-}
 
 -- | Internal representation of Copilot operators.
 module Copilot.Core.Operators
