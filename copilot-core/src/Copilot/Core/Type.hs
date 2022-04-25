@@ -11,15 +11,14 @@
 -- the target languages.
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE  ExistentialQuantification
-            , GADTs
-            , KindSignatures
-            , ScopedTypeVariables
-            , UndecidableInstances
-            , FlexibleContexts
-            , DataKinds
-            , FlexibleInstances
-#-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Copilot.Core.Type
   ( Type (..)
