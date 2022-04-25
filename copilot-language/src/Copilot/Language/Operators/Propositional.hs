@@ -2,10 +2,10 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe                  #-}
 
 -- | Implement negation over quantified extensions of boolean streams.
 --
