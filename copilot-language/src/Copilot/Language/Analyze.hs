@@ -214,7 +214,6 @@ analyzeDrop k (Append xs _ _)
   | otherwise                              = return ()
 analyzeDrop _ _                            = throw DropAppliedToNonAppend
 
-
 --------------------------------------------------------------------------------
 -- Analyzing external variables.  We check that every reference to an external
 -- variable has the same type, and for external functions, they have the same
