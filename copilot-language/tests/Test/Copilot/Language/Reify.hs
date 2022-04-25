@@ -116,9 +116,7 @@ arbitrarySemanticsP = oneof
   , SemanticsP <$> (arbitraryBitsIntegralExpr :: Gen (Semantics Word64))
   ]
 
-
 -- ** Random Stream generators
-
 
 -- | An arbitrary constant expression of any type, paired with its expected
 -- meaning.
