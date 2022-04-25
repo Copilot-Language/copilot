@@ -26,4 +26,5 @@ interpret format k spec =
   case format of
     Table -> renderAsTable e
     CSV   -> renderAsCSV e
-  where e = eval Haskell k spec
+  where
+    e = eval Haskell k spec
