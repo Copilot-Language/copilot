@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Parse output of Kind2.
 module Copilot.Theorem.Kind2.Output (parseOutput) where
