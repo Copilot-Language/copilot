@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE GADTs               #-}
@@ -28,8 +26,6 @@ import System.Mem.StableName.Map (Map(..))
 import qualified System.Mem.StableName.Map as M
 import Control.Monad (when, foldM_, foldM)
 import Control.Exception (Exception, throw)
-
---------------------------------------------------------------------------------
 
 -- | Exceptions or kinds of errors in Copilot specifications that the analysis
 -- implemented is able to detect.
@@ -77,12 +73,8 @@ instance Exception AnalyzeException
 maxRecursion :: Int
 maxRecursion = 100000
 
---------------------------------------------------------------------------------
-
 -- | An environment that contains the nodes visited.
 type Env = Map ()
-
---------------------------------------------------------------------------------
 
 -- | Analyze a Copilot specification and report any errors detected.
 --
@@ -96,8 +88,6 @@ analyze spec = do
   mapM_ (analyzeProperty refStreams) (map fst $ theorems $ runSpec spec)
   specExts refStreams spec >>= analyzeExts
 
---------------------------------------------------------------------------------
-
 -- | Analyze a Copilot trigger and report any errors detected.
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
@@ -109,15 +99,11 @@ analyzeTrigger refStreams (Trigger _ e0 args) =
   analyzeTriggerArg :: Arg -> IO ()
   analyzeTriggerArg (Arg e) = analyzeExpr refStreams e
 
---------------------------------------------------------------------------------
-
 -- | Analyze a Copilot observer and report any errors detected.
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeObserver :: IORef Env -> Observer -> IO ()
 analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
-
---------------------------------------------------------------------------------
 
 -- | Analyze a Copilot property and report any errors detected.
 --
@@ -125,14 +111,10 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 analyzeProperty :: IORef Env -> Property -> IO ()
 analyzeProperty refStreams (Property _ e) = analyzeExpr refStreams e
 
---------------------------------------------------------------------------------
-
 data SeenExtern = NoExtern
                 | SeenFun
                 | SeenArr
                 | SeenStruct
-
---------------------------------------------------------------------------------
 
 -- | Analyze a Copilot stream and report any errors detected.
 --
@@ -165,8 +147,6 @@ analyzeExpr refStreams s = do
                              go seenExt nodes' e3
       Label _ e           -> go seenExt nodes' e
 
---------------------------------------------------------------------------------
-
 -- | Detect whether the given stream name has already been visited.
 --
 -- This function throws a 'ReferentialCycle' exception if the second argument
@@ -178,15 +158,11 @@ assertNotVisited _              dstn nodes =
     Just () -> throw ReferentialCycle
     Nothing -> return ()
 
---------------------------------------------------------------------------------
-
 -- | Check that the level of recursion is not above the max recursion allowed.
 mapCheck :: IORef Env -> IO Bool
 mapCheck refStreams = do
   ref <- readIORef refStreams
   return $ getSize ref > maxRecursion
-
---------------------------------------------------------------------------------
 
 -- | Analyze a Copilot stream append and report any errors detected.
 analyzeAppend ::
@@ -200,8 +176,6 @@ analyzeAppend refStreams dstn e b f = do
       modifyIORef refStreams $ M.insert dstn ()
       f refStreams e
 
---------------------------------------------------------------------------------
-
 -- | Analyze a Copilot stream drop and report any errors detected.
 --
 -- This function can fail if the drop is exercised over a stream that is not an
@@ -214,11 +188,9 @@ analyzeDrop k (Append xs _ _)
   | otherwise                              = return ()
 analyzeDrop _ _                            = throw DropAppliedToNonAppend
 
---------------------------------------------------------------------------------
 -- Analyzing external variables.  We check that every reference to an external
 -- variable has the same type, and for external functions, they have the same
 -- typed arguments.
---------------------------------------------------------------------------------
 
 -- | An environment to store external variables, arrays, functions and structs,
 -- so that we can check types in the expression---e.g., if we declare the same
@@ -229,8 +201,6 @@ data ExternEnv = ExternEnv
   , externStructEnv  :: [(String, C.SimpleType)]
   , externStructArgs :: [(String, [C.SimpleType])]
   }
-
---------------------------------------------------------------------------------
 
 -- | Make sure external variables, functions, arrays, and structs are correctly
 -- typed.
@@ -295,8 +265,6 @@ analyzeExts ExternEnv { externVarEnv  = vars
            (head grp) -- should be typesafe, since this is from groupBy
            grp
 
---------------------------------------------------------------------------------
-
 -- | Obtain all the externs in a specification.
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
@@ -347,11 +315,7 @@ collectExts refStreams stream_ env_ = do
                                    go nodes env'' e3
       Label _ e              -> go nodes env e
 
---------------------------------------------------------------------------------
-
 -- | Return the simple C type representation of the type of the values carried
 -- by a stream.
 getSimpleType :: forall a. C.Typed a => Stream a -> C.SimpleType
 getSimpleType _ = C.simpleType (C.typeOf :: C.Type a)
-
---------------------------------------------------------------------------------
