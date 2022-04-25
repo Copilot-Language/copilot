@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Abstract syntax for streams and operators.
 
@@ -22,8 +20,6 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Error
 import Copilot.Language.Prelude
 import qualified Prelude as P
-
---------------------------------------------------------------------------------
 
 -- | A stream in Copilot is an infinite succession of values of the same type.
 --
@@ -52,26 +48,18 @@ data Stream :: * -> * where
               => Core.Op3 a b c d -> Stream a -> Stream b -> Stream c -> Stream d
   Label       :: Typed a => String -> Stream a -> Stream a
 
---------------------------------------------------------------------------------
-
 -- | Wrapper to use 'Stream's as arguments to triggers.
 data Arg where
   Arg :: Typed a => Stream a -> Arg
-
---------------------------------------------------------------------------------
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
   show _      = "Stream"
 
---------------------------------------------------------------------------------
-
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance P.Eq (Stream a) where
   (==)        = badUsage "'Prelude.(==)' isn't implemented for streams!"
   (/=)        = badUsage "'Prelude.(/=)' isn't implemented for streams!"
-
---------------------------------------------------------------------------------
 
 -- | Streams carrying numbers are instances of 'Num', and you can apply to them
 -- the 'Num' functions, point-wise.
@@ -100,8 +88,6 @@ instance (Typed a, P.Eq a, Num a) => Num (Stream a) where
 
   fromInteger             = Const . fromInteger
 
---------------------------------------------------------------------------------
-
 -- | Streams carrying fractional numbers are instances of 'Fractional', and you can
 -- apply to them the 'Fractional' functions, point-wise.
 
@@ -114,8 +100,6 @@ instance (Typed a, P.Eq a, Fractional a) => Fractional (Stream a) where
   recip x                 = Op1 (Core.Recip typeOf) x
 
   fromRational            = Const . fromRational
-
---------------------------------------------------------------------------------
 
 -- | Streams carrying floating point numbers are instances of 'Floating', and
 -- you can apply to them the 'Floating' functions, point-wise.
@@ -141,8 +125,6 @@ instance (Typed a, Eq a, Floating a) => Floating (Stream a) where
   asinh        = Op1 (Core.Asinh typeOf)
   atanh        = Op1 (Core.Atanh typeOf)
   acosh        = Op1 (Core.Acosh typeOf)
-
---------------------------------------------------------------------------------
 
 -- | Point-wise application of @ceiling@ to a stream.
 --
@@ -175,8 +157,6 @@ ceiling = Op1 (Core.Ceiling typeOf)
 -- qualified to use this function.
 floor :: (Typed a, RealFrac a) => Stream a -> Stream a
 floor = Op1 (Core.Floor typeOf)
-
---------------------------------------------------------------------------------
 
 -- | Point-wise application of @atan2@ to the values of two streams.
 --
