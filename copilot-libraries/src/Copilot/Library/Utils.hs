@@ -154,4 +154,5 @@ ls !! n = let indices      = map
 -- | Cycle a list to form an infinite stream.
 cycle :: ( Typed a ) => [ a ] -> Stream a
 cycle ls = cycle'
-  where cycle' = ls ++ cycle'
+  where
+    cycle' = ls ++ cycle'
