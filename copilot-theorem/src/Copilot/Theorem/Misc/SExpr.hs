@@ -48,7 +48,6 @@ instance Show (SExpr String) where
       show' (Atom s) = text s
       show' (List ts) = parens . hsep . map show' $ ts
 
-
 -- More advanced printing with some basic indentation
 
 -- | Indent by a given number.
