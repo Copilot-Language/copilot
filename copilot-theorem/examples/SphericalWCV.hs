@@ -41,12 +41,13 @@ tcoathr = extern "tcoathr" Nothing
 
 spherical2xyz :: Stream Double -> Stream Double -> Vect3
 spherical2xyz lat lon = (x, y, z)
-      where r     = 6371000 -- Radius of the earth in meters
-            theta = pi / 2 - lat
-            phi   = pi - lon
-            x     = r * sin theta * cos phi
-            y     = r * sin theta * sin phi
-            z     = r * cos theta
+      where
+        r     = 6371000 -- Radius of the earth in meters
+        theta = pi / 2 - lat
+        phi   = pi - lon
+        x     = r * sin theta * cos phi
+        y     = r * sin theta * sin phi
+        z     = r * cos theta
 
 dot3 :: Vect3 -> Vect3 -> Stream Double
 dot3 (x1, y1, z1) (x2, y2, z2) = x1 * x2 + y1 * y2 + z1 * z2
@@ -65,7 +66,8 @@ vect3_orthog_toz v = v `cross3` vect3_orthog_toy v
 
 unit :: Vect3 -> Vect3
 unit (x, y, z) = (x / n, y / n, z / n)
-      where n = norm3 (x, y, z)
+      where
+        n = norm3 (x, y, z)
 
 vect3_orthonorm_toy :: Vect3 -> Vect3
 vect3_orthonorm_toy = unit . vect3_orthog_toy
@@ -75,8 +77,9 @@ vect3_orthonorm_toz = unit . vect3_orthog_toz
 
 sphere_to_2D_plane :: Vect3 -> Vect3 -> Vect2
 sphere_to_2D_plane nzv w = (ymult `dot3` w, zmult `dot3` w)
-      where ymult = vect3_orthonorm_toy nzv
-            zmult = vect3_orthonorm_toz nzv
+      where
+        ymult = vect3_orthonorm_toy nzv
+        zmult = vect3_orthonorm_toz nzv
 
 pO :: Vect3
 pO = spherical2xyz latO lonO
@@ -89,7 +92,8 @@ sOx, sOy, sOz :: Stream Double
 
 sIx, sIy, sIz :: Stream Double
 (sIx, sIy, sIz) = (sI2x, sI2y, altI)
-      where (sI2x, sI2y) = sphere_to_2D_plane pO pI
+      where
+        (sI2x, sI2y) = sphere_to_2D_plane pO pI
 
 vOx, vOy, vOz :: Stream Double
 (vOx, vOy, vOz) = (gsO * sin trkO, gsO * cos trkO, vsO)
