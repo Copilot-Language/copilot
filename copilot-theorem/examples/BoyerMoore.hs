@@ -45,7 +45,6 @@ majorityVote (x : xs) = aux x 1 xs
     local (if s == 0 || l == p then s + 1 else s - 1) $ \s' ->
     aux p' s' ls
 
-
 okWith ::
   forall a . (Typed a, Eq a) =>
   Stream a -> [Stream a] -> Stream a -> Stream Bool
