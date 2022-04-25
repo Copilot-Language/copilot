@@ -27,7 +27,7 @@ engineMonitor = do
   exceed   = map (> 250) vals
   maj      = majority exceed
   checkMaj = aMajority exceed maj
-  ok       = alwaysBeen ((maj && checkMaj) ==> extern "cooler" cooler) 
+  ok       = alwaysBeen ((maj && checkMaj) ==> extern "cooler" cooler)
 
   two51  = Just $ [251, 251] P.++ repeat (250 :: Word8)
   zero   = Just $ repeat (0 :: Word8)
