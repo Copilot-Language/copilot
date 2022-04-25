@@ -1,7 +1,10 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs, ExistentialQuantification, LambdaCase, ScopedTypeVariables,
-             RankNTypes #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
 
 -- | Operators in modular transition systems and their translation.
