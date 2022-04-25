@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, KindSignatures #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 
 -- | Propositional equality and type equality.
 module Copilot.Core.Type.Equality
