@@ -2,10 +2,10 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs          #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE RankNTypes     #-}
+{-# LANGUAGE Safe           #-}
 
 -- | Copilot specifications consistute the main declaration of Copilot modules.
 --
