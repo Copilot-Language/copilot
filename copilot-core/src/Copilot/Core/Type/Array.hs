@@ -38,11 +38,12 @@ instance Show t => Show (Array n t) where
 -- list matches the length of the array at type level.
 array :: forall n t. KnownNat n => [t] -> Array n t
 array xs | datalen == typelen = Array xs
-         | otherwise          = error errmsg where
-  datalen = length xs
-  typelen = fromIntegral $ natVal (Proxy :: Proxy n)
-  errmsg = "Length of data (" ++ show datalen ++
-           ") does not match length of type (" ++ show typelen ++ ")."
+         | otherwise          = error errmsg
+  where
+    datalen = length xs
+    typelen = fromIntegral $ natVal (Proxy :: Proxy n)
+    errmsg = "Length of data (" ++ show datalen ++
+             ") does not match length of type (" ++ show typelen ++ ")."
 
 -- | Association between an array and the type of the elements it contains.
 type family InnerType x where
