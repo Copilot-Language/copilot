@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
@@ -27,8 +25,6 @@ import Copilot.Core.Expr (Name, Id, Expr, UExpr)
 import Copilot.Core.Type (Type, Typed)
 import Data.Typeable (Typeable)
 
---------------------------------------------------------------------------------
-
 -- | A stream in an infinite succession of values of the same type.
 --
 -- Stream can carry different types of data. Boolean streams play a special
@@ -40,16 +36,12 @@ data Stream = forall a. (Typeable a, Typed a) => Stream
   , streamExpr       :: Expr a
   , streamExprType   :: Type a }
 
---------------------------------------------------------------------------------
-
 -- | An observer, representing a stream that we observe during interpretation
 -- at every sample.
 data Observer = forall a. Typeable a => Observer
   { observerName     :: Name
   , observerExpr     :: Expr a
   , observerExprType :: Type a }
-
---------------------------------------------------------------------------------
 
 -- | A trigger, representing a function we execute when a boolean stream becomes
 -- true at a sample.
@@ -58,15 +50,11 @@ data Trigger = Trigger
   , triggerGuard     :: Expr Bool
   , triggerArgs      :: [UExpr] }
 
---------------------------------------------------------------------------------
-
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property = Property
   { propertyName     :: Name
   , propertyExpr     :: Expr Bool }
-
---------------------------------------------------------------------------------
 
 -- | A Copilot specification is a list of streams, together with monitors on
 -- these streams implemented as observers, triggers or properties.
@@ -75,5 +63,3 @@ data Spec = Spec
   , specObservers    :: [Observer]
   , specTriggers     :: [Trigger]
   , specProperties   :: [Property] }
-
---------------------------------------------------------------------------------
