@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE NamedFieldPuns      #-}
@@ -61,8 +59,6 @@ import qualified Copilot.Core as C
 import qualified Data.Map     as Map
 import qualified Data.Bimap   as Bimap
 
---------------------------------------------------------------------------------
-
 -- Naming conventions
 -- These are important in order to avoid name conflicts
 
@@ -83,8 +79,6 @@ ncTimeAnnot :: String -> Int -> String
 ncTimeAnnot s d
   | d == 0    = s
   | otherwise = s ++ ncSep ++ show d
-
---------------------------------------------------------------------------------
 
 -- | Translate Copilot specifications into a modular transition system.
 translate :: C.Spec -> TransSys
@@ -111,8 +105,6 @@ translate cspec =
 
     topNode = mkTopNode topNodeId (map nodeId propNodes) cprops
     extVarNodes = map mkExtVarNode extvarNodesNames
-
---------------------------------------------------------------------------------
 
 mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
 mkTopNode topNodeId dependencies cprops =
@@ -149,8 +141,6 @@ streamOfProp prop =
            , C.streamExpr = C.propertyExpr prop
            , C.streamExprType = C.Bool }
 
---------------------------------------------------------------------------------
-
 stream :: C.Stream -> Trans Node
 stream (C.Stream { C.streamId
                  , C.streamBuffer
@@ -179,8 +169,6 @@ stream (C.Stream { C.streamId
     return Node
       { nodeId, nodeDependencies, nodeLocalVars
       , nodeImportedVars, nodeConstrs = [] }
-
---------------------------------------------------------------------------------
 
 expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
@@ -237,8 +225,6 @@ newUnconstrainedVar t = do
   newLocal (Var newNode) $ VarDescr t $ Constrs []
   newDep newNode
   return $ VarE t (Var newNode)
-
---------------------------------------------------------------------------------
 
 runTrans :: Trans a -> (a, [(NodeId, U Type)])
 runTrans mx =
@@ -305,5 +291,3 @@ curNode = _curNode <$> get
 
 newExtVarNode id t =
   modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }
-
---------------------------------------------------------------------------------
