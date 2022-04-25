@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Example implementing an engine cooling control system.
 
