@@ -3,7 +3,7 @@
 -- Well-Clear Bounday Models for the Integration of UAS in the NAS',
 -- https://ntrs.nasa.gov/citations/20140010078.
 
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE RebindableSyntax #-}
 
 module Main where
