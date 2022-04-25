@@ -228,7 +228,7 @@ trOp1 = \case
   C.Acosh t -> (Acosh, trType t)
   -- C.BwNot t ->
   -- C.Cast t  ->
-  _ -> error "Unsupported unary operator in input." -- TODO(chathhorn)
+  _ -> error "Unsupported unary operator in input."
 
 trOp2 :: C.Op2 a b c -> (Op2, Type)
 trOp2 = \case
@@ -261,7 +261,7 @@ trOp2 = \case
   -- C.BwShiftL t _ ->
   -- C.BwShiftR t _ ->
 
-  _ -> error "Unsupported binary operator in input." -- TODO(chathhorn)
+  _ -> error "Unsupported binary operator in input."
 
 trType :: C.Type a -> Type
 trType = \case
