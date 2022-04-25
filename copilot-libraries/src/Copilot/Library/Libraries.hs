@@ -26,4 +26,3 @@ import Copilot.Library.RegExp
 import Copilot.Library.Utils
 import Copilot.Library.Voting
 import Copilot.Library.Stacks
-
