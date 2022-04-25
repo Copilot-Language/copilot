@@ -97,12 +97,13 @@ asColumns = flip asColumnsWithBuff $ 1
 
 asColumnsWithBuff :: [[Doc]] -> Int -> Doc
 asColumnsWithBuff lls q = normalize
-        where normalize = vcat $ map hsep
-                        $ map (\x -> pad (length x) longColumnLen empty x)
-                        $ pad' longEntryLen q
-                        $ transpose lls -- normalize column height
-              longColumnLen = maximum (map length lls)
-              longEntryLen = maximum $ map docLen (concat lls)
+        where
+          normalize = vcat $ map hsep
+                    $ map (\x -> pad (length x) longColumnLen empty x)
+                    $ pad' longEntryLen q
+                    $ transpose lls -- normalize column height
+          longColumnLen = maximum (map length lls)
+          longEntryLen = maximum $ map docLen (concat lls)
 
 docLen d = length $ render d
 
@@ -117,4 +118,5 @@ pad' :: Int      -- ^ Mininum number of spaces to add
      -> [[Doc]]
 pad' _ _ []       = []
 pad' mx q (ls:xs) = map buf ls : pad' mx q xs
-        where buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)
+        where
+          buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)
