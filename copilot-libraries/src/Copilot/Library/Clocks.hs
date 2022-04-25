@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: Clocks
 -- Description: Clocks based on a base period and phase
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -85,7 +85,7 @@ clk1 ( Period period' ) ( Phase phase' ) =
                   badUsage ( "clk1: clock phase must be less than period")
               else
                   let counter = [ P.fromInteger 0 ]
-                                ++ mux ( counter /= ( constant $ 
+                                ++ mux ( counter /= ( constant $
                                                         period' P.- 1 ) )
                                        ( counter P.+ 1 )
                                        ( 0 )
