@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs             #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -53,8 +51,6 @@ import qualified Data.Map as Map
 import Copilot.Theorem.Misc.Utils
 
 import System.IO (hClose)
-
---------------------------------------------------------------------------------
 
 -- * Tactics
 
@@ -118,8 +114,6 @@ kInduction opts backend = check P.Prover
   , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }
-
--------------------------------------------------------------------------------
 
 -- * Backends
 
@@ -241,8 +235,6 @@ metit installDir = Backend
   , logic           = ""
   , interpret       = TPTP.interpret
   }
-
--------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
@@ -423,5 +415,3 @@ selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
     where squash (a, b) = (concat a, b)
-
---------------------------------------------------------------------------------
