@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, GADTs #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 
 -- | Copilot specifications constitute the main declaration of Copilot modules.
 --
