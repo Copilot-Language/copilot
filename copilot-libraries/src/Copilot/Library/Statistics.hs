@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: Statistics
 -- Description: Basic bounded statistics
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -36,6 +36,6 @@ mean n s = ( sum n s ) / ( fromIntegral n )
 
 -- | Mean value over the current set of streams passed in.
 meanNow :: ( Typed a, Integral a ) => [ Stream a ] -> Stream a
-meanNow [] = 
+meanNow [] =
   badUsage "list of arguments to meanNow must be nonempty"
 meanNow ls = ( foldl1 (+) ls ) `div` ( fromIntegral $ length ls )
