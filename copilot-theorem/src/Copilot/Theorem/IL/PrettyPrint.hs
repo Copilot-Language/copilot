@@ -1,5 +1,3 @@
----------------------------------------------------------------------------------
-
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE Safe           #-}
@@ -13,8 +11,6 @@ import Text.PrettyPrint.HughesPJ
 import qualified Data.Map as Map
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 -- | Pretty print an IL specification.
 prettyPrint :: IL -> String
@@ -88,5 +84,3 @@ ppOp1 = text . show
 
 ppOp2 :: Op2 -> Doc
 ppOp2 = text . show
-
---------------------------------------------------------------------------------
