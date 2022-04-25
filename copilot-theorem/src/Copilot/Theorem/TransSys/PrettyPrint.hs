@@ -101,7 +101,6 @@ pLVar l (VarDescr {varType, varDef}) = header $$ indent body
             <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs)
             <+> text "}"
 
-
 pExpr :: Expr t -> Doc
 
 pExpr (Const t v) = pConst t v
