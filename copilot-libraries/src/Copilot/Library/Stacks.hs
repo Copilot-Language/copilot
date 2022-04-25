@@ -1,8 +1,8 @@
--- | 
+-- |
 -- Module: Stacks
 -- Description: Stream for a stack machine
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
--- 
+--
 -- This is a stream for a stack machine.
 --
 -- The stack is created from a specified depth, a specified start value, and
@@ -15,21 +15,21 @@
 --
 -- In 'stack' the push signal takes priority over the pop signal in the event
 -- that both are true in the same tick. This priority is reversed in 'stack''.
--- 
+--
 -- Here is an example sequence with one stack of each type, both depth 3 and
 -- starting value 0:
 --
--- @ 
--- popSignal:   pushSignal:  pushValue:   stack:       stack':     
--- false        true         100          0            0           
--- false        true         101          100          100         
--- true         true         102          101          101         
--- true         false        103          100          102         
--- true         false        104          0            101         
--- true         false        105          0            100         
--- true         false        106          0            0           
 -- @
--- 
+-- popSignal:   pushSignal:  pushValue:   stack:       stack':
+-- false        true         100          0            0
+-- false        true         101          100          100
+-- true         true         102          101          101
+-- true         false        103          100          102
+-- true         false        104          0            101
+-- true         false        105          0            100
+-- true         false        106          0            0
+-- @
+--
 -- Note the difference at the 4th tick after /popSignal/ and /pushSignal/ were
 -- both true.  Note also that one cannot pop the start value off the stack -
 -- that is, the stack is never empty.
