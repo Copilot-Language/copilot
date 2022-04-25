@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Integral class operators applied point-wise on streams.
 
@@ -21,8 +19,6 @@ import Copilot.Language.Stream
 import qualified Data.Bits as B
 import qualified Prelude as P
 import Data.List (foldl', replicate)
-
---------------------------------------------------------------------------------
 
 -- | Apply the 'Prelude.div' operation to two streams, point-wise.
 div :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
@@ -51,5 +47,3 @@ x `mod` y = Op2 (Core.Mod typeOf) x y
 (Const 2) ^ y          = (Const 1) .<<. y
 x ^ (Const y)          = foldl' ((P.*)) (Const 1) (replicate (P.fromIntegral y) x)
 _ ^ _                  = Err.badUsage "in ^: in x ^ y, either x must be the constant 2, or y must be a constant.  (Do not confuse ^ with bitwise XOR (.^.) or with ** for exponentation of floats/doubles.)"
-
---------------------------------------------------------------------------------
