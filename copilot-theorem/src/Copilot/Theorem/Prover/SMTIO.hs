@@ -3,8 +3,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE Safe #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Communication with SMT solvers or theorem provers.
 --
