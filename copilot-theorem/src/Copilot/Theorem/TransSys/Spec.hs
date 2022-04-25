@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE RankNTypes                #-}
@@ -45,8 +43,6 @@ import qualified Data.List  as List
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set
 import qualified Data.Bimap as Bimap
-
---------------------------------------------------------------------------------
 
 -- | Unique name that identifies a node.
 type NodeId = String
@@ -104,8 +100,6 @@ data Expr t where
   Op2   :: Type t -> Op2 a t -> Expr a -> Expr a -> Expr t
   VarE  :: Type t -> Var -> Expr t
 
---------------------------------------------------------------------------------
-
 -- | Constructor for variables identifiers in the global namespace.
 mkExtVar node name = ExtVar node (Var name)
 
@@ -130,8 +124,6 @@ transformExpr f = tre
     tre (Op1 t op e)      = f (Op1 t op (tre e))
     tre (Op2 t op e1 e2)  = f (Op2 t op (tre e1) (tre e2))
     tre e                 = f e
-
---------------------------------------------------------------------------------
 
 -- | The set of variables related to a node (union of the local variables and
 -- the imported variables after deferencing them).
@@ -161,8 +153,6 @@ nodeImportedExtVarsSet = Map.keysSet . Bimap.toMapR . nodeImportedVars
 nodeExportedExtVarsSet :: Node -> Set ExtVar
 nodeExportedExtVarsSet n = Set.map (ExtVar $ nodeId n) (nodeLocalVarsSet n)
 
---------------------------------------------------------------------------------
-
 instance HasInvariants Node where
 
   invariants n =
@@ -179,8 +169,6 @@ instance HasInvariants Node where
       in preVars `isSubsetOf` nodeLocalVarsSet n
     ]
 
---------------------------------------------------------------------------------
-
 specNodesIds :: TransSys -> Set NodeId
 specNodesIds s = Set.fromList . map nodeId $ specNodes s
 
@@ -195,8 +183,6 @@ specTopNode :: TransSys -> Node
 specTopNode spec = fromJust $ List.find
   ((== specTopNodeId spec) . nodeId)
   (specNodes spec)
-
---------------------------------------------------------------------------------
 
 instance HasInvariants TransSys where
 
@@ -223,10 +209,6 @@ isTopologicallySorted spec =
           guard $ Set.fromList (nodeDependencies n) `isSubsetOf` acc
           return . Set.insert (nodeId n) $ acc
 
---------------------------------------------------------------------------------
-
 -- For debugging purposes
 instance Show ExtVar where
   show (ExtVar n v) = "(" ++ n ++ " : " ++ show v ++ ")"
-
---------------------------------------------------------------------------------
