@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE Safe              #-}
 
 -- | A backend to the SMT-Lib format, enabling to produce commands for SMT-Lib
 -- implementing solvers, and parse results.
