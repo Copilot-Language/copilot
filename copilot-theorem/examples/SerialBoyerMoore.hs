@@ -1,4 +1,3 @@
---------------------------------------------------------------------------------
 {-# LANGUAGE RebindableSyntax #-}
 
 module SerialBoyerMoore where
@@ -9,8 +8,6 @@ import Copilot.Theorem.Prover.Z3
 
 import Prelude ()
 import Data.String (fromString)
-
---------------------------------------------------------------------------------
 
 conj :: [Stream Bool] -> Stream Bool
 conj = foldl (&&) true
@@ -56,8 +53,6 @@ spec = do
   where
     input = externW64 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
     (p, s, j) = majority input
-
---------------------------------------------------------------------------------
 
 induct :: Proof Universal
 induct = induction def { nraNLSat = False, debug = False }
