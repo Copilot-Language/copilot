@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2019 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | This is a simple example for arrays. As a program, it does not make much
 -- sense, however it shows of the features of arrays nicely.
