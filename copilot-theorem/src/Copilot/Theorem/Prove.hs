@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE NamedFieldPuns, ViewPatterns, ExistentialQuantification, GADTs #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe #-}
 
 -- | Connection to theorem provers.
