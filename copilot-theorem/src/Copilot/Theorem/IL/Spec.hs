@@ -1,6 +1,8 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification, GADTs, LambdaCase #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
 -- | This module implements the specification language for the IL format, an
