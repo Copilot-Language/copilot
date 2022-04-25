@@ -2,7 +2,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-
 {-# LANGUAGE Safe #-}
 
 -- | Temporal stream transformations.
