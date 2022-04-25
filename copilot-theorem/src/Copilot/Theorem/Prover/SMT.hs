@@ -327,18 +327,19 @@ entailment sid assumptions props = do
 
 getVars :: [Expr] -> [VarDescr]
 getVars = nubBy' (compare `on` varName) . concatMap getVars'
-  where getVars' :: Expr -> [VarDescr]
-        getVars' = \case
-          ConstB _             -> []
-          ConstI _ _           -> []
-          ConstR _             -> []
-          Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
-          Op1 _ _ e            -> getVars' e
-          Op2 _ _ e1 e2        -> getVars' e1 ++ getVars' e2
-          SVal t seq (Fixed i) -> [VarDescr (seq ++ "_" ++ show i) t []]
-          SVal t seq (Var i)   -> [VarDescr (seq ++ "_n" ++ show i) t []]
-          FunApp t name args   -> [VarDescr name t (map typeOf args)]
-                                  ++ concatMap getVars' args
+  where
+    getVars' :: Expr -> [VarDescr]
+    getVars' = \case
+      ConstB _             -> []
+      ConstI _ _           -> []
+      ConstR _             -> []
+      Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
+      Op1 _ _ e            -> getVars' e
+      Op2 _ _ e1 e2        -> getVars' e1 ++ getVars' e2
+      SVal t seq (Fixed i) -> [VarDescr (seq ++ "_" ++ show i) t []]
+      SVal t seq (Var i)   -> [VarDescr (seq ++ "_n" ++ show i) t []]
+      FunApp t name args   -> [VarDescr name t (map typeOf args)]
+                              ++ concatMap getVars' args
 
 unknown :: ProofScript b a
 unknown = mzero
@@ -414,4 +415,5 @@ onlyValidity' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
-    where squash (a, b) = (concat a, b)
+    where
+      squash (a, b) = (concat a, b)
