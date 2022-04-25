@@ -2,9 +2,9 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Copilot specification sanity check.
