@@ -3,8 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE Trustworthy               #-}
 
 -- | Internal Copilot Core representation of Copilot externs.
 module Copilot.Core.External
