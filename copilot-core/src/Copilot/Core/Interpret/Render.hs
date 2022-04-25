@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Pretty-print the results of a simulation.
 
@@ -17,8 +15,6 @@ import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import Text.PrettyPrint
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 -- | Render an execution trace as a table, formatted to faciliate readability.
 renderAsTable :: ExecTrace -> String
@@ -48,8 +44,6 @@ renderAsTable
 
      ppObserverOutputs :: [[Doc]]
      ppObserverOutputs = map (map text) (map snd obsvs)
-
---------------------------------------------------------------------------------
 
 -- | Render an execution trace as using comma-separate value (CSV) format.
 renderAsCSV :: ExecTrace -> String
@@ -96,8 +90,6 @@ step ExecTrace
           { interpTriggers  = map (fmap tail) trigs
           , interpObservers = []
           }
-
---------------------------------------------------------------------------------
 
 -- Copied from pretty-ncols because of incompatibility with newer GHC versions.
 asColumns :: [[Doc]] -> Doc
