@@ -4,8 +4,8 @@
 
 -- | A pretty printer for Copilot specifications.
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Core.PrettyPrint
   ( prettyPrint
