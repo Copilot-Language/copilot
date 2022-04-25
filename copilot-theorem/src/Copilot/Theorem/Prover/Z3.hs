@@ -546,6 +546,6 @@ instance (SMTBackend b m,MonadIO m) => SMTBackend (DebugBackend b) m where
         when (debugUseColor b) $ liftIO $ hSetSGR (debugHandle b) [Reset,SetColor Foreground Dull Blue]
         liftIO $ unless (mute b) $ hPutStrLn (debugHandle b) str
     when (debugUseColor b) $ liftIO $ hSetSGR (debugHandle b) [Reset]
-    return (resp,b { debugBackend = b2 , debugLines = nline })
+    return (resp,b { debugBackend = b2, debugLines = nline })
 
 
