@@ -53,17 +53,19 @@ toKind2 :: Style     -- ^ Style of the file (modular or inlined).
 toKind2 style assumptions checkedProps spec =
   addAssumptions spec assumptions
   $ trSpec (complete spec') predCallsGraph assumptions checkedProps
-  where predCallsGraph = specDependenciesGraph spec'
-        spec' = case style of
-          Inlined -> inline spec
-          Modular -> removeCycles spec
+  where
+    predCallsGraph = specDependenciesGraph spec'
+    spec' = case style of
+      Inlined -> inline spec
+      Modular -> removeCycles spec
 
 trSpec :: TransSys -> DepGraph -> [PropId] -> [PropId] -> K.File
 trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
-  where preds = map (trNode spec predCallsGraph) (specNodes spec)
-        props = map trProp $
-          filter ((`elem` checkedProps) . fst) $
-          Map.toList (specProps spec)
+  where
+    preds = map (trNode spec predCallsGraph) (specNodes spec)
+    props = map trProp $
+      filter ((`elem` checkedProps) . fst) $
+      Map.toList (specProps spec)
 
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)
