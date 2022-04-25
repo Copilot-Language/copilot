@@ -4,10 +4,10 @@
 
 -- | A tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns       #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE Safe               #-}
 
 module Copilot.Core.Interpret.Eval
   ( Env
