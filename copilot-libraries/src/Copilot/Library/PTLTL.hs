@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: PTLTL
 -- Description: Past-Time Linear-Temporal Logic
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
