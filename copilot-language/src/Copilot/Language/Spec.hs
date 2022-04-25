@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE KindSignatures #-}
@@ -43,8 +41,6 @@ import Copilot.Language.Stream
 
 import Copilot.Theorem.Prove
 
---------------------------------------------------------------------------------
-
 -- | A specification is a list of declarations of triggers, observers,
 -- properties and theorems.
 --
@@ -68,8 +64,6 @@ type Spec = Writer [SpecItem] ()
 -- can be used in subsequent actions.
 type Spec' a = Writer [SpecItem] a
 
---------------------------------------------------------------------------------
-
 -- | Return the complete list of declarations inside a 'Spec' or 'Spec''.
 --
 -- The word run in this function is unrelated to running the underlying
@@ -77,8 +71,6 @@ type Spec' a = Writer [SpecItem] a
 -- 'Spec'
 runSpec :: Spec' a -> [SpecItem]
 runSpec = execWriter
-
---------------------------------------------------------------------------------
 
 -- | Filter a list of spec items to keep only the observers.
 observers :: [SpecItem] -> [Observer]
@@ -120,8 +112,6 @@ theorems =
       TheoremItem p -> p : ls
       _              -> ls
 
---------------------------------------------------------------------------------
-
 -- | An item of a Copilot specification.
 data SpecItem
   = ObserverItem Observer
@@ -129,14 +119,10 @@ data SpecItem
   | PropertyItem Property
   | TheoremItem (Property, UProof)
 
---------------------------------------------------------------------------------
-
 -- | An observer, representing a stream that we observe during execution at
 -- every sample.
 data Observer where
   Observer :: Typed a => String -> Stream a -> Observer
-
---------------------------------------------------------------------------------
 
 -- | Define a new observer as part of a specification. This allows someone to
 -- print the value at every iteration during interpretation. Observers do not
@@ -148,14 +134,10 @@ observer :: Typed a
          -> Spec
 observer name e = tell [ObserverItem $ Observer name e]
 
---------------------------------------------------------------------------------
-
 -- | A trigger, representing a function we execute when a boolean stream becomes
 -- true at a sample.
 data Trigger where
   Trigger :: Core.Name -> Stream Bool -> [Arg] -> Trigger
-
---------------------------------------------------------------------------------
 
 -- | Define a new trigger as part of a specification. A trigger declares which
 -- external function, or handler, will be called when a guard defined by a
@@ -166,14 +148,10 @@ trigger :: String       -- ^ Name of the handler to be called.
         -> Spec
 trigger name e args = tell [TriggerItem $ Trigger name e args]
 
---------------------------------------------------------------------------------
-
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property where
   Property :: String -> Stream Bool -> Property
-
---------------------------------------------------------------------------------
 
 -- | A proposition, representing the quantification of a boolean streams over
 -- time.
@@ -194,8 +172,6 @@ extractProp :: Prop a -> Stream Bool
 extractProp (Forall p) = p
 extractProp (Exists p) = p
 
---------------------------------------------------------------------------------
-
 -- | A proposition, representing a boolean stream that is existentially or
 -- universally quantified over time, as part of a specification.
 --
@@ -205,8 +181,6 @@ prop :: String -> Prop a -> Writer [SpecItem] (PropRef a)
 prop name e = tell [PropertyItem $ Property name (extractProp e)]
   >> return (PropRef name)
 
---------------------------------------------------------------------------------
-
 -- | A theorem, or proposition together with a proof.
 --
 -- This function returns, in the monadic context, a reference to the
@@ -214,8 +188,6 @@ prop name e = tell [PropertyItem $ Property name (extractProp e)]
 theorem :: String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
 theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
   >> return (PropRef name)
-
---------------------------------------------------------------------------------
 
 -- | Construct a function argument from a stream.
 --
@@ -226,5 +198,3 @@ theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
 -- the current samples of the given streams.
 arg :: Typed a => Stream a -> Arg
 arg = Arg
-
---------------------------------------------------------------------------------
