@@ -5,9 +5,9 @@
 -- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Reify
   ( reify
