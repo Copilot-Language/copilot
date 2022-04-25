@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Casting of values with dynamic types and translating from Copilot core
