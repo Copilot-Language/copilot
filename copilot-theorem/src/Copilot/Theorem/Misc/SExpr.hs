@@ -64,11 +64,12 @@ toDoc shouldIndent printAtom expr = case expr of
   Atom a  -> text (printAtom a)
   List l  -> parens (foldl renderItem empty l)
 
-  where renderItem doc s
-          | shouldIndent s =
-            doc $$ indent (toDoc shouldIndent printAtom s)
-          | otherwise =
-            doc <+> toDoc shouldIndent printAtom s
+  where
+    renderItem doc s
+      | shouldIndent s =
+        doc $$ indent (toDoc shouldIndent printAtom s)
+      | otherwise =
+        doc <+> toDoc shouldIndent printAtom s
 
 -- | Parser for strings of characters separated by spaces into a structured
 -- tree.
