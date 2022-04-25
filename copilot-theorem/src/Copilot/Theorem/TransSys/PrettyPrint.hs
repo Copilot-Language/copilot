@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs          #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe           #-}
 
 -- | Pretty print a TransSys specification as a Kind2/Lustre specification.
 module Copilot.Theorem.TransSys.PrettyPrint ( prettyPrint ) where
