@@ -4,8 +4,8 @@
 
 -- | A pretty printer for Copilot specifications as GraphViz/dot graphs.
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Core.PrettyDot
   ( prettyPrintDot
