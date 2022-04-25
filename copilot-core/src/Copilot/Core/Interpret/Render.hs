@@ -99,8 +99,6 @@ step ExecTrace
 
 --------------------------------------------------------------------------------
 
-
-
 -- Copied from pretty-ncols because of incompatibility with newer GHC versions.
 asColumns :: [[Doc]] -> Doc
 asColumns = flip asColumnsWithBuff $ 1
