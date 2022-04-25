@@ -46,7 +46,6 @@ spec = do
   let a = extern "a" Nothing
   void $ prop "Example 7" (forall (a || not a))
 
-
 main :: IO ()
 main = do
   spec' <- reify spec
