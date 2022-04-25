@@ -8,9 +8,9 @@
 -- One of them uses a format (csv) that may be more machine-readable, while the
 -- other uses a format that may be easier for humans to read.
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE Safe #-}
 
 module Copilot.Language.Interpret
   ( csv
