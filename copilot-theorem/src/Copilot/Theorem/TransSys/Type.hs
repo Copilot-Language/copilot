@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE ExistentialQuantification, GADTs #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe #-}
 
 -- | Types suported by the modular transition systems.
