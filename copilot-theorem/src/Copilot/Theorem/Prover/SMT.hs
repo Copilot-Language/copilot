@@ -387,7 +387,6 @@ kInduction' startK maxK s as ps = (fromMaybe (Output P.Unknown ["proof by k-indu
             Unknown -> unknown
             Unsat   -> valid $ "proved with " ++ proofKind k
 
-
 onlySat' :: SmtFormat b => ProofState b -> [PropId] -> [PropId] -> IO Output
 onlySat' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
   where
