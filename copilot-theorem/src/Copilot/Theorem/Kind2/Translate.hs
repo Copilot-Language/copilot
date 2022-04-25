@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RankNTypes, ViewPatterns, NamedFieldPuns, GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe #-}
 
 -- | Convert modular transition systems ('TransSys') into Kind2 file
