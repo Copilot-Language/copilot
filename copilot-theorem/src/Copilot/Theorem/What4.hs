@@ -922,7 +922,6 @@ translateOp2 sym powFn logbFn op xe1 xe2 = case (op, xe1, xe2) of
                   Nothing -> panic
               _ -> panic
 
-
 translateOp3 :: forall t st fs a b c d .
                 WB.ExprBuilder t st fs
              -> CE.Op3 a b c d
