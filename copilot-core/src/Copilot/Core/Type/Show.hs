@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, GADTs #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 
 -- | Show Copilot Core types and typed values.
 module Copilot.Core.Type.Show
