@@ -4,7 +4,6 @@
 
 {-# LANGUAGE Safe #-}
 
-
 -- | Primitives to build constant streams.
 module Copilot.Language.Operators.Constant
   ( constant
