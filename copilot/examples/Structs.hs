@@ -11,7 +11,6 @@ import Control.Monad (void, forM_)
 import Language.Copilot
 import Copilot.Compile.C99
 
-
 -- | Definition for `Volts`.
 data Volts = Volts
   { numVolts :: Field "numVolts" Word16
@@ -65,7 +64,6 @@ spec = do
   trigger "equalityDifferentIndices"
     ((((battery#other) .!! 2) .!! 3) == (((battery#other) .!! 2) .!! 4))
     [arg battery]
-
 
 main :: IO ()
 main = do
