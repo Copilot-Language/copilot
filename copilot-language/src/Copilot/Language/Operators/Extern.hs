@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Primitives to build streams connected to external variables.
 
@@ -26,8 +24,6 @@ import Copilot.Language.Stream
 import Data.Word
 import Data.Int
 
---------------------------------------------------------------------------------
-
 -- | Create a stream populated by an external global variable.
 --
 -- The Copilot compiler does not check that the type is correct. If the list
@@ -41,8 +37,6 @@ extern :: Typed a
        -> Maybe [a] -- ^ Values to be used exclusively for testing/simulation.
        -> Stream a
 extern = Extern
-
---------------------------------------------------------------------------------
 
 -- | Create a stream carrying values of type Bool, populated by an external
 -- global variable.
