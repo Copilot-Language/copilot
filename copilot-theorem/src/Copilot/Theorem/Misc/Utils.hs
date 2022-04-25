@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Utility / auxiliary functions.
@@ -7,8 +5,6 @@ module Copilot.Theorem.Misc.Utils
  ( isSublistOf, nub', nubBy', nubEq
  , openTempFile
  ) where
-
---------------------------------------------------------------------------------
 
 import Data.Function (on)
 import Data.List (groupBy, sortBy, group, sort)
@@ -21,8 +17,6 @@ import qualified Data.Set as Set
 import System.IO hiding (openTempFile)
 import System.Random
 import System.Directory
-
---------------------------------------------------------------------------------
 
 -- | True if the given list is a subset of the second list, when both are
 -- considered as sets.
@@ -45,8 +39,6 @@ nub' = map head . group . sort
 -- | Variant of 'nub'' parameterized by the comparison function.
 nubBy' :: (a -> a -> Ordering) -> [a] -> [a]
 nubBy' f = map head . groupBy (\x y -> f x y == EQ) . sortBy f
-
---------------------------------------------------------------------------------
 
 -- | Create a temporary file and open it for writing.
 openTempFile :: String  -- ^ Directory where the file should be created.
@@ -72,5 +64,3 @@ openTempFile loc baseName extension = do
 
     pathFromSuff :: String -> FilePath
     pathFromSuff suf = loc ++ "/" ++ baseName ++ suf ++ "." ++ extension
-
---------------------------------------------------------------------------------
