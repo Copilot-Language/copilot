@@ -11,8 +11,6 @@ import Copilot.Language.Stream  (Stream (..))
 
 import GHC.TypeLits             (KnownSymbol)
 
---------------------------------------------------------------------------------
-
 -- | Create a stream that carries a field of a struct in another stream.
 --
 -- This function implements a projection of a field of a struct over time. For
@@ -23,5 +21,3 @@ import GHC.TypeLits             (KnownSymbol)
 (#) :: (KnownSymbol s, Typed t, Typed a, Struct a)
       => Stream a -> (a -> Field s t) -> Stream t
 (#) s f = Op1 (GetField typeOf typeOf f) s
-
---------------------------------------------------------------------------------
