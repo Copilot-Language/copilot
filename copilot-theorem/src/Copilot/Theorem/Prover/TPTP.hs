@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs, LambdaCase #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
 -- | A backend to <http://www.tptp.org/ TPTP>, enabling to produce assertions
