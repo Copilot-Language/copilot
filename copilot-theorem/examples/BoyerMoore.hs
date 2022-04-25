@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE RebindableSyntax    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -18,8 +16,6 @@ import Data.String (fromString)
 import qualified Prelude   as P
 import qualified Data.List as L
 
---------------------------------------------------------------------------------
-
 length :: [a] -> Stream Word8
 length l = constant (fromInteger $ L.genericLength l)
 
@@ -31,8 +27,6 @@ arbitraryCst s = c
     i :: Stream a
     i = extern s Nothing
     c = if t == 0 then i else [uninitialized (typeOf :: Type a)] ++ c
-
---------------------------------------------------------------------------------
 
 majorityVote :: forall a . (Typed a, Eq a) => [Stream a] -> Stream a
 majorityVote [] = error "empty list"
@@ -55,8 +49,6 @@ okWith a l maj = (a /= maj) ==> ((2 * count a l) <= length l)
   count _e [] = 0
   count e (x : xs) = (if x == e then 1 else 0) + count e xs
 
---------------------------------------------------------------------------------
-
 spec = do
   forM_ (zip [1..] ss) $ \(k :: Int, s) ->
     observer ((P.++) "s" (show k)) s
@@ -78,12 +70,8 @@ spec = do
 
     maj = majorityVote ss
 
---------------------------------------------------------------------------------
-
 induct :: Proof Universal
 induct = induction def { nraNLSat = False, debug = False }
-
---------------------------------------------------------------------------------
 
 -- | Initial value for a given type.
 --
