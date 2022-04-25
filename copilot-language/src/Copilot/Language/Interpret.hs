@@ -9,7 +9,8 @@
 -- other uses a format that may be easier for humans to read.
 
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Copilot.Language.Interpret
   ( csv
