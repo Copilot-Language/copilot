@@ -14,7 +14,6 @@ import qualified Prelude as P
 import Data.Foldable (forM_)
 import qualified Control.Monad as Monad
 
-
 -- | `dthr` is the horizontal distance threshold.
 dthr :: Stream Double
 dthr = extern "dthr" Nothing
@@ -32,7 +31,6 @@ tcoathr :: Stream Double
 tcoathr = extern "tcoathr" Nothing
 
 type Vect2 = (Stream Double, Stream Double)
-
 
 --------------------------------
 -- External streams for relative position and velocity.
@@ -54,7 +52,6 @@ vz = extern "relative_velocity_z" Nothing
 v :: (Stream Double, Stream Double)
 v = (vx, vy)
 
-
 -- | The relative x position between ownship and the intruder.
 sx :: Stream Double
 sx = extern "relative_position_x" Nothing
@@ -70,7 +67,6 @@ sz = extern "relative_position_z" Nothing
 -- | The relative position as a 2D vector.
 s :: (Stream Double, Stream Double)
 s = (sx, sy)
-
 
 ------------------
 -- The following section contains basic libraries for working with vectors.
@@ -100,7 +96,6 @@ a ~= b = (abs (a - b)) < 0.001
 -- | Negate a vector.
 neg :: Vect2 -> Vect2
 neg (x, y) = (negate x, negate y)
-
 
 --------------------
 -- From here on the algorithm, as described by the paper mentioned on the top
@@ -134,7 +129,6 @@ delta s v d = (d*d) * (sq v) - ((det s v)*(det s v))
 theta :: Vect2 -> Vect2 -> Stream Double -> Stream Double -> Stream Double
 theta s v d e = (-(s |*| v) + e * (sqrt $ delta s v d)) / (sq v)
 
-
 tcoa :: Stream Double -> Stream Double -> Stream Double
 tcoa sz vz = if (sz * vz) < 0
                then (-sz) / vz
@@ -142,7 +136,6 @@ tcoa sz vz = if (sz * vz) < 0
 
 dcpa :: Vect2 -> Vect2 -> Stream Double
 dcpa s@(sx, sy) v@(vx, vy) = norm (sx + (tcpa s v) * vx, sy + (tcpa s v) * vy)
-
 
 --------------------------
 -- Well clear Violation --
@@ -168,7 +161,6 @@ horizontalWCV tvar s v =
 spec = do
   Monad.void $ prop "1a" (forall $ (tau s v) ~= (tau (neg s) (neg v)))
   -- Monad.void $ prop "3d" (forall $ (wcv tep s sz v vz)    == (wcv tep (neg s) (-sz) (neg v) (-vz)))
-
 
 main :: IO ()
 main = do
