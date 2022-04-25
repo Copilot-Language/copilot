@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 
@@ -26,8 +24,6 @@ import Data.Default
 
 import qualified Copilot.Theorem.TransSys as TS
 
---------------------------------------------------------------------------------
-
 -- | Options for Kind2
 data Options = Options
   { bmcMax :: Int -- ^ Upper bound on the number of unrolling that base and
@@ -52,12 +48,8 @@ kind2Prover opts = Prover
   , askProver    = askKind2
   , closeProver  = const $ return () }
 
---------------------------------------------------------------------------------
-
 kind2Prog        = "kind2"
 kind2BaseOptions = ["--input-format", "native", "-xml"]
-
---------------------------------------------------------------------------------
 
 askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
 askKind2 (ProverST opts spec) assumptions toCheck = do
@@ -77,5 +69,3 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
 
   removeFile tempName
   return $ parseOutput (head toCheck) output
-
---------------------------------------------------------------------------------
