@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
@@ -25,8 +23,6 @@ module Copilot.Core.Type.Dynamic
   ) where
 
 import Copilot.Core.Type.Equality
-
---------------------------------------------------------------------------------
 
 -- | Representation of a value accompanied by its type.
 data Dynamic :: (* -> *) -> * where
