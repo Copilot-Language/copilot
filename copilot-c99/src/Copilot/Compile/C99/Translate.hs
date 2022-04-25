@@ -246,8 +246,9 @@ transtype ty = case ty of
   Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
-  Array ty' -> C.Array (transtype ty') length where
-    length = Just $ C.LitInt $ fromIntegral $ tylength ty
+  Array ty' -> C.Array (transtype ty') length
+    where
+      length = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
 -- | Translate a Copilot type intro a C typename
