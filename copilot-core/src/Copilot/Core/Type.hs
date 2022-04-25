@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Typing for Core.
 --
@@ -131,8 +129,6 @@ instance EqualType Type where
   (=~=) Double Double = Just Refl
   (=~=) _ _ = Nothing
 
---------------------------------------------------------------------------------
-
 -- | A simple, monomorphic representation of types that facilitates putting
 -- variables in heterogeneous lists and environments in spite of their types
 -- being different.
@@ -172,16 +168,12 @@ instance Eq SimpleType where
   SStruct == SStruct  = True
   _ == _ = False
 
---------------------------------------------------------------------------------
-
 -- | A typed expression, from which we can obtain the two type representations
 -- used by Copilot: 'Type' and 'SimpleType'.
 class (Show a, Typeable a) => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
   simpleType _ = SStruct
-
---------------------------------------------------------------------------------
 
 instance Typed Bool   where
   typeOf       = Bool
@@ -220,12 +212,8 @@ instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (Inner
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 
---------------------------------------------------------------------------------
-
 -- | A untyped type (no phantom type).
 data UType = forall a . Typeable a => UType { uTypeType :: Type a }
 
 instance Eq UType where
   UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
-
---------------------------------------------------------------------------------
