@@ -92,7 +92,6 @@ mergeNodes toMergeIds spec =
 
     constrs = mergeConstrs toMerge renamingF
 
-
 updateOtherNode :: NodeId -> [NodeId] -> (ExtVar -> ExtVar) -> Node -> Node
 updateOtherNode newNodeId mergedNodesIds renamingF n = n
   { nodeDependencies =
@@ -105,15 +104,12 @@ updateOtherNode newNodeId mergedNodesIds renamingF n = n
                      | (lv, gv) <- Bimap.toList $ nodeImportedVars n ]
   }
 
-
-
 updateExpr :: NodeId -> (ExtVar -> Var) -> Expr t -> Expr t
 updateExpr nId renamingF = transformExpr aux
   where
     aux :: forall t. Expr t -> Expr t
     aux (VarE t v) = VarE t (renamingF (ExtVar nId v))
     aux e = e
-
 
 mergeVarsDescrs :: [Node] -> (ExtVar -> Var) -> Map Var VarDescr
 mergeVarsDescrs toMerge renamingF = Map.fromList $ do
@@ -168,8 +164,6 @@ selectImportedVars toMerge otherNodes dependencies =
           if True `elem` bmap
             then Bimap.insert v' (ExtVar nId v) acc
             else acc
-
-
 
 redirectLocalImports :: [Node] -> Renaming ()
 redirectLocalImports toMerge = do
