@@ -27,7 +27,6 @@ tails :: ( Typed a )
          => Stream a -> [ Stream a ]
 tails s = [ drop x s | x <- [ 0 .. ] ]
 
-
 -- | Given a stream and a number, produce a finite list of streams dropping an
 -- increasing number of elements of the given stream, up to that number. For
 -- example, for a given stream @s@, the expression @take 2 s@ is equal to
@@ -117,7 +116,6 @@ nscanr1 :: ( Typed a )
            => Int -> ( Stream a -> Stream a -> Stream a )
            -> Stream a -> [ Stream a ]
 nscanr1 n f s = scanr1 f $ take n s
-
 
 -- | Case-like function: The index of the first predicate that is true
 -- in the predicate list selects the stream result. If no predicate
