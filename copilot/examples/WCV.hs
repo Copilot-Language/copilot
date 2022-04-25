@@ -32,9 +32,7 @@ tcoathr = extern "tcoathr" Nothing
 
 type Vect2 = (Stream Double, Stream Double)
 
---------------------------------
 -- External streams for relative position and velocity.
---------------------------------
 
 -- | The relative x velocity between ownship and the intruder.
 vx :: Stream Double
@@ -68,9 +66,7 @@ sz = extern "relative_position_z" Nothing
 s :: (Stream Double, Stream Double)
 s = (sx, sy)
 
-------------------
 -- The following section contains basic libraries for working with vectors.
-------------------
 
 -- | Multiply two Vectors.
 (|*|) :: Vect2 -> Vect2 -> Stream Double
@@ -97,10 +93,8 @@ a ~= b = (abs (a - b)) < 0.001
 neg :: Vect2 -> Vect2
 neg (x, y) = (negate x, negate y)
 
---------------------
 -- From here on the algorithm, as described by the paper mentioned on the top
 -- of this file, is implemented. Please refer to the paper for details.
---------------------
 
 tau :: Vect2 -> Vect2 -> Stream Double
 tau s v = if s |*| v < 0
@@ -137,9 +131,7 @@ tcoa sz vz = if (sz * vz) < 0
 dcpa :: Vect2 -> Vect2 -> Stream Double
 dcpa s@(sx, sy) v@(vx, vy) = norm (sx + (tcpa s v) * vx, sy + (tcpa s v) * vy)
 
---------------------------
 -- Well clear Violation --
---------------------------
 
 -- | Determines if the well clear property is violated or not.
 wcv :: (Vect2 -> Vect2 -> Stream Double) ->
