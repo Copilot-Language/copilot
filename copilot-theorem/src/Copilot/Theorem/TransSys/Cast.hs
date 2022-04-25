@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE Safe                #-}
@@ -16,16 +14,12 @@ module Copilot.Theorem.TransSys.Cast
   , casting
   ) where
 
---------------------------------------------------------------------------------
-
 import Copilot.Core as C
 
 import Data.Dynamic (Dynamic(..), fromDynamic, toDyn)
 import GHC.Float
 
 import qualified Copilot.Theorem.TransSys.Type as K
-
---------------------------------------------------------------------------------
 
 -- | Synonym for a dynamic type in Copilot core.
 type Dyn = Dynamic
@@ -62,8 +56,6 @@ casting t f = case castedType t of
   K.U K.Integer -> f K.Integer
   K.U K.Real    -> f K.Real
 
---------------------------------------------------------------------------------
-
 class Casted b where
   _cast :: Dyn -> Maybe b
 
@@ -89,5 +81,3 @@ instance Casted Double where
     | Just (v :: Float)  <- fromDynamic d = Just $ float2Double v
     | Just (v :: Double) <- fromDynamic d = Just v
     | otherwise                           = Nothing
-
---------------------------------------------------------------------------------
