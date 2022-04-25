@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE Trustworthy       #-}
 
 -- | Connections to various SMT solvers and theorem provers.
 module Copilot.Theorem.Prover.SMT
