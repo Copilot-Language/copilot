@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE NamedFieldPuns            #-}
+{-# LANGUAGE Safe                      #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 -- | Connection to theorem provers.
 module Copilot.Theorem.Prove
