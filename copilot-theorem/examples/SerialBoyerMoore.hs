@@ -33,7 +33,8 @@ majority l = (p, s, j)
     k  = [0] ++ (1 + k)
 
     count m = cnt
-      where cnt = [0] ++ if l == m then cnt + 1 else cnt
+      where
+        cnt = [0] ++ if l == m then cnt + 1 else cnt
 
     j = forAllCst allowed $ \m ->
           local (count m) $ \cnt ->
