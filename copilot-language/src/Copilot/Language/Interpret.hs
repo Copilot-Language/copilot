@@ -22,16 +22,12 @@ import qualified Copilot.Core.Interpret as I
 import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
 
---------------------------------------------------------------------------------
-
 -- | Simulate a number of steps of a given specification, printing the results
 -- in a table in comma-separated value (CSV) format.
 csv :: Integer -> Spec -> IO ()
 csv i spec = do
   putStrLn "Note: CSV format does not output observers."
   interpret' I.CSV i spec
-
---------------------------------------------------------------------------------
 
 -- | Simulate a number of steps of a given specification, printing the results
 -- in a table in readable format.
@@ -47,5 +43,3 @@ interpret' :: I.Format -> Integer -> Spec -> IO ()
 interpret' format i spec = do
   coreSpec <- reify spec
   putStrLn $ I.interpret format (fromIntegral i) coreSpec
-
---------------------------------------------------------------------------------
