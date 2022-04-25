@@ -114,7 +114,6 @@ translate cspec =
 
 --------------------------------------------------------------------------------
 
-
 mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
 mkTopNode topNodeId dependencies cprops =
   Node { nodeId = topNodeId
@@ -127,15 +126,12 @@ mkTopNode topNodeId dependencies cprops =
       [ (Var cp, mkExtVar (ncPropNode cp) ncMain)
       | cp <- C.propertyName <$> cprops ]
 
-
-
 mkExtVarNode (name, U t) =
   Node { nodeId = name
        , nodeDependencies = []
        , nodeLocalVars = Map.singleton (Var ncMain) (VarDescr t $ Constrs [])
        , nodeImportedVars = Bimap.empty
        , nodeConstrs = []}
-
 
 mkPropNodes :: [C.Property] -> Trans [Node]
 mkPropNodes = mapM propNode
@@ -290,7 +286,6 @@ popLocalInfos = do
     , _importedVars = Bimap.empty
     , _dependencies = [] }
   return (lvs, ivs, nub' dps)
-
 
 getUid :: Trans Int
 getUid = do
