@@ -57,17 +57,18 @@ clk :: ( Integral a ) =>
        -> Phase a     -- ^ Phase @m@ of clock
        -> Stream Bool -- ^ Clock signal - 'True' on clock ticks, 'False' otherwise
 clk ( Period period' ) ( Phase phase' ) = clk'
-  where clk' = if period' P.< 1 then
-                   badUsage ( "clk: clock period must be 1 or greater" )
-               else if phase' P.< 0 then
-                        badUsage ( "clk: clock phase must be 0 or greater" )
-                    else if phase' P.>= period' then
-                             badUsage ( "clk: clock phase must be less than period")
-                         else replicate ( fromIntegral phase' ) False
-                              P.++ True : replicate
-                                   ( fromIntegral
-                                     $ period' P.- phase' P.- 1 ) False
-                                   ++ clk'
+  where
+    clk' = if period' P.< 1 then
+               badUsage ( "clk: clock period must be 1 or greater" )
+           else if phase' P.< 0 then
+                    badUsage ( "clk: clock phase must be 0 or greater" )
+                else if phase' P.>= period' then
+                         badUsage ( "clk: clock phase must be less than period")
+                     else replicate ( fromIntegral phase' ) False
+                          P.++ True : replicate
+                               ( fromIntegral
+                                 $ period' P.- phase' P.- 1 ) False
+                               ++ clk'
 
 -- | This follows the same convention as 'clk', but uses a counter variable of
 -- integral type /a/ rather than an array.
