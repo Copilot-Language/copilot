@@ -1,7 +1,11 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RankNTypes, NamedFieldPuns, ViewPatterns,
-             ScopedTypeVariables, GADTs, FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Safe #-}
 
 -- | Translate Copilot specifications into a modular transition system.
