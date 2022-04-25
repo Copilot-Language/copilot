@@ -69,88 +69,97 @@ compile = compileWith mkDefaultCSettings
 -- * Generator functions for streams, guards and trigger arguments.
 -- * Declaration of the @step()@ function.
 compilec :: CSettings -> Spec -> C.TransUnit
-compilec cSettings spec = C.TransUnit declns funs where
-  streams  = specStreams spec
-  triggers = specTriggers spec
-  exts     = gatherexts streams triggers
-  exprs    = gatherexprs streams triggers
+compilec cSettings spec = C.TransUnit declns funs
+  where
+    streams  = specStreams spec
+    triggers = specTriggers spec
+    exts     = gatherexts streams triggers
+    exprs    = gatherexprs streams triggers
 
-  declns = mkstructdeclns exprs ++ mkexts exts ++ mkglobals streams
-  funs   = genfuns streams triggers ++ [mkstep cSettings streams triggers exts]
+    declns = mkstructdeclns exprs ++ mkexts exts ++ mkglobals streams
+    funs   = genfuns streams triggers ++ [mkstep cSettings streams triggers exts]
 
-  -- Write struct datatypes
-  mkstructdeclns :: [UExpr] -> [C.Decln]
-  mkstructdeclns es = catMaybes $ map mkdecln utypes where
-    mkdecln (UType ty) = case ty of
-      Struct x -> Just $ mkstructdecln ty
-      _        -> Nothing
+    -- Write struct datatypes
+    mkstructdeclns :: [UExpr] -> [C.Decln]
+    mkstructdeclns es = catMaybes $ map mkdecln utypes
+      where
+        mkdecln (UType ty) = case ty of
+          Struct x -> Just $ mkstructdecln ty
+          _        -> Nothing
 
-    utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
+        utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
 
-  -- Make declarations for copies of external variables.
-  mkexts :: [External] -> [C.Decln]
-  mkexts exts = map mkextcpydecln exts
+    -- Make declarations for copies of external variables.
+    mkexts :: [External] -> [C.Decln]
+    mkexts exts = map mkextcpydecln exts
 
-  -- Make buffer and index declarations for streams.
-  mkglobals :: [Stream] -> [C.Decln]
-  mkglobals streams = map buffdecln streams ++ map indexdecln streams where
-    buffdecln  (Stream sid buff _ ty) = mkbuffdecln  sid ty buff
-    indexdecln (Stream sid _    _ _ ) = mkindexdecln sid
+    -- Make buffer and index declarations for streams.
+    mkglobals :: [Stream] -> [C.Decln]
+    mkglobals streams = map buffdecln streams ++ map indexdecln streams
+      where
+        buffdecln  (Stream sid buff _ ty) = mkbuffdecln  sid ty buff
+        indexdecln (Stream sid _    _ _ ) = mkindexdecln sid
 
-  -- Make generator functions, including trigger arguments.
-  genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
-  genfuns streams triggers =  map accessdecln streams
-                           ++ map streamgen streams
-                           ++ concatMap triggergen triggers where
+    -- Make generator functions, including trigger arguments.
+    genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
+    genfuns streams triggers =  map accessdecln streams
+                             ++ map streamgen streams
+                             ++ concatMap triggergen triggers
+      where
 
-    accessdecln :: Stream -> C.FunDef
-    accessdecln (Stream sid buff _ ty) = mkaccessdecln sid ty buff
+        accessdecln :: Stream -> C.FunDef
+        accessdecln (Stream sid buff _ ty) = mkaccessdecln sid ty buff
 
-    streamgen :: Stream -> C.FunDef
-    streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
+        streamgen :: Stream -> C.FunDef
+        streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
 
-    triggergen :: Trigger -> [C.FunDef]
-    triggergen (Trigger name guard args) = guarddef : argdefs where
-      guarddef = genfun (guardname name) guard Bool
-      argdefs  = map arggen (zip (argnames name) args)
+        triggergen :: Trigger -> [C.FunDef]
+        triggergen (Trigger name guard args) = guarddef : argdefs
+          where
+            guarddef = genfun (guardname name) guard Bool
+            argdefs  = map arggen (zip (argnames name) args)
 
-      arggen :: (String, UExpr) -> C.FunDef
-      arggen (argname, UExpr ty expr) = genfun argname expr ty
+            arggen :: (String, UExpr) -> C.FunDef
+            arggen (argname, UExpr ty expr) = genfun argname expr ty
 
 -- | Generate the .h file from a 'Spec'.
 compileh :: CSettings -> Spec -> C.TransUnit
-compileh cSettings spec = C.TransUnit declns [] where
-  streams  = specStreams spec
-  triggers = specTriggers spec
-  exts     = gatherexts streams triggers
-  exprs    = gatherexprs streams triggers
+compileh cSettings spec = C.TransUnit declns []
+  where
+    streams  = specStreams spec
+    triggers = specTriggers spec
+    exts     = gatherexts streams triggers
+    exprs    = gatherexprs streams triggers
 
-  declns =  mkstructforwdeclns exprs
-         ++ mkexts exts
-         ++ extfundeclns triggers
-         ++ [stepdecln]
+    declns =  mkstructforwdeclns exprs
+           ++ mkexts exts
+           ++ extfundeclns triggers
+           ++ [stepdecln]
 
-  mkstructforwdeclns :: [UExpr] -> [C.Decln]
-  mkstructforwdeclns es = catMaybes $ map mkdecln utypes where
-    mkdecln (UType ty) = case ty of
-      Struct x -> Just $ mkstructforwdecln ty
-      _        -> Nothing
+    mkstructforwdeclns :: [UExpr] -> [C.Decln]
+    mkstructforwdeclns es = catMaybes $ map mkdecln utypes
+      where
+        mkdecln (UType ty) = case ty of
+          Struct x -> Just $ mkstructforwdecln ty
+          _        -> Nothing
 
-    utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
+        utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
 
-  -- Make declarations for external variables.
-  mkexts :: [External] -> [C.Decln]
-  mkexts = map mkextdecln
+    -- Make declarations for external variables.
+    mkexts :: [External] -> [C.Decln]
+    mkexts = map mkextdecln
 
-  extfundeclns :: [Trigger] -> [C.Decln]
-  extfundeclns triggers = map extfundecln triggers where
-    extfundecln :: Trigger -> C.Decln
-    extfundecln (Trigger name _ args) = C.FunDecln Nothing cty name params where
-        cty    = C.TypeSpec C.Void
-        params = map mkparam $ zip (argnames name) args
-        mkparam (name, UExpr ty _) = C.Param (transtype ty) name
+    extfundeclns :: [Trigger] -> [C.Decln]
+    extfundeclns triggers = map extfundecln triggers
+      where
+        extfundecln :: Trigger -> C.Decln
+        extfundecln (Trigger name _ args) = C.FunDecln Nothing cty name params
+          where
+            cty    = C.TypeSpec C.Void
+            params = map mkparam $ zip (argnames name) args
+            mkparam (name, UExpr ty _) = C.Param (transtype ty) name
 
-  -- Declaration for the step function.
-  stepdecln :: C.Decln
-  stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void)
-                  (cSettingsStepFunctionName cSettings) []
+    -- Declaration for the step function.
+    stepdecln :: C.Decln
+    stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void)
+                    (cSettingsStepFunctionName cSettings) []
