@@ -231,7 +231,6 @@ handleOp2 ::
 
   -> m (expr resT)
 
-
 handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
 
   C.And        -> boolConnector And
