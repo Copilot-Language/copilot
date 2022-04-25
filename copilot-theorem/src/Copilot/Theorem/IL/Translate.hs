@@ -1,7 +1,10 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RankNTypes, NamedFieldPuns, ScopedTypeVariables, GADTs,
-             LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe #-}
 
 -- | Translate Copilot specifications into IL specifications.
