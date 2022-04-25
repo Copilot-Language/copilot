@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE NamedFieldPuns, GADTs #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe #-}
 
 -- | Pretty print a TransSys specification as a Kind2/Lustre specification.
