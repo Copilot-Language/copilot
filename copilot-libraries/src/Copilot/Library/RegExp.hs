@@ -9,8 +9,6 @@
 -- For an example, see
 -- <https://github.com/Copilot-Language/examplesForACSL/blob/master/example15/main.hs>
 
-{-# LANGUAGE FlexibleContexts #-}
-
 module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
 
 import Text.ParserCombinators.Parsec
