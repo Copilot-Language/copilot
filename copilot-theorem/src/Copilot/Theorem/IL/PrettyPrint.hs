@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------
 
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE Safe #-}
 
 -- | This module implements a pretty printer for the IL format, an intermediate
