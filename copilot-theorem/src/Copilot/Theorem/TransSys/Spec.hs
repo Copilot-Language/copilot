@@ -205,9 +205,10 @@ instance HasInvariants TransSys where
 isTopologicallySorted :: TransSys -> Bool
 isTopologicallySorted spec =
   isJust $ foldM inspect Set.empty (specNodes spec)
-  where inspect acc n = do
-          guard $ Set.fromList (nodeDependencies n) `isSubsetOf` acc
-          return . Set.insert (nodeId n) $ acc
+  where
+    inspect acc n = do
+      guard $ Set.fromList (nodeDependencies n) `isSubsetOf` acc
+      return . Set.insert (nodeId n) $ acc
 
 -- For debugging purposes
 instance Show ExtVar where
