@@ -131,7 +131,6 @@ mkstep cSettings streams triggers exts =
   memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
   memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
 
-
 -- | Write a struct declaration based on its definition.
 mkstructdecln :: Struct a => Type a -> C.Decln
 mkstructdecln (Struct x) = C.TypeDecln struct where
