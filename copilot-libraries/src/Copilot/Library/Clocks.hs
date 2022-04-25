@@ -69,7 +69,6 @@ clk ( Period period' ) ( Phase phase' ) = clk'
                                      $ period' P.- phase' P.- 1 ) False
                                    ++ clk'
 
-
 -- | This follows the same convention as 'clk', but uses a counter variable of
 -- integral type /a/ rather than an array.
 clk1 :: ( Integral a, Typed a ) =>
