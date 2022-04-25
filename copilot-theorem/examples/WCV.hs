@@ -193,4 +193,3 @@ arith    = onlyValidity def { nraNLSat = True, debug = False }
 
 arithSat :: Proof Existential
 arithSat = onlySat      def { nraNLSat = True, debug = False }
-
