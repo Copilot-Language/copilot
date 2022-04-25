@@ -20,8 +20,9 @@ counter inc reset = cnt
 
 -- Counter that resets when it reaches 256
 bytecounter :: Stream Int32
-bytecounter = counter true reset where
-  reset = counter true false `mod` 256 == 0
+bytecounter = counter true reset
+  where
+    reset = counter true false `mod` 256 == 0
 
 spec :: Spec
 spec = trigger "counter" true [arg $ bytecounter]
