@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Operators in modular transition systems and their translation.
 module Copilot.Theorem.TransSys.Operators where
