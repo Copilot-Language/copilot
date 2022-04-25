@@ -124,4 +124,3 @@ declVars s@(Solver { vars }) decls = do
   return s { vars = vars `union` fromList newVars }
 
 --------------------------------------------------------------------------------
-
