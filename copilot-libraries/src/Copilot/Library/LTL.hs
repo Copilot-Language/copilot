@@ -95,10 +95,11 @@ eventually n = nfoldl1 ( fromIntegral n + 1 ) (||)
 until :: ( Integral a ) => a -> Stream Bool -> Stream Bool -> Stream Bool
 until 0 _ s1 = s1
 until n s0 s1 = foldl (||) s1 v0
-    where n' = fromIntegral n
-          v0 = [ always ( i :: Int ) s0 && drop ( i + 1 ) s1
-               | i <- [ 0 .. n' - 1 ]
-               ]
+    where
+       n' = fromIntegral n
+       v0 = [ always ( i :: Int ) s0 && drop ( i + 1 ) s1
+            | i <- [ 0 .. n' - 1 ]
+            ]
 
 -- | @release n s0 s1@ means that either @always n s1@, or @s1@ holds up to and
 -- including the period at which @s0@ becomes true.
@@ -108,7 +109,8 @@ until n s0 s1 = foldl (||) s1 v0
 release :: ( Integral a ) => a -> Stream Bool -> Stream Bool -> Stream Bool
 release 0 _ s1 = s1
 release n s0 s1 = always n s1 || foldl1 (||) v0
-    where n' = fromIntegral n
-          v0 = [ always ( i :: Int ) s1 && drop i s0
-               | i <- [ 0 .. n' - 1 ]
-               ]
+    where
+      n' = fromIntegral n
+      v0 = [ always ( i :: Int ) s1 && drop i s0
+           | i <- [ 0 .. n' - 1 ]
+           ]
