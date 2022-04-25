@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE Safe           #-}
@@ -15,8 +13,6 @@ import qualified Data.Map   as Map
 import qualified Data.Bimap as Bimap
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 indent     = nest 4
 emptyLine  = text ""
@@ -122,5 +118,3 @@ pOp1 = text . show
 
 pOp2 :: Op2 a b -> Doc
 pOp2 = text . show
-
---------------------------------------------------------------------------------
