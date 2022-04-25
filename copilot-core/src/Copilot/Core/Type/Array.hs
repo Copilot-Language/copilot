@@ -46,7 +46,6 @@ array xs | datalen == typelen = Array xs
   errmsg = "Length of data (" ++ show datalen ++
            ") does not match length of type (" ++ show typelen ++ ")."
 
-
 -- | Association between an array and the type of the elements it contains.
 type family InnerType x where
   InnerType (Array _ x) = InnerType x
