@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
@@ -16,13 +14,9 @@ module Copilot.Core.Type.Show
 
 import Copilot.Core.Type
 
---------------------------------------------------------------------------------
-
 -- | Witness datatype for showing a value, used by 'showWithType'.
 {-# DEPRECATED ShowWit "This type is deprecated in Copilot 3.7." #-}
 data ShowWit a = Show a => ShowWit
-
---------------------------------------------------------------------------------
 
 -- | Turn a type into a show witness.
 showWit :: Type a -> ShowWit a
@@ -42,8 +36,6 @@ showWit t =
     Array t -> ShowWit
     Struct t -> ShowWit
 
---------------------------------------------------------------------------------
-
 -- | Show Copilot Core type.
 showType :: Type a -> String
 showType t =
@@ -62,16 +54,12 @@ showType t =
     Array t -> "Array " ++ showType t
     Struct t -> "Struct"
 
---------------------------------------------------------------------------------
-
 -- Are we proving equivalence with a C backend, in which case we want to show
 -- Booleans as '0' and '1'.
 
 -- | Target language for showing a typed value. Used to adapt the
 -- representation of booleans.
 data ShowType = C | Haskell
-
---------------------------------------------------------------------------------
 
 -- | Show a value. The representation depends on the type and the target
 -- language. Booleans are represented differently depending on the backend.
@@ -87,5 +75,3 @@ showWithType showT t x =
   where
   sw = case showWit t of
          ShowWit -> show x
-
---------------------------------------------------------------------------------
