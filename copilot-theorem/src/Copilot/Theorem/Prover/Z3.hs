@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -46,8 +44,6 @@ import Language.SMTLib2.Internals hiding (Var)
 import System.Console.ANSI
 import System.IO
 import Control.Monad.Trans
-
---------------------------------------------------------------------------------
 
 -- | Tactics
 
@@ -102,8 +98,6 @@ kInduction opts = check P.Prover
   , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }
-
--------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
@@ -304,8 +298,6 @@ selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
     where squash (a, b) = (concat a, b)
 
---------------------------------------------------------------------------------
-
 -- | This is all very ugly. It might make better sense to go straight from Core to SMTExpr, or maybe use SBV instead.
 
 type Trans = StateT TransState SMT
@@ -487,9 +479,7 @@ transBV64 = \case
   SVal _ s i      -> getBV64Var $ ncVar s i
   e               -> error $ "Encountered unhandled expression (BV64): " ++ show e
 
------------------------------------------------------
 -- Debug stuff from the the smtlib2 library github --
------------------------------------------------------
 
 namedDebugBackend :: String -> Bool -> b -> DebugBackend b
 namedDebugBackend name mute b = DebugBackend b stderr (Just 0) (Just name) True mute
