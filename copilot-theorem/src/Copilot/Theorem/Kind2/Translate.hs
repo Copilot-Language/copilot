@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes     #-}
@@ -27,19 +25,13 @@ import Data.Map (Map, (!))
 import qualified Data.Map as Map
 import qualified Data.Bimap as Bimap
 
---------------------------------------------------------------------------------
-
 -- The following properties MUST hold for the given transition system :
 -- * Nodes are sorted by topological order
 -- * Nodes are `completed`, which means the dependency graph is transitive
 --   and each node imports all the local variables of its dependencies
 --
 
---------------------------------------------------------------------------------
-
 type DepGraph = Map NodeId [NodeId]
-
---------------------------------------------------------------------------------
 
 -- | Style of the Kind2 files produced: modular (with multiple separate nodes),
 -- or all inlined (with only one node).
@@ -108,8 +100,6 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
           toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
       in map (varName . toTopVar . toExtVar) assumptions
 
---------------------------------------------------------------------------------
-
 -- The ordering really matters here because the variables
 -- have to be given in this order in a pred call
 -- Our convention :
@@ -137,8 +127,6 @@ gatherPredStateVars spec node = locals ++ imported
       map (\(v, ev) -> K.StateVarDef (varName v) (extVarType ev) [])
       . sortBy (compare `on` snd) . Bimap.toList $ nodeImportedVars node
 
---------------------------------------------------------------------------------
-
 mkConj :: [K.Term] -> K.Term
 mkConj []  = trConst Bool True
 mkConj [x] = x
@@ -158,8 +146,6 @@ trConst Integer v     = K.ValueLiteral (show v)
 trConst Real    v     = K.ValueLiteral (show v)
 trConst Bool    True  = K.ValueLiteral "true"
 trConst Bool    False = K.ValueLiteral "false"
-
---------------------------------------------------------------------------------
 
 initLocals :: Node -> [K.Term]
 initLocals node =
@@ -214,8 +200,6 @@ predCalls isInitCall spec predCallsGraph node =
         argsSeq trVarF =
           map (localAlias trVarF) (calleeLocals ++ calleeImported)
 
---------------------------------------------------------------------------------
-
 trExpr :: Bool -> Expr t -> K.Term
 trExpr primed = tr
   where
@@ -225,5 +209,3 @@ trExpr primed = tr
     tr (Op1 _ op e) = K.FunApp (show op) [tr e]
     tr (Op2 _ op e1 e2) = K.FunApp (show op) [tr e1, tr e2]
     tr (VarE _ v) = if primed then trPrimedVar v else trVar v
-
---------------------------------------------------------------------------------
