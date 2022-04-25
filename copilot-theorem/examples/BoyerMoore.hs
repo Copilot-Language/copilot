@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module BoyerMoore where
