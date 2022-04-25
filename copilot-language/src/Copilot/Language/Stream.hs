@@ -4,10 +4,10 @@
 
 -- | Abstract syntax for streams and operators.
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs          #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Rank2Types     #-}
+{-# LANGUAGE Safe           #-}
 
 module Copilot.Language.Stream
   ( Stream (..)
