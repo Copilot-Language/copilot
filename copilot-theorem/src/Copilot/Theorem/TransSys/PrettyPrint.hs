@@ -79,23 +79,24 @@ pIVar v ev =
 
 pLVar :: Var -> VarDescr -> Doc
 pLVar l (VarDescr {varType, varDef}) = header $$ indent body
-  where header =
-          text (varName l)
-          <+> text ":"
-          <+> pType varType
-          <+> text "="
+  where
+    header =
+      text (varName l)
+      <+> text ":"
+      <+> pType varType
+      <+> text "="
 
-        body = case varDef of
-          Pre val var ->
-            pConst varType val
-            <+> text "->" <+> text "pre"
-            <+> text (varName var)
-          Expr e -> pExpr e
+    body = case varDef of
+      Pre val var ->
+        pConst varType val
+        <+> text "->" <+> text "pre"
+        <+> text (varName var)
+      Expr e -> pExpr e
 
-          Constrs cs ->
-            text "{"
-            <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs)
-            <+> text "}"
+      Constrs cs ->
+        text "{"
+        <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs)
+        <+> text "}"
 
 pExpr :: Expr t -> Doc
 
