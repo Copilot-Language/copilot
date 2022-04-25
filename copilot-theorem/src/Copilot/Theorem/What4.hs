@@ -98,7 +98,6 @@ import LibBF ( bfToDouble
 import GHC.TypeNats (KnownNat)
 import qualified Panic as Panic
 
---------------------------------------------------------------------------------
 -- 'prove' function
 --
 -- To prove properties of a spec, we translate them into What4 using the TransM
@@ -185,7 +184,6 @@ prove solver spec = do
   (res, _) <- runStateT (unTransM proveProperties) st
   return res
 
---------------------------------------------------------------------------------
 -- What4 translation
 
 -- | the state for translating Copilot expressions into What4 expressions. As we
