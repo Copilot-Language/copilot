@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Translate Copilot specifications into IL specifications.
 module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
