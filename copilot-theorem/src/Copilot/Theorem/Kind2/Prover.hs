@@ -76,6 +76,6 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
   putStrLn kind2Input
 
   removeFile tempName
-  return $ parseOutput (head toCheck) output -- TODO support multiple toCheck props
+  return $ parseOutput (head toCheck) output
 
 --------------------------------------------------------------------------------
