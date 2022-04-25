@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe                  #-}
 
 -- | Type-safe casting operators.
 module Copilot.Language.Operators.Cast
