@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
 
@@ -14,8 +12,6 @@ import Copilot.Core (Typed)
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import Prelude ()
-
---------------------------------------------------------------------------------
 
 infixr 1 ++
 
