@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe       #-}
 
@@ -31,14 +29,10 @@ import qualified Data.Set   as Set
 import qualified Data.Graph as Graph
 import qualified Data.Bimap as Bimap
 
---------------------------------------------------------------------------------
-
 prefix :: String -> Var -> Var
 prefix s1 (Var s2) = Var $ s1 ++ "." ++ s2
 
 ncNodeIdSep = "-"
-
---------------------------------------------------------------------------------
 
 -- | Merge all the given nodes, replacing all references to the given node Ids
 -- with a reference to a fresh node id (unless the nodes given as argument
@@ -180,8 +174,6 @@ redirectLocalImports toMerge = do
       guard $ n' `member` mergedNodesSet
       return (nId, alias, n', v)
 
---------------------------------------------------------------------------------
-
 -- | Discard all the structure of a /modular transition system/ and turn it
 -- into a /non-modular transition system/ with only one node.
 inline :: TransSys -> TransSys
@@ -217,8 +209,6 @@ removeCycles spec =
 
     topoSort s = s { specNodes =
       map (\(Graph.AcyclicSCC n) -> n) $ buildScc id (specNodes s) }
-
---------------------------------------------------------------------------------
 
 -- | Completes each node of a specification with imported variables such that
 -- each node contains a copy of all its dependencies.
@@ -283,5 +273,3 @@ complete spec =
                 return $ Bimap.tryInsert alias ev acc
 
           foldM tryImport (nodeImportedVars n) toImportVars
-
---------------------------------------------------------------------------------
