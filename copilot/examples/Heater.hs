@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright 2019 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- This is a simple example with basic usage. It implements a simple home
 -- heating system: It heats when temp gets too low, and stops when it is high
