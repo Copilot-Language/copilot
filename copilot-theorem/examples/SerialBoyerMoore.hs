@@ -57,7 +57,6 @@ spec = do
     input = externW64 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
     (p, s, j) = majority input
 
-
 --------------------------------------------------------------------------------
 
 induct :: Proof Universal
