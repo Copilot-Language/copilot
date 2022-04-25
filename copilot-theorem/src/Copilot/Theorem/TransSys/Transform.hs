@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Helper module to manipulate and simplify TransSys graphs.
 module Copilot.Theorem.TransSys.Transform
