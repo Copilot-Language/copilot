@@ -108,13 +108,12 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
 
 --------------------------------------------------------------------------------
 
-{- The ordering really matters here because the variables
-   have to be given in this order in a pred call
-   Our convention :
-   * First the local variables, sorted by alphabetical order
-   * Then the imported variables, by alphabetical order on
-     the father node then by alphabetical order on the variable name
--}
+-- The ordering really matters here because the variables
+-- have to be given in this order in a pred call
+-- Our convention :
+-- * First the local variables, sorted by alphabetical order
+-- * Then the imported variables, by alphabetical order on
+--   the father node then by alphabetical order on the variable name
 
 gatherPredStateVars :: TransSys -> Node -> [K.StateVarDef]
 gatherPredStateVars spec node = locals ++ imported
