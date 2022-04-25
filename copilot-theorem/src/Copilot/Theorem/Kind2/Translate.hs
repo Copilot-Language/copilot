@@ -89,7 +89,6 @@ trNode spec predCallsGraph node =
                          ++ map (trExpr True) (nodeConstrs node)
                          ++ predCalls False spec predCallsGraph node
 
-
 addAssumptions :: TransSys -> [PropId] -> K.File -> K.File
 addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
   K.File (changeTail aux filePreds) fileProps
@@ -171,7 +170,6 @@ initLocals node =
         Pre     c _ -> [mkEquality (trVar v) (trConst t c)]
         Expr    e   -> [mkEquality (trVar v) (trExpr False e)]
         Constrs cs  -> map (trExpr False) cs
-
 
 transLocals :: Node -> [K.Term]
 transLocals node =
