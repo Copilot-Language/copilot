@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Trustworthy #-}
 
 -- | Connections to various SMT solvers and theorem provers.
