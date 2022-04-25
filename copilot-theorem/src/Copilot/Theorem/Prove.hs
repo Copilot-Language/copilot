@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NamedFieldPuns            #-}
@@ -25,8 +23,6 @@ import qualified Copilot.Core as Core
 import Data.List (intercalate)
 import Control.Applicative (liftA2)
 import Control.Monad.Writer
-
---------------------------------------------------------------------------------
 
 -- | Output produced by a prover, containing the 'Status' of the proof and
 -- additional information.
@@ -94,8 +90,6 @@ data Action where
   Check  :: Prover -> Action
   Assume :: PropId -> Action
   Admit  :: Action
-
---------------------------------------------------------------------------------
 
 -- | Record a requirement for satisfiability checking.
 check :: Prover -> Proof a
@@ -217,5 +211,3 @@ combineOutputs nameL nameR (Output stL msgL) (Output stR msgR) =
       ++ msgL
       ++ [decoName nameR]
       ++ msgR
-
---------------------------------------------------------------------------------
