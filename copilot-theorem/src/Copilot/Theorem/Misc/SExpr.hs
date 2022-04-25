@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe              #-}
 
 -- | A representation for structured expression trees, with support for pretty
 -- printing and for parsing.
