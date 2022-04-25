@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Safe       #-}
 
@@ -11,8 +9,6 @@ import Copilot.Theorem.Prove  as P
 import Data.Maybe           (fromJust)
 
 import qualified Copilot.Theorem.Misc.Error as Err
-
---------------------------------------------------------------------------------
 
 simpleName s = QName s Nothing Nothing
 
@@ -52,5 +48,3 @@ parseOutput prop xml = fromJust $ do
     err msg = Err.fatal $
       "Parse error while reading the Kind2 XML output : \n"
       ++ msg ++ "\n\n" ++ xml
-
---------------------------------------------------------------------------------
