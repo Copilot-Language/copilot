@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Pretty-print the results of a simulation.
 
@@ -17,8 +15,6 @@ import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
 import Text.PrettyPrint
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 -- | Render an execution trace as a table, formatted to faciliate readability.
 renderAsTable :: ExecTrace -> String
@@ -48,8 +44,6 @@ renderAsTable
 
      ppObserverOutputs :: [[Doc]]
      ppObserverOutputs = map (map text) (map snd obsvs)
-
---------------------------------------------------------------------------------
 
 -- | Render an execution trace as using comma-separate value (CSV) format.
 renderAsCSV :: ExecTrace -> String
@@ -97,22 +91,19 @@ step ExecTrace
           , interpObservers = []
           }
 
---------------------------------------------------------------------------------
-
-
-
 -- Copied from pretty-ncols because of incompatibility with newer GHC versions.
 asColumns :: [[Doc]] -> Doc
 asColumns = flip asColumnsWithBuff $ 1
 
 asColumnsWithBuff :: [[Doc]] -> Int -> Doc
 asColumnsWithBuff lls q = normalize
-        where normalize = vcat $ map hsep
-                        $ map (\x -> pad (length x) longColumnLen empty x)
-                        $ pad' longEntryLen q
-                        $ transpose lls -- normalize column height
-              longColumnLen = maximum (map length lls)
-              longEntryLen = maximum $ map docLen (concat lls)
+        where
+          normalize = vcat $ map hsep
+                    $ map (\x -> pad (length x) longColumnLen empty x)
+                    $ pad' longEntryLen q
+                    $ transpose lls -- normalize column height
+          longColumnLen = maximum (map length lls)
+          longEntryLen = maximum $ map docLen (concat lls)
 
 docLen d = length $ render d
 
@@ -127,4 +118,5 @@ pad' :: Int      -- ^ Mininum number of spaces to add
      -> [[Doc]]
 pad' _ _ []       = []
 pad' mx q (ls:xs) = map buf ls : pad' mx q xs
-        where buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)
+        where
+          buf x = x <> (hcat $ replicate q space) <> (hcat $ replicate (mx - (docLen x)) space)

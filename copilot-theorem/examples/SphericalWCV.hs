@@ -41,12 +41,13 @@ tcoathr = extern "tcoathr" Nothing
 
 spherical2xyz :: Stream Double -> Stream Double -> Vect3
 spherical2xyz lat lon = (x, y, z)
-      where r     = 6371000 -- Radius of the earth in meters
-            theta = pi / 2 - lat
-            phi   = pi - lon
-            x     = r * sin theta * cos phi
-            y     = r * sin theta * sin phi
-            z     = r * cos theta
+      where
+        r     = 6371000 -- Radius of the earth in meters
+        theta = pi / 2 - lat
+        phi   = pi - lon
+        x     = r * sin theta * cos phi
+        y     = r * sin theta * sin phi
+        z     = r * cos theta
 
 dot3 :: Vect3 -> Vect3 -> Stream Double
 dot3 (x1, y1, z1) (x2, y2, z2) = x1 * x2 + y1 * y2 + z1 * z2
@@ -65,7 +66,8 @@ vect3_orthog_toz v = v `cross3` vect3_orthog_toy v
 
 unit :: Vect3 -> Vect3
 unit (x, y, z) = (x / n, y / n, z / n)
-      where n = norm3 (x, y, z)
+      where
+        n = norm3 (x, y, z)
 
 vect3_orthonorm_toy :: Vect3 -> Vect3
 vect3_orthonorm_toy = unit . vect3_orthog_toy
@@ -75,8 +77,9 @@ vect3_orthonorm_toz = unit . vect3_orthog_toz
 
 sphere_to_2D_plane :: Vect3 -> Vect3 -> Vect2
 sphere_to_2D_plane nzv w = (ymult `dot3` w, zmult `dot3` w)
-      where ymult = vect3_orthonorm_toy nzv
-            zmult = vect3_orthonorm_toz nzv
+      where
+        ymult = vect3_orthonorm_toy nzv
+        zmult = vect3_orthonorm_toz nzv
 
 pO :: Vect3
 pO = spherical2xyz latO lonO
@@ -89,7 +92,8 @@ sOx, sOy, sOz :: Stream Double
 
 sIx, sIy, sIz :: Stream Double
 (sIx, sIy, sIz) = (sI2x, sI2y, altI)
-      where (sI2x, sI2y) = sphere_to_2D_plane pO pI
+      where
+        (sI2x, sI2y) = sphere_to_2D_plane pO pI
 
 vOx, vOy, vOz :: Stream Double
 (vOx, vOy, vOz) = (gsO * sin trkO, gsO * cos trkO, vsO)
@@ -97,9 +101,7 @@ vOx, vOy, vOz :: Stream Double
 vIx, vIy, vIz :: Stream Double
 (vIx, vIy, vIz) = (gsI * sin trkI, gsI * cos trkI, vsI)
 
---------------------------------
 -- latI velocity/position --
---------------------------------
 
 vx, vy, vz :: Stream Double
 (vx, vy, vz) = (vOx - vIx, vOy - vIy, vOz - vIz)
@@ -113,9 +115,7 @@ sx, sy, sz :: Stream Double
 s :: Vect2
 s = (sx, sy)
 
-------------------
 -- Vector stuff --
-------------------
 
 (|*|) :: Vect2 -> Vect2 -> Stream Double
 (|*|) (x1, y1) (x2, y2) = (x1 * x2) + (y1 * y2)
@@ -135,9 +135,7 @@ a ~= b = abs (a - b) < 0.001
 neg :: Vect2 -> Vect2
 neg (x, y) = (negate x, negate y)
 
---------------------
 -- Time variables --
---------------------
 
 tau :: Vect2 -> Vect2 -> Stream Double
 tau s v = mux (s |*| v < 0) ((-(sq s)) / (s |*| v)) (-1)
@@ -160,9 +158,7 @@ delta s v d = d * d * sq v - (det s v * det s v)
 theta :: Vect2 -> Vect2 -> Stream Double -> Stream Double -> Stream Double
 theta s v d e = (-(s |*| v) + e * sqrt (delta s v d)) / sq v
 
---------------------------
 -- Some tools for times --
---------------------------
 
 tcoa :: Stream Double -> Stream Double -> Stream Double
 tcoa sz vz = mux ((sz * vz) < 0) ((-sz) / vz) (-1)
@@ -170,9 +166,7 @@ tcoa sz vz = mux ((sz * vz) < 0) ((-sz) / vz) (-1)
 dcpa :: Vect2 -> Vect2 -> Stream Double
 dcpa s@(sx, sy) v@(vx, vy) = norm (sx + tcpa s v * vx, sy + tcpa s v * vy)
 
---------------------------
 -- Well clear Violation --
---------------------------
 
 wcv :: (Vect2 -> Vect2 -> Stream Double) ->
        Vect2 -> Stream Double ->
@@ -186,22 +180,16 @@ verticalWCV sz vz = (abs sz <= zthr) || (0 <= tcoa sz vz && tcoa sz vz <= tcoath
 horizontalWCV :: (Vect2 -> Vect2 -> Stream Double) -> Vect2 -> Vect2 -> Stream Bool
 horizontalWCV tvar s v = (norm s <= dthr) || ((dcpa s v <= dthr) && (0 <= tvar s v) && (tvar s v <= tthr))
 
---------------
 -- Theorems --
---------------
 
--------------------------
 -- Horizontal symmetry --
--------------------------
 horizSymmetry = do
   theorem "1a" (forall $ tau s v    ~= tau (neg s) (neg v))     arith
   theorem "1b" (forall $ tcpa s v   ~= tcpa (neg s) (neg v))    arith
   theorem "1c" (forall $ taumod s v ~= taumod (neg s) (neg v))  arith
   theorem "1d" (forall $ tep s v    ~= tep (neg s) (neg v))     arith
 
--------------------------
 -- Horizontal ordering --
--------------------------
 horizOrdering = do
   theorem "2a" (forall $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
     ==> (tep s v <= taumod s v))
@@ -213,9 +201,7 @@ horizOrdering = do
     ==> (tcpa s v <= tau s v))
     arith
 
---------------
 -- Symmetry --
---------------
 symmetry = do
   theorem "3a" (forall $ wcv tau s sz v vz    == wcv tau (neg s) (-sz) (neg v) (-vz))
     arith
@@ -226,9 +212,7 @@ symmetry = do
   theorem "3d" (forall $ wcv tep s sz v vz    == wcv tep (neg s) (-sz) (neg v) (-vz))
     arith
 
----------------
 -- Inclusion --
----------------
 inclusion = do
   theorem "4i"   (forall $ wcv tau s sz v vz    ==> wcv tcpa s sz v vz)
     arith
@@ -237,9 +221,7 @@ inclusion = do
   theorem "4iii" (forall $ wcv taumod s sz v vz ==> wcv tep s sz v vz)
     arith
 
----------------------
 -- Local convexity --
----------------------
 
 t1, t2, t3 :: Stream Double
 t1 = extern "t1" Nothing
@@ -257,8 +239,6 @@ localConvexity = do
   theorem "5b" (forall $ locallyConvex taumod)      arith
   theorem "5c" (forall $ locallyConvex tep)         arith
   theorem "6"  (P.not (forall $ locallyConvex tau)) arithSat
-
---------------------------------------------------------------------------------
 
 arith :: Proof Universal
 arith    = onlyValidity def { nraNLSat = True, debug = False }

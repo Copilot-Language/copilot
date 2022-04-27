@@ -44,7 +44,6 @@ cmdargs = CmdArgs
                                     <> metavar "INT" <> showDefault
                                     <> help "Interpret specification and write result to output")
 
-
 -- | Create a main to either compile or interpret a copilot specification.
 --
 -- This function must be provided an auxiliary function capable of compiling
@@ -63,18 +62,19 @@ cmdargs = CmdArgs
 --     * @--interpret/-i NUM@: interpret the specification for a given number
 --       of steps.
 copilotMain :: Interpreter -> Printer -> Compiler -> Spec -> IO ()
-copilotMain interp pretty comp spec = main =<< execParser opts where
-  opts = info (cmdargs <**> helper) fullDesc
+copilotMain interp pretty comp spec = main =<< execParser opts
+  where
+    opts = info (cmdargs <**> helper) fullDesc
 
-  main :: CmdArgs -> IO ()
-  main args = do
-    let iters = ainterpret args
-    when (apretty args)       $ pretty spec
-    when (iters Prelude.> 0)  $ interp (fromIntegral iters) spec
+    main :: CmdArgs -> IO ()
+    main args = do
+      let iters = ainterpret args
+      when (apretty args)       $ pretty spec
+      when (iters Prelude.> 0)  $ interp (fromIntegral iters) spec
 
-    when (not $ acompile args) $ do
-      spec' <- reify spec
-      comp (aoutput args) spec'
+      when (not $ acompile args) $ do
+        spec' <- reify spec
+        comp (aoutput args) spec'
 
 -- | Create a main function with a default interpreter and pretty printer.
 --

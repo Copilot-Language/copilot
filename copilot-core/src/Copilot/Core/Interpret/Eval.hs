@@ -1,11 +1,11 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | A tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, BangPatterns, DeriveDataTypeable #-}
+{-# LANGUAGE BangPatterns       #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE Safe               #-}
 
 module Copilot.Core.Interpret.Eval
   ( Env
@@ -31,8 +31,6 @@ import Data.Dynamic      (Dynamic, fromDynamic, toDyn)
 import Data.List         (transpose)
 import Data.Maybe        (fromJust)
 import Data.Typeable     (Typeable)
-
---------------------------------------------------------------------------------
 
 -- | Exceptions that may be thrown during interpretation of a Copilot
 -- specification.
@@ -81,13 +79,9 @@ instance Show InterpException where
 -- exception mechanisms.
 instance Exception InterpException
 
---------------------------------------------------------------------------------
-
 -- | An environment that contains an association between (stream or extern)
 -- names and their values.
 type Env nm = [(nm, Dynamic)]
-
---------------------------------------------------------------------------------
 
 -- | The simulation output is defined as a string. Different backends may
 -- choose to format their results differently.
@@ -107,8 +101,6 @@ data ExecTrace = ExecTrace
     -- ^ Map from observer names to their outputs.
   }
   deriving Show
-
---------------------------------------------------------------------------------
 
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
@@ -138,8 +130,6 @@ eval showType k spec =
                 , interpObservers =
                     zip (map observerName (specObservers spec)) obsvs
                 }
-
---------------------------------------------------------------------------------
 
 -- | An environment that contains an association between (stream or extern)
 -- names and their values.
@@ -178,8 +168,6 @@ evalExpr_ k e0 locs strms = case e0 of
     let ev1 = evalExpr_ k e1 locs strms in
     ev1
 
---------------------------------------------------------------------------------
-
 -- | Evaluate an extern stream for a number of steps, obtaining the value of
 -- the sample at that time.
 evalExternVar :: Int -> Name -> Maybe [a] -> a
@@ -190,10 +178,6 @@ evalExternVar k name exts =
       case safeIndex k xs of
         Nothing -> throw (NotEnoughValues name k)
         Just x  -> x
-
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 
 -- | Evaluate an 'Copilot.Core.Operators.Op1' by producing an equivalent
 -- Haskell function operating on the same types as the
@@ -231,8 +215,6 @@ evalOp1 op = case op of
 
     -- Extract value from field
     unfield (Field v) = v
-
---------------------------------------------------------------------------------
 
 -- | Evaluate an 'Copilot.Core.Operators.Op2' by producing an equivalent
 -- Haskell function operating on the same types as the
@@ -272,15 +254,11 @@ catchZero :: Integral a => (a -> a -> a) -> (a -> a -> a)
 catchZero _ _ 0 = throw DivideByZero
 catchZero f x y = f x y
 
---------------------------------------------------------------------------------
-
 -- | Evaluate an 'Copilot.Core.Operators.Op3' by producing an equivalent
 -- Haskell function operating on the same types as the
 -- 'Copilot.Core.Operators.Op3'.
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
 evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
-
---------------------------------------------------------------------------------
 
 -- | Turn a stream into a key-value pair that can be added to an 'Env' for
 -- simulation.
@@ -311,8 +289,6 @@ evalStreams top specStrms initStrms =
       let x  = evalExpr_ k e [] strms                          in
       let ls = x `seq` (x:xs)                                  in
       (id, toDyn ls)
-
---------------------------------------------------------------------------------
 
 -- | Evaluate a trigger for a number of steps.
 evalTrigger :: ShowType          -- ^ Show booleans as @0@/@1@ (C) or
@@ -346,8 +322,6 @@ evalTrigger showType k strms
   evalUExpr (UExpr t e1) =
     map (showWithType showType t) (evalExprs_ k e1 strms)
 
---------------------------------------------------------------------------------
-
 -- | Evaluate an observer for a number of steps.
 evalObserver :: ShowType  -- ^ Show booleans as @0@/@1@ (C) or @True@/@False@
                           --   (Haskell).
@@ -362,15 +336,11 @@ evalObserver showType k strms
     , observerExprType = t }
   = map (showWithType showType t) (evalExprs_ k e strms)
 
---------------------------------------------------------------------------------
-
 -- | Evaluate an expression for a number of steps, producing a list with the
 -- changing value of the expression until that time.
 evalExprs_ :: Typeable a => Int -> Expr a -> Env Id -> [a]
 evalExprs_ k e strms =
   map (\i -> evalExpr_ i e [] strms) [0..(k-1)]
-
---------------------------------------------------------------------------------
 
 -- | Safe indexing (!!) on possibly infininite lists.
 safeIndex :: Int -> [a] -> Maybe a
@@ -378,5 +348,3 @@ safeIndex i ls =
   let ls' = take (i+1) ls in
   if length ls' > i then Just (ls' !! i)
     else Nothing
-
--------------------------------------------------------------------------------

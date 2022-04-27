@@ -1,7 +1,5 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe              #-}
 
 -- | A representation for structured expression trees, with support for pretty
 -- printing and for parsing.
@@ -11,8 +9,6 @@ import Text.ParserCombinators.Parsec
 import Text.PrettyPrint.HughesPJ as PP hiding (char, Str)
 
 import Control.Monad
-
---------------------------------------------------------------------------------
 
 -- | A structured expression is either an atom, or a sequence of expressions,
 -- where the first in the sequence denotes the tag or label of the tree.
@@ -38,8 +34,6 @@ list = List                 -- (ss)
 -- additional expressions or arguments..
 node a l = List (Atom a : l)    -- (s ss)
 
---------------------------------------------------------------------------------
-
 -- A straightforward string representation for 'SExpr's of Strings that
 -- parenthesizes lists of expressions.
 instance Show (SExpr String) where
@@ -47,7 +41,6 @@ instance Show (SExpr String) where
     where
       show' (Atom s) = text s
       show' (List ts) = parens . hsep . map show' $ ts
-
 
 -- More advanced printing with some basic indentation
 
@@ -71,13 +64,12 @@ toDoc shouldIndent printAtom expr = case expr of
   Atom a  -> text (printAtom a)
   List l  -> parens (foldl renderItem empty l)
 
-  where renderItem doc s
-          | shouldIndent s =
-            doc $$ indent (toDoc shouldIndent printAtom s)
-          | otherwise =
-            doc <+> toDoc shouldIndent printAtom s
-
---------------------------------------------------------------------------------
+  where
+    renderItem doc s
+      | shouldIndent s =
+        doc $$ indent (toDoc shouldIndent printAtom s)
+      | otherwise =
+        doc <+> toDoc shouldIndent printAtom s
 
 -- | Parser for strings of characters separated by spaces into a structured
 -- tree.
@@ -88,19 +80,20 @@ parser :: GenParser Char st (SExpr String)
 parser =
   choice [try unitP, nodeP, leafP]
 
-  where symbol     = oneOf "!#$%&|*+-/:<=>?@^_~."
-        lonelyStr  = many1 (alphaNum <|> symbol)
+  where
+    symbol     = oneOf "!#$%&|*+-/:<=>?@^_~."
+    lonelyStr  = many1 (alphaNum <|> symbol)
 
-        unitP      = string "()" >> return unit
+    unitP      = string "()" >> return unit
 
-        leafP      = atom <$> lonelyStr
+    leafP      = atom <$> lonelyStr
 
-        nodeP      = do void $ char '('
-                        spaces
-                        st <- sepBy parser spaces
-                        spaces
-                        void $ char ')'
-                        return $ List st
+    nodeP      = do void $ char '('
+                    spaces
+                    st <- sepBy parser spaces
+                    spaces
+                    void $ char ')'
+                    return $ List st
 
 -- | Parser for strings of characters separated by spaces into a structured
 -- tree.
@@ -111,5 +104,3 @@ parseSExpr :: String -> Maybe (SExpr String)
 parseSExpr str = case parse parser "" str of
   Left s -> error (show s) -- Nothing
   Right t -> Just t
-
---------------------------------------------------------------------------------

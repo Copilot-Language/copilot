@@ -1,7 +1,6 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE GADTs, FlexibleInstances #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE Safe              #-}
 
 -- | A backend to the SMT-Lib format, enabling to produce commands for SMT-Lib
 -- implementing solvers, and parse results.
@@ -13,8 +12,6 @@ import Copilot.Theorem.IL
 import Copilot.Theorem.Misc.SExpr
 
 import Text.Printf
-
---------------------------------------------------------------------------------
 
 -- | Type used to represent SMT-lib commands.
 --
@@ -28,8 +25,6 @@ smtTy :: Type -> String
 smtTy Bool    = "Bool"
 smtTy Real    = "Real"
 smtTy _       = "Int"
-
---------------------------------------------------------------------------------
 
 -- | Interface for SMT-Lib conforming backends.
 instance SmtFormat SmtLib where
@@ -47,8 +42,6 @@ interpret :: String -> Maybe SatResult
 interpret "sat"   = Just Sat
 interpret "unsat" = Just Unsat
 interpret _       = Just Unknown
-
---------------------------------------------------------------------------------
 
 expr :: Expr -> SExpr String
 
@@ -104,5 +97,3 @@ expr (Op2 _ op e1 e2) =
 expr (SVal _ f ix) = atom $ case ix of
   Fixed i -> f ++ "_" ++ show i
   Var off -> f ++ "_n" ++ show off
-
---------------------------------------------------------------------------------

@@ -1,21 +1,18 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Safe                  #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 
 -- | Implementation of an array that uses type literals to store length. No
 -- explicit indexing is used for the input data. Supports arbitrary nesting of
 -- arrays.
-
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
 
 module Copilot.Core.Type.Array
   ( Array
@@ -41,12 +38,12 @@ instance Show t => Show (Array n t) where
 -- list matches the length of the array at type level.
 array :: forall n t. KnownNat n => [t] -> Array n t
 array xs | datalen == typelen = Array xs
-         | otherwise          = error errmsg where
-  datalen = length xs
-  typelen = fromIntegral $ natVal (Proxy :: Proxy n)
-  errmsg = "Length of data (" ++ show datalen ++
-           ") does not match length of type (" ++ show typelen ++ ")."
-
+         | otherwise          = error errmsg
+  where
+    datalen = length xs
+    typelen = fromIntegral $ natVal (Proxy :: Proxy n)
+    errmsg = "Length of data (" ++ show datalen ++
+             ") does not match length of type (" ++ show typelen ++ ")."
 
 -- | Association between an array and the type of the elements it contains.
 type family InnerType x where

@@ -1,11 +1,9 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | A pretty printer for Copilot specifications.
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Safe  #-}
 
 module Copilot.Core.PrettyPrint
   ( prettyPrint
@@ -19,14 +17,10 @@ import Prelude hiding (id, (<>))
 import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
 
---------------------------------------------------------------------------------
-
 -- | Create a unique stream name by prefixing the given ID by a lowercase
 -- letter @"s"@.
 strmName :: Int -> Doc
 strmName id = text "s" <> int id
-
---------------------------------------------------------------------------------
 
 -- | Pretty-print a Copilot expression.
 --
@@ -115,8 +109,6 @@ ppOp3 op = case op of
     text "then" <+> doc2 <+>
     text "else" <+> doc3 <> text ")"
 
---------------------------------------------------------------------------------
-
 -- | Parenthesize two 'Doc's, separated by an infix 'String'.
 ppInfix :: String -> Doc -> Doc -> Doc
 ppInfix cs doc1 doc2 = parens $ doc1 <+> text cs <+> doc2
@@ -124,8 +116,6 @@ ppInfix cs doc1 doc2 = parens $ doc1 <+> text cs <+> doc2
 -- | Prefix a 'Doc' by a 'String'.
 ppPrefix :: String -> Doc -> Doc
 ppPrefix cs = (text cs <+>)
-
---------------------------------------------------------------------------------
 
 -- | Pretty-print a Copilot stream as a case of a top-level function for
 -- streams of that type, by pattern matching on the stream name.
@@ -147,8 +137,6 @@ ppStream
     <+> text "++"
     <+> ppExpr e
 
---------------------------------------------------------------------------------
-
 -- | Pretty-print a Copilot trigger as a case of a top-level @trigger@
 -- function, by pattern matching on the trigger name.
 ppTrigger :: Trigger -> Doc
@@ -165,8 +153,6 @@ ppTrigger
                           map (\a -> text "arg" <+> ppUExpr a) args))
   $$  nest 2 rbrack
 
---------------------------------------------------------------------------------
-
 -- | Pretty-print a Copilot observer as a case of a top-level @observer@
 -- function, by pattern matching on the observer name.
 ppObserver :: Observer -> Doc
@@ -178,8 +164,6 @@ ppObserver
   <+> text "="
   <+> ppExpr e
 
---------------------------------------------------------------------------------
-
 -- | Pretty-print a Copilot property as a case of a top-level @property@
 -- function, by pattern matching on the property name.
 ppProperty :: Property -> Doc
@@ -190,8 +174,6 @@ ppProperty
   =   text "property \"" <> text name <> text "\""
   <+> text "="
   <+> ppExpr e
-
---------------------------------------------------------------------------------
 
 -- | Pretty-print a Copilot specification, in the following order:
 --
@@ -207,10 +189,6 @@ ppSpec spec = cs $$ ds $$ es $$ fs
     es = foldr (($$) . ppObserver) empty (specObservers spec)
     fs = foldr (($$) . ppProperty) empty (specProperties spec)
 
---------------------------------------------------------------------------------
-
 -- | Pretty-print a Copilot specification.
 prettyPrint :: Spec -> String
 prettyPrint = render . ppSpec
-
---------------------------------------------------------------------------------

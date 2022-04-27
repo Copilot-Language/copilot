@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Example implementing an engine cooling control system.
 
@@ -11,11 +9,10 @@ module Main where
 import Language.Copilot
 import qualified Prelude as P
 
-{- If the majority of the engine temperature probes exeeds 250 degrees, then
- - the cooler is engaged and remains engaged until the majority of the engine
- - temperature probes drop to 250 or below.  Otherwise, trigger an immediate
- - shutdown of the engine.
--}
+-- If the majority of the engine temperature probes exeeds 250 degrees, then
+-- the cooler is engaged and remains engaged until the majority of the engine
+-- temperature probes drop to 250 or below.  Otherwise, trigger an immediate
+-- shutdown of the engine.
 
 engineMonitor :: Spec
 engineMonitor = do
@@ -28,7 +25,7 @@ engineMonitor = do
   exceed   = map (> 250) vals
   maj      = majority exceed
   checkMaj = aMajority exceed maj
-  ok       = alwaysBeen ((maj && checkMaj) ==> extern "cooler" cooler) 
+  ok       = alwaysBeen ((maj && checkMaj) ==> extern "cooler" cooler)
 
   two51  = Just $ [251, 251] P.++ repeat (250 :: Word8)
   zero   = Just $ repeat (0 :: Word8)

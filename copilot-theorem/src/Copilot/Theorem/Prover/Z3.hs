@@ -1,8 +1,11 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs,
-    MultiParamTypeClasses, FlexibleContexts #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Trustworthy           #-}
 
 module Copilot.Theorem.Prover.Z3
   ( module Data.Default
@@ -41,8 +44,6 @@ import Language.SMTLib2.Internals hiding (Var)
 import System.Console.ANSI
 import System.IO
 import Control.Monad.Trans
-
---------------------------------------------------------------------------------
 
 -- | Tactics
 
@@ -97,8 +98,6 @@ kInduction opts = check P.Prover
   , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }
-
--------------------------------------------------------------------------------
 
 -- | Checks the Copilot specification with k-induction
 
@@ -297,9 +296,8 @@ onlyValidity' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
-    where squash (a, b) = (concat a, b)
-
---------------------------------------------------------------------------------
+    where
+      squash (a, b) = (concat a, b)
 
 -- | This is all very ugly. It might make better sense to go straight from Core to SMTExpr, or maybe use SBV instead.
 
@@ -434,7 +432,6 @@ transR = \case
   SVal _ s i       -> getRatVar $ ncVar s i
   e                -> error $ "Encountered unhandled expression (Rat): " ++ show e
 
--- TODO(chathhorn): bleghh
 transBV8 :: Expr -> Trans (SMTExpr BV8)
 transBV8 = \case
   ConstI _ n      -> return $ constant $ BitVector n
@@ -483,9 +480,7 @@ transBV64 = \case
   SVal _ s i      -> getBV64Var $ ncVar s i
   e               -> error $ "Encountered unhandled expression (BV64): " ++ show e
 
------------------------------------------------------
 -- Debug stuff from the the smtlib2 library github --
------------------------------------------------------
 
 namedDebugBackend :: String -> Bool -> b -> DebugBackend b
 namedDebugBackend name mute b = DebugBackend b stderr (Just 0) (Just name) True mute
@@ -541,6 +536,4 @@ instance (SMTBackend b m,MonadIO m) => SMTBackend (DebugBackend b) m where
         when (debugUseColor b) $ liftIO $ hSetSGR (debugHandle b) [Reset,SetColor Foreground Dull Blue]
         liftIO $ unless (mute b) $ hPutStrLn (debugHandle b) str
     when (debugUseColor b) $ liftIO $ hSetSGR (debugHandle b) [Reset]
-    return (resp,b { debugBackend = b2 , debugLines = nline })
-
-
+    return (resp,b { debugBackend = b2, debugLines = nline })

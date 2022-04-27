@@ -17,13 +17,15 @@ statetell m = modify ((flip mappend) m)
 
 -- | Generate fresh variable name based on a given one.
 fresh :: String -> [String] -> String
-fresh name used = head $ dropWhile (flip elem used) (name:freshnames) where
-  freshnames = (name ++).show <$> [0..]
+fresh name used = head $ dropWhile (flip elem used) (name:freshnames)
+  where
+    freshnames = (name ++).show <$> [0..]
 
 -- | Collect all the names from a list of C99 declarations.
 names :: [C.Decln] -> [String]
-names ds = map match ds where
-  match (C.VarDecln _ _ name _) = name
+names ds = map match ds
+  where
+    match (C.VarDecln _ _ name _) = name
 
 -- | Turn a stream id into a suitable C variable name.
 streamname :: Id -> String

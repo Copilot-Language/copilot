@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
 
@@ -20,8 +18,6 @@ import Copilot.Language.Prelude
 import Copilot.Language.Operators.Constant (constant)
 import Copilot.Language.Stream
 import qualified Prelude as P
-
---------------------------------------------------------------------------------
 
 -- | A stream that contains the constant value 'True'.
 true :: Stream Bool
@@ -64,5 +60,3 @@ xor x y = ( not x && y ) || ( x && not y )
 -- | Apply the implication ('==>') operator to two boolean streams, point-wise.
 (==>) :: Stream Bool -> Stream Bool -> Stream Bool
 x ==> y = not x || y
-
---------------------------------------------------------------------------------

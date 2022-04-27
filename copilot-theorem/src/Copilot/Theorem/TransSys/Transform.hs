@@ -1,7 +1,5 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Helper module to manipulate and simplify TransSys graphs.
 module Copilot.Theorem.TransSys.Transform
@@ -31,14 +29,10 @@ import qualified Data.Set   as Set
 import qualified Data.Graph as Graph
 import qualified Data.Bimap as Bimap
 
---------------------------------------------------------------------------------
-
 prefix :: String -> Var -> Var
 prefix s1 (Var s2) = Var $ s1 ++ "." ++ s2
 
 ncNodeIdSep = "-"
-
---------------------------------------------------------------------------------
 
 -- | Merge all the given nodes, replacing all references to the given node Ids
 -- with a reference to a fresh node id (unless the nodes given as argument
@@ -92,7 +86,6 @@ mergeNodes toMergeIds spec =
 
     constrs = mergeConstrs toMerge renamingF
 
-
 updateOtherNode :: NodeId -> [NodeId] -> (ExtVar -> ExtVar) -> Node -> Node
 updateOtherNode newNodeId mergedNodesIds renamingF n = n
   { nodeDependencies =
@@ -105,15 +98,12 @@ updateOtherNode newNodeId mergedNodesIds renamingF n = n
                      | (lv, gv) <- Bimap.toList $ nodeImportedVars n ]
   }
 
-
-
 updateExpr :: NodeId -> (ExtVar -> Var) -> Expr t -> Expr t
 updateExpr nId renamingF = transformExpr aux
   where
     aux :: forall t. Expr t -> Expr t
     aux (VarE t v) = VarE t (renamingF (ExtVar nId v))
     aux e = e
-
 
 mergeVarsDescrs :: [Node] -> (ExtVar -> Var) -> Map Var VarDescr
 mergeVarsDescrs toMerge renamingF = Map.fromList $ do
@@ -169,8 +159,6 @@ selectImportedVars toMerge otherNodes dependencies =
             then Bimap.insert v' (ExtVar nId v) acc
             else acc
 
-
-
 redirectLocalImports :: [Node] -> Renaming ()
 redirectLocalImports toMerge = do
   renamingF <- getRenamingF
@@ -185,8 +173,6 @@ redirectLocalImports toMerge = do
       (alias, ExtVar n' v) <- Bimap.toList (nodeImportedVars n)
       guard $ n' `member` mergedNodesSet
       return (nId, alias, n', v)
-
---------------------------------------------------------------------------------
 
 -- | Discard all the structure of a /modular transition system/ and turn it
 -- into a /non-modular transition system/ with only one node.
@@ -223,8 +209,6 @@ removeCycles spec =
 
     topoSort s = s { specNodes =
       map (\(Graph.AcyclicSCC n) -> n) $ buildScc id (specNodes s) }
-
---------------------------------------------------------------------------------
 
 -- | Completes each node of a specification with imported variables such that
 -- each node contains a copy of all its dependencies.
@@ -289,5 +273,3 @@ complete spec =
                 return $ Bimap.tryInsert alias ev acc
 
           foldM tryImport (nodeImportedVars n) toImportVars
-
---------------------------------------------------------------------------------

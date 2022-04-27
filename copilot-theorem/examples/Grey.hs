@@ -15,7 +15,6 @@ intCounter reset = time
     time = if reset then 0
            else [0] ++ if time == 3 then 0 else time + 1
 
-
 greyTick :: Stream Bool -> Stream Bool
 greyTick reset = a && b
   where

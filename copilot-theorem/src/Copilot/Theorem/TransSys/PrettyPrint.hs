@@ -1,7 +1,6 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE NamedFieldPuns, GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE Safe           #-}
 
 -- | Pretty print a TransSys specification as a Kind2/Lustre specification.
 module Copilot.Theorem.TransSys.PrettyPrint ( prettyPrint ) where
@@ -14,8 +13,6 @@ import qualified Data.Map   as Map
 import qualified Data.Bimap as Bimap
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 indent     = nest 4
 emptyLine  = text ""
@@ -82,24 +79,24 @@ pIVar v ev =
 
 pLVar :: Var -> VarDescr -> Doc
 pLVar l (VarDescr {varType, varDef}) = header $$ indent body
-  where header =
-          text (varName l)
-          <+> text ":"
-          <+> pType varType
-          <+> text "="
+  where
+    header =
+      text (varName l)
+      <+> text ":"
+      <+> pType varType
+      <+> text "="
 
-        body = case varDef of
-          Pre val var ->
-            pConst varType val
-            <+> text "->" <+> text "pre"
-            <+> text (varName var)
-          Expr e -> pExpr e
+    body = case varDef of
+      Pre val var ->
+        pConst varType val
+        <+> text "->" <+> text "pre"
+        <+> text (varName var)
+      Expr e -> pExpr e
 
-          Constrs cs ->
-            text "{"
-            <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs)
-            <+> text "}"
-
+      Constrs cs ->
+        text "{"
+        <+> (hsep . punctuate (space <> text ";" <> space)) (map pExpr cs)
+        <+> text "}"
 
 pExpr :: Expr t -> Doc
 
@@ -122,5 +119,3 @@ pOp1 = text . show
 
 pOp2 :: Op2 a b -> Doc
 pOp2 = text . show
-
---------------------------------------------------------------------------------

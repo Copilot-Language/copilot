@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
 
@@ -17,15 +15,11 @@ import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import Prelude ()
 
---------------------------------------------------------------------------------
-
 -- | Convenient synonym for 'ifThenElse'.
 mux :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
 mux (Const True) t _  = t
 mux (Const False) _ f = f
 mux b t f             = Op3 (Core.Mux typeOf) b t f
-
---------------------------------------------------------------------------------
 
 -- | If-then-else applied point-wise to three streams (a condition stream, a
 -- then-branch stream, and an else-branch stream).
@@ -35,5 +29,3 @@ mux b t f             = Op3 (Core.Mux typeOf) b t f
 -- that time, otherwise it contains the value in the third stream.
 ifThenElse :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
 ifThenElse = mux
-
---------------------------------------------------------------------------------

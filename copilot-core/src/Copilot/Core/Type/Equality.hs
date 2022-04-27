@@ -1,9 +1,8 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, KindSignatures #-}
+{-# LANGUAGE GADTs          #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE Safe           #-}
 
 -- | Propositional equality and type equality.
 module Copilot.Core.Type.Equality

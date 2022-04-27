@@ -1,7 +1,9 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE LambdaCase, NamedFieldPuns, FlexibleInstances, RankNTypes, GADTs #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE Trustworthy       #-}
 
 -- | Connections to various SMT solvers and theorem provers.
 module Copilot.Theorem.Prover.SMT
@@ -49,8 +51,6 @@ import qualified Data.Map as Map
 import Copilot.Theorem.Misc.Utils
 
 import System.IO (hClose)
-
---------------------------------------------------------------------------------
 
 -- * Tactics
 
@@ -114,8 +114,6 @@ kInduction opts backend = check P.Prover
   , P.askProver   = kInduction' (startK opts) (maxK opts)
   , P.closeProver = const $ return ()
   }
-
--------------------------------------------------------------------------------
 
 -- * Backends
 
@@ -238,8 +236,6 @@ metit installDir = Backend
   , interpret       = TPTP.interpret
   }
 
--------------------------------------------------------------------------------
-
 -- | Checks the Copilot specification with k-induction
 
 type ProofScript b = MaybeT (StateT (ProofState b) IO)
@@ -331,18 +327,19 @@ entailment sid assumptions props = do
 
 getVars :: [Expr] -> [VarDescr]
 getVars = nubBy' (compare `on` varName) . concatMap getVars'
-  where getVars' :: Expr -> [VarDescr]
-        getVars' = \case
-          ConstB _             -> []
-          ConstI _ _           -> []
-          ConstR _             -> []
-          Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
-          Op1 _ _ e            -> getVars' e
-          Op2 _ _ e1 e2        -> getVars' e1 ++ getVars' e2
-          SVal t seq (Fixed i) -> [VarDescr (seq ++ "_" ++ show i) t []]
-          SVal t seq (Var i)   -> [VarDescr (seq ++ "_n" ++ show i) t []]
-          FunApp t name args   -> [VarDescr name t (map typeOf args)]
-                                  ++ concatMap getVars' args
+  where
+    getVars' :: Expr -> [VarDescr]
+    getVars' = \case
+      ConstB _             -> []
+      ConstI _ _           -> []
+      ConstR _             -> []
+      Ite _ e1 e2 e3       -> getVars' e1 ++ getVars' e2 ++ getVars' e3
+      Op1 _ _ e            -> getVars' e
+      Op2 _ _ e1 e2        -> getVars' e1 ++ getVars' e2
+      SVal t seq (Fixed i) -> [VarDescr (seq ++ "_" ++ show i) t []]
+      SVal t seq (Var i)   -> [VarDescr (seq ++ "_n" ++ show i) t []]
+      FunApp t name args   -> [VarDescr name t (map typeOf args)]
+                              ++ concatMap getVars' args
 
 unknown :: ProofScript b a
 unknown = mzero
@@ -383,7 +380,6 @@ kInduction' startK maxK s as ps = (fromMaybe (Output P.Unknown ["proof by k-indu
             Unknown -> unknown
             Unsat   -> valid $ "proved with " ++ proofKind k
 
-
 onlySat' :: SmtFormat b => ProofState b -> [PropId] -> [PropId] -> IO Output
 onlySat' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
   where
@@ -419,6 +415,5 @@ onlyValidity' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 selectProps :: [PropId] -> Map PropId ([Expr], Expr) -> ([Expr], [Expr])
 selectProps propIds properties =
   (squash . unzip) [(as, p) | (id, (as, p)) <- Map.toList properties, id `elem` propIds]
-    where squash (a, b) = (concat a, b)
-
---------------------------------------------------------------------------------
+    where
+      squash (a, b) = (concat a, b)

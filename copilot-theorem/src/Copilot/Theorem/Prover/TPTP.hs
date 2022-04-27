@@ -1,7 +1,6 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE GADTs, LambdaCase #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE Safe       #-}
 
 -- | A backend to <http://www.tptp.org/ TPTP>, enabling to produce assertions
 -- and to parse the results from TPTP.
@@ -11,8 +10,6 @@ import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
 import Copilot.Theorem.IL
 
 import Data.List
-
---------------------------------------------------------------------------------
 
 -- | Type used to represent TPTP expressions.
 --
@@ -33,8 +30,6 @@ instance Show TptpExpr where
   show (Atom atom)     = atom
   show (Fun name args) = name ++ "(" ++ intercalate ", " (map show args) ++ ")"
 
---------------------------------------------------------------------------------
-
 instance SmtFormat Tptp where
   push     = Null
   pop      = Null
@@ -49,8 +44,6 @@ interpret str
   | "SZS status Unsatisfiable" `isPrefixOf` str = Just Unsat
   | "SZS status"               `isPrefixOf` str = Just Unknown
   | otherwise                                   = Nothing
-
---------------------------------------------------------------------------------
 
 expr :: Expr -> TptpExpr
 expr = \case
@@ -109,5 +102,3 @@ showOp2 = \case
   Mod   -> "mod"
   Fdiv  -> "/"
   Pow   -> "^"
-
---------------------------------------------------------------------------------

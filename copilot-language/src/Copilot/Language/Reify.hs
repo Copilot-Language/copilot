@@ -1,12 +1,11 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE Safe                      #-}
 
 module Copilot.Language.Reify
   ( reify
@@ -28,7 +27,6 @@ import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Map (Map)
 import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM, unless)
---------------------------------------------------------------------------------
 
 -- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
@@ -58,8 +56,6 @@ reify spec = do
 
   return cspec
 
---------------------------------------------------------------------------------
-
 -- | Transform a Copilot observer specification into a Copilot Core
 -- observer specification.
 {-# INLINE mkObserver #-}
@@ -75,8 +71,6 @@ mkObserver refMkId refStreams refMap (Observer name e) = do
     { Core.observerName     = name
     , Core.observerExpr     = w
     , Core.observerExprType = typeOf }
-
---------------------------------------------------------------------------------
 
 -- | Transform a Copilot trigger specification into a Copilot Core
 -- trigger specification.
@@ -102,8 +96,6 @@ mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
     w <- mkExpr refMkId refStreams refMap e
     return $ Core.UExpr typeOf w
 
---------------------------------------------------------------------------------
-
 -- | Transform a Copilot property specification into a Copilot Core
 -- property specification.
 {-# INLINE mkProperty #-}
@@ -118,8 +110,6 @@ mkProperty refMkId refStreams refMap (Property name guard) = do
   return Core.Property
     { Core.propertyName  = name
     , Core.propertyExpr  = w1 }
-
---------------------------------------------------------------------------------
 
 -- | Transform a Copilot stream expression into a Copilot Core expression.
 {-# INLINE mkExpr #-}
@@ -210,8 +200,6 @@ mkExpr refMkId refStreams refMap = go
     w <- mkExpr refMkId refStreams refMap e
     return $ (name, Core.UExpr typeOf w)
 
---------------------------------------------------------------------------------
-
 -- | Transform a Copilot stream expression into a Copilot Core stream
 -- expression.
 {-# INLINE mkStream #-}
@@ -256,8 +244,6 @@ mkStream refMkId refStreams refMap e0 = do
         , Core.streamExpr       = w
         , Core.streamExprType   = typeOf }
     return id
-
---------------------------------------------------------------------------------
 
 -- | Create a fresh, unused 'Id'.
 mkId :: IORef Int -> IO Id

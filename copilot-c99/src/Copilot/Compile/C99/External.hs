@@ -26,27 +26,29 @@ extunion = unionBy (\a b -> extname a == extname b)
 -- Although Copilot specifications can contain also properties and theorems,
 -- the C99 backend currently only generates code for streams and triggers.
 gatherexts :: [Stream] -> [Trigger] -> [External]
-gatherexts streams triggers = streamsexts `extunion` triggersexts where
-  streamsexts  = foldr extunion mempty $ map streamexts streams
-  triggersexts = foldr extunion mempty $ map triggerexts triggers
+gatherexts streams triggers = streamsexts `extunion` triggersexts
+  where
+    streamsexts  = foldr extunion mempty $ map streamexts streams
+    triggersexts = foldr extunion mempty $ map triggerexts triggers
 
-  streamexts :: Stream -> [External]
-  streamexts (Stream _ _ expr _) = exprexts expr
+    streamexts :: Stream -> [External]
+    streamexts (Stream _ _ expr _) = exprexts expr
 
-  triggerexts :: Trigger -> [External]
-  triggerexts (Trigger _ guard args) = guardexts `extunion` argexts where
-    guardexts = exprexts guard
-    argexts   = concat $ map uexprexts args
+    triggerexts :: Trigger -> [External]
+    triggerexts (Trigger _ guard args) = guardexts `extunion` argexts
+      where
+        guardexts = exprexts guard
+        argexts   = concat $ map uexprexts args
 
-  uexprexts :: UExpr -> [External]
-  uexprexts (UExpr _ expr) = exprexts expr
+    uexprexts :: UExpr -> [External]
+    uexprexts (UExpr _ expr) = exprexts expr
 
-  exprexts :: Expr a -> [External]
-  exprexts expr = let rec = exprexts in case expr of
-    Local _ _ _ e1 e2   -> rec e1 `extunion` rec e2
-    ExternVar ty name _ -> [External name (excpyname name) ty]
-    Op1 _ e             -> rec e
-    Op2 _ e1 e2         -> rec e1 `extunion` rec e2
-    Op3 _ e1 e2 e3      -> rec e1 `extunion` rec e2 `extunion` rec e3
-    Label _ _ e         -> rec e
-    _                   -> []
+    exprexts :: Expr a -> [External]
+    exprexts expr = let rec = exprexts in case expr of
+      Local _ _ _ e1 e2   -> rec e1 `extunion` rec e2
+      ExternVar ty name _ -> [External name (excpyname name) ty]
+      Op1 _ e             -> rec e
+      Op2 _ e1 e2         -> rec e1 `extunion` rec e2
+      Op3 _ e1 e2 e3      -> rec e1 `extunion` rec e2 `extunion` rec e3
+      Label _ _ e         -> rec e
+      _                   -> []

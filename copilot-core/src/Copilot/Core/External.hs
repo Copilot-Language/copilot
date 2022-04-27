@@ -1,10 +1,8 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE Trustworthy               #-}
 
 -- | Internal Copilot Core representation of Copilot externs.
 module Copilot.Core.External
@@ -21,15 +19,11 @@ import Prelude hiding (all, concat, foldr)
 
 import Data.Typeable    (Typeable)
 
---------------------------------------------------------------------------------
-
 -- | An extern variable declaration, together with the type of the underlying
 -- extern.
 data ExtVar = ExtVar
   { externVarName :: Name
   , externVarType :: UType }
-
---------------------------------------------------------------------------------
 
 -- | List of all externs used in a specification.
 externVars :: Spec -> [ExtVar]
@@ -57,8 +51,6 @@ externVarsExpr e0 = case e0 of
 -- | Extract all expressions used in an untyped Copilot expression.
 externVarsUExpr :: UExpr -> DList ExtVar
 externVarsUExpr UExpr { uExprExpr = e } = externVarsExpr e
-
---------------------------------------------------------------------------------
 
 -- | Apply a function to all expressions in a specification, concatenating the
 -- results.

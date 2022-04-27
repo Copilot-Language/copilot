@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | A monad capable of keeping track of variable renames and of providing
@@ -25,8 +23,6 @@ import qualified Data.Map  as Map
 import qualified Data.Set  as Set
 import qualified Data.List as List
 
---------------------------------------------------------------------------------
-
 -- | A monad capable of keeping track of variable renames and of providing
 -- fresh names for variables.
 type Renaming = State RenamingST
@@ -35,8 +31,6 @@ type Renaming = State RenamingST
 data RenamingST = RenamingST
   { _reservedNames :: Set Var
   , _renaming      :: Map ExtVar Var }
-
---------------------------------------------------------------------------------
 
 -- | Register a name as reserved or used.
 addReservedName :: Var -> Renaming ()
@@ -86,5 +80,3 @@ runRenaming m =
       r <- m
       f <- getRenamingF
       return (r, f)
-
---------------------------------------------------------------------------------

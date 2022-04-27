@@ -1,11 +1,7 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Abstract syntax tree of Kind2 files.
 module Copilot.Theorem.Kind2.AST where
-
---------------------------------------------------------------------------------
 
 -- | A file is a sequence of predicates and propositions.
 data File = File
@@ -54,5 +50,3 @@ data Term =
   | StateVar       String
   | FunApp         String [Term]
   | PredApp        String PredType [Term]
-
---------------------------------------------------------------------------------

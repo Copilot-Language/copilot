@@ -1,8 +1,9 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE RankNTypes, NamedFieldPuns, ScopedTypeVariables, GADTs,
-             LambdaCase #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NamedFieldPuns      #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE Safe                #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Translate Copilot specifications into IL specifications.
 module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
@@ -24,8 +25,6 @@ import GHC.Float (float2Double)
 
 import Data.Typeable (Typeable)
 
---------------------------------------------------------------------------------
-
 -- 'nc' stands for naming convention.
 ncSeq :: C.Id -> SeqId
 ncSeq = printf "s%d"
@@ -42,8 +41,6 @@ ncUnhandledOp = id
 
 ncMux :: Integer -> SeqId
 ncMux n = "mux" ++ show n
-
---------------------------------------------------------------------------------
 
 -- | Translate a Copilot specification to an IL specification.
 translate :: C.Spec -> IL
@@ -88,22 +85,24 @@ bound s t = case t of
   C.Word32  -> bound' C.Word32
   C.Word64  -> bound' C.Word64
   _         -> return ()
-  where bound' :: (Bounded a, Integral a) => C.Type a -> Trans ()
-        bound' t = do
-          b <- addBounds <$> get
-          when b $ localConstraint (Op2 Bool And
-            (Op2 Bool Le (trConst t minBound) s)
-            (Op2 Bool Ge (trConst t maxBound) s))
+  where
+    bound' :: (Bounded a, Integral a) => C.Type a -> Trans ()
+    bound' t = do
+      b <- addBounds <$> get
+      when b $ localConstraint (Op2 Bool And
+        (Op2 Bool Le (trConst t minBound) s)
+        (Op2 Bool Ge (trConst t maxBound) s))
 
 streamInit :: C.Stream -> [Expr]
 streamInit (C.Stream { C.streamId       = id
                      , C.streamBuffer   = b :: [val]
                      , C.streamExprType = t }) =
   zipWith initConstraint [0..] b
-  where initConstraint :: Integer -> val -> Expr
-        initConstraint p v = Op2 Bool Eq
-          (SVal (trType t) (ncSeq id) (Fixed p))
-          $ trConst t v
+  where
+    initConstraint :: Integer -> val -> Expr
+    initConstraint p v = Op2 Bool Eq
+      (SVal (trType t) (ncSeq id) (Fixed p))
+      $ trConst t v
 
 streamRec :: C.Stream -> Trans Expr
 streamRec (C.Stream { C.streamId       = id
@@ -115,8 +114,6 @@ streamRec (C.Stream { C.streamId       = id
   bound s t
   e' <- expr e
   return $ Op2 Bool Eq s e'
-
---------------------------------------------------------------------------------
 
 expr :: Typeable a => C.Expr a -> Trans Expr
 
@@ -134,7 +131,8 @@ expr (C.Local ta _ name ea eb) = do
 expr (C.Var t name) = return $ SVal (trType t) (ncLocal name) _n_
 
 expr (C.ExternVar t name _) = bound s t >> return s
-  where s = SVal (trType t) (ncExternVar name) _n_
+  where
+    s = SVal (trType t) (ncExternVar name) _n_
 
 expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Int8   -> trSign ta e
@@ -144,15 +142,16 @@ expr (C.Op1 (C.Sign ta) e) = case ta of
   C.Float  -> trSign ta e
   C.Double -> trSign ta e
   _        -> expr $ C.Const ta 1
-  where trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
-        trSign ta e =
-          expr (C.Op3 (C.Mux ta)
-            (C.Op2 (C.Lt ta) e (C.Const ta 0))
-            (C.Const ta (-1))
-            (C.Op3 (C.Mux ta)
-              (C.Op2 (C.Gt ta) e (C.Const ta 0))
-              (C.Const ta 1)
-              (C.Const ta 0)))
+  where
+    trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
+    trSign ta e =
+      expr (C.Op3 (C.Mux ta)
+        (C.Op2 (C.Lt ta) e (C.Const ta 0))
+        (C.Const ta (-1))
+        (C.Op3 (C.Mux ta)
+          (C.Op2 (C.Gt ta) e (C.Const ta 0))
+          (C.Const ta 1)
+          (C.Const ta 0)))
 expr (C.Op1 (C.Sqrt _) e) = do
   e' <- expr e
   return $ Op2 Real Pow e' (ConstR 0.5)
@@ -160,19 +159,22 @@ expr (C.Op1 (C.Cast _ _) e) = expr e
 expr (C.Op1 op e) = do
   e' <- expr e
   return $ Op1 t' op' e'
-  where (op', t') = trOp1 op
+  where
+    (op', t') = trOp1 op
 
 expr (C.Op2 (C.Ne t) e1 e2) = do
   e1' <- expr e1
   e2' <- expr e2
   return $ Op1 Bool Not (Op2 t' Eq e1' e2')
-  where t' = trType t
+  where
+    t' = trType t
 
 expr (C.Op2 op e1 e2) = do
   e1' <- expr e1
   e2' <- expr e2
   return $ Op2 t' op' e1' e2'
-  where (op', t') = trOp2 op
+  where
+    (op', t') = trOp2 op
 
 expr (C.Op3 (C.Mux t) cond e1 e2) = do
   cond' <- expr cond
@@ -193,14 +195,15 @@ trConst t v = case t of
   t@C.Word16 -> negifyI v (trType t)
   t@C.Word32 -> negifyI v (trType t)
   t@C.Word64 -> negifyI v (trType t)
-  where negifyR :: Double -> Expr
-        negifyR v
-          | v >= 0    = ConstR v
-          | otherwise = Op1 Real Neg $ ConstR $ negate $ v
-        negifyI :: Integral a => a -> Type -> Expr
-        negifyI v t
-          | v >= 0    = ConstI t $ toInteger v
-          | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
+  where
+    negifyR :: Double -> Expr
+    negifyR v
+      | v >= 0    = ConstR v
+      | otherwise = Op1 Real Neg $ ConstR $ negate $ v
+    negifyI :: Integral a => a -> Type -> Expr
+    negifyI v t
+      | v >= 0    = ConstI t $ toInteger v
+      | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
 
 trOp1 :: C.Op1 a b -> (Op1, Type)
 trOp1 = \case
@@ -225,7 +228,7 @@ trOp1 = \case
   C.Acosh t -> (Acosh, trType t)
   -- C.BwNot t ->
   -- C.Cast t  ->
-  _ -> error "Unsupported unary operator in input." -- TODO(chathhorn)
+  _ -> error "Unsupported unary operator in input."
 
 trOp2 :: C.Op2 a b c -> (Op2, Type)
 trOp2 = \case
@@ -258,7 +261,7 @@ trOp2 = \case
   -- C.BwShiftL t _ ->
   -- C.BwShiftR t _ ->
 
-  _ -> error "Unsupported binary operator in input." -- TODO(chathhorn)
+  _ -> error "Unsupported binary operator in input."
 
 trType :: C.Type a -> Type
 trType = \case
@@ -273,8 +276,6 @@ trType = \case
   C.Word64 -> BV64
   C.Float  -> Real
   C.Double -> Real
-
---------------------------------------------------------------------------------
 
 -- | Translation state.
 data TransST = TransST
@@ -294,14 +295,16 @@ newMux c t e1 e2 = do
       modify $ \st -> st { muxes = (v, mux) : ms }
       return v
     Just (v, _) -> return v
-  where mux = (c, t, e1, e2)
+  where
+    mux = (c, t, e1, e2)
 
 getMuxes :: Trans [Expr]
 getMuxes = muxes <$> get >>= return . concat . (map toConstraints)
-  where toConstraints (v, (c, _, e1, e2)) =
-          [ Op2 Bool Or (Op1 Bool Not c) (Op2 Bool Eq v e1)
-          , Op2 Bool Or c (Op2 Bool Eq v e2)
-          ]
+  where
+    toConstraints (v, (c, _, e1, e2)) =
+      [ Op2 Bool Or (Op1 Bool Not c) (Op2 Bool Eq v e1)
+      , Op2 Bool Or c (Op2 Bool Eq v e2)
+      ]
 
 -- | A state monad over the translation state ('TransST').
 type Trans = State TransST
@@ -321,6 +324,3 @@ popLocalConstraints = liftM2 (++) (localConstraints <$> get) getMuxes
 
 runTrans :: Bool -> Trans a -> a
 runTrans b m = evalState m $ TransST [] [] 0 b
-
---------------------------------------------------------------------------------
-

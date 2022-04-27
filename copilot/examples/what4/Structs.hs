@@ -12,7 +12,6 @@ import Control.Monad (void, forM_)
 import Language.Copilot
 import Copilot.Theorem.What4
 
-
 -- | Definition for `Volts`.
 data Volts = Volts
   { numVolts :: Field "numVolts" Word16
@@ -64,7 +63,6 @@ spec = do
   -- false).
   void $ prop "Example 2" $ forall $
     (((battery#other) .!! 2) .!! 3) == (((battery#other) .!! 2) .!! 4)
-
 
 main :: IO ()
 main = do

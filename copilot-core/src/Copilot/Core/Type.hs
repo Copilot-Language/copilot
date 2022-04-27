@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Typing for Core.
 --
@@ -10,16 +8,15 @@
 -- initialize variables and equivalent representations for those types in
 -- the target languages.
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE  ExistentialQuantification
-            , GADTs
-            , KindSignatures
-            , ScopedTypeVariables
-            , UndecidableInstances
-            , FlexibleContexts
-            , DataKinds
-            , FlexibleInstances
-#-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE Safe                      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Copilot.Core.Type
   ( Type (..)
@@ -80,9 +77,10 @@ instance (KnownSymbol s, Show t) => Show (Field s t) where
   show f@(Field v) = fieldname f ++ ":" ++ show v
 
 instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
-  show t = "<" ++ fields ++ ">" where
-    fields = intercalate "," $ map showfield (toValues t)
-    showfield (Value _ field) = show field
+  show t = "<" ++ fields ++ ">"
+    where
+      fields = intercalate "," $ map showfield (toValues t)
+      showfield (Value _ field) = show field
 
 -- | A Type representing the types of expressions or values handled by
 -- Copilot Core.
@@ -132,8 +130,6 @@ instance EqualType Type where
   (=~=) Double Double = Just Refl
   (=~=) _ _ = Nothing
 
---------------------------------------------------------------------------------
-
 -- | A simple, monomorphic representation of types that facilitates putting
 -- variables in heterogeneous lists and environments in spite of their types
 -- being different.
@@ -154,7 +150,7 @@ data SimpleType where
 
 -- | Type equality, used to help type inference.
 
-{- This instance is necessary, otherwise the type of SArray can't be inferred -}
+-- This instance is necessary, otherwise the type of SArray can't be inferred.
 
 instance Eq SimpleType where
   SBool   == SBool    = True
@@ -173,16 +169,12 @@ instance Eq SimpleType where
   SStruct == SStruct  = True
   _ == _ = False
 
---------------------------------------------------------------------------------
-
 -- | A typed expression, from which we can obtain the two type representations
 -- used by Copilot: 'Type' and 'SimpleType'.
 class (Show a, Typeable a) => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
   simpleType _ = SStruct
-
---------------------------------------------------------------------------------
 
 instance Typed Bool   where
   typeOf       = Bool
@@ -221,12 +213,8 @@ instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (Inner
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 
---------------------------------------------------------------------------------
-
 -- | A untyped type (no phantom type).
 data UType = forall a . Typeable a => UType { uTypeType :: Type a }
 
 instance Eq UType where
   UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
-
---------------------------------------------------------------------------------

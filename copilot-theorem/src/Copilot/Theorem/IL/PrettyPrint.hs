@@ -1,7 +1,6 @@
----------------------------------------------------------------------------------
-
-{-# LANGUAGE NamedFieldPuns, GADTs #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE GADTs          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE Safe           #-}
 
 -- | This module implements a pretty printer for the IL format, an intermediate
 -- representation used in copilot-theorem to facilitate model checking.
@@ -12,8 +11,6 @@ import Text.PrettyPrint.HughesPJ
 import qualified Data.Map as Map
 
 import Prelude hiding ((<>))
-
---------------------------------------------------------------------------------
 
 -- | Pretty print an IL specification.
 prettyPrint :: IL -> String
@@ -87,5 +84,3 @@ ppOp1 = text . show
 
 ppOp2 :: Op2 -> Doc
 ppOp2 = text . show
-
---------------------------------------------------------------------------------

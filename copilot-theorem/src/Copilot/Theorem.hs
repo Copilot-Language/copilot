@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Highly automated proof techniques are a necessary step for the widespread
@@ -22,5 +20,3 @@ module Copilot.Theorem
 
 import Copilot.Theorem.Tactics as X
 import Copilot.Theorem.Prove
-
---------------------------------------------------------------------------------

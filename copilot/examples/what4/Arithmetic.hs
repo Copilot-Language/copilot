@@ -38,7 +38,6 @@ spec = do
   -- Another example with floats. This fails, because it isn't true.
   void $ prop "Example 6" (forall ((efloat + 1) /= efloat))
 
-
 main :: IO ()
 main = do
   spec' <- reify spec

@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Simplify IL expressions by partly evaluating operations on booleans.
 module Copilot.Theorem.IL.Transform ( bsimpl ) where
@@ -45,4 +45,3 @@ bsimpl = until (\x -> bsimpl' x == x) bsimpl'
       FunApp t f args             -> FunApp t f (map bsimpl' args)
 
       e                           -> e
-

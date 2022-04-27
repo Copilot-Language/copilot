@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Main Copilot language export file.
 --
@@ -71,11 +69,7 @@ import Copilot.Language.Prelude
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream)
 
---------------------------------------------------------------------------------
-
 -- | Transform a high-level Copilot Language specification into a low-level
 -- Copilot Core specification and pretty-print it to stdout.
 prettyPrint :: Spec -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
-
---------------------------------------------------------------------------------

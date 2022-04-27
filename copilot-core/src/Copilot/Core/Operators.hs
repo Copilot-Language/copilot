@@ -1,9 +1,8 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE GADTs, Rank2Types #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Internal representation of Copilot operators.
 module Copilot.Core.Operators
@@ -18,8 +17,6 @@ import Copilot.Core.Type        (Type(..), Field(..))
 import Copilot.Core.Type.Array  (Array)
 import Data.Bits
 import Data.Word                (Word32)
-
---------------------------------------------------------------------------------
 
 -- | Unary operators.
 data Op1 a b where

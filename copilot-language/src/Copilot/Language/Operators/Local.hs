@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Let expressions.
 --
@@ -18,8 +16,6 @@ module Copilot.Language.Operators.Local
 import Copilot.Core (Typed)
 import Copilot.Language.Stream (Stream (..))
 
---------------------------------------------------------------------------------
-
 -- | Let expressions.
 --
 --   Create a stream that results from applying a stream to a function on
@@ -33,5 +29,3 @@ import Copilot.Language.Stream (Stream (..))
 --   @
 local :: (Typed a, Typed b) => Stream a -> (Stream a -> Stream b) -> Stream b
 local = Local
-
---------------------------------------------------------------------------------

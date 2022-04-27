@@ -1,9 +1,6 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 {-# LANGUAGE Safe #-}
-
 
 -- | Primitives to build constant streams.
 module Copilot.Language.Operators.Constant
@@ -27,14 +24,10 @@ import Copilot.Language.Stream
 import Data.Word
 import Data.Int
 
---------------------------------------------------------------------------------
-
 -- | Create a constant stream that is equal to the given argument, at any
 -- point in time.
 constant :: Typed a => a -> Stream a
 constant = Const
-
---------------------------------------------------------------------------------
 
 -- | Create a constant stream carrying values of type 'Bool' that is equal to
 -- the given argument, at any point in time.

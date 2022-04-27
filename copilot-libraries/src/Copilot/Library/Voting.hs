@@ -1,4 +1,4 @@
--- | 
+-- |
 -- Module: Voting
 -- Description: Implementation of the Boyer-Moore Majority Vote Algorithm
 -- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -34,7 +34,7 @@
 
 {-# LANGUAGE RebindableSyntax #-}
 
-module Copilot.Library.Voting 
+module Copilot.Library.Voting
   ( majority, aMajority ) where
 
 import Copilot.Language
@@ -53,11 +53,11 @@ majority' :: (P.Eq a, Typed a)
 majority' []     can _   = can
 majority' (x:xs) can cnt =
   local (cnt == 0) inZero
-  where 
+  where
   inZero zero    = local (if zero then x else can) inCan
-    where       
+    where
     inCan can'   = local (if zero || x == can then cnt+1 else cnt-1) inCnt
-      where 
+      where
       inCnt cnt' = majority' xs can' cnt'
 
 -- | Majority vote second pass: checking that a candidate indeed has more than

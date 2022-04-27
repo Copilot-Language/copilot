@@ -1,9 +1,7 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Safe                  #-}
 
 -- | Type-safe casting operators.
 module Copilot.Language.Operators.Cast
@@ -15,8 +13,6 @@ import Copilot.Language.Stream
 
 import Data.Int
 import Data.Word
-
---------------------------------------------------------------------------------
 
 -- | Class to capture casting between types for which it can be performed
 -- safely.
@@ -30,15 +26,11 @@ class UnsafeCast a b where
   -- | Perform an unsafe cast from @Stream a@ to @Stream b@.
   unsafeCast :: (Typed a, Typed b) => Stream a -> Stream b
 
---------------------------------------------------------------------------------
-
 -- | Cast a boolean stream to a stream of numbers, producing 1 if the
 -- value at a point in time is 'True', and 0 otherwise.
 castBool :: (Eq a, Num a, Typed a) => Stream Bool -> Stream a
 castBool (Const bool) = Const $ if bool then 1 else 0
 castBool x            = Op3 (C.Mux typeOf) x 1 0
-
---------------------------------------------------------------------------------
 
 -- | Identity casting.
 instance Cast Bool Bool where
@@ -84,14 +76,10 @@ instance Cast Bool Int32 where
 instance Cast Bool Int64 where
   cast = castBool
 
---------------------------------------------------------------------------------
-
 -- | Cast a stream carrying numbers to an integral using 'fromIntegral'.
 castIntegral :: (Integral a, Typed a, Num b, Typed b) => Stream a -> Stream b
 castIntegral (Const x) = Const (fromIntegral x)
 castIntegral x         = Op1 (C.Cast typeOf typeOf) x
-
---------------------------------------------------------------------------------
 
 -- | Identity casting.
 instance Cast Word8 Word8 where
@@ -121,8 +109,6 @@ instance Cast Word8 Int32 where
 instance Cast Word8 Int64 where
   cast = castIntegral
 
---------------------------------------------------------------------------------
-
 -- | Identity casting.
 instance Cast Word16 Word16 where
   cast = castIntegral
@@ -143,8 +129,6 @@ instance Cast Word16 Int32 where
 instance Cast Word16 Int64 where
   cast = castIntegral
 
---------------------------------------------------------------------------------
-
 -- | Identity casting.
 instance Cast Word32 Word32 where
   cast = castIntegral
@@ -157,13 +141,9 @@ instance Cast Word32 Word64 where
 instance Cast Word32 Int64 where
   cast = castIntegral
 
---------------------------------------------------------------------------------
-
 -- | Identity casting.
 instance Cast Word64 Word64 where
   cast = castIntegral
-
---------------------------------------------------------------------------------
 
 -- | Identity casting.
 instance Cast Int8 Int8 where
@@ -181,8 +161,6 @@ instance Cast Int8 Int32 where
 instance Cast Int8 Int64 where
   cast = castIntegral
 
---------------------------------------------------------------------------------
-
 -- | Identity casting.
 instance Cast Int16 Int16 where
   cast = castIntegral
@@ -195,8 +173,6 @@ instance Cast Int16 Int32 where
 instance Cast Int16 Int64 where
   cast = castIntegral
 
---------------------------------------------------------------------------------
-
 -- | Identity casting.
 instance Cast Int32 Int32 where
   cast = castIntegral
@@ -204,8 +180,6 @@ instance Cast Int32 Int32 where
 -- | Cast number to bigger type.
 instance Cast Int32 Int64 where
   cast = castIntegral
-
---------------------------------------------------------------------------------
 
 -- | Identity casting.
 instance Cast Int64 Int64 where

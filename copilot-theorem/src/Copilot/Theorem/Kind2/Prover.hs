@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 
 -- | A prover backend based on Kind2.
@@ -26,8 +24,6 @@ import Data.Default
 
 import qualified Copilot.Theorem.TransSys as TS
 
---------------------------------------------------------------------------------
-
 -- | Options for Kind2
 data Options = Options
   { bmcMax :: Int -- ^ Upper bound on the number of unrolling that base and
@@ -52,12 +48,8 @@ kind2Prover opts = Prover
   , askProver    = askKind2
   , closeProver  = const $ return () }
 
---------------------------------------------------------------------------------
-
 kind2Prog        = "kind2"
 kind2BaseOptions = ["--input-format", "native", "-xml"]
-
---------------------------------------------------------------------------------
 
 askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
 askKind2 (ProverST opts spec) assumptions toCheck = do
@@ -76,6 +68,4 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
   putStrLn kind2Input
 
   removeFile tempName
-  return $ parseOutput (head toCheck) output -- TODO support multiple toCheck props
-
---------------------------------------------------------------------------------
+  return $ parseOutput (head toCheck) output

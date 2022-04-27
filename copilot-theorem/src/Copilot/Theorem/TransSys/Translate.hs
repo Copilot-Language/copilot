@@ -1,8 +1,10 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE RankNTypes, NamedFieldPuns, ViewPatterns,
-             ScopedTypeVariables, GADTs, FlexibleContexts #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE NamedFieldPuns      #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE Safe                #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 -- | Translate Copilot specifications into a modular transition system.
 --
@@ -57,8 +59,6 @@ import qualified Copilot.Core as C
 import qualified Data.Map     as Map
 import qualified Data.Bimap   as Bimap
 
---------------------------------------------------------------------------------
-
 -- Naming conventions
 -- These are important in order to avoid name conflicts
 
@@ -79,8 +79,6 @@ ncTimeAnnot :: String -> Int -> String
 ncTimeAnnot s d
   | d == 0    = s
   | otherwise = s ++ ncSep ++ show d
-
---------------------------------------------------------------------------------
 
 -- | Translate Copilot specifications into a modular transition system.
 translate :: C.Spec -> TransSys
@@ -108,9 +106,6 @@ translate cspec =
     topNode = mkTopNode topNodeId (map nodeId propNodes) cprops
     extVarNodes = map mkExtVarNode extvarNodesNames
 
---------------------------------------------------------------------------------
-
-
 mkTopNode :: String -> [NodeId] -> [C.Property] -> Node
 mkTopNode topNodeId dependencies cprops =
   Node { nodeId = topNodeId
@@ -123,15 +118,12 @@ mkTopNode topNodeId dependencies cprops =
       [ (Var cp, mkExtVar (ncPropNode cp) ncMain)
       | cp <- C.propertyName <$> cprops ]
 
-
-
 mkExtVarNode (name, U t) =
   Node { nodeId = name
        , nodeDependencies = []
        , nodeLocalVars = Map.singleton (Var ncMain) (VarDescr t $ Constrs [])
        , nodeImportedVars = Bimap.empty
        , nodeConstrs = []}
-
 
 mkPropNodes :: [C.Property] -> Trans [Node]
 mkPropNodes = mapM propNode
@@ -148,8 +140,6 @@ streamOfProp prop =
            , C.streamBuffer = []
            , C.streamExpr = C.propertyExpr prop
            , C.streamExprType = C.Bool }
-
---------------------------------------------------------------------------------
 
 stream :: C.Stream -> Trans Node
 stream (C.Stream { C.streamId
@@ -179,8 +169,6 @@ stream (C.Stream { C.streamId
     return Node
       { nodeId, nodeDependencies, nodeLocalVars
       , nodeImportedVars, nodeConstrs = [] }
-
---------------------------------------------------------------------------------
 
 expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
@@ -219,12 +207,6 @@ expr t (C.ExternVar _ name _) = do
   newImportedVar localAlias (ExtVar nodeName (Var ncMain))
   return $ VarE t localAlias
 
--- TODO : Use uninterpreted functions to handle
--- * Unhandled operators
--- * Extern functions
--- * Extern arrays
--- For now, the result of these operations is a new unconstrained variable
-
 expr t (C.Op1 op e) = handleOp1
   t (op, e) expr notHandled Op1
   where
@@ -243,8 +225,6 @@ newUnconstrainedVar t = do
   newLocal (Var newNode) $ VarDescr t $ Constrs []
   newDep newNode
   return $ VarE t (Var newNode)
-
---------------------------------------------------------------------------------
 
 runTrans :: Trans a -> (a, [(NodeId, U Type)])
 runTrans mx =
@@ -293,7 +273,6 @@ popLocalInfos = do
     , _dependencies = [] }
   return (lvs, ivs, nub' dps)
 
-
 getUid :: Trans Int
 getUid = do
   uid <- _nextUid <$> get
@@ -312,5 +291,3 @@ curNode = _curNode <$> get
 
 newExtVarNode id t =
   modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }
-
---------------------------------------------------------------------------------

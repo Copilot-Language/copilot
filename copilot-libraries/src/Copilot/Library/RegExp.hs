@@ -9,8 +9,6 @@
 -- For an example, see
 -- <https://github.com/Copilot-Language/examplesForACSL/blob/master/example15/main.hs>
 
-{-# LANGUAGE FlexibleContexts #-}
-
 module Copilot.Library.RegExp ( copilotRegexp, copilotRegexpB ) where
 
 import Text.ParserCombinators.Parsec
@@ -54,7 +52,6 @@ data RegExp t = REpsilon
               | RStar    ( RegExp t )
                 deriving Show
 
-
 -- | Parsers for single characters.
 lquote, rquote, lparen, rparen,
   star, plus, qmark, point, minus,
@@ -78,7 +75,6 @@ followedBy :: GenParser tok () a
            -> GenParser tok () a
 followedBy p p' = p >>= \ r -> p' >> return r
 
-
 -- | Parsing a string p' with prefix p, returning both in order.
 cPrefix, optCPrefix :: GenParser tok () Char
                     -> GenParser tok () String
@@ -97,7 +93,6 @@ optCPrefix p p' = optionMaybe p
 -- its case).
 ci :: String -> GenParser Char () String
 ci = mapM ( \ c -> ( char . toLower ) c <|> ( char . toUpper ) c )
-
 
 -- | Parser for regular expressions
 regexp  :: ( SymbolParser t ) => GenParser Char () ( RegExp t )
@@ -118,10 +113,8 @@ factor' = between lparen rparen regexp
 anySym  :: ( SymbolParser t ) => GenParser Char () ( RegExp t )
 anySym  = point >> ( return . RSymbol ) ( NumSym Nothing Any )
 
-
 class SymbolParser t where
     parseSym :: GenParser Char () ( RegExp t )
-
 
 instance SymbolParser Bool where
     parseSym = do { truth <- ( ci "t" >> optional ( ci "rue" )
@@ -132,7 +125,6 @@ instance SymbolParser Bool where
                               <|> ( string "0" >> return False )
                   ; return $ RSymbol ( NumSym Nothing $ Sym truth )
                   }
-
 
 parseWordSym :: ( Integral t )
                 => GenParser Char () ( RegExp t )
@@ -149,11 +141,9 @@ parseIntSym = do { num <- between lquote rquote $
                    $ fromIntegral ( read num :: Integer )
                  }
 
-
 type StreamName = String
 newtype P = P { getName :: StreamName }
     deriving Eq
-
 
 parsePSym :: GenParser Char () ( RegExp P )
 parsePSym = do { pStream <- between lquote rquote $
@@ -161,7 +151,6 @@ parsePSym = do { pStream <- between lquote rquote $
                ; return . RSymbol . NumSym Nothing . Sym
                  $ P pStream
                }
-
 
 instance SymbolParser Word8 where
     parseSym = parseWordSym
@@ -190,7 +179,6 @@ instance SymbolParser Int64 where
 instance SymbolParser P where
     parseSym = parsePSym
 
-
 opOr       :: GenParser Char () ( RegExp t -> RegExp t -> RegExp t )
 opOr       = char '|' >> return ROr
 
@@ -215,14 +203,12 @@ parser :: ( SymbolParser t )
          => GenParser Char () ( RegExp t )
 parser = regexp `followedBy` eof
 
-
 hasEpsilon                    :: RegExp t -> Bool
 hasEpsilon   REpsilon         = True
 hasEpsilon ( RSymbol  _     ) = False
 hasEpsilon ( ROr      r1 r2 ) = hasEpsilon r1 || hasEpsilon r2
 hasEpsilon ( RConcat  r1 r2 ) = hasEpsilon r1 && hasEpsilon r2
 hasEpsilon ( RStar    _     ) = True
-
 
 first                    :: RegExp t -> [ NumSym t ]
 first   REpsilon         = []
@@ -232,17 +218,14 @@ first ( RConcat  r1 r2 ) = first r1 ++ if hasEpsilon r1 then
                                            first r2 else []
 first ( RStar    r     ) = first r
 
-
 reverse'                   :: RegExp t -> RegExp t
 reverse' ( ROr     r1 r2 ) = ROr     ( reverse' r1 ) ( reverse' r2 )
 reverse' ( RConcat r1 r2 ) = RConcat ( reverse' r2 ) ( reverse' r1 )
 reverse' ( RStar   r     ) = RStar   ( reverse' r  )
 reverse'   e               = e
 
-
 last' :: RegExp t -> [ NumSym t ]
 last' = first . reverse'
-
 
 follow                        :: ( Eq t ) =>
                                  RegExp t -> NumSym t -> [ NumSym t ]
@@ -256,10 +239,8 @@ follow ( RStar    r     ) sNr = follow r sNr
                                 `union` if sNr `elem` last' r then
                                             first r else []
 
-
 preceding :: ( Eq t ) => RegExp t -> NumSym t -> [ NumSym t ]
 preceding = follow . reverse'
-
 
 hasFinitePath                   :: RegExp t -> Bool
 hasFinitePath ( ROr     r1 r2 ) = hasFinitePath r1 || hasFinitePath r2
@@ -267,14 +248,12 @@ hasFinitePath ( RConcat _  r2 ) = hasFinitePath r2
 hasFinitePath ( RStar   _     ) = False
 hasFinitePath   _               = True
 
-
 getSymbols                   :: RegExp t -> [ NumSym t ]
 getSymbols ( RSymbol s     ) = [ s ]
 getSymbols ( ROr     r1 r2 ) = getSymbols r1 ++ getSymbols r2
 getSymbols ( RConcat r1 r2 ) = getSymbols r1 ++ getSymbols r2
 getSymbols ( RStar   r     ) = getSymbols r
 getSymbols   _               = []
-
 
 -- assign each symbol in the regular expression a
 -- unique number, counting up from 0
@@ -298,7 +277,6 @@ enumSyms rexp = evalState ( enumSyms' rexp ) 0
         return $ RStar   r'
       enumSyms'   other           =
         return other
-
 
 regexp2CopilotNFA :: ( C.Typed t, Eq t )
                      => C.Stream t -> RegExp t -> C.Stream Bool -> C.Stream Bool
@@ -332,7 +310,6 @@ regexp2CopilotNFA inStream rexp reset =
 
     in outStream
 
-
 -- | Regular expression matching over an arbitrary stream
 copilotRegexp :: ( C.Typed t, SymbolParser t, Eq t )
               => C.Stream t     -- ^ The stream to monitor.
@@ -357,7 +334,6 @@ copilotRegexp inStream rexp reset =
                         , "on infinite streams, since we do not have "
                         , "a distinct end-of-input symbol." ]
              else regexp2CopilotNFA inStream nrexp reset
-
 
 regexp2CopilotNFAB :: RegExp P -> [ ( StreamName, C.Stream Bool ) ]
                       -> C.Stream Bool -> C.Stream Bool
@@ -396,7 +372,6 @@ regexp2CopilotNFAB rexp propositions reset =
         outStream                  = foldl ( C.|| ) start streams
 
     in outStream
-
 
 -- | Regular expression matching over a collection of boolean streams.
 --

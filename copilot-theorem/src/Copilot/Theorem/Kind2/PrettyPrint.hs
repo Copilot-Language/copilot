@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Pretty print a Kind2 file defining predicates and propositions.
@@ -11,15 +9,11 @@ import Copilot.Theorem.Kind2.AST
 
 import Data.List (intercalate)
 
---------------------------------------------------------------------------------
-
 -- | A tree of expressions, in which the leafs are strings.
 type SSExpr = SExpr String
 
 -- | Reserved keyword prime.
 kwPrime = "prime"
-
---------------------------------------------------------------------------------
 
 -- | Pretty print a Kind2 file.
 prettyPrint :: File -> String
@@ -33,8 +27,6 @@ shouldIndent :: SSExpr -> Bool
 shouldIndent (Atom _)                   = False
 shouldIndent (List [Atom a, Atom _])    = a `notElem` [kwPrime]
 shouldIndent _                          = True
-
---------------------------------------------------------------------------------
 
 -- | Convert a file into a sequence of expressions.
 ppFile :: File -> [SSExpr]
@@ -75,8 +67,7 @@ ppTerm (PrimedStateVar v) = list [atom kwPrime, atom v]
 ppTerm (StateVar v) = atom v
 ppTerm (FunApp f args) = node f $ map ppTerm args
 ppTerm (PredApp p t args) = node (p ++ "." ++ ext) $ map ppTerm args
-  where ext = case t of
-         Init -> "init"
-         Trans -> "trans"
-
---------------------------------------------------------------------------------
+  where
+    ext = case t of
+      Init -> "init"
+      Trans -> "trans"

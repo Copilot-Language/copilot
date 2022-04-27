@@ -48,7 +48,6 @@ transexpr (Op3 op e1 e2 e3) = do
   e3' <- transexpr e3
   return $ transop3 op e1' e2' e3'
 
-
 -- | Translates a Copilot unary operator and its argument into a C99
 -- expression.
 transop1 :: Op1 a b -> C.Expr -> C.Expr
@@ -229,7 +228,6 @@ constfieldinit (Value ty (Field val)) = constinit ty val
 constarray :: Type a -> [a] -> [C.Init]
 constarray ty = map (constinit ty)
 
-
 -- | Explicitly cast a C99 value to a type.
 explicitty :: Type a -> C.Expr -> C.Expr
 explicitty ty = C.Cast (transtypename ty)
@@ -248,8 +246,9 @@ transtype ty = case ty of
   Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
-  Array ty' -> C.Array (transtype ty') length where
-    length = Just $ C.LitInt $ fromIntegral $ tylength ty
+  Array ty' -> C.Array (transtype ty') length
+    where
+      length = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
 -- | Translate a Copilot type intro a C typename

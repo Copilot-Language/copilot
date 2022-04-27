@@ -1,6 +1,5 @@
---------------------------------------------------------------------------------
-
-{-# LANGUAGE RebindableSyntax, ScopedTypeVariables #-}
+{-# LANGUAGE RebindableSyntax    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module BoyerMoore where
 
@@ -17,8 +16,6 @@ import Data.String (fromString)
 import qualified Prelude   as P
 import qualified Data.List as L
 
---------------------------------------------------------------------------------
-
 length :: [a] -> Stream Word8
 length l = constant (fromInteger $ L.genericLength l)
 
@@ -31,8 +28,6 @@ arbitraryCst s = c
     i = extern s Nothing
     c = if t == 0 then i else [uninitialized (typeOf :: Type a)] ++ c
 
---------------------------------------------------------------------------------
-
 majorityVote :: forall a . (Typed a, Eq a) => [Stream a] -> Stream a
 majorityVote [] = error "empty list"
 majorityVote (x : xs) = aux x 1 xs
@@ -44,7 +39,6 @@ majorityVote (x : xs) = aux x 1 xs
     local (if s == 0 || l == p then s + 1 else s - 1) $ \s' ->
     aux p' s' ls
 
-
 okWith ::
   forall a . (Typed a, Eq a) =>
   Stream a -> [Stream a] -> Stream a -> Stream Bool
@@ -54,8 +48,6 @@ okWith a l maj = (a /= maj) ==> ((2 * count a l) <= length l)
   count :: Stream a -> [Stream a] -> Stream Word8
   count _e [] = 0
   count e (x : xs) = (if x == e then 1 else 0) + count e xs
-
---------------------------------------------------------------------------------
 
 spec = do
   forM_ (zip [1..] ss) $ \(k :: Int, s) ->
@@ -78,12 +70,8 @@ spec = do
 
     maj = majorityVote ss
 
---------------------------------------------------------------------------------
-
 induct :: Proof Universal
 induct = induction def { nraNLSat = False, debug = False }
-
---------------------------------------------------------------------------------
 
 -- | Initial value for a given type.
 --

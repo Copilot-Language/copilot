@@ -77,4 +77,3 @@ spec = do
     d1 = acos ((sin lat1) * (sin lat2) + (cos lat1) * (cos lat2) * (cos (lon1 - lon2)))
     d2 = 2 * asin (sqrt (
         (sin ((lat1 - lat2)/2)) ** 2 + (cos lat1) * (cos lat2) * ((sin ((lon1 - lon2)/2)) ** 2)))
-

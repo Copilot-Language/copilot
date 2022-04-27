@@ -1,6 +1,4 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
 -- | Reexports 'Prelude' from package "base" hiding identifiers redefined by
 -- Copilot.
@@ -31,5 +29,3 @@ import Prelude hiding
   , cycle
   , take
   )
-
---------------------------------------------------------------------------------

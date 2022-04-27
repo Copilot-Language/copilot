@@ -1,10 +1,11 @@
---------------------------------------------------------------------------------
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 
-{-# LANGUAGE Safe #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE Safe                      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 -- | An implementation of dynamic types using "Copilot.Core.Type.Equality".
 -- The theory behind this technique is described the following paper:
@@ -12,8 +13,6 @@
 -- * Baars, Arthur I. and Swierstra, S. Doaitse,
 -- \"/Typing dynamic typing/\",
 -- ACM SIGPLAN Notices vol. 37, p. 157-166, 2002
-
-{-# LANGUAGE GADTs, KindSignatures, ScopedTypeVariables #-}
 
 module Copilot.Core.Type.Dynamic
   {-# DEPRECATED "This module is deprecated in Copilot 3.8." #-}
@@ -24,8 +23,6 @@ module Copilot.Core.Type.Dynamic
   ) where
 
 import Copilot.Core.Type.Equality
-
---------------------------------------------------------------------------------
 
 -- | Representation of a value accompanied by its type.
 data Dynamic :: (* -> *) -> * where

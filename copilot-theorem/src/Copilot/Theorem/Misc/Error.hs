@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
-
 {-# LANGUAGE Safe #-}
 
 -- | Custom functions to report error messages to users.
@@ -9,8 +7,6 @@ module Copilot.Theorem.Misc.Error
   , impossible_
   , fatal
   ) where
-
---------------------------------------------------------------------------------
 
 -- | Tag used with error messages to help users locate the component that
 -- failed or reports the error.
@@ -34,5 +30,3 @@ impossible_ = error $ errorHeader ++ "Unexpected internal error"
 -- | Report an unrecoverable error (e.g., incorrect format).
 fatal :: String -> a
 fatal = error
-
---------------------------------------------------------------------------------

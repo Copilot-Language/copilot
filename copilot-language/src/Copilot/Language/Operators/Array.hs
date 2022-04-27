@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe         #-}
 
 {-# LANGUAGE TypeFamilies #-}
 
@@ -18,8 +18,6 @@ import Copilot.Language.Stream  (Stream (..))
 import Data.Word                (Word32)
 import GHC.TypeLits             (KnownNat)
 
---------------------------------------------------------------------------------
-
 -- | Create a stream that carries an element of an array in another stream.
 --
 -- This function implements a projection of the element of an array at a given
@@ -33,5 +31,3 @@ import GHC.TypeLits             (KnownNat)
          , Typed t'
          ) => Stream (Array n t) -> Stream Word32 -> Stream t
 arr .!! n = Op2 (Index typeOf) arr n
-
---------------------------------------------------------------------------------
