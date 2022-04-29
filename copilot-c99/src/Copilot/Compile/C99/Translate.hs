@@ -6,6 +6,7 @@ module Copilot.Compile.C99.Translate where
 import Control.Monad.State
 
 import Copilot.Core
+import Copilot.Compile.C99.Error (impossible)
 import Copilot.Compile.C99.Util
 
 import qualified Language.C99.Simple as C
@@ -60,7 +61,7 @@ transop1 op e =
   -- 3) Desugaring/complex (expands to complex expression)
   case op of
     Not           -> (C..!) e
-    Abs      ty   -> funcall (specializeMathFunName ty "abs") [e]
+    Abs      ty   -> transAbs ty e
     Sign     ty   -> transSign ty e
     Recip    ty   -> (constNumTy ty 1) C../ e
     Acos     ty   -> funcall (specializeMathFunName ty "acos") [e]
@@ -118,6 +119,55 @@ transop2 op e1 e2 = case op of
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
+
+-- | Translate @'Abs' e@ in Copilot Core into a C99 expression.
+--
+-- This function produces a portable implementation of abs in C99 that works
+-- for the type given, provided that the output fits in a variable of the same
+-- type (which may not be true, for example, for signed integers in the lower
+-- end of their type range). If the absolute value is out of range, the
+-- behavior is undefined.
+--
+-- PRE: The type given is a Num type (floating-point number, or a
+-- signed/unsigned integer of fixed size).
+transAbs :: Type a -> C.Expr -> C.Expr
+transAbs ty e
+    -- Abs for floats/doubles is called fabs in C99's math.h.
+    | typeIsFloating ty
+    = funcall (specializeMathFunName ty "fabs") [e]
+
+    -- C99 provides multiple implementations of abs, depending on the type of
+    -- the arguments. For integers, it provides C99 abs, labs, and llabs, which
+    -- take, respectively, an int, a long int, and a long long int.
+    --
+    -- However, the code produced by Copilot uses types with fixed width (e.g.,
+    -- int16_t), and there is no guarantee that, for example, 32-bit int or
+    -- 64-bit int will fit in a C int (only guaranteed to be 16 bits).
+    -- Consequently, this function provides a portable version of abs for signed
+    -- and unsigned ints implemented using shift and xor. For example, for a
+    -- value x of type int32_t, the absolute value is:
+    -- (x + (x >> sizeof(int32_t)-1)) ^ (x >> sizeof(int32_t)-1))
+    | otherwise
+    = (e C..+ (e C..>> tyBitSizeMinus1)) C..^ (e C..>> tyBitSizeMinus1)
+  where
+    -- Size of an integer type in bits, minus one. It's easier to hard-code
+    -- them than to try and generate the right expressions in C using sizeof.
+    --
+    -- PRE: the type 'ty' is a signed or unsigned integer type.
+    tyBitSizeMinus1 :: C.Expr
+    tyBitSizeMinus1 = case ty of
+      Int8   -> C.LitInt 7
+      Int16  -> C.LitInt 15
+      Int32  -> C.LitInt 31
+      Int64  -> C.LitInt 63
+      Word8  -> C.LitInt 7
+      Word16 -> C.LitInt 15
+      Word32 -> C.LitInt 31
+      Word64 -> C.LitInt 63
+      _      -> impossible
+                  "transAbs"
+                  "copilot-c99"
+                  "Abs applied to unexpected types."
 
 -- | Translate @'Sign' e@ in Copilot Core into a C99 expression.
 --
@@ -314,3 +364,11 @@ specializeMathFunName ty s
        , "remquo", "copysign", "nextafter", "nexttoward", "fdim"
        , "fmax",   "fmin",     "fma"
        ]
+
+-- * Auxiliary functions
+
+-- | True if the type given is a floating point number.
+typeIsFloating :: Type a -> Bool
+typeIsFloating Float  = True
+typeIsFloating Double = True
+typeIsFloating _      = False
