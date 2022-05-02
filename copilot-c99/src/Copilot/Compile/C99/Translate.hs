@@ -6,6 +6,7 @@ module Copilot.Compile.C99.Translate where
 import Control.Monad.State
 
 import Copilot.Core
+import Copilot.Compile.C99.Error (impossible)
 import Copilot.Compile.C99.Util
 
 import qualified Language.C99.Simple as C
@@ -51,31 +52,38 @@ transexpr (Op3 op e1 e2 e3) = do
 -- | Translates a Copilot unary operator and its argument into a C99
 -- expression.
 transop1 :: Op1 a b -> C.Expr -> C.Expr
-transop1 op e = case op of
-  Not             -> (C..!) e
-  Abs      _      -> funcall "abs"      [e]
-  Sign     ty     -> transSign ty e
-  Recip    _      -> C.LitDouble 1.0 C../ e
-  Exp      _      -> funcall "exp"   [e]
-  Sqrt     _      -> funcall "sqrt"  [e]
-  Log      _      -> funcall "log"   [e]
-  Sin      _      -> funcall "sin"   [e]
-  Tan      _      -> funcall "tan"   [e]
-  Cos      _      -> funcall "cos"   [e]
-  Asin     _      -> funcall "asin"  [e]
-  Atan     _      -> funcall "atan"  [e]
-  Acos     _      -> funcall "acos"  [e]
-  Sinh     _      -> funcall "sinh"  [e]
-  Tanh     _      -> funcall "tanh"  [e]
-  Cosh     _      -> funcall "cosh"  [e]
-  Asinh    _      -> funcall "asinh" [e]
-  Atanh    _      -> funcall "atanh" [e]
-  Acosh    _      -> funcall "acosh" [e]
-  Ceiling  _      -> funcall "ceil"  [e]
-  Floor    _      -> funcall "floor" [e]
-  BwNot    _      -> (C..~) e
-  Cast     _ ty  -> C.Cast (transtypename ty) e
-  GetField (Struct _)  _ f -> C.Dot e (accessorname f)
+transop1 op e =
+  -- There are three types of ways in which a function in Copilot Core can be
+  -- translated into C:
+  --
+  -- 1) Direct translation (perfect 1-to-1 mapping)
+  -- 2) Type-directed translation (1-to-many mapping, choice based on type)
+  -- 3) Desugaring/complex (expands to complex expression)
+  case op of
+    Not           -> (C..!) e
+    Abs      ty   -> transAbs ty e
+    Sign     ty   -> transSign ty e
+    Recip    ty   -> (constNumTy ty 1) C../ e
+    Acos     ty   -> funcall (specializeMathFunName ty "acos") [e]
+    Asin     ty   -> funcall (specializeMathFunName ty "asin") [e]
+    Atan     ty   -> funcall (specializeMathFunName ty "atan") [e]
+    Cos      ty   -> funcall (specializeMathFunName ty "cos") [e]
+    Sin      ty   -> funcall (specializeMathFunName ty "sin") [e]
+    Tan      ty   -> funcall (specializeMathFunName ty "tan") [e]
+    Acosh    ty   -> funcall (specializeMathFunName ty "acosh") [e]
+    Asinh    ty   -> funcall (specializeMathFunName ty "asinh") [e]
+    Atanh    ty   -> funcall (specializeMathFunName ty "atanh") [e]
+    Cosh     ty   -> funcall (specializeMathFunName ty "cosh") [e]
+    Sinh     ty   -> funcall (specializeMathFunName ty "sinh") [e]
+    Tanh     ty   -> funcall (specializeMathFunName ty "tanh") [e]
+    Exp      ty   -> funcall (specializeMathFunName ty "exp") [e]
+    Log      ty   -> funcall (specializeMathFunName ty "log") [e]
+    Sqrt     ty   -> funcall (specializeMathFunName ty "sqrt") [e]
+    Ceiling  ty   -> funcall (specializeMathFunName ty "ceil") [e]
+    Floor    ty   -> funcall (specializeMathFunName ty "floor") [e]
+    BwNot    _    -> (C..~) e
+    Cast     _ ty -> C.Cast (transtypename ty) e
+    GetField (Struct _)  _ f -> C.Dot e (accessorname f)
 
 -- | Translates a Copilot binary operator and its arguments into a C99
 -- expression.
@@ -89,9 +97,10 @@ transop2 op e1 e2 = case op of
   Mod      _   -> e1 C..%  e2
   Div      _   -> e1 C../  e2
   Fdiv     _   -> e1 C../  e2
-  Pow      _   -> funcall "pow" [e1, e2]
-  Logb     _   -> funcall "log" [e2] C../ funcall "log" [e1]
-  Atan2    _   -> funcall "atan2" [e1, e2]
+  Pow      ty  -> funcall (specializeMathFunName ty "pow") [e1, e2]
+  Logb     ty  -> funcall (specializeMathFunName ty "log") [e2] C../
+                  funcall (specializeMathFunName ty "log") [e1]
+  Atan2    ty  -> funcall (specializeMathFunName ty "atan2") [e1, e2]
   Eq       _   -> e1 C..== e2
   Ne       _   -> e1 C..!= e2
   Le       _   -> e1 C..<= e2
@@ -110,6 +119,55 @@ transop2 op e1 e2 = case op of
 transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transop3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
+
+-- | Translate @'Abs' e@ in Copilot Core into a C99 expression.
+--
+-- This function produces a portable implementation of abs in C99 that works
+-- for the type given, provided that the output fits in a variable of the same
+-- type (which may not be true, for example, for signed integers in the lower
+-- end of their type range). If the absolute value is out of range, the
+-- behavior is undefined.
+--
+-- PRE: The type given is a Num type (floating-point number, or a
+-- signed/unsigned integer of fixed size).
+transAbs :: Type a -> C.Expr -> C.Expr
+transAbs ty e
+    -- Abs for floats/doubles is called fabs in C99's math.h.
+    | typeIsFloating ty
+    = funcall (specializeMathFunName ty "fabs") [e]
+
+    -- C99 provides multiple implementations of abs, depending on the type of
+    -- the arguments. For integers, it provides C99 abs, labs, and llabs, which
+    -- take, respectively, an int, a long int, and a long long int.
+    --
+    -- However, the code produced by Copilot uses types with fixed width (e.g.,
+    -- int16_t), and there is no guarantee that, for example, 32-bit int or
+    -- 64-bit int will fit in a C int (only guaranteed to be 16 bits).
+    -- Consequently, this function provides a portable version of abs for signed
+    -- and unsigned ints implemented using shift and xor. For example, for a
+    -- value x of type int32_t, the absolute value is:
+    -- (x + (x >> sizeof(int32_t)-1)) ^ (x >> sizeof(int32_t)-1))
+    | otherwise
+    = (e C..+ (e C..>> tyBitSizeMinus1)) C..^ (e C..>> tyBitSizeMinus1)
+  where
+    -- Size of an integer type in bits, minus one. It's easier to hard-code
+    -- them than to try and generate the right expressions in C using sizeof.
+    --
+    -- PRE: the type 'ty' is a signed or unsigned integer type.
+    tyBitSizeMinus1 :: C.Expr
+    tyBitSizeMinus1 = case ty of
+      Int8   -> C.LitInt 7
+      Int16  -> C.LitInt 15
+      Int32  -> C.LitInt 31
+      Int64  -> C.LitInt 63
+      Word8  -> C.LitInt 7
+      Word16 -> C.LitInt 15
+      Word32 -> C.LitInt 31
+      Word64 -> C.LitInt 63
+      _      -> impossible
+                  "transAbs"
+                  "copilot-c99"
+                  "Abs applied to unexpected types."
 
 -- | Translate @'Sign' e@ in Copilot Core into a C99 expression.
 --
@@ -151,17 +209,6 @@ transSign ty e = positiveCase $ negativeCase e
                  -> C.Expr
     negativeCase =
       C.Cond (C.BinaryOp C.LT e (constNumTy ty 0)) (constNumTy ty (-1))
-
-    -- Translate a literal number of type @ty@ into a C99 literal.
-    --
-    -- PRE: The type of PRE is numeric (integer or floating-point), that
-    -- is, not boolean, struct or array.
-    constNumTy :: Type a -> Integer -> C.Expr
-    constNumTy ty =
-      case ty of
-        Float  -> C.LitFloat . fromInteger
-        Double -> C.LitDouble . fromInteger
-        _      -> C.LitInt
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
@@ -254,3 +301,74 @@ transtype ty = case ty of
 -- | Translate a Copilot type intro a C typename
 transtypename :: Type a -> C.TypeName
 transtypename ty = C.TypeName $ transtype ty
+
+-- Translate a literal number of type @ty@ into a C99 literal.
+--
+-- PRE: The type of PRE is numeric (integer or floating-point), that
+-- is, not boolean, struct or array.
+constNumTy :: Type a -> Integer -> C.Expr
+constNumTy ty =
+  case ty of
+    Float  -> C.LitFloat . fromInteger
+    Double -> C.LitDouble . fromInteger
+    _      -> C.LitInt
+
+-- | Provide a specialized function name in C99 for a function given the type
+-- of its arguments, and its "family" name.
+--
+-- C99 provides multiple variants of the same conceptual function, based on the
+-- types. Depending on the function, common variants exist for signed/unsigned
+-- arguments, long or short types, float or double. The C99 standard uses the
+-- same mechanism to name most such functions: the default variant works for
+-- double, and there are additional variants for float and long double. For
+-- example, the sin function operates on double, while sinf operates on float,
+-- and sinl operates on long double.
+--
+-- This function only knows how to provide specialized names for functions in
+-- math.h that provide a default version for a double argument and vary for
+-- floats. It won't change the function name given if the variation is based on
+-- the return type, if the function is defined elsewhere, or for other types.
+specializeMathFunName :: Type a -> String -> String
+specializeMathFunName ty s
+    -- The following function pattern matches based on the variants available
+    -- for a specific function.
+    --
+    -- Do not assume that a function you need implemented follows the same
+    -- standard as others: check whether it is present in the standard.
+    | isMathFPArgs s
+    , Float <- ty
+    = s ++ "f"
+
+    | otherwise
+    = s
+  where
+    -- True if the function family name is part of math.h and follows the
+    -- standard rule of providing multiple variants for floating point numbers
+    -- based on the type of their arguments.
+    --
+    -- Note: nan is not in this list because the names of its variants are
+    -- determined by the return type.
+    --
+    -- For details, see:
+    -- "B.11 Mathematics <math.h>" in the C99 standard
+    isMathFPArgs :: String -> Bool
+    isMathFPArgs = flip elem
+       [ "acos",   "asin",     "atan",      "atan2",      "cos",    "sin"
+       , "tan",    "acosh",    "asinh",     "atanh",      "cosh",   "sinh"
+       , "tanh",   "exp",      "exp2",      "expm1",      "frexp",  "ilogb"
+       , "ldexp",  "log",      "log10",     "log1p",      "log2",   "logb"
+       , "modf",   "scalbn",   "scalbln",   "cbrt",       "fabs",   "hypot"
+       , "pow",    "sqrt",     "erf",       "erfc",       "lgamma", "tgamma"
+       , "ceil",   "floor",    "nearbyint", "rint",       "lrint",  "llrint"
+       , "round",  "lround",   "llround",   "trunc",      "fmod",   "remainder"
+       , "remquo", "copysign", "nextafter", "nexttoward", "fdim"
+       , "fmax",   "fmin",     "fma"
+       ]
+
+-- * Auxiliary functions
+
+-- | True if the type given is a floating point number.
+typeIsFloating :: Type a -> Bool
+typeIsFloating Float  = True
+typeIsFloating Double = True
+typeIsFloating _      = False
