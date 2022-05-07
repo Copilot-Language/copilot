@@ -1,3 +1,6 @@
+2022-05-02
+        * Add support for GHC 9.0. (#294)
+
 2022-03-07
         * Version bump (3.8). (#298)
         * Mark package as uncurated to avoid modification. (#288)
