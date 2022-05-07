@@ -1,4 +1,6 @@
-2022-05-02
+2022-05-06
+        * Version bump (3.9). (#320)
+        * Compliance with style guide (partial). (#316)
         * Add support for GHC 9.0. (#294)
 
 2022-03-07
