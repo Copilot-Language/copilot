@@ -9,6 +9,8 @@ import Copilot.Core
 import Copilot.Compile.C99.Error (impossible)
 import Copilot.Compile.C99.Util
 
+import qualified Data.List.NonEmpty as NonEmpty
+
 import qualified Language.C99.Simple as C
 
 -- | Translates a Copilot Core expression into a C99 expression.
@@ -226,7 +228,7 @@ constty ty = case ty of
   Float     -> explicitty ty . C.LitFloat
   Double    -> explicitty ty . C.LitDouble
   Struct _  -> \v ->
-    C.InitVal (transtypename ty) (map constfieldinit (toValues v))
+    C.InitVal (transtypename ty) (NonEmpty.fromList $ map constfieldinit (toValues v))
   Array ty' -> \v ->
     C.InitVal (transtypename ty) (constarray ty' (arrayelems v))
 
@@ -254,7 +256,7 @@ constinit ty val = case ty of
   -- whole expression as an array of two int32_t's (as opposed to a nested
   -- array). This can either lead to compile-time errors (if you're lucky) or
   -- incorrect runtime semantics (if you're unlucky).
-  Array ty' -> C.InitArray $ constarray ty' $ arrayelems val
+  Array ty' -> C.InitList $ constarray ty' $ arrayelems val
 
   -- We use InitArray to initialize a struct because the syntax used for
   -- initializing arrays and structs is compatible. For instance, {1, 2} works
@@ -263,17 +265,18 @@ constinit ty val = case ty of
   -- (structs can also be initialized as { .a = 1, .b = 2}, but language-c99
   -- does not support such syntax and does not provide a specialized
   -- initialization construct for structs).
-  Struct _  -> C.InitArray $ map constfieldinit $ toValues val
+  Struct _  -> C.InitList $ NonEmpty.fromList $ map constfieldinit (toValues val)
   _         -> C.InitExpr $ constty ty val
 
 -- | Transform a Copilot Core struct field into a C99 initializer.
-constfieldinit :: Value a -> C.Init
-constfieldinit (Value ty (Field val)) = constinit ty val
+constfieldinit :: Value a -> C.InitItem
+constfieldinit (Value ty (Field val)) = C.InitItem Nothing $ constinit ty val
 
 -- | Transform a Copilot Array, based on the element values and their type,
 -- into a list of C99 initializer values.
-constarray :: Type a -> [a] -> [C.Init]
-constarray ty = map (constinit ty)
+constarray :: Type a -> [a] -> NonEmpty.NonEmpty C.InitItem
+constarray ty xs =
+  NonEmpty.fromList $ map (C.InitItem Nothing . constinit ty) xs
 
 -- | Explicitly cast a C99 value to a type.
 explicitty :: Type a -> C.Expr -> C.Expr

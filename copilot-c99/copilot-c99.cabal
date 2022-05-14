@@ -53,7 +53,7 @@ library
                           , copilot-core        >= 3.9   && < 3.10
                           , language-c99        >= 0.1.1 && < 0.2
                           , language-c99-util   >= 0.1.1 && < 0.2
-                          , language-c99-simple >= 0.1.1 && < 0.2
+                          , language-c99-simple >= 0.2   && < 0.3
 
   exposed-modules         : Copilot.Compile.C99
 
