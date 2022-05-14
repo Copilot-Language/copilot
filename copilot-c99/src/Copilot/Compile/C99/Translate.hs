@@ -262,9 +262,7 @@ constinit ty val = case ty of
   -- initializing arrays and structs is compatible. For instance, {1, 2} works
   -- both for initializing an int array of length 2 as well as a struct with
   -- two int fields, although the two expressions are conceptually different
-  -- (structs can also be initialized as { .a = 1, .b = 2}, but language-c99
-  -- does not support such syntax and does not provide a specialized
-  -- initialization construct for structs).
+  -- (structs can also be initialized as { .a = 1, .b = 2}.
   Struct _  -> C.InitList $ conststruct (toValues val)
   _         -> C.InitExpr $ constty ty val
 
