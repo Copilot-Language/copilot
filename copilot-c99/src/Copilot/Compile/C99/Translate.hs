@@ -228,7 +228,7 @@ constty ty = case ty of
   Float     -> explicitty ty . C.LitFloat
   Double    -> explicitty ty . C.LitDouble
   Struct _  -> \v ->
-    C.InitVal (transtypename ty) (NonEmpty.fromList $ map constfieldinit (toValues v))
+    C.InitVal (transtypename ty) (conststruct (toValues v))
   Array ty' -> \v ->
     C.InitVal (transtypename ty) (constarray ty' (arrayelems v))
 
@@ -265,12 +265,17 @@ constinit ty val = case ty of
   -- (structs can also be initialized as { .a = 1, .b = 2}, but language-c99
   -- does not support such syntax and does not provide a specialized
   -- initialization construct for structs).
-  Struct _  -> C.InitList $ NonEmpty.fromList $ map constfieldinit (toValues val)
+  Struct _  -> C.InitList $ conststruct (toValues val)
   _         -> C.InitExpr $ constty ty val
 
 -- | Transform a Copilot Core struct field into a C99 initializer.
 constfieldinit :: Value a -> C.InitItem
 constfieldinit (Value ty (Field val)) = C.InitItem Nothing $ constinit ty val
+
+-- | Transform a Copilot Struct, based on the struct fields, into a list of C99
+-- initializer values.
+conststruct :: [Value a] -> NonEmpty.NonEmpty C.InitItem
+conststruct val = NonEmpty.fromList $ map constfieldinit val
 
 -- | Transform a Copilot Array, based on the element values and their type,
 -- into a list of C99 initializer values.
