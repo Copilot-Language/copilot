@@ -79,12 +79,16 @@ mkstep cSettings streams triggers exts =
 
     void = C.TypeSpec C.Void
     stmts  =  map mkexcopy exts
-           ++ map mktriggercheck triggers
+           ++ triggerStmts
            ++ tmpassigns
            ++ bufferupdates
            ++ indexupdates
-    (declns, tmpassigns, bufferupdates, indexupdates) =
+    declns =  streamDeclns
+           ++ concat triggerDeclns
+    (streamDeclns, tmpassigns, bufferupdates, indexupdates) =
       unzip4 $ map mkupdateglobals streams
+    (triggerDeclns, triggerStmts) =
+      unzip $ map mktriggercheck triggers
 
     -- Write code to update global stream buffers and index.
     mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
@@ -129,13 +133,85 @@ mkstep cSettings streams triggers exts =
 
       _       -> C.Ident cpyname C..= C.Ident name
 
-    -- Make if-statement to check the guard, call the trigger if necessary.
-    mktriggercheck :: Trigger -> C.Stmt
-    mktriggercheck (Trigger name guard args) = C.If guard' firetrigger
+    -- Make if-statement to check the guard, call the handler if necessary.
+    -- This returns two things:
+    --
+    -- * A list of Declns for temporary variables, one for each argument that
+    --   the handler function accepts. For example, if a handler function takes
+    --   three arguments, the list of Declns might look something like this:
+    --
+    --   @
+    --   int8_t   handler_arg_temp0;
+    --   int16_t  handler_arg_temp1;
+    --   struct s handler_arg_temp2;
+    --   @
+    --
+    -- * A Stmt representing the if-statement. Continuing the example above,
+    --   the if-statement would look something like this:
+    --
+    --   @
+    --   if (handler_guard()) {
+    --     handler_arg_temp0 = handler_arg0();
+    --     handler_arg_temp1 = handler_arg1();
+    --     handler_arg_temp2 = handler_arg2();
+    --     handler(handler_arg_temp0, handler_arg_temp1, &handler_arg_temp2);
+    --   }
+    --   @
+    --
+    -- We create temporary variables because:
+    --
+    -- 1. We want to pass structs by reference intead of by value. To this end,
+    --    we use C's & operator to obtain a reference to a temporary variable
+    --    of a struct type and pass that to the handler function.
+    --
+    -- 2. Assigning a struct to a temporary variable defensively ensures that
+    --    any modifications that the handler called makes to the struct argument
+    --    will not affect the internals of the monitoring code.
+    mktriggercheck :: Trigger -> ([C.Decln], C.Stmt)
+    mktriggercheck (Trigger name guard args) =
+        (aTmpDeclns, ifStmt)
       where
-        guard'      = C.Funcall (C.Ident $ guardname name) []
-        firetrigger = [C.Expr $ C.Funcall (C.Ident name) args']
+        aTmpDeclns = zipWith (\tmpVar arg ->
+                               C.VarDecln Nothing (tempType arg) tmpVar Nothing)
+                             aTempNames
+                             args
           where
+            tempType (UExpr { uExprType = ty }) =
+              case ty of
+                -- If a temporary variable is being used to store an array,
+                -- declare the type of the temporary variable as a pointer, not
+                -- an array. The problem with declaring it as an array is that
+                -- the `arg` function will return a pointer, not an array, and
+                -- C doesn't make it easy to cast directly from an array to a
+                -- pointer.
+                Array ty' -> C.Ptr $ transtype ty'
+                _         -> transtype ty
+
+        aTempNames = take (length args) (argTempNames name)
+
+        ifStmt = C.If guard' firetrigger
+
+        guard' = C.Funcall (C.Ident $ guardname name) []
+
+        -- The body of the if-statement. This consists of statements that assign
+        -- the values of the temporary variables, following by a final statement
+        -- that passes the temporary variables to the handler function.
+        firetrigger = map C.Expr argAssigns ++
+                      [C.Expr $ C.Funcall (C.Ident name)
+                                          (zipWith passArg aTempNames args)]
+          where
+            passArg aTempName (UExpr { uExprType = ty }) =
+              case ty of
+                -- Special case for Struct to pass reference to temporary
+                -- struct variable to handler. (See the comments for
+                -- mktriggercheck for details.)
+                Struct _ -> C.UnaryOp C.Ref $ C.Ident aTempName
+                _        -> C.Ident aTempName
+
+            argAssigns = zipWith (\aTempName arg ->
+                                   C.AssignOp C.Assign (C.Ident aTempName) arg)
+                                 aTempNames
+                                 args'
             args'        = take (length args) (map argcall (argnames name))
             argcall name = C.Funcall (C.Ident name) []
 

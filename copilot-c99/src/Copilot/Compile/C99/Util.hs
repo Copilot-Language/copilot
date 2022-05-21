@@ -55,9 +55,18 @@ guardname name = name ++ "_guard"
 argname :: String -> Int -> String
 argname name n = name ++ "_arg" ++ show n
 
+-- | Turn a handler function name into a name for a temporary variable for a
+-- handler argument.
+argTempName :: String -> Int -> String
+argTempName name n = name ++ "_arg_temp" ++ show n
+
 -- | Enumerate all argument names based on trigger name.
 argnames :: String -> [String]
 argnames base = [aname | n <- [0..], let aname = argname base n]
+
+-- | Enumerate all temporary variable names based on handler function name.
+argTempNames :: String -> [String]
+argTempNames base = map (argTempName base) [0..]
 
 -- | Define a C expression that calls a function with arguments.
 funcall :: C.Ident -> [C.Expr] -> C.Expr
