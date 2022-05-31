@@ -23,3 +23,8 @@ before_install:
 
 script:
   - cabal v2-install --lib copilot
+
+  # Run tests only on GHC 8.10.4
+  #
+  # Only libraries with tests are listed below or the v2-test command fails.
+  - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-core copilot-language; fi
