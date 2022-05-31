@@ -476,27 +476,42 @@ arbitraryBitsExpr =
 arbitraryBitsIntegralExpr :: (Arbitrary t, Typed t, Bits t, Integral t)
                           => Gen (Expr t, [t])
 arbitraryBitsIntegralExpr =
-  -- We use frequency instead of oneof because the random expression generator
-  -- seems to generate expressions that are too large and the test fails due
-  -- to running out of memory.
-  frequency
-    [ (10, arbitraryConst)
+      -- We use frequency instead of oneof because the random expression
+      -- generator seems to generate expressions that are too large and the
+      -- test fails due to running out of memory.
+      frequency
+        [ (10, arbitraryConst)
 
-    , (2, apply1 <$> arbitraryNumOp1 <*> arbitraryBitsIntegralExpr)
+        , (2, apply1 <$> arbitraryNumOp1 <*> arbitraryBitsIntegralExpr)
 
-    , (1, apply2 <$> arbitraryNumOp2
-                 <*> arbitraryBitsIntegralExpr
-                 <*> arbitraryBitsIntegralExpr)
+        , (1, apply2 <$> arbitraryNumOp2
+                     <*> arbitraryBitsIntegralExpr
+                     <*> arbitraryBitsIntegralExpr)
 
-    , (5, apply2 <$> arbitraryBitsIntegralOp2
-                 <*> arbitraryBitsIntegralExpr
-                 <*> arbitraryBitsIntegralExpr)
+        , (5, apply2 <$> arbitraryBitsIntegralOp2
+                     <*> arbitraryBitsIntegralExpr
+                     <*> arbitraryBitsIntegralExprConstPos)
 
-    , (1, apply3 <$> arbitraryITEOp3
-                 <*> arbitraryBoolExpr
-                 <*> arbitraryBitsIntegralExpr
-                 <*> arbitraryBitsIntegralExpr)
-    ]
+        , (1, apply3 <$> arbitraryITEOp3
+                     <*> arbitraryBoolExpr
+                     <*> arbitraryBitsIntegralExpr
+                     <*> arbitraryBitsIntegralExpr)
+        ]
+  where
+
+    -- Generator for constant bit integral expressions that, when converted to
+    -- type 't', result in a positive number. We use a constant generator, as
+    -- opposed to a generator based on the more comprehensive
+    -- arbitraryBitsIntegralExpr, because the latter runs out of memory easily
+    -- when nested and filtered with suchThat.
+    arbitraryBitsIntegralExprConstPos =
+        (\v -> (Const typeOf v, repeat v)) <$> intThatFits
+      where
+        -- In this context:
+        --
+        -- intThatFits :: Gen t
+        intThatFits =
+          suchThat arbitrary ((> 0) . (\x -> (fromIntegral x) :: Int))
 
 -- ** Operators
 
