@@ -2,8 +2,7 @@
 module Main where
 
 -- External imports
-import Data.Monoid    (mempty)
-import Test.Framework (Test, defaultMainWithOpts)
+import Test.Framework (Test, defaultMain)
 
 -- Internal library modules being tested
 import qualified Test.Copilot.Core.External
@@ -15,7 +14,7 @@ import qualified Test.Copilot.Core.Type.Show
 
 -- | Run all unit tests on copilot-core.
 main :: IO ()
-main = defaultMainWithOpts tests mempty
+main = defaultMain tests
 
 -- | All unit tests in copilot-core.
 tests :: [Test.Framework.Test]

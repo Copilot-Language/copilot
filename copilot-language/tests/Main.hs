@@ -2,15 +2,14 @@
 module Main where
 
 -- External imports
-import Data.Monoid    (mempty)
-import Test.Framework (Test, defaultMainWithOpts)
+import Test.Framework (Test, defaultMain)
 
 -- Internal imports
 import qualified Test.Copilot.Language.Reify
 
 -- | Run all unit tests on copilot-language.
 main :: IO ()
-main = defaultMainWithOpts tests mempty
+main = defaultMain tests
 
 -- | All unit tests in copilot-language.
 tests :: [Test.Framework.Test]
