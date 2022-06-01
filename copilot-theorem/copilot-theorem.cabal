@@ -40,20 +40,6 @@ library
                             -fno-warn-missing-signatures
                             -fcontext-stack=100
 
-                            -- -fpackage-trust
-                            -- -trust=array
-                            -- -trust=base
-                            -- -trust=containers
-                            -- -- -trust=copilot-core
-                            -- -trust=directory
-                            -- -- -trust=exceptions
-                            -- -trust=process
-                            -- -- -trust=random
-                            -- -trust=unix
-                            -- -- -trust=parsec
-                            -- -trust=bytestring
-                            -- -- -trust=text
-
   build-depends           : base          >= 4.9 && < 5
                           , ansi-terminal >= 0.8 && < 0.10
                           , bimap         >= 0.3 && < 0.4

@@ -1,3 +1,5 @@
+2022-06-01
+        * Remove comment from cabal file. (#325)
 2022-05-06
         * Version bump (3.9). (#320)
         * Compliance with style guide (partial). (#316)
