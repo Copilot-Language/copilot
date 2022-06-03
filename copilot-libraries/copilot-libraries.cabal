@@ -38,9 +38,7 @@ library
 
   build-depends: base             >= 4.9 && < 5
 
-               , array            >= 0.5 && < 0.6
                , containers       >= 0.4 && < 0.7
-               , data-reify       >= 0.6 && < 0.7
                , mtl              >= 2.0 && < 2.3
                , parsec           >= 2.0 && < 3.2
                , copilot-language >= 3.9 && < 3.10
