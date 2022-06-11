@@ -45,7 +45,6 @@ library
   build-depends:
     base       >= 4.9 && < 5,
     pretty     >= 1.0 && < 1.2,
-    mtl        >= 2.0 && < 2.3,
     dlist
 
   exposed-modules:
