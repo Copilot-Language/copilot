@@ -1,3 +1,7 @@
+-- The following warning is enabled in this module so that the import of
+-- Copilot.Core.External does not give rise to a warning.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 -- | Test copilot-core:Copilot.Core.External.
 module Test.Copilot.Core.External where
 
