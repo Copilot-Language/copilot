@@ -44,7 +44,6 @@ library
     default-language:  Haskell2010
     ghc-options:
       -Wall
-      -fwarn-tabs
       -fno-warn-orphans
     build-depends:
                        base                 >= 4.9  && < 5

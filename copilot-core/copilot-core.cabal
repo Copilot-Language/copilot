@@ -39,7 +39,6 @@ library
 
   ghc-options:
     -Wall
-    -fwarn-tabs
     -fno-warn-orphans
 
   build-depends:
