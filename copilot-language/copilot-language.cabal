@@ -71,7 +71,6 @@ library
                  , System.Mem.StableName.Map
                  , Copilot.Language.Error
   ghc-options:
-    -fwarn-tabs
     -Wall
 
 test-suite unit-tests
