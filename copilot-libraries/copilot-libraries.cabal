@@ -56,5 +56,4 @@ library
     , Copilot.Library.MTL
 
   ghc-options:
-    -fwarn-tabs
     -Wall
