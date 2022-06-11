@@ -44,7 +44,6 @@ library
   -- internal modules.
   ghc-options             : -Wall -fwarn-tabs -Wno-deprecations
   build-depends           : base                >= 4.9 && < 5
-                          , containers          >= 0.4 && < 0.7
                           , directory           >= 1.3 && < 1.4
                           , filepath            >= 1.4 && < 1.5
                           , mtl                 >= 2.2 && < 2.3
@@ -52,7 +51,6 @@ library
 
                           , copilot-core        >= 3.9   && < 3.10
                           , language-c99        >= 0.1.1 && < 0.2
-                          , language-c99-util   >= 0.1.1 && < 0.2
                           , language-c99-simple >= 0.1.1 && < 0.2
 
   exposed-modules         : Copilot.Compile.C99
