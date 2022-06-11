@@ -6,6 +6,7 @@
 
 -- | Internal Copilot Core representation of Copilot externs.
 module Copilot.Core.External
+  {-# DEPRECATED "This module is deprecated in Copilot 3.10." #-}
   ( ExtVar (..)
   , externVars
   ) where
