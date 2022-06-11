@@ -1,6 +1,7 @@
-2022-06-09
+2022-06-11
         * Remove comment from cabal file. (#325)
         * Remove unnecessary dependencies from Cabal package. (#326)
+        * Remove duplicated compiler option. (#328)
 
 2022-05-06
         * Version bump (3.9). (#320)
