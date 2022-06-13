@@ -1,8 +1,8 @@
 -- Copyright (c) 2011 National Institute of Aerospace / Galois, Inc.
 
--- | This module implements two interpreters, which may be used to simulated or
--- executed Copilot specifications on a computer to understand their behavior
--- to debug possible errors.
+-- | This module implements two interpreters, which may be used to simulate or
+-- execute Copilot specifications on a computer to understand their behavior to
+-- debug possible errors.
 --
 -- The interpreters included vary in how the present the results to the user.
 -- One of them uses a format (csv) that may be more machine-readable, while the
