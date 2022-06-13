@@ -1,3 +1,7 @@
+-- The following warning is disnabled in this module so that the import of
+-- Copilot.Core.Type.Show does not give rise to a warning.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 -- | Test copilot-core:Copilot.Core.Type.Show.
 module Test.Copilot.Core.Type.Show where
 

@@ -12,15 +12,17 @@ module Copilot.Core.Interpret.Eval
   , Output
   , ExecTrace (..)
   , eval
+  , ShowType (..)
   ) where
 
-import Copilot.Core           (Expr (..), Field (..), Id, Name, Observer (..),
-                               Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
-                               Trigger (..), Type (Struct), UExpr (..),
-                               arrayelems, specObservers, specStreams,
-                               specTriggers)
-import Copilot.Core.Error     (badUsage)
-import Copilot.Core.Type.Show (ShowType, showWithType)
+import Copilot.Core                   (Expr (..), Field (..), Id, Name,
+                                       Observer (..), Op1 (..), Op2 (..),
+                                       Op3 (..), Spec, Stream (..),
+                                       Trigger (..), Type (Struct), UExpr (..),
+                                       arrayelems, specObservers, specStreams,
+                                       specTriggers)
+import Copilot.Core.Error             (badUsage)
+import Copilot.Core.Type.ShowInternal (ShowType (..), showWithType)
 
 import           Prelude hiding (id)
 import qualified Prelude as P

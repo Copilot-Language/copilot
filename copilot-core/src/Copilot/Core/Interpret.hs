@@ -12,7 +12,7 @@ module Copilot.Core.Interpret
 import Copilot.Core
 import Copilot.Core.Interpret.Eval
 import Copilot.Core.Interpret.Render
-import Copilot.Core.Type.Show (ShowType(..))
+import Copilot.Core.Type.ShowInternal (ShowType(..))
 
 -- | Output format for the results of a Copilot spec interpretation.
 data Format = Table | CSV
