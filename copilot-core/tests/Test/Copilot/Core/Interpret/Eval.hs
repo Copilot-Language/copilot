@@ -1,4 +1,8 @@
 {-# LANGUAGE ExistentialQuantification #-}
+-- The following warning is disabled in this module so that the import of
+-- Copilot.Core.Type.Show does not give rise to a warning.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 -- | Test copilot-core:Copilot.Core.Interpret.Eval.
 --
 -- The gist of this evaluation is in 'SemanticsP' and 'checkSemanticsP' which

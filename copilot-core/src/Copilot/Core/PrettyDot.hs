@@ -11,7 +11,7 @@ module Copilot.Core.PrettyDot
   ) where
 
 import Copilot.Core
-import Copilot.Core.Type.Show (showWithType, ShowType(..), showType)
+import Copilot.Core.Type.ShowInternal (showWithType, ShowType(..), showType)
 import Prelude hiding (id, (<>))
 import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
