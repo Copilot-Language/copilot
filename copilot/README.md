@@ -83,7 +83,7 @@ of the main repository.
 -- This is a simple example with basic usage. It implements a simple home
 -- heating system: It heats when temp gets too low, and stops when it is high
 -- enough. It read temperature as a byte (range -50C to 100C) and translates
--- this to Celcius.
+-- this to Celsius.
 
 module Heater where
 
@@ -96,7 +96,7 @@ import Prelude hiding ((>), (<), div)
 temp :: Stream Word8
 temp = extern "temperature" Nothing
 
--- Calculate temperature in Celcius.
+-- Calculate temperature in Celsius.
 -- We need to cast the Word8 to a Float. Note that it is an unsafeCast, as there
 -- is no direct relation between Word8 and Float.
 ctemp :: Stream Float
