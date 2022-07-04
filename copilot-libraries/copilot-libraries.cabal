@@ -39,7 +39,7 @@ library
   build-depends: base             >= 4.9 && < 5
 
                , containers       >= 0.4 && < 0.7
-               , mtl              >= 2.0 && < 2.3
+               , mtl              >= 2.0 && < 2.4
                , parsec           >= 2.0 && < 3.2
                , copilot-language >= 3.9 && < 3.10
 
