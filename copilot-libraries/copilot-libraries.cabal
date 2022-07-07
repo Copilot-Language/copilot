@@ -28,8 +28,8 @@ x-curation: uncurated
 
 source-repository head
     type:       git
-    location:   git://github.com/Copilot-Language/copilot.git
-    subdir:     lib/copilot-libraries
+    location:   https://github.com/Copilot-Language/copilot.git
+    subdir:     copilot-libraries
 
 library
   default-language: Haskell2010
