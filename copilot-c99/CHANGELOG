@@ -1,7 +1,8 @@
-2022-06-15
+2022-07-04
         * Remove unnecessary dependencies from Cabal package. (#323)
         * Remove duplicated compiler option. (#328)
         * Pass structs by reference, not value, in handlers. (#305)
+        * Relax version bounds of dependencies. (#335)
 
 2022-05-06
         * Version bump (3.9). (#320)

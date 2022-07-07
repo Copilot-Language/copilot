@@ -22,7 +22,7 @@ before_install:
   - git submodule update --remote
 
 script:
-  - cabal v2-install --lib copilot
+  - travis_wait 30 cabal v2-install --lib copilot
 
   # Run tests only on GHC 8.10.4
   #
