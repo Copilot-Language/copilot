@@ -31,8 +31,8 @@ x-curation: uncurated
 
 source-repository head
     type:       git
-    location:   git://github.com/Copilot-Language/copilot.git
-    subdir:     lib/copilot-c99
+    location:   https://github.com/Copilot-Language/copilot.git
+    subdir:     copilot-c99
 
 library
   default-language        : Haskell2010
