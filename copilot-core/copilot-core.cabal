@@ -29,7 +29,7 @@ x-curation: uncurated
 source-repository head
     type:       git
     location:   https://github.com/Copilot-Language/copilot.git
-    subdir:     lib/copilot-core
+    subdir:     copilot-core
 
 library
 
