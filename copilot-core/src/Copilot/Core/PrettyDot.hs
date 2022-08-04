@@ -6,6 +6,7 @@
 {-# LANGUAGE Safe  #-}
 
 module Copilot.Core.PrettyDot
+  {-# DEPRECATED "This module is deprecated in Copilot 3.11." #-}
   ( prettyPrintDot
   , prettyPrintExprDot
   ) where
