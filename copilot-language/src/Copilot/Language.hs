@@ -71,5 +71,6 @@ import Copilot.Language.Stream (Stream)
 
 -- | Transform a high-level Copilot Language specification into a low-level
 -- Copilot Core specification and pretty-print it to stdout.
+{-# DEPRECATED prettyPrint "This function is deprecated in Copilot 3.11." #-}
 prettyPrint :: Spec -> IO ()
 prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
