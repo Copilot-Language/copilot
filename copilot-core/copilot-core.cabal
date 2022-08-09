@@ -57,7 +57,6 @@ library
     Copilot.Core.Spec
     Copilot.Core.Type
     Copilot.Core.Type.Array
-    Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
     Copilot.Core.Type.Show
     Copilot.Core.PrettyPrint
