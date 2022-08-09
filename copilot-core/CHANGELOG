@@ -1,3 +1,6 @@
+2022-08-04
+        * Deprecate Copilot.Core.PrettyDot. (#359)
+
 2022-07-07
         * Version bump (3.10). (#356)
         * Fix error in test case generation; enable CLI args in tests. (#337)
