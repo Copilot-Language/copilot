@@ -57,7 +57,6 @@ library
     Copilot.Core.Spec
     Copilot.Core.Type
     Copilot.Core.Type.Array
-    Copilot.Core.Type.Dynamic
     Copilot.Core.Type.Equality
     Copilot.Core.Type.Show
     Copilot.Core.PrettyPrint
@@ -82,7 +81,6 @@ test-suite unit-tests
     Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type
     Test.Copilot.Core.Type.Array
-    Test.Copilot.Core.Type.Dynamic
     Test.Copilot.Core.Type.Show
 
   build-depends:
