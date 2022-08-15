@@ -101,14 +101,16 @@ mkstep cSettings streams triggers exts =
           tmpassign = case ty of
             Array _ -> C.Expr $ memcpy (C.Ident tmp_var) val size
               where
-                size = C.LitInt $ fromIntegral $ tysize ty
+                size = C.LitInt (fromIntegral $ tysize ty)
+                        C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $ C.Ident tmp_var C..= val
 
           bufferupdate = case ty of
             Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
               where
                 dest = C.Index buff_var index_var
-                size = C.LitInt $ fromIntegral $ tysize ty
+                size = C.LitInt (fromIntegral $ tysize ty)
+                         C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $
                            C.Index buff_var index_var C..= (C.Ident tmp_var)
 
@@ -130,7 +132,8 @@ mkstep cSettings streams triggers exts =
         where
           exvar  = C.Ident cpyname
           locvar = C.Ident name
-          size   = C.LitInt $ fromIntegral $ tysize ty
+          size   = C.LitInt (fromIntegral $ tysize ty)
+                     C..* C.SizeOfType (C.TypeName (tyElemName ty))
 
       _       -> C.Ident cpyname C..= C.Ident name
 
@@ -219,6 +222,16 @@ mkstep cSettings streams triggers exts =
     -- Write a call to the memcpy function.
     memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
     memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
+
+    -- Translate a Copilot type to a C99 type, handling arrays especially.
+    --
+    -- If the given type is an array (including multi-dimensional arrays), the
+    -- type is that of the elements in the array. Otherwise, it is just the
+    -- equivalent representation of the given type in C.
+    tyElemName :: Type a -> C.Type
+    tyElemName ty = case ty of
+      Array ty' -> tyElemName ty'
+      _         -> transtype ty
 
 -- | Write a struct declaration based on its definition.
 mkstructdecln :: Struct a => Type a -> C.Decln
