@@ -8,6 +8,7 @@
 {-# LANGUAGE Safe               #-}
 
 module Copilot.Core.Interpret.Eval
+  {-# DEPRECATED "This module is deprecated in Copilot 3.11. Use copilot-interpreter instead." #-}
   ( Env
   , Output
   , ExecTrace (..)

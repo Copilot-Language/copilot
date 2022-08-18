@@ -1,3 +1,7 @@
+-- The following warning is enabled in this module so that the import of
+-- Copilot.Core.Interpret.Eval and Render do not give rise to warnings.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | An interpreter for Copilot specifications.
@@ -5,6 +9,7 @@
 {-# LANGUAGE Safe #-}
 
 module Copilot.Core.Interpret
+  {-# DEPRECATED "This module is deprecated in Copilot 3.11. Use copilot-interpreter instead." #-}
   ( Format (..)
   , interpret
   ) where
