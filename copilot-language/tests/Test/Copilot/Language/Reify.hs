@@ -36,8 +36,8 @@ import           Copilot.Language.Stream             (Stream)
 import qualified Copilot.Language.Stream             as Copilot
 
 -- Internal imports: functions needed to test after reification
-import Copilot.Core.Interpret.Eval (ExecTrace (interpObservers),
-                                    ShowType (Haskell), eval)
+import Copilot.Interpret.Eval (ExecTrace (interpObservers), ShowType (Haskell),
+                               eval)
 
 -- Internal imports: auxiliary functions
 import Test.Extra (apply1, apply2, apply3)

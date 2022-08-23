@@ -17,7 +17,7 @@ module Copilot.Language.Interpret
   , interpret
   ) where
 
-import qualified Copilot.Core.Interpret as I
+import qualified Copilot.Interpret as I
 
 import Copilot.Language.Spec (Spec)
 import Copilot.Language.Reify
