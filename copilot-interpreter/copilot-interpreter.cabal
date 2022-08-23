@@ -1,0 +1,87 @@
+cabal-version:       >=1.10
+name:                copilot-interpreter
+version:             3.10
+synopsis:            Interpreter for Copilot.
+description:
+  Interpreter for Copilot.
+  .
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C. Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.
+  .
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
+
+author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
+                     Sebastian Niller, Nis Nordbyop Wegmann, Ivan Perez
+license:             BSD3
+license-file:        LICENSE
+maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
+homepage:            https://copilot-language.github.io
+bug-reports:         https://github.com/Copilot-Language/copilot/issues
+stability:           Experimental
+category:            Language, Embedded
+build-type:          Simple
+extra-source-files:  README.md, CHANGELOG
+
+x-curation: uncurated
+
+source-repository head
+    type:       git
+    location:   https://github.com/Copilot-Language/copilot.git
+    subdir:     copilot-interpreter
+
+library
+
+  default-language:  Haskell2010
+
+  hs-source-dirs:    src
+
+  ghc-options:
+    -Wall
+
+  build-depends:
+    base       >= 4.9 && < 5,
+    pretty     >= 1.0 && < 1.2,
+
+    copilot-core
+
+  exposed-modules:
+
+    Copilot.Interpret
+    Copilot.Interpret.Eval
+
+  other-modules:
+
+    Copilot.Interpret.Error
+    Copilot.Interpret.Render
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  other-modules:
+    Test.Extra
+    Test.Copilot.Interpret.Eval
+
+  build-depends:
+      base
+    , QuickCheck
+    , pretty
+    , test-framework
+    , test-framework-quickcheck2
+
+    , copilot-core
+    , copilot-interpreter
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall

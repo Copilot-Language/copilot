@@ -7,8 +7,7 @@
 {-# LANGUAGE GADTs              #-}
 {-# LANGUAGE Safe               #-}
 
-module Copilot.Core.Interpret.Eval
-  {-# DEPRECATED "This module is deprecated in Copilot 3.11. Use copilot-interpreter instead." #-}
+module Copilot.Interpret.Eval
   ( Env
   , Output
   , ExecTrace (..)
@@ -16,14 +15,11 @@ module Copilot.Core.Interpret.Eval
   , ShowType (..)
   ) where
 
-import Copilot.Core                   (Expr (..), Field (..), Id, Name,
-                                       Observer (..), Op1 (..), Op2 (..),
-                                       Op3 (..), Spec, Stream (..),
-                                       Trigger (..), Type (Struct), UExpr (..),
-                                       arrayelems, specObservers, specStreams,
-                                       specTriggers)
-import Copilot.Core.Error             (badUsage)
-import Copilot.Core.Type.ShowInternal (ShowType (..), showWithType)
+import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
+                                Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
+                                Trigger (..), Type (..), UExpr (..), arrayelems,
+                                specObservers, specStreams, specTriggers)
+import Copilot.Interpret.Error (badUsage)
 
 import           Prelude hiding (id)
 import qualified Prelude as P
@@ -351,3 +347,50 @@ safeIndex i ls =
   let ls' = take (i+1) ls in
   if length ls' > i then Just (ls' !! i)
     else Nothing
+
+-- * Auxiliary
+
+-- Are we proving equivalence with a C backend, in which case we want to show
+-- Booleans as '0' and '1'.
+
+-- | Target language for showing a typed value. Used to adapt the
+-- representation of booleans.
+data ShowType = C | Haskell
+
+-- | Show a value. The representation depends on the type and the target
+-- language. Booleans are represented differently depending on the backend.
+showWithType :: ShowType -> Type a -> a -> String
+showWithType showT t x =
+  case showT of
+    C         -> case t of
+                   Bool -> if x then "1" else "0"
+                   _    -> sw
+    Haskell   -> case t of
+                   Bool -> if x then "true" else "false"
+                   _    -> sw
+  where
+  sw = case showWit t of
+         ShowWit -> show x
+
+-- * Auxiliary show instance
+
+-- | Witness datatype for showing a value, used by 'showWithType'.
+data ShowWit a = Show a => ShowWit
+
+-- | Turn a type into a show witness.
+showWit :: Type a -> ShowWit a
+showWit t =
+  case t of
+    Bool   -> ShowWit
+    Int8   -> ShowWit
+    Int16  -> ShowWit
+    Int32  -> ShowWit
+    Int64  -> ShowWit
+    Word8  -> ShowWit
+    Word16 -> ShowWit
+    Word32 -> ShowWit
+    Word64 -> ShowWit
+    Float  -> ShowWit
+    Double -> ShowWit
+    Array t -> ShowWit
+    Struct t -> ShowWit

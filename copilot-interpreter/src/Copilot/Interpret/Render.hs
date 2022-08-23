@@ -1,22 +1,17 @@
--- The following warning is enabled in this module so that the import of
--- Copilot.Core.Interpret.Eval does not give rise to a warning.
-{-# OPTIONS_GHC -fno-warn-deprecations #-}
-
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | Pretty-print the results of a simulation.
 
 {-# LANGUAGE Safe #-}
 
-module Copilot.Core.Interpret.Render
-  {-# DEPRECATED "This module is deprecated in Copilot 3.11. Use copilot-interpreter instead." #-}
+module Copilot.Interpret.Render
   ( renderAsTable
   , renderAsCSV
   ) where
 
 import Data.List (intersperse, transpose, foldl')
 import Data.Maybe (catMaybes)
-import Copilot.Core.Interpret.Eval (Output, ExecTrace (..))
+import Copilot.Interpret.Eval (Output, ExecTrace (..))
 import Text.PrettyPrint
 
 import Prelude hiding ((<>))

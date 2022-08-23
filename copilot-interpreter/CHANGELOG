@@ -1,0 +1,2 @@
+2022-08-22
+        * Split copilot-interpreter into separate library. (#361)

@@ -1,23 +1,17 @@
--- The following warning is enabled in this module so that the import of
--- Copilot.Core.Interpret.Eval and Render do not give rise to warnings.
-{-# OPTIONS_GHC -fno-warn-deprecations #-}
-
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | An interpreter for Copilot specifications.
 
 {-# LANGUAGE Safe #-}
 
-module Copilot.Core.Interpret
-  {-# DEPRECATED "This module is deprecated in Copilot 3.11. Use copilot-interpreter instead." #-}
+module Copilot.Interpret
   ( Format (..)
   , interpret
   ) where
 
 import Copilot.Core
-import Copilot.Core.Interpret.Eval
-import Copilot.Core.Interpret.Render
-import Copilot.Core.Type.ShowInternal (ShowType(..))
+import Copilot.Interpret.Eval
+import Copilot.Interpret.Render
 
 -- | Output format for the results of a Copilot spec interpretation.
 data Format = Table | CSV
