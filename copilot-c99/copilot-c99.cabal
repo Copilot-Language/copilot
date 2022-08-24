@@ -50,8 +50,8 @@ library
                           , pretty              >= 1.1 && < 1.2
 
                           , copilot-core        >= 3.10  && < 3.11
-                          , language-c99        >= 0.1.1 && < 0.2
-                          , language-c99-simple >= 0.1.1 && < 0.2
+                          , language-c99        >= 0.2.0 && < 0.3
+                          , language-c99-simple >= 0.2.1 && < 0.3
 
   exposed-modules         : Copilot.Compile.C99
 

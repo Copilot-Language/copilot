@@ -1,3 +1,6 @@
+2022-08-23
+        * Update to support language-c99-0.2.0. (#371)
+
 2022-07-07
         * Version bump (3.10). (#356)
         * Remove unnecessary dependencies from Cabal package. (#323)

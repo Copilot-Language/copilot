@@ -4,9 +4,10 @@
 -- | High-level translation of Copilot Core into C99.
 module Copilot.Compile.C99.CodeGen where
 
-import Control.Monad.State  (runState)
-import Data.List            (union, unzip4)
-import Data.Typeable        (Typeable)
+import           Control.Monad.State (runState)
+import           Data.List           (union, unzip4)
+import qualified Data.List.NonEmpty  as NonEmpty
+import           Data.Typeable       (Typeable)
 
 import qualified Language.C99.Simple as C
 
@@ -50,7 +51,7 @@ mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals
     name     = streamname sid
     cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
     buffsize = length xs
-    initvals = Just $ C.InitArray $ constarray ty xs
+    initvals = Just $ C.InitList $ constarray ty xs
 
 -- | Make a C index variable and initialise it to 0.
 mkindexdecln :: Id -> C.Decln
@@ -224,7 +225,7 @@ mkstructdecln :: Struct a => Type a -> C.Decln
 mkstructdecln (Struct x) = C.TypeDecln struct
   where
     struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
-    fields = map mkfield (toValues x)
+    fields = NonEmpty.fromList $ map mkfield (toValues x)
 
     mkfield :: Value a -> C.FieldDecln
     mkfield (Value ty field) = C.FieldDecln (transtype ty) (fieldname field)
