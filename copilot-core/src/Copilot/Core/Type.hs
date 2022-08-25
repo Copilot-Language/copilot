@@ -102,8 +102,6 @@ data Type :: * -> * where
   Double  :: Type Double
   Array   :: forall n t. ( KnownNat n
                          , Typed t
-                         , Typed (InnerType t)
-                         , Flatten t (InnerType t)
                          ) => Type t -> Type (Array n t)
   Struct  :: (Typed a, Struct a) => a -> Type a
 
@@ -209,7 +207,7 @@ instance Typed Float  where
 instance Typed Double where
   typeOf       = Double
   simpleType _ = SDouble
-instance (Typeable t, Typed t, KnownNat n, Flatten t (InnerType t), Typed (InnerType t)) => Typed (Array n t) where
+instance (Typeable t, Typed t, KnownNat n) => Typed (Array n t) where
   typeOf                = Array typeOf
   simpleType (Array t)  = SArray t
 
