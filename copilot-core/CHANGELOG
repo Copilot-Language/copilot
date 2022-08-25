@@ -1,7 +1,8 @@
-2022-08-22
+2022-08-25
         * Deprecate Copilot.Core.PrettyDot. (#359)
         * Remove Copilot.Core.Type.Dynamic. (#360)
         * Split copilot-interpreter into separate library. (#361)
+        * Deprecate unused classes, functions from Array module. (#369)
 
 2022-07-07
         * Version bump (3.10). (#356)
