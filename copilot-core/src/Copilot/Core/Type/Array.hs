@@ -46,11 +46,14 @@ array xs | datalen == typelen = Array xs
              ") does not match length of type (" ++ show typelen ++ ")."
 
 -- | Association between an array and the type of the elements it contains.
+{-# DEPRECATED InnerType "This type family is deprecated in Copilot 3.11." #-}
 type family InnerType x where
   InnerType (Array _ x) = InnerType x
   InnerType x           = x
 
 -- | Flattening or conversion of arrays to lists.
+{-# DEPRECATED Flatten "This class is deprecated in Copilot 3.11." #-}
+{-# DEPRECATED flatten "This function is deprecated in Copilot 3.11." #-}
 class Flatten a b where
   -- | Flatten an array to a list.
   flatten :: Array n a -> [b]
@@ -63,10 +66,12 @@ instance Flatten a a where
 instance Flatten a b => Flatten (Array n a) b where
   flatten (Array xss) = concat $ map flatten xss
 
+-- | This instance is deprecated in Copilot 3.11.
 instance Foldable (Array n) where
   foldr f base (Array xs) = foldr f base xs
 
 -- | Total number of elements in a possibly nested array.
+{-# DEPRECATED size "This function is deprecated in Copilot 3.11." #-}
 size :: forall a n b. (Flatten a b, b ~ InnerType a) => Array n a -> Int
 size xs = length $ (flatten xs :: [b])
 
