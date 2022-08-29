@@ -1,5 +1,6 @@
-2022-08-23
+2022-08-29
         * Update to support language-c99-0.2.0. (#371)
+        * Fix error handling buffers in generated code for 'step'. (#314)
 
 2022-07-07
         * Version bump (3.10). (#356)
