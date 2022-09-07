@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-interpreter
-version:             3.10
+version:             3.11
 synopsis:            Interpreter for Copilot.
 description:
   Interpreter for Copilot.

@@ -14,7 +14,7 @@ description:
   <https://copilot-language.github.io>.
 
 
-version                   : 3.10
+version                   : 3.11
 license                   : BSD3
 license-file              : LICENSE
 maintainer                : Ivan Perez <ivan.perezdominguez@nasa.gov>
@@ -63,7 +63,7 @@ library
                           , xml           >= 1.3 && < 1.4
                           , what4         >= 1.1 && < 1.4
 
-                          , copilot-core  >= 3.10 && < 3.11
+                          , copilot-core  >= 3.11 && < 3.12
 
   exposed-modules         : Copilot.Theorem
                           , Copilot.Theorem.Prove
