@@ -1,2 +1,3 @@
-2022-08-22
+2022-09-07
+        * Version bump (3.11). (#376)
         * Split copilot-interpreter into separate library. (#361)
