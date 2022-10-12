@@ -39,7 +39,8 @@ module Copilot.Core.Type
 
 import Data.Int
 import Data.Word
-import Copilot.Core.Type.Equality
+import Data.Type.Equality         as DE
+import Copilot.Core.Type.Equality as CE
 import Copilot.Core.Type.Array
 
 import Data.Typeable (Typeable, typeRep)
@@ -115,18 +116,32 @@ tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
 tysize ty@(Array _            ) = tylength ty
 
 instance EqualType Type where
-  (=~=) Bool   Bool   = Just Refl
-  (=~=) Int8   Int8   = Just Refl
-  (=~=) Int16  Int16  = Just Refl
-  (=~=) Int32  Int32  = Just Refl
-  (=~=) Int64  Int64  = Just Refl
-  (=~=) Word8  Word8  = Just Refl
-  (=~=) Word16 Word16 = Just Refl
-  (=~=) Word32 Word32 = Just Refl
-  (=~=) Word64 Word64 = Just Refl
-  (=~=) Float  Float  = Just Refl
-  (=~=) Double Double = Just Refl
+  (=~=) Bool   Bool   = Just CE.Refl
+  (=~=) Int8   Int8   = Just CE.Refl
+  (=~=) Int16  Int16  = Just CE.Refl
+  (=~=) Int32  Int32  = Just CE.Refl
+  (=~=) Int64  Int64  = Just CE.Refl
+  (=~=) Word8  Word8  = Just CE.Refl
+  (=~=) Word16 Word16 = Just CE.Refl
+  (=~=) Word32 Word32 = Just CE.Refl
+  (=~=) Word64 Word64 = Just CE.Refl
+  (=~=) Float  Float  = Just CE.Refl
+  (=~=) Double Double = Just CE.Refl
   (=~=) _ _ = Nothing
+
+instance TestEquality Type where
+  testEquality Bool   Bool   = Just DE.Refl
+  testEquality Int8   Int8   = Just DE.Refl
+  testEquality Int16  Int16  = Just DE.Refl
+  testEquality Int32  Int32  = Just DE.Refl
+  testEquality Int64  Int64  = Just DE.Refl
+  testEquality Word8  Word8  = Just DE.Refl
+  testEquality Word16 Word16 = Just DE.Refl
+  testEquality Word32 Word32 = Just DE.Refl
+  testEquality Word64 Word64 = Just DE.Refl
+  testEquality Float  Float  = Just DE.Refl
+  testEquality Double Double = Just DE.Refl
+  testEquality _ _ = Nothing
 
 -- | A simple, monomorphic representation of types that facilitates putting
 -- variables in heterogeneous lists and environments in spite of their types
@@ -162,8 +177,8 @@ instance Eq SimpleType where
   SWord64 == SWord64  = True
   SFloat  == SFloat   = True
   SDouble == SDouble  = True
-  (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
-                             | otherwise              = False
+  (SArray t1) == (SArray t2) | Just DE.Refl <- testEquality t1 t2 = True
+                             | otherwise                          = False
   SStruct == SStruct  = True
   _ == _ = False
 
