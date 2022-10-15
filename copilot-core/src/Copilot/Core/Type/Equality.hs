@@ -5,7 +5,7 @@
 {-# LANGUAGE Safe           #-}
 
 -- | Propositional equality and type equality.
-module Copilot.Core.Type.Equality
+module Copilot.Core.Type.Equality {-# DEPRECATED "Use Data.Type.Equality" #-}
   ( Equal (..)
   , EqualType (..)
   , coerce

@@ -8,7 +8,7 @@ module Copilot.Theorem.TransSys.Type
   , U (..)
   ) where
 
-import Copilot.Core.Type.Equality
+import Data.Type.Equality ((:~:)(..), testEquality, TestEquality) 
 
 -- | A type at both value and type level.
 --
@@ -19,11 +19,11 @@ data Type a where
   Real    :: Type Double
 
 -- | Proofs of type equality.
-instance EqualType Type where
-  Bool    =~= Bool     = Just Refl
-  Integer =~= Integer  = Just Refl
-  Real    =~= Real     = Just Refl
-  _       =~= _        = Nothing
+instance TestEquality Type where
+  testEquality Bool  Bool  = Just Refl
+  testEquality Integer  Integer  = Just Refl
+  testEquality Real Real = Just Refl
+  testEquality _ _ = Nothing
 
 -- | Unknown types.
 --

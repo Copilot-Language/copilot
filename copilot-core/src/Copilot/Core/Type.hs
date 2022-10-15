@@ -39,7 +39,7 @@ module Copilot.Core.Type
 
 import Data.Int
 import Data.Word
-import Copilot.Core.Type.Equality
+import Data.Type.Equality ((:~:)(..), testEquality, TestEquality)
 import Copilot.Core.Type.Array
 
 import Data.Typeable (Typeable, typeRep)
@@ -114,19 +114,19 @@ tysize :: forall n t. KnownNat n => Type (Array n t) -> Int
 tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
 tysize ty@(Array _            ) = tylength ty
 
-instance EqualType Type where
-  (=~=) Bool   Bool   = Just Refl
-  (=~=) Int8   Int8   = Just Refl
-  (=~=) Int16  Int16  = Just Refl
-  (=~=) Int32  Int32  = Just Refl
-  (=~=) Int64  Int64  = Just Refl
-  (=~=) Word8  Word8  = Just Refl
-  (=~=) Word16 Word16 = Just Refl
-  (=~=) Word32 Word32 = Just Refl
-  (=~=) Word64 Word64 = Just Refl
-  (=~=) Float  Float  = Just Refl
-  (=~=) Double Double = Just Refl
-  (=~=) _ _ = Nothing
+instance TestEquality Type where
+  testEquality Bool   Bool   = Just Refl
+  testEquality Int8   Int8   = Just Refl
+  testEquality Int16  Int16  = Just Refl
+  testEquality Int32  Int32  = Just Refl
+  testEquality Int64  Int64  = Just Refl
+  testEquality Word8  Word8  = Just Refl
+  testEquality Word16 Word16 = Just Refl
+  testEquality Word32 Word32 = Just Refl
+  testEquality Word64 Word64 = Just Refl
+  testEquality Float  Float  = Just Refl
+  testEquality Double Double = Just Refl
+  testEquality _ _ = Nothing
 
 -- | A simple, monomorphic representation of types that facilitates putting
 -- variables in heterogeneous lists and environments in spite of their types
@@ -162,7 +162,7 @@ instance Eq SimpleType where
   SWord64 == SWord64  = True
   SFloat  == SFloat   = True
   SDouble == SDouble  = True
-  (SArray t1) == (SArray t2) | Just Refl <- t1 =~= t2 = True
+  (SArray t1) == (SArray t2) | Just Refl <- t1 `testEquality` t2 = True
                              | otherwise              = False
   SStruct == SStruct  = True
   _ == _ = False
