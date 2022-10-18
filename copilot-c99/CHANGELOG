@@ -1,3 +1,6 @@
+2022-10-18
+        * Removed deprecated flag from cabal file. (#380)
+
 2022-09-07
         * Version bump (3.11). (#376)
         * Update to support language-c99-0.2.0. (#371)
