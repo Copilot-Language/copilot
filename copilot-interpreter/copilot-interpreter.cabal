@@ -76,6 +76,7 @@ test-suite unit-tests
 
     , copilot-core
     , copilot-interpreter
+    , copilot-prettyprinter
 
   hs-source-dirs:
     tests
