@@ -6,6 +6,7 @@
 {-# LANGUAGE Safe  #-}
 
 module Copilot.Core.PrettyPrint
+  {-# DEPRECATED "This module is deprecated in Copilot 3.12. Use copilot-prettyprinter instead." #-}
   ( prettyPrint
   , ppExpr
   ) where
