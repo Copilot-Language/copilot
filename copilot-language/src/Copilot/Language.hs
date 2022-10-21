@@ -47,7 +47,6 @@ import Data.Word
 import Copilot.Core (Name, Typed)
 import Copilot.Core.Type
 import Copilot.Core.Type.Array
-import qualified Copilot.Core.PrettyPrint as PP
 import Copilot.Language.Error
 import Copilot.Language.Interpret
 import Copilot.Language.Operators.Boolean
@@ -68,6 +67,7 @@ import Copilot.Language.Reify
 import Copilot.Language.Prelude
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream)
+import qualified Copilot.PrettyPrint as PP
 
 -- | Transform a high-level Copilot Language specification into a low-level
 -- Copilot Core specification and pretty-print it to stdout.
