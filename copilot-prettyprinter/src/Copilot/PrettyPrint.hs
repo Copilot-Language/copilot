@@ -5,15 +5,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE Safe  #-}
 
-module Copilot.Core.PrettyPrint
-  {-# DEPRECATED "This module is deprecated in Copilot 3.12. Use copilot-prettyprinter instead." #-}
+module Copilot.PrettyPrint
   ( prettyPrint
   , ppExpr
   ) where
 
 import Copilot.Core
-import Copilot.Core.Error (impossible)
-import Copilot.Core.Type.ShowInternal (showWithType, ShowType(..), showType)
+import Copilot.PrettyPrint.Error (impossible)
+import Copilot.PrettyPrint.Type (showWithType, ShowType(..), showType)
 import Prelude hiding (id, (<>))
 import Text.PrettyPrint.HughesPJ
 import Data.List (intersperse)
@@ -73,7 +72,7 @@ ppOp1 op = case op of
   BwNot _                 -> ppPrefix "~"
   Cast _ _                -> ppPrefix "(cast)"
   GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
-  GetField _ _ _          -> impossible "ppOp1" "Copilot.Core.PrettyPrint"
+  GetField _ _ _          -> impossible "ppOp1" "Copilot.PrettyPrint"
 
 -- | Pretty-print a binary operation.
 ppOp2 :: Op2 a b c -> Doc -> Doc -> Doc

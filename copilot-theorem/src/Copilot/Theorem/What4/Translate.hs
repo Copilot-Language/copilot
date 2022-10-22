@@ -71,10 +71,10 @@ import qualified What4.SpecialFunctions         as WSF
 
 import qualified Copilot.Core.Expr              as CE
 import qualified Copilot.Core.Operators         as CE
-import qualified Copilot.Core.PrettyPrint       as CP
 import qualified Copilot.Core.Spec              as CS
 import qualified Copilot.Core.Type              as CT
 import qualified Copilot.Core.Type.Array        as CT
+import qualified Copilot.PrettyPrint            as CP
 
 -- Translation into What4
 

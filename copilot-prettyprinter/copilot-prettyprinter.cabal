@@ -1,12 +1,12 @@
 cabal-version:       >=1.10
-name:                copilot-interpreter
+name:                copilot-prettyprinter
 version:             3.11
-synopsis:            Interpreter for Copilot.
+synopsis:            A prettyprinter of Copilot Specifications.
 description:
-  Interpreter for Copilot.
+  A prettyprinter of Copilot specifications.
   .
   Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
-  Haskell that compiles into embedded C. Copilot contains an interpreter,
+  Haskell that compiles into embedded C.  Copilot contains an interpreter,
   multiple back-end compilers, and other verification tools.
   .
   A tutorial, examples, and other information are available at
@@ -29,7 +29,7 @@ x-curation: uncurated
 source-repository head
     type:       git
     location:   https://github.com/Copilot-Language/copilot.git
-    subdir:     copilot-interpreter
+    subdir:     copilot-prettyprinter
 
 library
 
@@ -39,50 +39,19 @@ library
 
   ghc-options:
     -Wall
+    -fno-warn-orphans
 
   build-depends:
-    base       >= 4.9 && < 5,
-    pretty     >= 1.0 && < 1.2,
+    base   >= 4.9 && < 5,
+    pretty >= 1.0 && < 1.2,
 
     copilot-core
 
   exposed-modules:
 
-    Copilot.Interpret
-    Copilot.Interpret.Eval
+    Copilot.PrettyPrint
 
   other-modules:
 
-    Copilot.Interpret.Error
-    Copilot.Interpret.Render
-
-test-suite unit-tests
-  type:
-    exitcode-stdio-1.0
-
-  main-is:
-    Main.hs
-
-  other-modules:
-    Test.Extra
-    Test.Copilot.Interpret.Eval
-
-  build-depends:
-      base
-    , QuickCheck
-    , pretty
-    , test-framework
-    , test-framework-quickcheck2
-
-    , copilot-core
-    , copilot-interpreter
-    , copilot-prettyprinter
-
-  hs-source-dirs:
-    tests
-
-  default-language:
-    Haskell2010
-
-  ghc-options:
-    -Wall
+    Copilot.PrettyPrint.Error
+    Copilot.PrettyPrint.Type

@@ -1,3 +1,6 @@
+2022-10-21
+        * Deprecate Copilot.Core.PrettyPrinter. (#383)
+
 2022-09-07
         * Version bump (3.11). (#376)
         * Deprecate Copilot.Core.PrettyDot. (#359)

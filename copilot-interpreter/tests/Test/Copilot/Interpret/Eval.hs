@@ -28,11 +28,11 @@ import Text.PrettyPrint.HughesPJ            (render)
 import Copilot.Core.Expr        (Expr (Const, Drop, Op1, Op2, Op3),
                                  UExpr (UExpr))
 import Copilot.Core.Operators   (Op1 (..), Op2 (..), Op3 (..))
-import Copilot.Core.PrettyPrint (ppExpr)
 import Copilot.Core.Spec        (Observer (..), Spec (..), Stream (Stream))
 import Copilot.Core.Type        (Type (..), Typed (typeOf))
 import Copilot.Interpret.Eval   (ExecTrace (interpObservers),
                                  ShowType (Haskell), eval)
+import Copilot.PrettyPrint      (ppExpr)
 
 -- Internal imports: auxiliary functions
 import Test.Extra (apply1, apply2, apply3)
