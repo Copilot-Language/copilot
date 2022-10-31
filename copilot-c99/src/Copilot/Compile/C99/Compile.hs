@@ -46,6 +46,7 @@ compileWith cSettings prefix spec
                              , "#include <stdlib.h>"
                              , "#include <math.h>"
                              , ""
+                             , "#include \"" ++ prefix ++ "_types.h\""
                              , "#include \"" ++ prefix ++ ".h\""
                              , ""
                              ]
