@@ -38,6 +38,7 @@ compileWith cSettings prefix spec
   | otherwise
   = do let cfile = render $ pretty $ C.translate $ compilec cSettings spec
            hfile = render $ pretty $ C.translate $ compileh cSettings spec
+           typeDeclnsFile = safeCRender $ compileTypeDeclns cSettings spec
 
            cmacros = unlines [ "#include <stdint.h>"
                              , "#include <stdbool.h>"
@@ -53,6 +54,7 @@ compileWith cSettings prefix spec
        createDirectoryIfMissing True dir
        writeFile (dir </> prefix ++ ".c") $ cmacros ++ cfile
        writeFile (dir </> prefix ++ ".h") hfile
+       writeFile (dir </> prefix ++ "_types.h") typeDeclnsFile
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -181,3 +183,11 @@ compileTypeDeclns _cSettings spec = C.TransUnit declns []
         mkTypeDecln (UType ty) = case ty of
           Struct _ -> Just $ mkstructdecln ty
           _        -> Nothing
+
+-- * Auxiliary definitions
+
+-- | Render a C.TransUnit to a String, accounting for the case in which the
+-- translation unit is empty.
+safeCRender :: C.TransUnit -> String
+safeCRender (C.TransUnit [] []) = ""
+safeCRender transUnit           = render $ pretty $ C.translate transUnit
