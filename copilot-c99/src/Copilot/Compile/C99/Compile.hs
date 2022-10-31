@@ -160,3 +160,24 @@ compileh cSettings spec = C.TransUnit declns []
     stepdecln :: C.Decln
     stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void)
                     (cSettingsStepFunctionName cSettings) []
+
+-- | Generate a C translation unit that contains all type declarations needed
+-- by the Copilot specification.
+compileTypeDeclns :: CSettings -> Spec -> C.TransUnit
+compileTypeDeclns _cSettings spec = C.TransUnit declns []
+  where
+    declns = mkTypeDeclns exprs
+
+    exprs    = gatherexprs streams triggers
+    streams  = specStreams spec
+    triggers = specTriggers spec
+
+    -- Generate type declarations.
+    mkTypeDeclns :: [UExpr] -> [C.Decln]
+    mkTypeDeclns es = catMaybes $ map mkTypeDecln uTypes
+      where
+        uTypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
+
+        mkTypeDecln (UType ty) = case ty of
+          Struct _ -> Just $ mkstructdecln ty
+          _        -> Nothing
