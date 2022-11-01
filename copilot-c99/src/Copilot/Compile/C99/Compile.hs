@@ -38,6 +38,7 @@ compileWith cSettings prefix spec
   | otherwise
   = do let cfile = render $ pretty $ C.translate $ compilec cSettings spec
            hfile = render $ pretty $ C.translate $ compileh cSettings spec
+           typeDeclnsFile = safeCRender $ compileTypeDeclns cSettings spec
 
            cmacros = unlines [ "#include <stdint.h>"
                              , "#include <stdbool.h>"
@@ -45,6 +46,7 @@ compileWith cSettings prefix spec
                              , "#include <stdlib.h>"
                              , "#include <math.h>"
                              , ""
+                             , "#include \"" ++ prefix ++ "_types.h\""
                              , "#include \"" ++ prefix ++ ".h\""
                              , ""
                              ]
@@ -53,6 +55,7 @@ compileWith cSettings prefix spec
        createDirectoryIfMissing True dir
        writeFile (dir </> prefix ++ ".c") $ cmacros ++ cfile
        writeFile (dir </> prefix ++ ".h") hfile
+       writeFile (dir </> prefix ++ "_types.h") typeDeclnsFile
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -74,20 +77,9 @@ compilec cSettings spec = C.TransUnit declns funs
     streams  = specStreams spec
     triggers = specTriggers spec
     exts     = gatherexts streams triggers
-    exprs    = gatherexprs streams triggers
 
-    declns = mkstructdeclns exprs ++ mkexts exts ++ mkglobals streams
+    declns = mkexts exts ++ mkglobals streams
     funs   = genfuns streams triggers ++ [mkstep cSettings streams triggers exts]
-
-    -- Write struct datatypes
-    mkstructdeclns :: [UExpr] -> [C.Decln]
-    mkstructdeclns es = catMaybes $ map mkdecln utypes
-      where
-        mkdecln (UType ty) = case ty of
-          Struct x -> Just $ mkstructdecln ty
-          _        -> Nothing
-
-        utypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
 
     -- Make declarations for copies of external variables.
     mkexts :: [External] -> [C.Decln]
@@ -171,3 +163,32 @@ compileh cSettings spec = C.TransUnit declns []
     stepdecln :: C.Decln
     stepdecln = C.FunDecln Nothing (C.TypeSpec C.Void)
                     (cSettingsStepFunctionName cSettings) []
+
+-- | Generate a C translation unit that contains all type declarations needed
+-- by the Copilot specification.
+compileTypeDeclns :: CSettings -> Spec -> C.TransUnit
+compileTypeDeclns _cSettings spec = C.TransUnit declns []
+  where
+    declns = mkTypeDeclns exprs
+
+    exprs    = gatherexprs streams triggers
+    streams  = specStreams spec
+    triggers = specTriggers spec
+
+    -- Generate type declarations.
+    mkTypeDeclns :: [UExpr] -> [C.Decln]
+    mkTypeDeclns es = catMaybes $ map mkTypeDecln uTypes
+      where
+        uTypes = nub $ concatMap (\(UExpr _ e) -> exprtypes e) es
+
+        mkTypeDecln (UType ty) = case ty of
+          Struct _ -> Just $ mkstructdecln ty
+          _        -> Nothing
+
+-- * Auxiliary definitions
+
+-- | Render a C.TransUnit to a String, accounting for the case in which the
+-- translation unit is empty.
+safeCRender :: C.TransUnit -> String
+safeCRender (C.TransUnit [] []) = ""
+safeCRender transUnit           = render $ pretty $ C.translate transUnit
