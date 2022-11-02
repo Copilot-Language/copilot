@@ -1,6 +1,8 @@
-2022-10-21
+2022-11-02
         * Add functionality for bisimulation proofs of Copilot specifications. (#363)
         * Use pretty-printer from copilot-prettyprinter. (#383)
+        * Replace uses of Copilot.Core.Type.Equality with definitions from
+          base:Data.Type.Equality. (#379)
 
 2022-09-07
         * Version bump (3.11). (#376)
