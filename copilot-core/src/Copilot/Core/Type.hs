@@ -63,7 +63,8 @@ class Struct a where
   toValues :: a -> [Value a]
 
 -- | The field of a struct, together with a representation of its type.
-data Value a = forall s t . (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
+data Value a =
+  forall s t . (Typeable t, KnownSymbol s, Show t) => Value (Type t) (Field s t)
 
 -- | A field in a struct. The name of the field is a literal at the type
 -- level.
@@ -75,7 +76,8 @@ fieldname _ = symbolVal (Proxy :: Proxy s)
 
 -- | Extract the name of an accessor (a function that returns a field of a
 -- struct).
-accessorname :: forall a s t . (Struct a, KnownSymbol s) => (a -> Field s t) -> String
+accessorname :: forall a s t . (Struct a, KnownSymbol s)
+             => (a -> Field s t) -> String
 accessorname _ = symbolVal (Proxy :: Proxy s)
 
 instance (KnownSymbol s, Show t) => Show (Field s t) where
