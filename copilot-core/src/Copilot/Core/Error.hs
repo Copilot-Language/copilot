@@ -4,8 +4,9 @@
 
 -- | Custom functions to report error messages to users.
 module Copilot.Core.Error
-  ( impossible
-  , badUsage ) where
+    ( impossible
+    , badUsage )
+  where
 
 -- | Report an error due to a bug in Copilot.
 impossible :: String -- ^ Name of the function in which the error was detected.
