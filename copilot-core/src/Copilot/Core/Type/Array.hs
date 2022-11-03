@@ -15,14 +15,15 @@
 -- arrays.
 
 module Copilot.Core.Type.Array
-  ( Array
-  , array
-  , flatten
-  , size
-  , Flatten
-  , InnerType
-  , arrayelems
-  ) where
+    ( Array
+    , array
+    , flatten
+    , size
+    , Flatten
+    , InnerType
+    , arrayelems
+    )
+  where
 
 -- External imports
 import Data.Proxy   (Proxy (..))
