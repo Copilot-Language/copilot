@@ -1,10 +1,11 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE Safe                      #-}
 
--- | Copilot specifications constitute the main declaration of Copilot modules.
+-- |
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Copilot specifications constitute the main declaration of Copilot modules.
 --
 -- A specification normally contains the association between streams to monitor
 -- and their handling functions, or streams to observe, or a theorem that must
