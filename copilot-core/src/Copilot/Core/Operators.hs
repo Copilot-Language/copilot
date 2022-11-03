@@ -98,5 +98,5 @@ data Op2 a b c where
 
 -- | Ternary operators.
 data Op3 a b c d where
-  -- Conditional operator:
+  -- Conditional operator.
   Mux :: Type a -> Op3 Bool a a a
