@@ -8,7 +8,7 @@
 -- Show Copilot Core types and typed values.
 module Copilot.Core.Type.ShowInternal
     ( showWithType
-    , ShowType(..)
+    , ShowType (..)
     , showType
     )
   where
@@ -42,18 +42,18 @@ showWithType showT t x =
 showType :: Type a -> String
 showType t =
   case t of
-    Bool   -> "Bool"
-    Int8   -> "Int8"
-    Int16  -> "Int16"
-    Int32  -> "Int32"
-    Int64  -> "Int64"
-    Word8  -> "Word8"
-    Word16 -> "Word16"
-    Word32 -> "Word32"
-    Word64 -> "Word64"
-    Float  -> "Float"
-    Double -> "Double"
-    Array t -> "Array " ++ showType t
+    Bool     -> "Bool"
+    Int8     -> "Int8"
+    Int16    -> "Int16"
+    Int32    -> "Int32"
+    Int64    -> "Int64"
+    Word8    -> "Word8"
+    Word16   -> "Word16"
+    Word32   -> "Word32"
+    Word64   -> "Word64"
+    Float    -> "Float"
+    Double   -> "Double"
+    Array t  -> "Array " ++ showType t
     Struct t -> "Struct"
 
 -- * Auxiliary show instance
@@ -65,16 +65,16 @@ data ShowWit a = Show a => ShowWit
 showWit :: Type a -> ShowWit a
 showWit t =
   case t of
-    Bool   -> ShowWit
-    Int8   -> ShowWit
-    Int16  -> ShowWit
-    Int32  -> ShowWit
-    Int64  -> ShowWit
-    Word8  -> ShowWit
-    Word16 -> ShowWit
-    Word32 -> ShowWit
-    Word64 -> ShowWit
-    Float  -> ShowWit
-    Double -> ShowWit
-    Array t -> ShowWit
+    Bool     -> ShowWit
+    Int8     -> ShowWit
+    Int16    -> ShowWit
+    Int32    -> ShowWit
+    Int64    -> ShowWit
+    Word8    -> ShowWit
+    Word16   -> ShowWit
+    Word32   -> ShowWit
+    Word64   -> ShowWit
+    Float    -> ShowWit
+    Double   -> ShowWit
+    Array t  -> ShowWit
     Struct t -> ShowWit
