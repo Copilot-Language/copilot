@@ -50,7 +50,7 @@ data Op1 a b where
   Ceiling  :: RealFrac a => Type a -> Op1 a a
   Floor    :: RealFrac a => Type a -> Op1 a a
   -- Bitwise operators.
-  BwNot    :: Bits     a => Type a -> Op1 a a
+  BwNot    :: Bits a => Type a -> Op1 a a
   -- Casting operator.
   Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
               -- ^ Casting operator.
@@ -90,8 +90,8 @@ data Op2 a b c where
   BwAnd    :: Bits a => Type a -> Op2 a a a
   BwOr     :: Bits a => Type a -> Op2 a a a
   BwXor    :: Bits a => Type a -> Op2 a a a
-  BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
-  BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
+  BwShiftL :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
+  BwShiftR :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
   -- Array operator.
 
   Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
@@ -100,4 +100,4 @@ data Op2 a b c where
 -- | Ternary operators.
 data Op3 a b c d where
   -- Conditional operator:
-  Mux   :: Type a -> Op3 Bool a a a
+  Mux :: Type a -> Op3 Bool a a a
