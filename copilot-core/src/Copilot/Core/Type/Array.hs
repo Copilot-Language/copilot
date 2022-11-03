@@ -24,8 +24,9 @@ module Copilot.Core.Type.Array
   , arrayelems
   ) where
 
-import GHC.TypeLits     (Nat, KnownNat, natVal)
-import Data.Proxy       (Proxy (..))
+-- External imports
+import Data.Proxy   (Proxy (..))
+import GHC.TypeLits (KnownNat, Nat, natVal)
 
 -- | Implementation of an array that uses type literals to store length.
 data Array (n :: Nat) t where
