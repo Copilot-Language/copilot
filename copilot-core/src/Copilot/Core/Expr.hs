@@ -6,12 +6,13 @@
 
 -- | Internal representation of Copilot stream expressions.
 module Copilot.Core.Expr
-  ( Id
-  , Name
-  , Expr (..)
-  , UExpr (..)
-  , DropIdx
-  ) where
+    ( Id
+    , Name
+    , Expr (..)
+    , UExpr (..)
+    , DropIdx
+    )
+  where
 
 -- External imports
 import Data.Typeable (Typeable)
