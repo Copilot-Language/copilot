@@ -1,3 +1,13 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE Safe                      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
+
 -- The following flag is disabled in this module so that the import of
 -- Copilot.Core.Type.Equality does not give rise to warnings.
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
@@ -11,17 +21,6 @@
 -- This information is needed by the compiler to generate code, since it must
 -- initialize variables and equivalent representations for those types in
 -- the target languages.
-
-{-# LANGUAGE DataKinds                 #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE KindSignatures            #-}
-{-# LANGUAGE Safe                      #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE UndecidableInstances      #-}
-
 module Copilot.Core.Type
     ( Type (..)
     , Typed (..)
