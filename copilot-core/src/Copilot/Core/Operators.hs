@@ -6,10 +6,11 @@
 
 -- | Internal representation of Copilot operators.
 module Copilot.Core.Operators
-  ( Op1 (..)
-  , Op2 (..)
-  , Op3 (..)
-  ) where
+    ( Op1 (..)
+    , Op2 (..)
+    , Op3 (..)
+    )
+  where
 
 -- External imports
 import Data.Bits    (Bits)
