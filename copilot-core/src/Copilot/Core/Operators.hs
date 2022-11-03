@@ -15,7 +15,7 @@ import GHC.TypeLits             (KnownSymbol)
 
 import Copilot.Core.Type        (Type(..), Field(..))
 import Copilot.Core.Type.Array  (Array)
-import Data.Bits
+import Data.Bits                (Bits)
 import Data.Word                (Word32)
 
 -- | Unary operators.
