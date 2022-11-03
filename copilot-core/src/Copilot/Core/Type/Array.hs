@@ -1,5 +1,3 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -9,7 +7,10 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
--- | Implementation of an array that uses type literals to store length. No
+-- |
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Implementation of an array that uses type literals to store length. No
 -- explicit indexing is used for the input data. Supports arbitrary nesting of
 -- arrays.
 
