@@ -93,7 +93,6 @@ data Op2 a b c where
   BwShiftL :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
   BwShiftR :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
   -- Array operator.
-
   Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
               -- ^ Array access/projection of an array element.
 
