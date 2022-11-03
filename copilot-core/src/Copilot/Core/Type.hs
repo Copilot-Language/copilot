@@ -41,11 +41,11 @@ module Copilot.Core.Type
   , accessorname
   ) where
 
-import Data.Int
-import Data.Word
+import Data.Int                   (Int16, Int32, Int64, Int8)
+import Data.Word                  (Word16, Word32, Word64, Word8)
 import Data.Type.Equality         as DE
 import Copilot.Core.Type.Equality as CE
-import Copilot.Core.Type.Array
+import Copilot.Core.Type.Array    (Array)
 
 import Data.Typeable (Typeable, typeRep)
 
