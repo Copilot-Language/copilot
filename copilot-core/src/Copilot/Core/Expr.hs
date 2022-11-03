@@ -52,4 +52,5 @@ data Expr a where
 -- existential).
 data UExpr = forall a . Typeable a => UExpr
   { uExprType :: Type a
-  , uExprExpr :: Expr a }
+  , uExprExpr :: Expr a
+  }
