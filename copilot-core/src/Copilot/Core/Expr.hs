@@ -13,11 +13,13 @@ module Copilot.Core.Expr
   , DropIdx
   ) where
 
-import Copilot.Core.Operators (Op1, Op2, Op3)
-import Copilot.Core.Type (Type)
-import Data.Word (Word32)
-
+-- External imports
 import Data.Typeable (Typeable)
+import Data.Word     (Word32)
+
+-- Internal imports
+import Copilot.Core.Operators (Op1, Op2, Op3)
+import Copilot.Core.Type      (Type)
 
 -- | A stream identifier.
 type Id = Int
