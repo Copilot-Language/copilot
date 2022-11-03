@@ -16,9 +16,6 @@ module Copilot.Core.Type.ShowInternal
 -- Internal imports
 import Copilot.Core.Type (Type (..))
 
--- Are we proving equivalence with a C backend, in which case we want to show
--- Booleans as '0' and '1'.
-
 -- | Target language for showing a typed value. Used to adapt the
 -- representation of booleans.
 data ShowType = C | Haskell
