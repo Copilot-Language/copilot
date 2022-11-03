@@ -23,23 +23,24 @@
 {-# LANGUAGE UndecidableInstances      #-}
 
 module Copilot.Core.Type
-  ( Type (..)
-  , Typed (..)
-  , UType (..)
-  , SimpleType (..)
+    ( Type (..)
+    , Typed (..)
+    , UType (..)
+    , SimpleType (..)
 
-  , tysize
-  , tylength
+    , tysize
+    , tylength
 
-  , Value (..)
-  , toValues
-  , Field (..)
-  , typename
+    , Value (..)
+    , toValues
+    , Field (..)
+    , typename
 
-  , Struct
-  , fieldname
-  , accessorname
-  ) where
+    , Struct
+    , fieldname
+    , accessorname
+    )
+  where
 
 -- External imports
 import Data.Int           (Int16, Int32, Int64, Int8)
