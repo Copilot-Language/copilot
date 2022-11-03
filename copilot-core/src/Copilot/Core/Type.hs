@@ -41,18 +41,18 @@ module Copilot.Core.Type
   , accessorname
   ) where
 
-import Data.Int                   (Int16, Int32, Int64, Int8)
-import Data.Word                  (Word16, Word32, Word64, Word8)
-import Data.Type.Equality         as DE
-import Copilot.Core.Type.Equality as CE
+-- External imports
+import Data.Int           (Int16, Int32, Int64, Int8)
+import Data.List          (intercalate)
+import Data.Proxy         (Proxy (..))
+import Data.Type.Equality as DE
+import Data.Typeable      (Typeable, typeRep)
+import Data.Word          (Word16, Word32, Word64, Word8)
+import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, symbolVal)
+
+-- Internal imports
 import Copilot.Core.Type.Array    (Array)
-
-import Data.Typeable (Typeable, typeRep)
-
-import GHC.TypeLits (KnownNat, natVal, Symbol, KnownSymbol, symbolVal)
-import Data.Proxy   (Proxy (..))
-
-import Data.List (intercalate)
+import Copilot.Core.Type.Equality as CE
 
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
