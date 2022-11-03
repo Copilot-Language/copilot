@@ -11,6 +11,7 @@ module Copilot.Core.Type.ShowInternal
   , showType
   ) where
 
+-- Internal imports
 import Copilot.Core.Type (Type (..))
 
 -- Are we proving equivalence with a C backend, in which case we want to show
