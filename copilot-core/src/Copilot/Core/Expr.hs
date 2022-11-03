@@ -1,10 +1,10 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE Safe                      #-}
 
--- | Internal representation of Copilot stream expressions.
+-- |
+-- Description: Internal representation of Copilot stream expressions.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
 module Copilot.Core.Expr
     ( Id
     , Name
