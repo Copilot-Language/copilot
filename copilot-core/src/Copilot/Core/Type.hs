@@ -168,7 +168,6 @@ data SimpleType where
 -- | Type equality, used to help type inference.
 
 -- This instance is necessary, otherwise the type of SArray can't be inferred.
-
 instance Eq SimpleType where
   SBool   == SBool   = True
   SInt8   == SInt8   = True
