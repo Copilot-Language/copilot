@@ -1,3 +1,7 @@
+-- The following flag is disabled in this module so that the import of
+-- Copilot.Core.Type.Equality does not give rise to warnings.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
 -- | Typing for Core.
