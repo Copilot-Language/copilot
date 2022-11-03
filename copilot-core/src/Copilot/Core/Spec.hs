@@ -35,15 +35,15 @@ import Copilot.Core.Type (Type, Typed)
 -- Stream can carry different types of data. Boolean streams play a special
 -- role: they are used by other parts (e.g., 'Trigger') to detect when the
 -- properties being monitored are violated.
-data Stream = forall a. (Typeable a, Typed a) => Stream
-  { streamId         :: Id
-  , streamBuffer     :: [a]
-  , streamExpr       :: Expr a
-  , streamExprType   :: Type a }
+data Stream = forall a . (Typeable a, Typed a) => Stream
+  { streamId       :: Id
+  , streamBuffer   :: [a]
+  , streamExpr     :: Expr a
+  , streamExprType :: Type a }
 
 -- | An observer, representing a stream that we observe during interpretation
 -- at every sample.
-data Observer = forall a. Typeable a => Observer
+data Observer = forall a . Typeable a => Observer
   { observerName     :: Name
   , observerExpr     :: Expr a
   , observerExprType :: Type a }
@@ -51,20 +51,20 @@ data Observer = forall a. Typeable a => Observer
 -- | A trigger, representing a function we execute when a boolean stream becomes
 -- true at a sample.
 data Trigger = Trigger
-  { triggerName      :: Name
-  , triggerGuard     :: Expr Bool
-  , triggerArgs      :: [UExpr] }
+  { triggerName  :: Name
+  , triggerGuard :: Expr Bool
+  , triggerArgs  :: [UExpr] }
 
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property = Property
-  { propertyName     :: Name
-  , propertyExpr     :: Expr Bool }
+  { propertyName :: Name
+  , propertyExpr :: Expr Bool }
 
 -- | A Copilot specification is a list of streams, together with monitors on
 -- these streams implemented as observers, triggers or properties.
 data Spec = Spec
-  { specStreams      :: [Stream]
-  , specObservers    :: [Observer]
-  , specTriggers     :: [Trigger]
-  , specProperties   :: [Property] }
+  { specStreams    :: [Stream]
+  , specObservers  :: [Observer]
+  , specTriggers   :: [Trigger]
+  , specProperties :: [Property] }
