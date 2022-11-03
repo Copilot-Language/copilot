@@ -14,12 +14,13 @@
 -- into Copilot Core's 'Spec'. This module defines the low-level Copilot Core
 -- representations for Specs and the main types of element in a spec..
 module Copilot.Core.Spec
-  ( Stream (..)
-  , Observer (..)
-  , Trigger (..)
-  , Spec (..)
-  , Property (..)
-  ) where
+    ( Stream (..)
+    , Observer (..)
+    , Trigger (..)
+    , Spec (..)
+    , Property (..)
+    )
+  where
 
 -- External imports
 import Data.Typeable (Typeable)
