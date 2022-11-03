@@ -25,15 +25,16 @@
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
 
 module Copilot.Core
-  ( module Copilot.Core.Expr
-  , module Copilot.Core.External
-  , module Copilot.Core.Operators
-  , module Copilot.Core.Spec
-  , module Copilot.Core.Type
-  , module Copilot.Core.Type.Array
-  , module Data.Int
-  , module Data.Word
-  ) where
+    ( module Copilot.Core.Expr
+    , module Copilot.Core.External
+    , module Copilot.Core.Operators
+    , module Copilot.Core.Spec
+    , module Copilot.Core.Type
+    , module Copilot.Core.Type.Array
+    , module Data.Int
+    , module Data.Word
+    )
+  where
 
 -- External imports
 import Data.Int
