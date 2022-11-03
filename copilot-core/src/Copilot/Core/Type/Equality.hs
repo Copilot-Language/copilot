@@ -6,6 +6,7 @@
 
 -- | Propositional equality and type equality.
 module Copilot.Core.Type.Equality
+  {-# DEPRECATED "This module is deprecated in Copilot 3.12. Use base:Data.Type.Equality instead." #-}
   ( Equal (..)
   , EqualType (..)
   , coerce

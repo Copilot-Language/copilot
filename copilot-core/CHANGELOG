@@ -1,5 +1,7 @@
-2022-10-21
+2022-11-02
         * Deprecate Copilot.Core.PrettyPrinter. (#383)
+        * Replace uses of Copilot.Core.Type.Equality with definitions from
+          base:Data.Type.Equality; deprecate Copilot.Core.Type.Equality. (#379)
 
 2022-09-07
         * Version bump (3.11). (#376)
