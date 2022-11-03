@@ -11,12 +11,14 @@ module Copilot.Core.Operators
   , Op3 (..)
   ) where
 
-import GHC.TypeLits             (KnownSymbol)
+-- External imports
+import Data.Bits    (Bits)
+import Data.Word    (Word32)
+import GHC.TypeLits (KnownSymbol)
 
-import Copilot.Core.Type        (Type(..), Field(..))
-import Copilot.Core.Type.Array  (Array)
-import Data.Bits                (Bits)
-import Data.Word                (Word32)
+-- Internal imports
+import Copilot.Core.Type       (Field (..), Type (..))
+import Copilot.Core.Type.Array (Array)
 
 -- | Unary operators.
 data Op1 a b where
