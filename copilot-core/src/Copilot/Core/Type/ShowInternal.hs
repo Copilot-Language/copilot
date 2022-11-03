@@ -6,10 +6,11 @@
 
 -- | Show Copilot Core types and typed values.
 module Copilot.Core.Type.ShowInternal
-  ( showWithType
-  , ShowType(..)
-  , showType
-  ) where
+    ( showWithType
+    , ShowType(..)
+    , showType
+    )
+  where
 
 -- Internal imports
 import Copilot.Core.Type (Type (..))
@@ -25,16 +26,16 @@ data ShowType = C | Haskell
 -- language. Booleans are represented differently depending on the backend.
 showWithType :: ShowType -> Type a -> a -> String
 showWithType showT t x =
-  case showT of
-    C         -> case t of
+    case showT of
+      C       -> case t of
                    Bool -> if x then "1" else "0"
                    _    -> sw
-    Haskell   -> case t of
+      Haskell -> case t of
                    Bool -> if x then "true" else "false"
                    _    -> sw
   where
-  sw = case showWit t of
-         ShowWit -> show x
+    sw = case showWit t of
+           ShowWit -> show x
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
