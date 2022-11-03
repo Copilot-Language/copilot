@@ -1,10 +1,11 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE Safe                      #-}
 
--- | Show Copilot Core types and typed values.
+-- |
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Show Copilot Core types and typed values.
 module Copilot.Core.Type.ShowInternal
     ( showWithType
     , ShowType(..)
