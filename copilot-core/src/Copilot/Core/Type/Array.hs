@@ -13,7 +13,6 @@
 -- Implementation of an array that uses type literals to store length. No
 -- explicit indexing is used for the input data. Supports arbitrary nesting of
 -- arrays.
-
 module Copilot.Core.Type.Array
     ( Array
     , array
