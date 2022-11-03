@@ -35,11 +35,14 @@ module Copilot.Core
   , module Data.Word
   ) where
 
+-- External imports
+import Data.Int
+import Data.Word
+
+-- Internal imports
 import Copilot.Core.Expr
 import Copilot.Core.External -- See GHC flag enabled above
 import Copilot.Core.Operators
 import Copilot.Core.Spec
 import Copilot.Core.Type
 import Copilot.Core.Type.Array
-import Data.Int
-import Data.Word
