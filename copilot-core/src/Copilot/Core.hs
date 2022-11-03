@@ -1,6 +1,7 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
--- | Intermediate representation for Copilot specifications.
+-- |
+-- Description: Intermediate representation for Copilot specifications.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
 -- The following articles might also be useful:
 --
 -- * Carette, Jacques and Kiselyov, Oleg and Shan, Chung-chieh,
