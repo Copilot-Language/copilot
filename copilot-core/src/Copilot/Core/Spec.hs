@@ -21,9 +21,12 @@ module Copilot.Core.Spec
   , Property (..)
   ) where
 
-import Copilot.Core.Expr (Name, Id, Expr, UExpr)
-import Copilot.Core.Type (Type, Typed)
+-- External imports
 import Data.Typeable (Typeable)
+
+-- Internal imports
+import Copilot.Core.Expr (Expr, Id, Name, UExpr)
+import Copilot.Core.Type (Type, Typed)
 
 -- | A stream in an infinite succession of values of the same type.
 --
