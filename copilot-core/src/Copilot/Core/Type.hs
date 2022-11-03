@@ -2,9 +2,9 @@
 -- Copilot.Core.Type.Equality does not give rise to warnings.
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
 
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
--- | Typing for Core.
+-- |
+-- Description: Typing for Core.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
 --
 -- All expressions and streams in Core are accompanied by a representation of
 -- the types of the underlying expressions used or carried by the streams.
