@@ -1,6 +1,14 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
+{-# LANGUAGE Safe #-}
 
--- | Intermediate representation for Copilot specifications.
+-- The following warning is enabled in this module so that the import of
+-- Copilot.Core.External does not give rise to a warning. It can be removed
+-- when that module is removed from the implementation.
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
+-- |
+-- Description: Intermediate representation for Copilot specifications.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
 -- The following articles might also be useful:
 --
 -- * Carette, Jacques and Kiselyov, Oleg and Shan, Chung-chieh,
@@ -17,29 +25,26 @@
 -- ("Copilot.Core.Interpret")
 -- and the pretty-printer
 -- ("Copilot.Core.PrettyPrint").
-
-{-# LANGUAGE Safe #-}
--- The following warning is enabled in this module so that the import of
--- Copilot.Core.External does not give rise to a warning. It can be removed
--- when that module is removed from the implementation.
-{-# OPTIONS_GHC -fno-warn-deprecations #-}
-
 module Copilot.Core
-  ( module Copilot.Core.Expr
-  , module Copilot.Core.External
-  , module Copilot.Core.Operators
-  , module Copilot.Core.Spec
-  , module Copilot.Core.Type
-  , module Copilot.Core.Type.Array
-  , module Data.Int
-  , module Data.Word
-  ) where
+    ( module Copilot.Core.Expr
+    , module Copilot.Core.External
+    , module Copilot.Core.Operators
+    , module Copilot.Core.Spec
+    , module Copilot.Core.Type
+    , module Copilot.Core.Type.Array
+    , module Data.Int
+    , module Data.Word
+    )
+  where
 
+-- External imports
+import Data.Int
+import Data.Word
+
+-- Internal imports
 import Copilot.Core.Expr
 import Copilot.Core.External -- See GHC flag enabled above
 import Copilot.Core.Operators
 import Copilot.Core.Spec
 import Copilot.Core.Type
 import Copilot.Core.Type.Array
-import Data.Int
-import Data.Word

@@ -1,31 +1,32 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
--- | Implementation of an array that uses type literals to store length. No
+-- |
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Implementation of an array that uses type literals to store length. No
 -- explicit indexing is used for the input data. Supports arbitrary nesting of
 -- arrays.
-
 module Copilot.Core.Type.Array
-  ( Array
-  , array
-  , flatten
-  , size
-  , Flatten
-  , InnerType
-  , arrayelems
-  ) where
+    ( Array
+    , array
+    , flatten
+    , size
+    , Flatten
+    , InnerType
+    , arrayelems
+    )
+  where
 
-import GHC.TypeLits     (Nat, KnownNat, natVal)
-import Data.Proxy       (Proxy (..))
+-- External imports
+import Data.Proxy   (Proxy (..))
+import GHC.TypeLits (KnownNat, Nat, natVal)
 
 -- | Implementation of an array that uses type literals to store length.
 data Array (n :: Nat) t where

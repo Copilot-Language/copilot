@@ -1,11 +1,13 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE Safe #-}
 
--- | Custom functions to report error messages to users.
+-- |
+-- Description: Custom functions to report error messages to users.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
 module Copilot.Core.Error
-  ( impossible
-  , badUsage ) where
+    ( impossible
+    , badUsage
+    )
+  where
 
 -- | Report an error due to a bug in Copilot.
 impossible :: String -- ^ Name of the function in which the error was detected.

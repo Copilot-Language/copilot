@@ -1,22 +1,25 @@
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE GADTs      #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE Safe       #-}
 
--- | Internal representation of Copilot operators.
+-- |
+-- Description: Internal representation of Copilot operators.
+-- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
 module Copilot.Core.Operators
-  ( Op1 (..)
-  , Op2 (..)
-  , Op3 (..)
-  ) where
+    ( Op1 (..)
+    , Op2 (..)
+    , Op3 (..)
+    )
+  where
 
-import GHC.TypeLits             (KnownSymbol)
+-- External imports
+import Data.Bits    (Bits)
+import Data.Word    (Word32)
+import GHC.TypeLits (KnownSymbol)
 
-import Copilot.Core.Type        (Type(..), Field(..))
-import Copilot.Core.Type.Array  (Array)
-import Data.Bits
-import Data.Word                (Word32)
+-- Internal imports
+import Copilot.Core.Type       (Field (..), Type (..))
+import Copilot.Core.Type.Array (Array)
 
 -- | Unary operators.
 data Op1 a b where
@@ -47,7 +50,7 @@ data Op1 a b where
   Ceiling  :: RealFrac a => Type a -> Op1 a a
   Floor    :: RealFrac a => Type a -> Op1 a a
   -- Bitwise operators.
-  BwNot    :: Bits     a => Type a -> Op1 a a
+  BwNot    :: Bits a => Type a -> Op1 a a
   -- Casting operator.
   Cast     :: (Integral a, Num b) => Type a -> Type b -> Op1 a b
               -- ^ Casting operator.
@@ -87,14 +90,13 @@ data Op2 a b c where
   BwAnd    :: Bits a => Type a -> Op2 a a a
   BwOr     :: Bits a => Type a -> Op2 a a a
   BwXor    :: Bits a => Type a -> Op2 a a a
-  BwShiftL :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
-  BwShiftR :: ( Bits a, Integral b ) => Type a -> Type b -> Op2 a b a
+  BwShiftL :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
+  BwShiftR :: (Bits a, Integral b) => Type a -> Type b -> Op2 a b a
   -- Array operator.
-
   Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
               -- ^ Array access/projection of an array element.
 
 -- | Ternary operators.
 data Op3 a b c d where
-  -- Conditional operator:
-  Mux   :: Type a -> Op3 Bool a a a
+  -- Conditional operator.
+  Mux :: Type a -> Op3 Bool a a a
