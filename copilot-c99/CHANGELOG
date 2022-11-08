@@ -1,4 +1,5 @@
-2022-10-31
+2022-11-07
+        * Version bump (3.12). (#389)
         * Removed deprecated flag from cabal file. (#380)
         * Generate type declarations in separate header file. (#373)
 

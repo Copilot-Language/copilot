@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-prettyprinter
-version:             3.11
+version:             3.12
 synopsis:            A prettyprinter of Copilot Specifications.
 description:
   A prettyprinter of Copilot specifications.

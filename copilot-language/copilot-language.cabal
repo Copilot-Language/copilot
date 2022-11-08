@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-language
-version:             3.11
+version:             3.12
 synopsis:            A Haskell-embedded DSL for monitoring hard real-time
                      distributed systems.
 description:
@@ -42,10 +42,10 @@ library
                , data-reify            >= 0.6 && < 0.7
                , mtl                   >= 2.0 && < 3
 
-               , copilot-core          >= 3.11 && < 3.12
-               , copilot-interpreter   >= 3.11 && < 3.12
-               , copilot-prettyprinter >= 3.11 && < 3.12
-               , copilot-theorem       >= 3.11 && < 3.12
+               , copilot-core          >= 3.12 && < 3.13
+               , copilot-interpreter   >= 3.12 && < 3.13
+               , copilot-prettyprinter >= 3.12 && < 3.13
+               , copilot-theorem       >= 3.12 && < 3.13
 
   exposed-modules: Copilot.Language
                  , Copilot.Language.Operators.BitWise
