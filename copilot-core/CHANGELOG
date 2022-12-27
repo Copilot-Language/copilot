@@ -1,4 +1,5 @@
 2022-12-27
+        * Remove Copilot.Core.External. (#391)
         * Fix bug in definition of simpleType for Int8. (#393)
 
 2022-11-07
