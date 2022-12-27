@@ -50,7 +50,6 @@ library
 
     Copilot.Core
     Copilot.Core.Expr
-    Copilot.Core.External
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Operators
