@@ -4,17 +4,19 @@ module Test.Copilot.Core.Type where
 -- External imports
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck                      (Property, elements, forAllBlind,
-                                             shuffle, (==>))
+import Test.QuickCheck                      (Gen, Property, elements,
+                                             forAllBlind, shuffle, (==>))
 
 -- Internal imports: library modules being tested
-import Copilot.Core.Type (SimpleType (..))
+import Copilot.Core.Type (SimpleType (..), Type(..), simpleType)
 
 -- | All unit tests for copilot-core:Copilot.Core.Type.
 tests :: Test.Framework.Test
 tests =
   testGroup "Copilot.Core.Type"
-    [ testProperty "reflexivity of equality of simple types"
+    [ testProperty "simpleType preserves inequality"
+        testSimpleTypesInequality
+    ,  testProperty "reflexivity of equality of simple types"
         testSimpleTypesEqualityReflexive
     , testProperty "symmetry of equality of simple types"
         testSimpleTypesEqualitySymmetric
@@ -23,6 +25,35 @@ tests =
     , testProperty "uniqueness of equality of simple types"
         testSimpleTypesEqualityUniqueness
     ]
+
+-- | Test that the function simpleTypes preserves inequality, that is, it
+-- returns different values for different types. This test is limited; we do
+-- not test structs or arrays.
+testSimpleTypesInequality :: Property
+testSimpleTypesInequality = forAllBlind twoDiffTypes $ \(t1, t2) ->
+    t1 /= t2
+  where
+    twoDiffTypes :: Gen (SimpleType, SimpleType)
+    twoDiffTypes = do
+      shuffled <- shuffle diffTypes
+      case shuffled of
+        (t1:t2:_) -> return (t1, t2)
+        _         -> return (SBool, SBool)
+
+    -- | A list of types that should all be different.
+    diffTypes :: [SimpleType]
+    diffTypes = [ simpleType Bool
+                , simpleType Int8
+                , simpleType Int16
+                , simpleType Int32
+                , simpleType Int64
+                , simpleType Word8
+                , simpleType Word16
+                , simpleType Word32
+                , simpleType Word64
+                , simpleType Float
+                , simpleType Double
+                ]
 
 -- | Test that the equality relation for simple types is reflexive.
 testSimpleTypesEqualityReflexive :: Property
