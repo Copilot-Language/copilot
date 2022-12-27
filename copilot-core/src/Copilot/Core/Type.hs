@@ -200,7 +200,7 @@ instance Typed Bool where
 
 instance Typed Int8 where
   typeOf       = Int8
-  simpleType _ = SBool
+  simpleType _ = SInt8
 
 instance Typed Int16 where
   typeOf       = Int16
