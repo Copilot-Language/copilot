@@ -47,6 +47,10 @@ excpyname name = name ++ "_cpy"
 generatorname :: Id -> String
 generatorname sid = streamname sid ++ "_gen"
 
+-- | Turn stream id into name of its output argument array.
+generatorOutputArgName :: Id -> String
+generatorOutputArgName sid = streamname sid ++ "_output"
+
 -- | Turn the name of a trigger into a guard generator.
 guardname :: String -> String
 guardname name = name ++ "_guard"
