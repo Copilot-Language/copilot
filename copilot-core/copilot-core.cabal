@@ -56,7 +56,6 @@ library
     Copilot.Core.Type
     Copilot.Core.Type.Array
     Copilot.Core.Type.Equality
-    Copilot.Core.Type.Show
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
 
