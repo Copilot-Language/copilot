@@ -56,7 +56,6 @@ library
     Copilot.Core.Type
     Copilot.Core.Type.Array
     Copilot.Core.Type.Equality
-    Copilot.Core.Type.Show
     Copilot.Core.PrettyPrint
     Copilot.Core.PrettyDot
 
@@ -64,7 +63,7 @@ library
 
     Copilot.Core.Error
     Copilot.Core.Interpret.Render
-    Copilot.Core.Type.ShowInternal
+    Copilot.Core.Type.Show
 
 test-suite unit-tests
   type:
@@ -75,10 +74,8 @@ test-suite unit-tests
 
   other-modules:
     Test.Extra
-    Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type
     Test.Copilot.Core.Type.Array
-    Test.Copilot.Core.Type.Show
 
   build-depends:
       base
