@@ -43,14 +43,12 @@ library
 
   build-depends:
     base       >= 4.9 && < 5,
-    pretty     >= 1.0 && < 1.2,
-    dlist
+    pretty     >= 1.0 && < 1.2
 
   exposed-modules:
 
     Copilot.Core
     Copilot.Core.Expr
-    Copilot.Core.External
     Copilot.Core.Interpret
     Copilot.Core.Interpret.Eval
     Copilot.Core.Operators
@@ -77,7 +75,6 @@ test-suite unit-tests
 
   other-modules:
     Test.Extra
-    Test.Copilot.Core.External
     Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type
     Test.Copilot.Core.Type.Array
