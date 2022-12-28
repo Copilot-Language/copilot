@@ -75,10 +75,8 @@ test-suite unit-tests
 
   other-modules:
     Test.Extra
-    Test.Copilot.Core.Interpret.Eval
     Test.Copilot.Core.Type
     Test.Copilot.Core.Type.Array
-    Test.Copilot.Core.Type.Show
 
   build-depends:
       base
