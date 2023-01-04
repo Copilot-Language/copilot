@@ -6,6 +6,7 @@
 {-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE Safe                      #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
 -- The following flag is disabled in this module so that the import of
@@ -46,9 +47,10 @@ import Data.Int           (Int16, Int32, Int64, Int8)
 import Data.List          (intercalate)
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality as DE
-import Data.Typeable      (Typeable, typeRep)
+import Data.Typeable      (Typeable, eqT, typeRep)
 import Data.Word          (Word16, Word32, Word64, Word8)
-import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, symbolVal)
+import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
+                           symbolVal)
 
 -- Internal imports
 import Copilot.Core.Type.Array    (Array)
@@ -147,6 +149,21 @@ instance TestEquality Type where
   testEquality Word64 Word64 = Just DE.Refl
   testEquality Float  Float  = Just DE.Refl
   testEquality Double Double = Just DE.Refl
+  testEquality (Array t1) (Array t2) =
+      testArrayEquality t1 t2
+    where
+      testArrayEquality :: forall n1 a1 n2 a2.
+                           (KnownNat n1, KnownNat n2)
+                        => Type a1
+                        -> Type a2
+                        -> Maybe (Array n1 a1 :~: Array n2 a2)
+      testArrayEquality ty1 ty2
+        | Just DE.Refl <- sameNat (Proxy :: Proxy n1) (Proxy :: Proxy n2)
+        , Just DE.Refl <- testEquality ty1 ty2
+        = Just DE.Refl
+        | otherwise
+        = Nothing
+  testEquality (Struct _) (Struct _) = eqT
   testEquality _ _ = Nothing
 
 -- | A simple, monomorphic representation of types that facilitates putting
