@@ -1,3 +1,7 @@
+2023-01-04
+        * Implement missing cases of type equality for arrays and structs.
+          (#400)
+
 2022-12-27
         * Remove Copilot.Core.External. (#391)
         * Fix bug in definition of simpleType for Int8. (#393)
