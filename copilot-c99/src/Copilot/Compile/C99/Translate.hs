@@ -18,7 +18,7 @@ transexpr (Const ty x) = return $ constty ty x
 
 transexpr (Local ty1 _ name e1 e2) = do
   e1' <- transexpr e1
-  let cty1 = transtype ty1
+  let cty1 = transLocalVarDeclType ty1
       init = Just $ C.InitExpr e1'
   statetell [C.VarDecln Nothing cty1 name init]
 
@@ -302,6 +302,16 @@ transtype ty = case ty of
     where
       length = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
+
+-- | Translate a Copilot type to a valid (local) variable declaration C99 type.
+--
+-- If the type denotes an array, translate it to a pointer to whatever the
+-- array holds. This special case is needed when the type is used for a local
+-- variable declaration. We treat global variables differently (we generate
+-- list initializers).
+transLocalVarDeclType :: Type a -> C.Type
+transLocalVarDeclType (Array ty') = C.Ptr $ transtype ty'
+transLocalVarDeclType ty          = transtype ty
 
 -- | Translate a Copilot type intro a C typename
 transtypename :: Type a -> C.TypeName
