@@ -12,6 +12,7 @@ import           Data.Typeable       (Typeable)
 import qualified Language.C99.Simple as C
 
 import Copilot.Core
+import Copilot.Compile.C99.Error     (impossible)
 import Copilot.Compile.C99.Util
 import Copilot.Compile.C99.External
 import Copilot.Compile.C99.Settings
@@ -29,6 +30,28 @@ genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr]
   where
     cty = C.decay $ transtype ty
     (cexpr, cvars) = runState (transexpr expr) mempty
+
+-- | Write a generator function for a stream that returns an array.
+genFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
+genFunArray name nameArg expr ty@(Array _) =
+    C.FunDef funType name [ outputParam ] varDecls stmts
+  where
+    funType = C.TypeSpec C.Void
+
+    -- The output value is an array
+    outputParam = C.Param cArrayType nameArg
+    cArrayType  = transtype ty
+
+    -- Output value, and any variable declarations needed
+    (cexpr, varDecls) = runState (transexpr expr) mempty
+
+    -- Copy expression to output argument
+    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cexpr size ]
+    size  = C.LitInt (fromIntegral $ tysize ty)
+              C..* C.SizeOfType (C.TypeName $ tyElemName ty)
+
+genFunArray name nameArg expr _ =
+  impossible "genFunArray" "copilot-c99"
 
 -- | Make a extern declaration of a variable.
 mkextdecln :: External -> C.Decln
@@ -99,10 +122,8 @@ mkstep cSettings streams triggers exts =
           tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
 
           tmpassign = case ty of
-            Array _ -> C.Expr $ memcpy (C.Ident tmp_var) val size
-              where
-                size = C.LitInt (fromIntegral $ tysize ty)
-                        C..* C.SizeOfType (C.TypeName (tyElemName ty))
+            Array _ -> C.Expr $ C.Funcall (C.Ident $ generatorname sid)
+                                          [ C.Ident tmp_var ]
             _       -> C.Expr $ C.Ident tmp_var C..= val
 
           bufferupdate = case ty of
@@ -219,19 +240,6 @@ mkstep cSettings streams triggers exts =
             args'        = take (length args) (map argcall (argnames name))
             argcall name = C.Funcall (C.Ident name) []
 
-    -- Write a call to the memcpy function.
-    memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
-    memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
-
-    -- Translate a Copilot type to a C99 type, handling arrays especially.
-    --
-    -- If the given type is an array (including multi-dimensional arrays), the
-    -- type is that of the elements in the array. Otherwise, it is just the
-    -- equivalent representation of the given type in C.
-    tyElemName :: Type a -> C.Type
-    tyElemName ty = case ty of
-      Array ty' -> tyElemName ty'
-      _         -> transtype ty
 
 -- | Write a struct declaration based on its definition.
 mkstructdecln :: Struct a => Type a -> C.Decln
@@ -278,3 +286,19 @@ gatherexprs streams triggers =  map streamexpr streams
   where
     streamexpr  (Stream _ _ expr ty)   = UExpr ty expr
     triggerexpr (Trigger _ guard args) = UExpr Bool guard : args
+
+-- * Auxiliary functions
+
+-- Write a call to the memcpy function.
+memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
+memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
+
+-- Translate a Copilot type to a C99 type, handling arrays especially.
+--
+-- If the given type is an array (including multi-dimensional arrays), the
+-- type is that of the elements in the array. Otherwise, it is just the
+-- equivalent representation of the given type in C.
+tyElemName :: Type a -> C.Type
+tyElemName ty = case ty of
+  Array ty' -> tyElemName ty'
+  _         -> transtype ty

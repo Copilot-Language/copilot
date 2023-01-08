@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 -- | Compile Copilot specifications to C99 code.
 module Copilot.Compile.C99.Compile
   ( compile
@@ -103,6 +104,8 @@ compilec cSettings spec = C.TransUnit declns funs
         accessdecln (Stream sid buff _ ty) = mkaccessdecln sid ty buff
 
         streamgen :: Stream -> C.FunDef
+        streamgen (Stream sid _ expr ty@(Array _)) =
+          genFunArray (generatorname sid) (generatorOutputArgName sid) expr ty
         streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
 
         triggergen :: Trigger -> [C.FunDef]
