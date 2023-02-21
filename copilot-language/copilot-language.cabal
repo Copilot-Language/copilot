@@ -44,7 +44,6 @@ library
 
                , copilot-core          >= 3.13 && < 3.14
                , copilot-interpreter   >= 3.13 && < 3.14
-               , copilot-prettyprinter >= 3.13 && < 3.14
                , copilot-theorem       >= 3.13 && < 3.14
 
   exposed-modules: Copilot.Language
