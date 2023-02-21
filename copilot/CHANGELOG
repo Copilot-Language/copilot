@@ -1,3 +1,6 @@
+2023-02-21
+        * Replace import of Copilot.Language.prettyPrint. (#412)
+
 2023-01-07
         * Version bump (3.13). (#406)
 
