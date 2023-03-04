@@ -2,6 +2,7 @@
         * Remove Copilot.Core.PrettyDot. (#409)
         * Fix formatting error in CHANGELOG. (#414)
         * Remove module space Copilot.Core.Interpret. (#410)
+        * Remove unused definitions from Copilot.Core.Type.Array. (#411)
 
 2023-01-07
         * Version bump (3.13). (#406)
