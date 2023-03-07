@@ -3,9 +3,10 @@
 module Language.Copilot.Main ( copilotMain, defaultMain ) where
 
 import qualified Copilot.Core as C (Spec)
-import Copilot.Language (interpret, prettyPrint)
+import Copilot.Language (interpret)
 import Copilot.Language.Reify (reify)
 import Copilot.Language (Spec)
+import qualified Copilot.PrettyPrint as PP
 
 import Options.Applicative
 import Data.Semigroup ((<>))
@@ -86,3 +87,8 @@ copilotMain interp pretty comp spec = main =<< execParser opts
 -- command line options.
 defaultMain :: Compiler -> Spec -> IO ()
 defaultMain = copilotMain interpret prettyPrint
+  where
+    -- Transform a high-level Copilot Language specification into a low-level
+    -- Copilot Core specification and pretty-print it to stdout.
+    prettyPrint :: Spec -> IO ()
+    prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr

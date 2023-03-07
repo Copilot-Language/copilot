@@ -39,7 +39,6 @@ module Copilot.Language
   , prop
   , theorem
   , forall, exists
-  , prettyPrint
   ) where
 
 import Data.Int hiding (Int)
@@ -67,10 +66,3 @@ import Copilot.Language.Reify
 import Copilot.Language.Prelude
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream)
-import qualified Copilot.PrettyPrint as PP
-
--- | Transform a high-level Copilot Language specification into a low-level
--- Copilot Core specification and pretty-print it to stdout.
-{-# DEPRECATED prettyPrint "This function is deprecated in Copilot 3.11." #-}
-prettyPrint :: Spec -> IO ()
-prettyPrint e = fmap PP.prettyPrint (reify e) >>= putStr
