@@ -16,8 +16,7 @@
 -- Electronic Notes in Theoretical Computer Science vol. 174, p. 23-39, 2007.
 --
 -- For examples of how to traverse a Copilot specification see
--- the source code of the interpreter
--- ("Copilot.Core.Interpret")
+-- the source code of the interpreter (@copilot-interpreter@)
 -- and the pretty-printer
 -- ("Copilot.Core.PrettyPrint").
 module Copilot.Core
