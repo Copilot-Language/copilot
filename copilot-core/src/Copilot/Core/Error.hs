@@ -5,7 +5,6 @@
 -- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
 module Copilot.Core.Error
     ( impossible
-    , badUsage
     )
   where
 
@@ -19,8 +18,3 @@ impossible function package =
     ++ ". Please file an issue at "
     ++ "https://github.com/Copilot-Language/copilot/issues"
     ++ "or email the maintainers at <ivan.perezdominguez@nasa.gov>"
-
--- | Report an error due to an error detected by Copilot (e.g., user error).
-badUsage :: String -- ^ Description of the error.
-         -> a
-badUsage msg = error $ "Copilot error: " ++ msg
