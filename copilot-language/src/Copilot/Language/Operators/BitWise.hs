@@ -1,5 +1,6 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
 
+{-# LANGUAGE CPP  #-}
 {-# LANGUAGE Safe #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -16,7 +17,12 @@ import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 import qualified Prelude as P
+
+#if MIN_VERSION_base(4,17,0)
+import Data.Bits hiding ((.>>.), (.<<.))
+#else
 import Data.Bits
+#endif
 
 -- | Instance of the 'Bits' class for 'Stream's.
 --
@@ -36,9 +42,11 @@ instance (Typed a, Bits a) => Bits (Stream a) where
   bit          = P.error "tbd: bit"
   popCount     = P.error "tbd: popCount"
 
+#if !MIN_VERSION_base(4,17,0)
 -- | See 'xor'.
 (.^.) :: Bits a => a -> a -> a
 (.^.) = xor -- Avoid redefinition of the Operators.Boolean xor
+#endif
 
 -- | Shifting values of a stream to the left.
 (.<<.) :: (Bits a, Typed a, Typed b, P.Integral b)
