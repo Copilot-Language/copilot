@@ -153,7 +153,7 @@ trigger name e args = tell [TriggerItem $ Trigger name e args callStack]
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property where
-  Property :: String -> Stream Bool -> Property
+  Property :: String -> Stream Bool -> CallStack -> Property
 
 -- | A proposition, representing the quantification of a boolean streams over
 -- time.
@@ -179,16 +179,16 @@ extractProp (Exists p) = p
 --
 -- This function returns, in the monadic context, a reference to the
 -- proposition.
-prop :: String -> Prop a -> Writer [SpecItem] (PropRef a)
-prop name e = tell [PropertyItem $ Property name (extractProp e)]
+prop :: HasCallStack => String -> Prop a -> Writer [SpecItem] (PropRef a)
+prop name e = tell [PropertyItem $ Property name (extractProp e) callStack]
   >> return (PropRef name)
 
 -- | A theorem, or proposition together with a proof.
 --
 -- This function returns, in the monadic context, a reference to the
 -- proposition.
-theorem :: String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
-theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
+theorem :: HasCallStack => String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
+theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e) callStack, p)]
   >> return (PropRef name)
 
 -- | Construct a function argument from a stream.

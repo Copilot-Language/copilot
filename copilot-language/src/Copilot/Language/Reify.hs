@@ -27,6 +27,7 @@ import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Map (Map)
 import qualified System.Mem.StableName.Map as M
 import Control.Monad (liftM, unless)
+import GHC.Stack (callStack)
 
 -- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
@@ -51,7 +52,7 @@ reify spec = do
         , Core.specTriggers   = coreTriggers
         , Core.specProperties = coreProperties }
 
-  results <- sequence $ zipWith (prove cspec) (map (\(Property n _,_) -> n) thms) $ map snd thms
+  results <- sequence $ zipWith (prove cspec) (map (\(Property n _ _,_) -> n) thms) $ map snd thms
   unless (and results) $ putStrLn "Warning: failed to check some proofs."
 
   return cspec
@@ -106,11 +107,12 @@ mkProperty
   -> IORef [Core.Stream]
   -> Property
   -> IO Core.Property
-mkProperty refMkId refStreams refMap (Property name guard) = do
+mkProperty refMkId refStreams refMap (Property name guard callStack) = do
   w1 <- mkExpr refMkId refStreams refMap guard
   return Core.Property
     { Core.propertyName  = name
-    , Core.propertyExpr  = w1 }
+    , Core.propertyExpr  = w1
+    , Core.propertyCallstack = callStack }
 
 -- | Transform a Copilot stream expression into a Copilot Core expression.
 {-# INLINE mkExpr #-}

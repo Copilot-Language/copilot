@@ -65,6 +65,7 @@ data Trigger = Trigger
 data Property = Property
   { propertyName :: Name
   , propertyExpr :: Expr Bool
+  , propertyCallstack :: CallStack
   }
 
 -- | A Copilot specification is a list of streams, together with monitors on

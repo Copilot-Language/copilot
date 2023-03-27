@@ -109,7 +109,7 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeProperty :: IORef Env -> Property -> IO ()
-analyzeProperty refStreams (Property _ e) = analyzeExpr refStreams e
+analyzeProperty refStreams (Property _ e _) = analyzeExpr refStreams e
 
 data SeenExtern = NoExtern
                 | SeenFun
