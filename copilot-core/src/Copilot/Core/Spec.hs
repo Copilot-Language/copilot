@@ -29,6 +29,7 @@ import Data.Typeable (Typeable)
 -- Internal imports
 import Copilot.Core.Expr (Expr, Id, Name, UExpr)
 import Copilot.Core.Type (Type, Typed)
+import GHC.Stack (CallStack)
 
 -- | A stream in an infinite succession of values of the same type.
 --
@@ -56,6 +57,7 @@ data Trigger = Trigger
   { triggerName  :: Name
   , triggerGuard :: Expr Bool
   , triggerArgs  :: [UExpr]
+  , triggerCallstack :: CallStack
   }
 
 -- | A property, representing a boolean stream that is existentially or

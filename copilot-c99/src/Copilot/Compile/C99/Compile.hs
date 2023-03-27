@@ -109,7 +109,7 @@ compilec cSettings spec = C.TransUnit declns funs
         streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
 
         triggergen :: Trigger -> [C.FunDef]
-        triggergen (Trigger name guard args) = guarddef : argdefs
+        triggergen (Trigger name guard args _) = guarddef : argdefs
           where
             guarddef = genfun (guardname name) guard Bool
             argdefs  = map arggen (zip (argnames name) args)
@@ -148,7 +148,7 @@ compileh cSettings spec = C.TransUnit declns []
     extfundeclns triggers = map extfundecln triggers
       where
         extfundecln :: Trigger -> C.Decln
-        extfundecln (Trigger name _ args) = C.FunDecln Nothing cty name params
+        extfundecln (Trigger name _ args _) = C.FunDecln Nothing cty name params
           where
             cty    = C.TypeSpec C.Void
             params = map mkparam $ zip (argnames name) args

@@ -193,7 +193,7 @@ mkstep cSettings streams triggers exts =
     --    any modifications that the handler called makes to the struct argument
     --    will not affect the internals of the monitoring code.
     mktriggercheck :: Trigger -> ([C.Decln], C.Stmt)
-    mktriggercheck (Trigger name guard args) =
+    mktriggercheck (Trigger name guard args _) =
         (aTmpDeclns, ifStmt)
       where
         aTmpDeclns = zipWith (\tmpVar arg ->
@@ -285,7 +285,7 @@ gatherexprs streams triggers =  map streamexpr streams
                              ++ concatMap triggerexpr triggers
   where
     streamexpr  (Stream _ _ expr ty)   = UExpr ty expr
-    triggerexpr (Trigger _ guard args) = UExpr Bool guard : args
+    triggerexpr (Trigger _ guard args _) = UExpr Bool guard : args
 
 -- * Auxiliary functions
 

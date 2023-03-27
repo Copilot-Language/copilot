@@ -81,13 +81,14 @@ mkTrigger
   -> IORef [Core.Stream]
   -> Trigger
   -> IO Core.Trigger
-mkTrigger refMkId refStreams refMap (Trigger name guard args) = do
+mkTrigger refMkId refStreams refMap (Trigger name guard args callStack) = do
   w1 <- mkExpr refMkId refStreams refMap guard
   args' <- mapM mkTriggerArg args
   return Core.Trigger
     { Core.triggerName  = name
     , Core.triggerGuard = w1
-    , Core.triggerArgs  = args' }
+    , Core.triggerArgs  = args'
+    , Core.triggerCallstack = callStack }
 
   where
 

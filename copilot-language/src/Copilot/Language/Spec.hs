@@ -40,6 +40,7 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Stream
 
 import Copilot.Theorem.Prove
+import GHC.Stack (HasCallStack, CallStack, callStack)
 
 -- | A specification is a list of declarations of triggers, observers,
 -- properties and theorems.
@@ -137,16 +138,17 @@ observer name e = tell [ObserverItem $ Observer name e]
 -- | A trigger, representing a function we execute when a boolean stream becomes
 -- true at a sample.
 data Trigger where
-  Trigger :: Core.Name -> Stream Bool -> [Arg] -> Trigger
+  Trigger :: Core.Name -> Stream Bool -> [Arg] -> CallStack -> Trigger
 
 -- | Define a new trigger as part of a specification. A trigger declares which
 -- external function, or handler, will be called when a guard defined by a
 -- boolean stream becomes true.
-trigger :: String       -- ^ Name of the handler to be called.
+trigger :: HasCallStack
+        => String       -- ^ Name of the handler to be called.
         -> Stream Bool  -- ^ The stream used as the guard for the trigger.
         -> [Arg]        -- ^ List of arguments to the handler.
         -> Spec
-trigger name e args = tell [TriggerItem $ Trigger name e args]
+trigger name e args = tell [TriggerItem $ Trigger name e args callStack]
 
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
