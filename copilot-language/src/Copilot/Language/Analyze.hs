@@ -92,7 +92,7 @@ analyze spec = do
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeTrigger :: IORef Env -> Trigger -> IO ()
-analyzeTrigger refStreams (Trigger _ e0 args _) =
+analyzeTrigger refStreams (Trigger _ e0 args) =
   analyzeExpr refStreams e0 >> mapM_ analyzeTriggerArg args
 
   where
@@ -109,7 +109,7 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeProperty :: IORef Env -> Property -> IO ()
-analyzeProperty refStreams (Property _ e _) = analyzeExpr refStreams e
+analyzeProperty refStreams (Property _ e) = analyzeExpr refStreams e
 
 data SeenExtern = NoExtern
                 | SeenFun
@@ -278,7 +278,7 @@ specExts refStreams spec = do
   observerExts env (Observer _ stream) = collectExts refStreams stream env
 
   triggerExts :: ExternEnv -> Trigger -> IO ExternEnv
-  triggerExts env (Trigger _ guard args _) = do
+  triggerExts env (Trigger _ guard args) = do
     env' <- collectExts refStreams guard env
     foldM (\env'' (Arg arg_) -> collectExts refStreams arg_ env'')
           env' args

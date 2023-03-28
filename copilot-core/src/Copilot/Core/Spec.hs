@@ -57,7 +57,7 @@ data Trigger = Trigger
   { triggerName  :: Name
   , triggerGuard :: Expr Bool
   , triggerArgs  :: [UExpr]
-  , triggerCallstack :: CallStack
+  , triggerCallStack :: CallStack
   }
 
 -- | A property, representing a boolean stream that is existentially or
@@ -65,7 +65,7 @@ data Trigger = Trigger
 data Property = Property
   { propertyName :: Name
   , propertyExpr :: Expr Bool
-  , propertyCallstack :: CallStack
+  , propertyCallStack :: CallStack
   }
 
 -- | A Copilot specification is a list of streams, together with monitors on
