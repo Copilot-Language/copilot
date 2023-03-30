@@ -37,10 +37,10 @@ import GHC.Stack (CallStack)
 -- role: they are used by other parts (e.g., 'Trigger') to detect when the
 -- properties being monitored are violated.
 data Stream = forall a . (Typeable a, Typed a) => Stream
-  { streamId       :: Id
-  , streamBuffer   :: [a]
-  , streamExpr     :: Expr a
-  , streamExprType :: Type a
+  { streamId        :: Id
+  , streamBuffer    :: [a]
+  , streamExpr      :: Expr a
+  , streamExprType  :: Type a
   , streamCallStack :: CallStack
   }
 
@@ -55,17 +55,17 @@ data Observer = forall a . Typeable a => Observer
 -- | A trigger, representing a function we execute when a boolean stream becomes
 -- true at a sample.
 data Trigger = Trigger
-  { triggerName  :: Name
-  , triggerGuard :: Expr Bool
-  , triggerArgs  :: [UExpr]
+  { triggerName      :: Name
+  , triggerGuard     :: Expr Bool
+  , triggerArgs      :: [UExpr]
   , triggerCallStack :: CallStack
   }
 
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property = Property
-  { propertyName :: Name
-  , propertyExpr :: Expr Bool
+  { propertyName      :: Name
+  , propertyExpr      :: Expr Bool
   , propertyCallStack :: CallStack
   }
 

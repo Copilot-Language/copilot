@@ -87,7 +87,7 @@ externW64 = extern
 -- | Create a stream carrying values of type Int8, populated by an external
 -- global variable.
 externI8 :: HasCallStack
-          => String    -- ^ Name of the global variable to make accessible.
+         => String    -- ^ Name of the global variable to make accessible.
          -> Maybe [Int8] -- ^ Values to be used exclusively for testing/simulation.
          -> Stream Int8
 externI8 = extern
@@ -119,7 +119,7 @@ externI64 = extern
 -- | Create a stream carrying values of type Float, populated by an external
 -- global variable.
 externF :: HasCallStack
-          => String        -- ^ Name of the global variable to make accessible.
+        => String        -- ^ Name of the global variable to make accessible.
         -> Maybe [Float] -- ^ Values to be used exclusively for testing/simulation.
         -> Stream Float
 externF = extern
@@ -127,7 +127,7 @@ externF = extern
 -- | Create a stream carrying values of type Double, populated by an external
 -- global variable.
 externD :: HasCallStack
-          => String    -- ^ Name of the global variable to make accessible.
+        => String    -- ^ Name of the global variable to make accessible.
         -> Maybe [Double] -- ^ Values to be used exclusively for testing/simulation.
         -> Stream Double
 externD = extern

@@ -91,7 +91,7 @@ compilec cSettings spec = C.TransUnit declns funs
     mkglobals streams = map buffdecln streams ++ map indexdecln streams
       where
         buffdecln  (Stream sid buff _ ty _) = mkbuffdecln  sid ty buff
-        indexdecln (Stream sid _    _ _ _) = mkindexdecln sid
+        indexdecln (Stream sid _    _ _  _) = mkindexdecln sid
 
     -- Make generator functions, including trigger arguments.
     genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
