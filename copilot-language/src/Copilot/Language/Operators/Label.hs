@@ -10,6 +10,7 @@ module Copilot.Language.Operators.Label
 
 import Copilot.Core (Typed)
 import Copilot.Language.Stream (Stream (..))
+import GHC.Stack (HasCallStack)
 
 -- | This function allows you to label a stream with a tag, which can be used
 -- by different backends to provide additional information either in error
@@ -18,5 +19,5 @@ import Copilot.Language.Stream (Stream (..))
 -- Semantically, a labelled stream is just the stream inside it. The use of
 -- label should not affect the observable behavior of the monitor, and how it
 -- is used in the code generated is a decision specific to each backend.
-label :: (Typed a) => String -> Stream a -> Stream a
+label :: (HasCallStack, Typed a) => String -> Stream a -> Stream a
 label = Label

@@ -14,9 +14,10 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import Prelude ()
+import GHC.Stack (HasCallStack)
 
 -- | Convenient synonym for 'ifThenElse'.
-mux :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
+mux :: (HasCallStack, Typed a) => Stream Bool -> Stream a -> Stream a -> Stream a
 mux (Const True) t _  = t
 mux (Const False) _ f = f
 mux b t f             = Op3 (Core.Mux typeOf) b t f
@@ -27,5 +28,5 @@ mux b t f             = Op3 (Core.Mux typeOf) b t f
 -- Produce a stream that, at any point in time, if the value of the first
 -- stream at that point is true, contains the value in the second stream at
 -- that time, otherwise it contains the value in the third stream.
-ifThenElse :: Typed a => Stream Bool -> Stream a -> Stream a -> Stream a
+ifThenElse :: (HasCallStack, Typed a) => Stream Bool -> Stream a -> Stream a -> Stream a
 ifThenElse = mux

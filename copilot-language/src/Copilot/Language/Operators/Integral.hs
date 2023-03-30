@@ -19,16 +19,17 @@ import Copilot.Language.Stream
 import qualified Data.Bits as B
 import qualified Prelude as P
 import Data.List (foldl', replicate)
+import GHC.Stack (HasCallStack)
 
 -- | Apply the 'Prelude.div' operation to two streams, point-wise.
-div :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
+div :: (HasCallStack, Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 (Const 0) `div` _ = Const 0
 _ `div` (Const 0) = Err.badUsage "in div: division by zero."
 x `div` (Const 1) = x
 x `div` y = Op2 (Core.Div typeOf) x y
 
 -- | Apply the 'Prelude.mod' operation to two streams, point-wise.
-mod :: (Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
+mod :: (HasCallStack, Typed a, P.Integral a) => Stream a -> Stream a -> Stream a
 _         `mod` (Const 0) = Err.badUsage "in mod: division by zero."
 (Const 0) `mod` _         = (Const 0)
 (Const x) `mod` (Const y) = Const (x `P.mod` y)
@@ -38,7 +39,7 @@ x `mod` y = Op2 (Core.Mod typeOf) x y
 --
 -- Either the first stream must be the constant 2, or the second must be a
 -- constant stream.
-(^) :: (Typed a, Typed b, P.Num a, B.Bits a, P.Integral b)
+(^) :: (HasCallStack, Typed a, Typed b, P.Num a, B.Bits a, P.Integral b)
     => Stream a -> Stream b -> Stream a
 (Const 0) ^ (Const 0)  = Const 1
 (Const 0) ^ x          = Op3 (Core.Mux typeOf) (Op2 (Core.Eq typeOf) x 0) (1) (0)

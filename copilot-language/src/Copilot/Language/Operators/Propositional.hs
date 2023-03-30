@@ -16,11 +16,12 @@ import Copilot.Language.Spec (Prop (..))
 import qualified Copilot.Language.Operators.Boolean as B
 
 import Copilot.Theorem
+import GHC.Stack (HasCallStack)
 
 -- | A proposition that can be negated.
 class Negatable a b where
   -- | Negate a proposition.
-  not :: a -> b
+  not :: HasCallStack => a -> b
 
 -- | Negation of an existentially quantified proposition.
 instance Negatable (Prop Existential) (Prop Universal) where

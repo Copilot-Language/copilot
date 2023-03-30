@@ -90,8 +90,8 @@ compilec cSettings spec = C.TransUnit declns funs
     mkglobals :: [Stream] -> [C.Decln]
     mkglobals streams = map buffdecln streams ++ map indexdecln streams
       where
-        buffdecln  (Stream sid buff _ ty) = mkbuffdecln  sid ty buff
-        indexdecln (Stream sid _    _ _ ) = mkindexdecln sid
+        buffdecln  (Stream sid buff _ ty _) = mkbuffdecln  sid ty buff
+        indexdecln (Stream sid _    _ _ _) = mkindexdecln sid
 
     -- Make generator functions, including trigger arguments.
     genfuns :: [Stream] -> [Trigger] -> [C.FunDef]
@@ -101,12 +101,12 @@ compilec cSettings spec = C.TransUnit declns funs
       where
 
         accessdecln :: Stream -> C.FunDef
-        accessdecln (Stream sid buff _ ty) = mkaccessdecln sid ty buff
+        accessdecln (Stream sid buff _ ty _) = mkaccessdecln sid ty buff
 
         streamgen :: Stream -> C.FunDef
-        streamgen (Stream sid _ expr ty@(Array _)) =
+        streamgen (Stream sid _ expr ty@(Array _) _) =
           genFunArray (generatorname sid) (generatorOutputArgName sid) expr ty
-        streamgen (Stream sid _ expr ty) = genfun (generatorname sid) expr ty
+        streamgen (Stream sid _ expr ty _) = genfun (generatorname sid) expr ty
 
         triggergen :: Trigger -> [C.FunDef]
         triggergen (Trigger name guard args _) = guarddef : argdefs

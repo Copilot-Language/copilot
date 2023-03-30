@@ -116,7 +116,7 @@ mkstep cSettings streams triggers exts =
 
     -- Write code to update global stream buffers and index.
     mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
-    mkupdateglobals (Stream sid buff expr ty) =
+    mkupdateglobals (Stream sid buff expr ty _) =
       (tmpdecln, tmpassign, bufferupdate, indexupdate)
         where
           tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
@@ -284,7 +284,7 @@ gatherexprs :: [Stream] -> [Trigger] -> [UExpr]
 gatherexprs streams triggers =  map streamexpr streams
                              ++ concatMap triggerexpr triggers
   where
-    streamexpr  (Stream _ _ expr ty)   = UExpr ty expr
+    streamexpr  (Stream _ _ expr ty _)   = UExpr ty expr
     triggerexpr (Trigger _ guard args _) = UExpr Bool guard : args
 
 -- * Auxiliary functions

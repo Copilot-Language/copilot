@@ -13,12 +13,13 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import qualified Prelude as P
+import GHC.Stack (HasCallStack)
 
 -- | Compare two streams point-wise for equality.
 --
 -- The output stream contains the value True at a point in time if both
 -- argument streams contain the same value at that point in time.
-(==) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
+(==) :: (HasCallStack, P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) == (Const y) = Const (x P.== y)
 x == y = Op2 (Core.Eq typeOf) x y
 
@@ -26,6 +27,6 @@ x == y = Op2 (Core.Eq typeOf) x y
 --
 -- The output stream contains the value True at a point in time if both
 -- argument streams contain different values at that point in time.
-(/=) :: (P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
+(/=) :: (HasCallStack, P.Eq a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) /= (Const y) = Const (x P./= y)
 x /= y = Op2 (Core.Ne typeOf) x y

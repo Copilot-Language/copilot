@@ -13,22 +13,23 @@ import Copilot.Language.Stream
 
 import Data.Int
 import Data.Word
+import GHC.Stack (HasCallStack)
 
 -- | Class to capture casting between types for which it can be performed
 -- safely.
 class Cast a b where
   -- | Perform a safe cast from @Stream a@ to @Stream b@.
-  cast :: (Typed a, Typed b) => Stream a -> Stream b
+  cast :: (HasCallStack, Typed a, Typed b) => Stream a -> Stream b
 
 -- | Class to capture casting between types for which casting may be unsafe
 -- and/or result in a loss of precision or information.
 class UnsafeCast a b where
   -- | Perform an unsafe cast from @Stream a@ to @Stream b@.
-  unsafeCast :: (Typed a, Typed b) => Stream a -> Stream b
+  unsafeCast :: (HasCallStack, Typed a, Typed b) => Stream a -> Stream b
 
 -- | Cast a boolean stream to a stream of numbers, producing 1 if the
 -- value at a point in time is 'True', and 0 otherwise.
-castBool :: (Eq a, Num a, Typed a) => Stream Bool -> Stream a
+castBool :: (HasCallStack, Eq a, Num a, Typed a) => Stream Bool -> Stream a
 castBool (Const bool) = Const $ if bool then 1 else 0
 castBool x            = Op3 (C.Mux typeOf) x 1 0
 
@@ -77,7 +78,7 @@ instance Cast Bool Int64 where
   cast = castBool
 
 -- | Cast a stream carrying numbers to an integral using 'fromIntegral'.
-castIntegral :: (Integral a, Typed a, Num b, Typed b) => Stream a -> Stream b
+castIntegral :: (HasCallStack, Integral a, Typed a, Num b, Typed b) => Stream a -> Stream b
 castIntegral (Const x) = Const (fromIntegral x)
 castIntegral x         = Op1 (C.Cast typeOf typeOf) x
 

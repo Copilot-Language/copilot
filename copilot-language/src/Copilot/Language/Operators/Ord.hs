@@ -15,13 +15,14 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import qualified Prelude as P
+import GHC.Stack (HasCallStack)
 
 -- | Compare two streams point-wise for order.
 --
 -- The output stream contains the value True at a point in time if the
 -- element in the first stream is smaller or equal than the element in
 -- the second stream at that point in time, and False otherwise.
-(<=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(<=) :: (HasCallStack, P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) <= (Const y) = Const (x P.<= y)
 x <= y                 = Op2 (Core.Le typeOf) x y
 
@@ -30,7 +31,7 @@ x <= y                 = Op2 (Core.Le typeOf) x y
 -- The output stream contains the value True at a point in time if the
 -- element in the first stream is greater or equal than the element in
 -- the second stream at that point in time, and False otherwise.
-(>=) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(>=) :: (HasCallStack, P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) >= (Const y) = Const (x P.>= y)
 x >= y                 = Op2 (Core.Ge typeOf) x y
 
@@ -39,7 +40,7 @@ x >= y                 = Op2 (Core.Ge typeOf) x y
 -- The output stream contains the value True at a point in time if the
 -- element in the first stream is smaller than the element in the second stream
 -- at that point in time, and False otherwise.
-(<) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(<) :: (HasCallStack, P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) < (Const y) = Const (x P.< y)
 x < y                 = Op2 (Core.Lt typeOf) x y
 
@@ -48,6 +49,6 @@ x < y                 = Op2 (Core.Lt typeOf) x y
 -- The output stream contains the value True at a point in time if the element
 -- in the first stream is greater than the element in the second stream at that
 -- point in time, and False otherwise.
-(>) :: (P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
+(>) :: (HasCallStack, P.Ord a, Typed a) => Stream a -> Stream a -> Stream Bool
 (Const x) > (Const y) = Const (x P.> y)
 x > y                 = Op2 (Core.Gt typeOf) x y

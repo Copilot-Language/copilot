@@ -111,7 +111,7 @@ prove solver spec = do
     Z3 -> WC.extendConfig WS.z3Options (WI.getConfiguration sym)
 
   -- Compute the maximum amount of delay for any stream in this spec
-  let bufLen (CS.Stream _ buf _ _) = genericLength buf
+  let bufLen (CS.Stream _ buf _ _ _) = genericLength buf
       maxBufLen = maximum (0 : (bufLen <$> CS.specStreams spec))
 
   -- This process performs k-induction where we use @k = maxBufLen@.
@@ -352,7 +352,7 @@ computeAssumptions ::
 computeAssumptions sym properties spec =
     concat <$> forM specPropertyExprs computeAssumption
   where
-    bufLen (CS.Stream _ buf _ _) = genericLength buf
+    bufLen (CS.Stream _ buf _ _ _) = genericLength buf
     maxBufLen = maximum (0 : (bufLen <$> CS.specStreams spec))
 
     -- Retrieve the boolean-values Copilot expressions corresponding to the

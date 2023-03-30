@@ -41,6 +41,7 @@ data Stream = forall a . (Typeable a, Typed a) => Stream
   , streamBuffer   :: [a]
   , streamExpr     :: Expr a
   , streamExprType :: Type a
+  , streamCallStack :: CallStack
   }
 
 -- | An observer, representing a stream that we observe during interpretation

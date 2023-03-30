@@ -15,6 +15,7 @@ module Copilot.Language.Operators.Local
 
 import Copilot.Core (Typed)
 import Copilot.Language.Stream (Stream (..))
+import GHC.Stack (HasCallStack)
 
 -- | Let expressions.
 --
@@ -27,5 +28,5 @@ import Copilot.Language.Stream (Stream (..))
 --   expression = local (stream1 + stream2) $ \\s ->
 --                (s >= 0 && s <= 10)
 --   @
-local :: (Typed a, Typed b) => Stream a -> (Stream a -> Stream b) -> Stream b
+local :: (HasCallStack, Typed a, Typed b) => Stream a -> (Stream a -> Stream b) -> Stream b
 local = Local

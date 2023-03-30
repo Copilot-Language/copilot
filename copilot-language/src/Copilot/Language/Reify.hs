@@ -207,7 +207,7 @@ mkExpr refMkId refStreams refMap = go
 -- expression.
 {-# INLINE mkStream #-}
 mkStream
-  :: Typed a
+  :: (HasCallStack, Typed a)
   => IORef Int
   -> IORef (Map Core.Id)
   -> IORef [Core.Stream]
@@ -245,7 +245,8 @@ mkStream refMkId refStreams refMap e0 = do
         { Core.streamId         = id
         , Core.streamBuffer     = buf
         , Core.streamExpr       = w
-        , Core.streamExprType   = typeOf }
+        , Core.streamExprType   = typeOf
+        , Core.streamCallStack  = callStack }
     return id
 
 -- | Create a fresh, unused 'Id'.

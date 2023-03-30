@@ -22,6 +22,7 @@ import qualified Prelude as P
 import Data.Bits hiding ((.>>.), (.<<.))
 #else
 import Data.Bits
+import GHC.Stack (HasCallStack)
 #endif
 
 -- | Instance of the 'Bits' class for 'Stream's.
@@ -49,11 +50,11 @@ instance (Typed a, Bits a) => Bits (Stream a) where
 #endif
 
 -- | Shifting values of a stream to the left.
-(.<<.) :: (Bits a, Typed a, Typed b, P.Integral b)
+(.<<.) :: (HasCallStack, Bits a, Typed a, Typed b, P.Integral b)
        => Stream a -> Stream b -> Stream a
 (.<<.) = Op2 (Core.BwShiftL typeOf typeOf)
 
 -- | Shifting values of a stream to the right.
-(.>>.) :: (Bits a, Typed a, Typed b, P.Integral b)
+(.>>.) :: (HasCallStack, Bits a, Typed a, Typed b, P.Integral b)
        => Stream a -> Stream b -> Stream a
 (.>>.) = Op2 (Core.BwShiftR typeOf typeOf)

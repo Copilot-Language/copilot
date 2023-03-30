@@ -12,6 +12,7 @@ import Copilot.Core (Typed)
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
 import Prelude ()
+import GHC.Stack (HasCallStack)
 
 infixr 1 ++
 
@@ -23,7 +24,7 @@ infixr 1 ++
 -- Prepending elements to a stream may increase the memory requirements of the
 -- generated programs (which now must hold the same number of elements in
 -- memory for future processing).
-(++) :: Typed a => [a] -> Stream a -> Stream a
+(++) :: (HasCallStack, Typed a) => [a] -> Stream a -> Stream a
 (++) = (`Append` Nothing)
 
 -- | Drop a number of samples from a stream.
@@ -32,7 +33,7 @@ infixr 1 ++
 -- elements. For most kinds of streams, you cannot drop elements without
 -- prepending an equal or greater number of elements to them first, as it
 -- could result in undefined samples.
-drop :: Typed a => Int -> Stream a -> Stream a
+drop :: (HasCallStack, Typed a) => Int -> Stream a -> Stream a
 drop 0 s             = s
 drop _ ( Const j )   = Const j
 drop i ( Drop  j s ) = Drop (fromIntegral i + j) s

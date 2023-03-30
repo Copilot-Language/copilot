@@ -32,7 +32,7 @@ gatherexts streams triggers = streamsexts `extunion` triggersexts
     triggersexts = foldr extunion mempty $ map triggerexts triggers
 
     streamexts :: Stream -> [External]
-    streamexts (Stream _ _ expr _) = exprexts expr
+    streamexts (Stream _ _ expr _ _) = exprexts expr
 
     triggerexts :: Trigger -> [External]
     triggerexts (Trigger _ guard args _) = guardexts `extunion` argexts

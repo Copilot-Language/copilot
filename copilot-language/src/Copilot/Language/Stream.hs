@@ -20,7 +20,7 @@ import qualified Copilot.Core as Core
 import Copilot.Language.Error
 import Copilot.Language.Prelude
 import qualified Prelude as P
-
+import GHC.Stack (HasCallStack)
 -- | A stream in Copilot is an infinite succession of values of the same type.
 --
 -- Streams can be built using simple primities (e.g., 'Const'), by applying
@@ -29,28 +29,28 @@ import qualified Prelude as P
 -- 'Op2', 'Op3').
 
 data Stream :: * -> * where
-  Append      :: Typed a
+  Append      :: (HasCallStack, Typed a)
               => [a] -> Maybe (Stream Bool) -> Stream a -> Stream a
-  Const       :: Typed a => a -> Stream a
-  Drop        :: Typed a
+  Const       :: (HasCallStack, Typed a) => a -> Stream a
+  Drop        :: (HasCallStack, Typed a)
               => Int -> Stream a -> Stream a
-  Extern      :: Typed a
+  Extern      :: (HasCallStack, Typed a)
               => String -> Maybe [a] -> Stream a
-  Local       :: (Typed a, Typed b)
+  Local       :: (HasCallStack, Typed a, Typed b)
               => Stream a -> (Stream a -> Stream b) -> Stream b
-  Var         :: Typed a
+  Var         :: (HasCallStack, Typed a)
               => String -> Stream a
-  Op1         :: (Typed a, Typed b)
+  Op1         :: (HasCallStack, Typed a, Typed b)
               => Core.Op1 a b -> Stream a -> Stream b
-  Op2         :: (Typed a, Typed b, Typed c)
+  Op2         :: (HasCallStack, Typed a, Typed b, Typed c)
               => Core.Op2 a b c -> Stream a -> Stream b -> Stream c
-  Op3         :: (Typed a, Typed b, Typed c, Typed d)
+  Op3         :: (HasCallStack, Typed a, Typed b, Typed c, Typed d)
               => Core.Op3 a b c d -> Stream a -> Stream b -> Stream c -> Stream d
-  Label       :: Typed a => String -> Stream a -> Stream a
+  Label       :: (HasCallStack, Typed a) => String -> Stream a -> Stream a
 
 -- | Wrapper to use 'Stream's as arguments to triggers.
 data Arg where
-  Arg :: Typed a => Stream a -> Arg
+  Arg :: (HasCallStack, Typed a) => Stream a -> Arg
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
