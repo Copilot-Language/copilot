@@ -8,11 +8,6 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE UndecidableInstances      #-}
-
--- The following flag is disabled in this module so that the import of
--- Copilot.Core.Type.Equality does not give rise to warnings.
-{-# OPTIONS_GHC -fno-warn-deprecations #-}
-
 -- |
 -- Description: Typing for Core.
 -- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -53,8 +48,7 @@ import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
                            symbolVal)
 
 -- Internal imports
-import Copilot.Core.Type.Array    (Array)
-import Copilot.Core.Type.Equality as CE
+import Copilot.Core.Type.Array (Array)
 
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
@@ -122,20 +116,6 @@ tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
 tysize :: forall n t . KnownNat n => Type (Array n t) -> Int
 tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
 tysize ty@(Array _            ) = tylength ty
-
-instance EqualType Type where
-  (=~=) Bool   Bool   = Just CE.Refl
-  (=~=) Int8   Int8   = Just CE.Refl
-  (=~=) Int16  Int16  = Just CE.Refl
-  (=~=) Int32  Int32  = Just CE.Refl
-  (=~=) Int64  Int64  = Just CE.Refl
-  (=~=) Word8  Word8  = Just CE.Refl
-  (=~=) Word16 Word16 = Just CE.Refl
-  (=~=) Word32 Word32 = Just CE.Refl
-  (=~=) Word64 Word64 = Just CE.Refl
-  (=~=) Float  Float  = Just CE.Refl
-  (=~=) Double Double = Just CE.Refl
-  (=~=) _ _ = Nothing
 
 instance TestEquality Type where
   testEquality Bool   Bool   = Just DE.Refl
