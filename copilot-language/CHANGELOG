@@ -1,3 +1,6 @@
+2023-04-17
+        * Remove outdated comment about pretty-printer. (#428)
+
 2023-03-07
         * Version bump (3.14). (#422)
         * Remove function Copilot.Language.prettyPrint. (#412)
