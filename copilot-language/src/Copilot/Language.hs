@@ -3,8 +3,7 @@
 -- | Main Copilot language export file.
 --
 -- This is mainly a meta-module that re-exports most definitions in this
--- library. It also provides a default pretty printer that prints a
--- specification to stdout.
+-- library.
 
 {-# LANGUAGE Safe #-}
 
