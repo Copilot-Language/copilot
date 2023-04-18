@@ -1,3 +1,6 @@
+2023-04-17
+        * Remove Copilot.Core.Type.Equality. (#427)
+
 2023-03-07
         * Version bump (3.14). (#422)
         * Remove Copilot.Core.PrettyDot. (#409)
