@@ -42,8 +42,7 @@ library
     -fno-warn-orphans
 
   build-depends:
-    base       >= 4.9 && < 5,
-    pretty     >= 1.0 && < 1.2
+    base >= 4.9 && < 5
 
   exposed-modules:
 
@@ -53,12 +52,6 @@ library
     Copilot.Core.Spec
     Copilot.Core.Type
     Copilot.Core.Type.Array
-    Copilot.Core.PrettyPrint
-
-  other-modules:
-
-    Copilot.Core.Error
-    Copilot.Core.Type.Show
 
 test-suite unit-tests
   type:
@@ -76,7 +69,6 @@ test-suite unit-tests
       base
     , HUnit
     , QuickCheck
-    , pretty
     , test-framework
     , test-framework-hunit
     , test-framework-quickcheck2
