@@ -54,10 +54,6 @@ library
     Copilot.Core.Type
     Copilot.Core.Type.Array
 
-  other-modules:
-
-    Copilot.Core.Type.Show
-
 test-suite unit-tests
   type:
     exitcode-stdio-1.0
