@@ -56,7 +56,6 @@ library
 
   other-modules:
 
-    Copilot.Core.Error
     Copilot.Core.Type.Show
 
 test-suite unit-tests
