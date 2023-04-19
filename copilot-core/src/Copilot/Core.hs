@@ -17,8 +17,7 @@
 --
 -- For examples of how to traverse a Copilot specification see
 -- the source code of the interpreter (@copilot-interpreter@)
--- and the pretty-printer
--- ("Copilot.Core.PrettyPrint").
+-- and the pretty-printer (@copilot-prettyprinter@).
 module Copilot.Core
     ( module Copilot.Core.Expr
     , module Copilot.Core.Operators
