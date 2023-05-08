@@ -1,6 +1,6 @@
 cabal-version             : >= 1.10
 name                      : copilot-c99
-version                   : 3.14
+version                   : 3.15
 synopsis                  : A compiler for Copilot targeting C99.
 description               :
   This package is a back-end from Copilot to C.
@@ -45,7 +45,7 @@ library
                           , mtl                 >= 2.2 && < 2.4
                           , pretty              >= 1.1 && < 1.2
 
-                          , copilot-core        >= 3.14  && < 3.15
+                          , copilot-core        >= 3.15  && < 3.16
                           , language-c99        >= 0.2.0 && < 0.3
                           , language-c99-simple >= 0.2.2 && < 0.3
 
