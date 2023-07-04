@@ -58,3 +58,38 @@ library
                          , Copilot.Compile.C99.External
                          , Copilot.Compile.C99.Compile
                          , Copilot.Compile.C99.Settings
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  other-modules:
+   Test.Copilot.Compile.C99
+
+  build-depends:
+      base
+    , directory
+    , HUnit
+    , QuickCheck
+    , pretty
+    , process
+    , random
+    , test-framework
+    , test-framework-hunit
+    , test-framework-quickcheck2
+    , unix
+
+    , copilot-core
+    , copilot-c99
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
