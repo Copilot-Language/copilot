@@ -1,3 +1,6 @@
+2023-07-07
+        * Move Copilot.Language.Stream.Arg to Copilot.Language.Spec. (#446)
+
 2023-05-07
         * Version bump (3.15). (#438)
         * Remove outdated comment about pretty-printer. (#428)
