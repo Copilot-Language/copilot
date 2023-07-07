@@ -17,7 +17,7 @@ import Copilot.Core (Typed, Id, typeOf)
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Error   (impossible)
 import Copilot.Language.Spec
-import Copilot.Language.Stream (Stream (..), Arg (..))
+import Copilot.Language.Stream (Stream (..))
 
 import Copilot.Theorem.Prove
 

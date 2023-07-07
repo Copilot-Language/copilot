@@ -9,7 +9,6 @@
 
 module Copilot.Language.Stream
   ( Stream (..)
-  , Arg (..)
   , Copilot.Language.Stream.ceiling
   , Copilot.Language.Stream.floor
   , Copilot.Language.Stream.atan2
@@ -47,10 +46,6 @@ data Stream :: * -> * where
   Op3         :: (Typed a, Typed b, Typed c, Typed d)
               => Core.Op3 a b c d -> Stream a -> Stream b -> Stream c -> Stream d
   Label       :: Typed a => String -> Stream a -> Stream a
-
--- | Wrapper to use 'Stream's as arguments to triggers.
-data Arg where
-  Arg :: Typed a => Stream a -> Arg
 
 -- | Dummy instance in order to make 'Stream' an instance of 'Num'.
 instance Show (Stream a) where
