@@ -22,6 +22,7 @@ module Copilot.Language.Spec
   , Trigger (..)
   , trigger, triggers
   , arg
+  , Arg(..)
   , Property (..)
   , Prop (..)
   , prop, properties
@@ -198,3 +199,7 @@ theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
 -- the current samples of the given streams.
 arg :: Typed a => Stream a -> Arg
 arg = Arg
+
+-- | Wrapper to use 'Stream's as arguments to triggers.
+data Arg where
+  Arg :: Typed a => Stream a -> Arg
