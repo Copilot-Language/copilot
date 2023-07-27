@@ -56,7 +56,17 @@ majority' (x:xs) can cnt =
   where
   inZero zero    = local (if zero then x else can) inCan
     where
-    inCan can'   = local (if zero || x == can then cnt+1 else cnt-1) inCnt
+    inCan can' =
+        -- We include a special case for when `xs` is empty that immediately
+        -- returns `can'`. We could omit this special case without changing the
+        -- final result, but this has the downside that `local` would bind a
+        -- local variable that would go unused in `inCnt`. (Note that `inCnt`
+        -- recursively invokes `majority'`, which doesn't use its last argument
+        -- if the list of vote streams is empty.) These unused local variables
+        -- would result in C code that triggers compiler warnings.
+        case xs of
+          [] -> can'
+          _  -> local (if zero || x == can then cnt+1 else cnt-1) inCnt
       where
       inCnt cnt' = majority' xs can' cnt'
 
