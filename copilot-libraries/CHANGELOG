@@ -1,5 +1,7 @@
-2023-07-27
+2023-08-08
         * Fix semantics of since in Copilot.Library.PTLTL. (#443)
+        * Prevent the majority function from generating unused local variables.
+          (#408)
 
 2023-07-07
         * Version bump (3.16). (#448)
