@@ -13,47 +13,47 @@ import Copilot.Compile.C99.Util
 import qualified Language.C99.Simple as C
 
 -- | Translates a Copilot Core expression into a C99 expression.
-transexpr :: Expr a -> State FunEnv C.Expr
-transexpr (Const ty x) = return $ constty ty x
+transExpr :: Expr a -> State FunEnv C.Expr
+transExpr (Const ty x) = return $ constTy ty x
 
-transexpr (Local ty1 _ name e1 e2) = do
-  e1' <- transexpr e1
-  let cty1 = transLocalVarDeclType ty1
+transExpr (Local ty1 _ name e1 e2) = do
+  e1' <- transExpr e1
+  let cTy1 = transLocalVarDeclType ty1
       init = Just $ C.InitExpr e1'
-  statetell [C.VarDecln Nothing cty1 name init]
+  stateTell [C.VarDecln Nothing cTy1 name init]
 
-  transexpr e2
+  transExpr e2
 
-transexpr (Var _ n) = return $ C.Ident n
+transExpr (Var _ n) = return $ C.Ident n
 
-transexpr (Drop _ amount sid) = do
-  let accessvar = streamaccessorname sid
+transExpr (Drop _ amount sId) = do
+  let accessVar = streamAccessorName sId
       index     = C.LitInt (fromIntegral amount)
-  return $ funcall accessvar [index]
+  return $ funCall accessVar [index]
 
-transexpr (ExternVar _ name _) = return $ C.Ident (excpyname name)
+transExpr (ExternVar _ name _) = return $ C.Ident (exCpyName name)
 
-transexpr (Label _ _ e) = transexpr e -- ignore label
+transExpr (Label _ _ e) = transExpr e -- ignore label
 
-transexpr (Op1 op e) = do
-  e' <- transexpr e
-  return $ transop1 op e'
+transExpr (Op1 op e) = do
+  e' <- transExpr e
+  return $ transOp1 op e'
 
-transexpr (Op2 op e1 e2) = do
-  e1' <- transexpr e1
-  e2' <- transexpr e2
-  return $ transop2 op e1' e2'
+transExpr (Op2 op e1 e2) = do
+  e1' <- transExpr e1
+  e2' <- transExpr e2
+  return $ transOp2 op e1' e2'
 
-transexpr (Op3 op e1 e2 e3) = do
-  e1' <- transexpr e1
-  e2' <- transexpr e2
-  e3' <- transexpr e3
-  return $ transop3 op e1' e2' e3'
+transExpr (Op3 op e1 e2 e3) = do
+  e1' <- transExpr e1
+  e2' <- transExpr e2
+  e3' <- transExpr e3
+  return $ transOp3 op e1' e2' e3'
 
 -- | Translates a Copilot unary operator and its argument into a C99
 -- expression.
-transop1 :: Op1 a b -> C.Expr -> C.Expr
-transop1 op e =
+transOp1 :: Op1 a b -> C.Expr -> C.Expr
+transOp1 op e =
   -- There are three types of ways in which a function in Copilot Core can be
   -- translated into C:
   --
@@ -65,31 +65,31 @@ transop1 op e =
     Abs      ty   -> transAbs ty e
     Sign     ty   -> transSign ty e
     Recip    ty   -> (constNumTy ty 1) C../ e
-    Acos     ty   -> funcall (specializeMathFunName ty "acos") [e]
-    Asin     ty   -> funcall (specializeMathFunName ty "asin") [e]
-    Atan     ty   -> funcall (specializeMathFunName ty "atan") [e]
-    Cos      ty   -> funcall (specializeMathFunName ty "cos") [e]
-    Sin      ty   -> funcall (specializeMathFunName ty "sin") [e]
-    Tan      ty   -> funcall (specializeMathFunName ty "tan") [e]
-    Acosh    ty   -> funcall (specializeMathFunName ty "acosh") [e]
-    Asinh    ty   -> funcall (specializeMathFunName ty "asinh") [e]
-    Atanh    ty   -> funcall (specializeMathFunName ty "atanh") [e]
-    Cosh     ty   -> funcall (specializeMathFunName ty "cosh") [e]
-    Sinh     ty   -> funcall (specializeMathFunName ty "sinh") [e]
-    Tanh     ty   -> funcall (specializeMathFunName ty "tanh") [e]
-    Exp      ty   -> funcall (specializeMathFunName ty "exp") [e]
-    Log      ty   -> funcall (specializeMathFunName ty "log") [e]
-    Sqrt     ty   -> funcall (specializeMathFunName ty "sqrt") [e]
-    Ceiling  ty   -> funcall (specializeMathFunName ty "ceil") [e]
-    Floor    ty   -> funcall (specializeMathFunName ty "floor") [e]
+    Acos     ty   -> funCall (specializeMathFunName ty "acos") [e]
+    Asin     ty   -> funCall (specializeMathFunName ty "asin") [e]
+    Atan     ty   -> funCall (specializeMathFunName ty "atan") [e]
+    Cos      ty   -> funCall (specializeMathFunName ty "cos") [e]
+    Sin      ty   -> funCall (specializeMathFunName ty "sin") [e]
+    Tan      ty   -> funCall (specializeMathFunName ty "tan") [e]
+    Acosh    ty   -> funCall (specializeMathFunName ty "acosh") [e]
+    Asinh    ty   -> funCall (specializeMathFunName ty "asinh") [e]
+    Atanh    ty   -> funCall (specializeMathFunName ty "atanh") [e]
+    Cosh     ty   -> funCall (specializeMathFunName ty "cosh") [e]
+    Sinh     ty   -> funCall (specializeMathFunName ty "sinh") [e]
+    Tanh     ty   -> funCall (specializeMathFunName ty "tanh") [e]
+    Exp      ty   -> funCall (specializeMathFunName ty "exp") [e]
+    Log      ty   -> funCall (specializeMathFunName ty "log") [e]
+    Sqrt     ty   -> funCall (specializeMathFunName ty "sqrt") [e]
+    Ceiling  ty   -> funCall (specializeMathFunName ty "ceil") [e]
+    Floor    ty   -> funCall (specializeMathFunName ty "floor") [e]
     BwNot    _    -> (C..~) e
-    Cast     _ ty -> C.Cast (transtypename ty) e
+    Cast     _ ty -> C.Cast (transTypeName ty) e
     GetField (Struct _)  _ f -> C.Dot e (accessorname f)
 
 -- | Translates a Copilot binary operator and its arguments into a C99
 -- expression.
-transop2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
-transop2 op e1 e2 = case op of
+transOp2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
+transOp2 op e1 e2 = case op of
   And          -> e1 C..&& e2
   Or           -> e1 C..|| e2
   Add      _   -> e1 C..+  e2
@@ -98,10 +98,10 @@ transop2 op e1 e2 = case op of
   Mod      _   -> e1 C..%  e2
   Div      _   -> e1 C../  e2
   Fdiv     _   -> e1 C../  e2
-  Pow      ty  -> funcall (specializeMathFunName ty "pow") [e1, e2]
-  Logb     ty  -> funcall (specializeMathFunName ty "log") [e2] C../
-                  funcall (specializeMathFunName ty "log") [e1]
-  Atan2    ty  -> funcall (specializeMathFunName ty "atan2") [e1, e2]
+  Pow      ty  -> funCall (specializeMathFunName ty "pow") [e1, e2]
+  Logb     ty  -> funCall (specializeMathFunName ty "log") [e2] C../
+                  funCall (specializeMathFunName ty "log") [e1]
+  Atan2    ty  -> funCall (specializeMathFunName ty "atan2") [e1, e2]
   Eq       _   -> e1 C..== e2
   Ne       _   -> e1 C..!= e2
   Le       _   -> e1 C..<= e2
@@ -117,8 +117,8 @@ transop2 op e1 e2 = case op of
 
 -- | Translates a Copilot ternary operator and its arguments into a C99
 -- expression.
-transop3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
-transop3 op e1 e2 e3 = case op of
+transOp3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
+transOp3 op e1 e2 e3 = case op of
   Mux _ -> C.Cond e1 e2 e3
 
 -- | Translate @'Abs' e@ in Copilot Core into a C99 expression.
@@ -135,7 +135,7 @@ transAbs :: Type a -> C.Expr -> C.Expr
 transAbs ty e
     -- Abs for floats/doubles is called fabs in C99's math.h.
     | typeIsFloating ty
-    = funcall (specializeMathFunName ty "fabs") [e]
+    = funCall (specializeMathFunName ty "fabs") [e]
 
     -- C99 provides multiple implementations of abs, depending on the type of
     -- the arguments. For integers, it provides C99 abs, labs, and llabs, which
@@ -213,32 +213,32 @@ transSign ty e = positiveCase $ negativeCase e
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- literal.
-constty :: Type a -> a -> C.Expr
-constty ty = case ty of
+constTy :: Type a -> a -> C.Expr
+constTy ty = case ty of
   Bool      -> C.LitBool
-  Int8      -> explicitty ty . C.LitInt . fromIntegral
-  Int16     -> explicitty ty . C.LitInt . fromIntegral
-  Int32     -> explicitty ty . C.LitInt . fromIntegral
-  Int64     -> explicitty ty . C.LitInt . fromIntegral
-  Word8     -> explicitty ty . C.LitInt . fromIntegral
-  Word16    -> explicitty ty . C.LitInt . fromIntegral
-  Word32    -> explicitty ty . C.LitInt . fromIntegral
-  Word64    -> explicitty ty . C.LitInt . fromIntegral
-  Float     -> explicitty ty . C.LitFloat
-  Double    -> explicitty ty . C.LitDouble
+  Int8      -> explicitTy ty . C.LitInt . fromIntegral
+  Int16     -> explicitTy ty . C.LitInt . fromIntegral
+  Int32     -> explicitTy ty . C.LitInt . fromIntegral
+  Int64     -> explicitTy ty . C.LitInt . fromIntegral
+  Word8     -> explicitTy ty . C.LitInt . fromIntegral
+  Word16    -> explicitTy ty . C.LitInt . fromIntegral
+  Word32    -> explicitTy ty . C.LitInt . fromIntegral
+  Word64    -> explicitTy ty . C.LitInt . fromIntegral
+  Float     -> explicitTy ty . C.LitFloat
+  Double    -> explicitTy ty . C.LitDouble
   Struct _  -> \v ->
-    C.InitVal (transtypename ty) (constStruct (toValues v))
+    C.InitVal (transTypeName ty) (constStruct (toValues v))
   Array ty' -> \v ->
-    C.InitVal (transtypename ty) (constarray ty' (arrayelems v))
+    C.InitVal (transTypeName ty) (constArray ty' (arrayelems v))
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- initializer.
-constinit :: Type a -> a -> C.Init
-constinit ty val = case ty of
-  -- We include two special cases for Struct and Array to avoid using constty
+constInit :: Type a -> a -> C.Init
+constInit ty val = case ty of
+  -- We include two special cases for Struct and Array to avoid using constTy
   -- on them.
   --
-  -- In the default case (i.e., InitExpr (constty ty val)), constant
+  -- In the default case (i.e., InitExpr (constTy ty val)), constant
   -- initializations are explicitly cast. However, doing so 1) may result in
   -- incorrect values for arrays, and 2) will be considered a non-constant
   -- expression in the case of arrays and structs, and thus not allowed as the
@@ -255,7 +255,7 @@ constinit ty val = case ty of
   -- whole expression as an array of two int32_t's (as opposed to a nested
   -- array). This can either lead to compile-time errors (if you're lucky) or
   -- incorrect runtime semantics (if you're unlucky).
-  Array ty' -> C.InitList $ constarray ty' $ arrayelems val
+  Array ty' -> C.InitList $ constArray ty' $ arrayelems val
 
   -- We use InitArray to initialize a struct because the syntax used for
   -- initializing arrays and structs is compatible. For instance, {1, 2} works
@@ -263,30 +263,30 @@ constinit ty val = case ty of
   -- two int fields, although the two expressions are conceptually different
   -- (structs can also be initialized as { .a = 1, .b = 2}.
   Struct _  -> C.InitList $ constStruct (toValues val)
-  _         -> C.InitExpr $ constty ty val
+  _         -> C.InitExpr $ constTy ty val
 
 -- | Transform a Copilot Core struct field into a C99 initializer.
-constfieldinit :: Value a -> C.InitItem
-constfieldinit (Value ty (Field val)) = C.InitItem Nothing $ constinit ty val
+constFieldInit :: Value a -> C.InitItem
+constFieldInit (Value ty (Field val)) = C.InitItem Nothing $ constInit ty val
 
 -- | Transform a Copilot Struct, based on the struct fields, into a list of C99
 -- initializer values.
 constStruct :: [Value a] -> NonEmpty.NonEmpty C.InitItem
-constStruct val = NonEmpty.fromList $ map constfieldinit val
+constStruct val = NonEmpty.fromList $ map constFieldInit val
 
 -- | Transform a Copilot Array, based on the element values and their type,
 -- into a list of C99 initializer values.
-constarray :: Type a -> [a] -> NonEmpty.NonEmpty C.InitItem
-constarray ty =
-  NonEmpty.fromList . map (C.InitItem Nothing . constinit ty)
+constArray :: Type a -> [a] -> NonEmpty.NonEmpty C.InitItem
+constArray ty =
+  NonEmpty.fromList . map (C.InitItem Nothing . constInit ty)
 
 -- | Explicitly cast a C99 value to a type.
-explicitty :: Type a -> C.Expr -> C.Expr
-explicitty ty = C.Cast (transtypename ty)
+explicitTy :: Type a -> C.Expr -> C.Expr
+explicitTy ty = C.Cast (transTypeName ty)
 
 -- | Translate a Copilot type to a C99 type.
-transtype :: Type a -> C.Type
-transtype ty = case ty of
+transType :: Type a -> C.Type
+transType ty = case ty of
   Bool      -> C.TypeSpec $ C.TypedefName "bool"
   Int8      -> C.TypeSpec $ C.TypedefName "int8_t"
   Int16     -> C.TypeSpec $ C.TypedefName "int16_t"
@@ -298,7 +298,7 @@ transtype ty = case ty of
   Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
-  Array ty' -> C.Array (transtype ty') length
+  Array ty' -> C.Array (transType ty') length
     where
       length = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
@@ -310,12 +310,12 @@ transtype ty = case ty of
 -- variable declaration. We treat global variables differently (we generate
 -- list initializers).
 transLocalVarDeclType :: Type a -> C.Type
-transLocalVarDeclType (Array ty') = C.Ptr $ transtype ty'
-transLocalVarDeclType ty          = transtype ty
+transLocalVarDeclType (Array ty') = C.Ptr $ transType ty'
+transLocalVarDeclType ty          = transType ty
 
 -- | Translate a Copilot type intro a C typename
-transtypename :: Type a -> C.TypeName
-transtypename ty = C.TypeName $ transtype ty
+transTypeName :: Type a -> C.TypeName
+transTypeName ty = C.TypeName $ transType ty
 
 -- Translate a literal number of type @ty@ into a C99 literal.
 --

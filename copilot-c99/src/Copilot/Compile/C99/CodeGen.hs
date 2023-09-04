@@ -19,17 +19,17 @@ import Copilot.Compile.C99.Settings
 import Copilot.Compile.C99.Translate
 
 -- | Write a declaration for a generator function.
-gendecln :: String -> Type a -> C.Decln
-gendecln name ty = C.FunDecln Nothing cty name []
+genDecln :: String -> Type a -> C.Decln
+genDecln name ty = C.FunDecln Nothing cTy name []
   where
-    cty = C.decay $ transtype ty
+    cTy = C.decay $ transType ty
 
 -- | Write a generator function for a stream.
-genfun :: String -> Expr a -> Type a -> C.FunDef
-genfun name expr ty = C.FunDef cty name [] cvars [C.Return $ Just cexpr]
+genFun :: String -> Expr a -> Type a -> C.FunDef
+genFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
   where
-    cty = C.decay $ transtype ty
-    (cexpr, cvars) = runState (transexpr expr) mempty
+    cTy = C.decay $ transType ty
+    (cExpr, cVars) = runState (transExpr expr) mempty
 
 -- | Write a generator function for a stream that returns an array.
 genFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
@@ -40,13 +40,13 @@ genFunArray name nameArg expr ty@(Array _) =
 
     -- The output value is an array
     outputParam = C.Param cArrayType nameArg
-    cArrayType  = transtype ty
+    cArrayType  = transType ty
 
     -- Output value, and any variable declarations needed
-    (cexpr, varDecls) = runState (transexpr expr) mempty
+    (cExpr, varDecls) = runState (transExpr expr) mempty
 
     -- Copy expression to output argument
-    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cexpr size ]
+    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cExpr size ]
     size  = C.LitInt (fromIntegral $ tysize ty)
               C..* C.SizeOfType (C.TypeName $ tyElemName ty)
 
@@ -54,79 +54,79 @@ genFunArray name nameArg expr _ =
   impossible "genFunArray" "copilot-c99"
 
 -- | Make a extern declaration of a variable.
-mkextdecln :: External -> C.Decln
-mkextdecln (External name _ ty) = decln
+mkExtDecln :: External -> C.Decln
+mkExtDecln (External name _ ty) = decln
   where
-    decln = C.VarDecln (Just C.Extern) cty name Nothing
-    cty   = transtype ty
+    decln = C.VarDecln (Just C.Extern) cTy name Nothing
+    cTy   = transType ty
 
 -- | Make a declaration for a copy of an external variable.
-mkextcpydecln :: External -> C.Decln
-mkextcpydecln (External name cpyname ty) = decln
+mkExtCpyDecln :: External -> C.Decln
+mkExtCpyDecln (External name cpyName ty) = decln
   where
-    cty   = transtype ty
-    decln = C.VarDecln (Just C.Static) cty cpyname Nothing
+    cTy   = transType ty
+    decln = C.VarDecln (Just C.Static) cTy cpyName Nothing
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
-mkbuffdecln :: Id -> Type a -> [a] -> C.Decln
-mkbuffdecln sid ty xs = C.VarDecln (Just C.Static) cty name initvals
+mkBuffDecln :: Id -> Type a -> [a] -> C.Decln
+mkBuffDecln sId ty xs = C.VarDecln (Just C.Static) cTy name initVals
   where
-    name     = streamname sid
-    cty      = C.Array (transtype ty) (Just $ C.LitInt $ fromIntegral buffsize)
-    buffsize = length xs
-    initvals = Just $ C.InitList $ constarray ty xs
+    name     = streamName sId
+    cTy      = C.Array (transType ty) (Just $ C.LitInt $ fromIntegral buffSize)
+    buffSize = length xs
+    initVals = Just $ C.InitList $ constArray ty xs
 
 -- | Make a C index variable and initialise it to 0.
-mkindexdecln :: Id -> C.Decln
-mkindexdecln sid = C.VarDecln (Just C.Static) cty name initval
+mkIndexDecln :: Id -> C.Decln
+mkIndexDecln sId = C.VarDecln (Just C.Static) cTy name initVal
   where
-    name    = indexname sid
-    cty     = C.TypeSpec $ C.TypedefName "size_t"
-    initval = Just $ C.InitExpr $ C.LitInt 0
+    name    = indexName sId
+    cTy     = C.TypeSpec $ C.TypedefName "size_t"
+    initVal = Just $ C.InitExpr $ C.LitInt 0
 
 -- | Define an accessor functions for the ring buffer associated with a stream
-mkaccessdecln :: Id -> Type a -> [a] -> C.FunDef
-mkaccessdecln sid ty xs = C.FunDef cty name params [] [C.Return (Just expr)]
+mkAccessDecln :: Id -> Type a -> [a] -> C.FunDef
+mkAccessDecln sId ty xs = C.FunDef cTy name params [] [C.Return (Just expr)]
   where
-    cty        = C.decay $ transtype ty
-    name       = streamaccessorname sid
-    bufflength = C.LitInt $ fromIntegral $ length xs
+    cTy        = C.decay $ transType ty
+    name       = streamAccessorName sId
+    buffLength = C.LitInt $ fromIntegral $ length xs
     params     = [C.Param (C.TypeSpec $ C.TypedefName "size_t") "x"]
-    index      = (C.Ident (indexname sid) C..+ C.Ident "x") C..% bufflength
-    expr       = C.Index (C.Ident (streamname sid)) index
+    index      = (C.Ident (indexName sId) C..+ C.Ident "x") C..% buffLength
+    expr       = C.Index (C.Ident (streamName sId)) index
 
 -- | Writes the step function, that updates all streams.
-mkstep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
-mkstep cSettings streams triggers exts =
+mkStep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
+mkStep cSettings streams triggers exts =
     C.FunDef void (cSettingsStepFunctionName cSettings) [] declns stmts
   where
 
     void = C.TypeSpec C.Void
-    stmts  =  map mkexcopy exts
+    stmts  =  map mkExCopy exts
            ++ triggerStmts
-           ++ tmpassigns
-           ++ bufferupdates
-           ++ indexupdates
+           ++ tmpAssigns
+           ++ bufferUpdates
+           ++ indexUpdates
     declns =  streamDeclns
            ++ concat triggerDeclns
-    (streamDeclns, tmpassigns, bufferupdates, indexupdates) =
-      unzip4 $ map mkupdateglobals streams
+    (streamDeclns, tmpAssigns, bufferUpdates, indexUpdates) =
+      unzip4 $ map mkUpdateGlobals streams
     (triggerDeclns, triggerStmts) =
-      unzip $ map mktriggercheck triggers
+      unzip $ map mkTriggerCheck triggers
 
     -- Write code to update global stream buffers and index.
-    mkupdateglobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
-    mkupdateglobals (Stream sid buff expr ty) =
-      (tmpdecln, tmpassign, bufferupdate, indexupdate)
+    mkUpdateGlobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
+    mkUpdateGlobals (Stream sId buff expr ty) =
+      (tmpDecln, tmpAssign, bufferUpdate, indexUpdate)
         where
-          tmpdecln = C.VarDecln Nothing cty tmp_var Nothing
+          tmpDecln = C.VarDecln Nothing cTy tmp_var Nothing
 
-          tmpassign = case ty of
-            Array _ -> C.Expr $ C.Funcall (C.Ident $ generatorname sid)
+          tmpAssign = case ty of
+            Array _ -> C.Expr $ C.Funcall (C.Ident $ generatorName sId)
                                           [ C.Ident tmp_var ]
             _       -> C.Expr $ C.Ident tmp_var C..= val
 
-          bufferupdate = case ty of
+          bufferUpdate = case ty of
             Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
               where
                 dest = C.Index buff_var index_var
@@ -135,28 +135,28 @@ mkstep cSettings streams triggers exts =
             _       -> C.Expr $
                            C.Index buff_var index_var C..= (C.Ident tmp_var)
 
-          indexupdate = C.Expr $ index_var C..= (incindex C..% bufflength)
+          indexUpdate = C.Expr $ index_var C..= (incIndex C..% buffLength)
             where
-              bufflength = C.LitInt $ fromIntegral $ length buff
-              incindex   = index_var C..+ C.LitInt 1
+              buffLength = C.LitInt $ fromIntegral $ length buff
+              incIndex   = index_var C..+ C.LitInt 1
 
-          tmp_var   = streamname sid ++ "_tmp"
-          buff_var  = C.Ident $ streamname sid
-          index_var = C.Ident $ indexname sid
-          val       = C.Funcall (C.Ident $ generatorname sid) []
-          cty       = transtype ty
+          tmp_var   = streamName sId ++ "_tmp"
+          buff_var  = C.Ident $ streamName sId
+          index_var = C.Ident $ indexName sId
+          val       = C.Funcall (C.Ident $ generatorName sId) []
+          cTy       = transType ty
 
     -- Make code that copies an external variable to its local one.
-    mkexcopy :: External -> C.Stmt
-    mkexcopy (External name cpyname ty) = C.Expr $ case ty of
-      Array _ -> memcpy exvar locvar size
+    mkExCopy :: External -> C.Stmt
+    mkExCopy (External name cpyName ty) = C.Expr $ case ty of
+      Array _ -> memcpy exVar locVar size
         where
-          exvar  = C.Ident cpyname
-          locvar = C.Ident name
+          exVar  = C.Ident cpyName
+          locVar = C.Ident name
           size   = C.LitInt (fromIntegral $ tysize ty)
                      C..* C.SizeOfType (C.TypeName (tyElemName ty))
 
-      _       -> C.Ident cpyname C..= C.Ident name
+      _       -> C.Ident cpyName C..= C.Ident name
 
     -- Make if-statement to check the guard, call the handler if necessary.
     -- This returns two things:
@@ -192,8 +192,8 @@ mkstep cSettings streams triggers exts =
     -- 2. Assigning a struct to a temporary variable defensively ensures that
     --    any modifications that the handler called makes to the struct argument
     --    will not affect the internals of the monitoring code.
-    mktriggercheck :: Trigger -> ([C.Decln], C.Stmt)
-    mktriggercheck (Trigger name guard args) =
+    mkTriggerCheck :: Trigger -> ([C.Decln], C.Stmt)
+    mkTriggerCheck (Trigger name guard args) =
         (aTmpDeclns, ifStmt)
       where
         aTmpDeclns = zipWith (\tmpVar arg ->
@@ -209,19 +209,19 @@ mkstep cSettings streams triggers exts =
                 -- the `arg` function will return a pointer, not an array, and
                 -- C doesn't make it easy to cast directly from an array to a
                 -- pointer.
-                Array ty' -> C.Ptr $ transtype ty'
-                _         -> transtype ty
+                Array ty' -> C.Ptr $ transType ty'
+                _         -> transType ty
 
         aTempNames = take (length args) (argTempNames name)
 
-        ifStmt = C.If guard' firetrigger
+        ifStmt = C.If guard' fireTrigger
 
-        guard' = C.Funcall (C.Ident $ guardname name) []
+        guard' = C.Funcall (C.Ident $ guardName name) []
 
         -- The body of the if-statement. This consists of statements that assign
         -- the values of the temporary variables, following by a final statement
         -- that passes the temporary variables to the handler function.
-        firetrigger = map C.Expr argAssigns ++
+        fireTrigger = map C.Expr argAssigns ++
                       [C.Expr $ C.Funcall (C.Ident name)
                                           (zipWith passArg aTempNames args)]
           where
@@ -237,55 +237,55 @@ mkstep cSettings streams triggers exts =
                                    C.AssignOp C.Assign (C.Ident aTempName) arg)
                                  aTempNames
                                  args'
-            args'        = take (length args) (map argcall (argnames name))
-            argcall name = C.Funcall (C.Ident name) []
+            args'        = take (length args) (map argCall (argNames name))
+            argCall name = C.Funcall (C.Ident name) []
 
 
 -- | Write a struct declaration based on its definition.
-mkstructdecln :: Struct a => Type a -> C.Decln
-mkstructdecln (Struct x) = C.TypeDecln struct
+mkStructDecln :: Struct a => Type a -> C.Decln
+mkStructDecln (Struct x) = C.TypeDecln struct
   where
     struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
-    fields = NonEmpty.fromList $ map mkfield (toValues x)
+    fields = NonEmpty.fromList $ map mkField (toValues x)
 
-    mkfield :: Value a -> C.FieldDecln
-    mkfield (Value ty field) = C.FieldDecln (transtype ty) (fieldname field)
+    mkField :: Value a -> C.FieldDecln
+    mkField (Value ty field) = C.FieldDecln (transType ty) (fieldname field)
 
 -- | Write a forward struct declaration.
-mkstructforwdecln :: Struct a => Type a -> C.Decln
-mkstructforwdecln (Struct x) = C.TypeDecln struct
+mkStructForwDecln :: Struct a => Type a -> C.Decln
+mkStructForwDecln (Struct x) = C.TypeDecln struct
   where
     struct = C.TypeSpec $ C.Struct (typename x)
 
 -- | List all types of an expression, returns items uniquely.
-exprtypes :: Typeable a => Expr a -> [UType]
-exprtypes e = case e of
-  Const ty _            -> typetypes ty
-  Local ty1 ty2 _ e1 e2 -> typetypes ty1 `union` typetypes ty2
-                           `union` exprtypes e1 `union` exprtypes e2
-  Var ty _              -> typetypes ty
-  Drop ty _ _           -> typetypes ty
-  ExternVar ty _ _      -> typetypes ty
-  Op1 _ e1              -> exprtypes e1
-  Op2 _ e1 e2           -> exprtypes e1 `union` exprtypes e2
-  Op3 _ e1 e2 e3        -> exprtypes e1 `union` exprtypes e2 `union` exprtypes e3
-  Label ty _ _          -> typetypes ty
+exprTypes :: Typeable a => Expr a -> [UType]
+exprTypes e = case e of
+  Const ty _            -> typeTypes ty
+  Local ty1 ty2 _ e1 e2 -> typeTypes ty1 `union` typeTypes ty2
+                           `union` exprTypes e1 `union` exprTypes e2
+  Var ty _              -> typeTypes ty
+  Drop ty _ _           -> typeTypes ty
+  ExternVar ty _ _      -> typeTypes ty
+  Op1 _ e1              -> exprTypes e1
+  Op2 _ e1 e2           -> exprTypes e1 `union` exprTypes e2
+  Op3 _ e1 e2 e3        -> exprTypes e1 `union` exprTypes e2 `union` exprTypes e3
+  Label ty _ _          -> typeTypes ty
 
 -- | List all types of a type, returns items uniquely.
-typetypes :: Typeable a => Type a -> [UType]
-typetypes ty = case ty of
-  Array ty' -> typetypes ty' `union` [UType ty]
-  Struct x  -> concatMap (\(Value ty' _) -> typetypes ty') (toValues x) `union` [UType ty]
+typeTypes :: Typeable a => Type a -> [UType]
+typeTypes ty = case ty of
+  Array ty' -> typeTypes ty' `union` [UType ty]
+  Struct x  -> concatMap (\(Value ty' _) -> typeTypes ty') (toValues x) `union` [UType ty]
   _         -> [UType ty]
 
 -- | Collect all expression of a list of streams and triggers and wrap them
 -- into an UEXpr.
-gatherexprs :: [Stream] -> [Trigger] -> [UExpr]
-gatherexprs streams triggers =  map streamexpr streams
-                             ++ concatMap triggerexpr triggers
+gatherExprs :: [Stream] -> [Trigger] -> [UExpr]
+gatherExprs streams triggers =  map streamExpr streams
+                             ++ concatMap triggerExpr triggers
   where
-    streamexpr  (Stream _ _ expr ty)   = UExpr ty expr
-    triggerexpr (Trigger _ guard args) = UExpr Bool guard : args
+    streamExpr  (Stream _ _ expr ty)   = UExpr ty expr
+    triggerExpr (Trigger _ guard args) = UExpr Bool guard : args
 
 -- * Auxiliary functions
 
@@ -301,4 +301,4 @@ memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
 tyElemName :: Type a -> C.Type
 tyElemName ty = case ty of
   Array ty' -> tyElemName ty'
-  _         -> transtype ty
+  _         -> transType ty
