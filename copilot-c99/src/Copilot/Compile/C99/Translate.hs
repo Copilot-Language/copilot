@@ -64,7 +64,7 @@ transOp1 op e =
     Not           -> (C..!) e
     Abs      ty   -> transAbs ty e
     Sign     ty   -> transSign ty e
-    Recip    ty   -> (constNumTy ty 1) C../ e
+    Recip    ty   -> constNumTy ty 1 C../ e
     Acos     ty   -> funCall (specializeMathFunName ty "acos") [e]
     Asin     ty   -> funCall (specializeMathFunName ty "asin") [e]
     Atan     ty   -> funCall (specializeMathFunName ty "atan") [e]

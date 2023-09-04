@@ -13,7 +13,7 @@ type FunEnv = [C.Decln]
 
 -- | `tell` equivalent for `State`.
 stateTell :: Monoid m => m -> State m ()
-stateTell m = modify ((flip mappend) m)
+stateTell m = modify (flip mappend m)
 
 -- | Generate fresh variable name based on a given one.
 fresh :: String -> [String] -> String

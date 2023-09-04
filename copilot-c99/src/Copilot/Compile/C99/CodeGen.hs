@@ -133,7 +133,7 @@ mkStep cSettings streams triggers exts =
                 size = C.LitInt (fromIntegral $ tysize ty)
                          C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $
-                           C.Index buffVar indexVar C..= (C.Ident tmpVar)
+                           C.Index buffVar indexVar C..= C.Ident tmpVar
 
           indexUpdate = C.Expr $ indexVar C..= (incIndex C..% buffLength)
             where
