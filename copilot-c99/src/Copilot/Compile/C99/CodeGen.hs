@@ -119,32 +119,32 @@ mkStep cSettings streams triggers exts =
     mkUpdateGlobals (Stream sId buff expr ty) =
       (tmpDecln, tmpAssign, bufferUpdate, indexUpdate)
         where
-          tmpDecln = C.VarDecln Nothing cTy tmp_var Nothing
+          tmpDecln = C.VarDecln Nothing cTy tmpVar Nothing
 
           tmpAssign = case ty of
             Array _ -> C.Expr $ C.Funcall (C.Ident $ generatorName sId)
-                                          [ C.Ident tmp_var ]
-            _       -> C.Expr $ C.Ident tmp_var C..= val
+                                          [ C.Ident tmpVar ]
+            _       -> C.Expr $ C.Ident tmpVar C..= val
 
           bufferUpdate = case ty of
-            Array _ -> C.Expr $ memcpy dest (C.Ident tmp_var) size
+            Array _ -> C.Expr $ memcpy dest (C.Ident tmpVar) size
               where
-                dest = C.Index buff_var index_var
+                dest = C.Index buffVar indexVar
                 size = C.LitInt (fromIntegral $ tysize ty)
                          C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $
-                           C.Index buff_var index_var C..= (C.Ident tmp_var)
+                           C.Index buffVar indexVar C..= (C.Ident tmpVar)
 
-          indexUpdate = C.Expr $ index_var C..= (incIndex C..% buffLength)
+          indexUpdate = C.Expr $ indexVar C..= (incIndex C..% buffLength)
             where
               buffLength = C.LitInt $ fromIntegral $ length buff
-              incIndex   = index_var C..+ C.LitInt 1
+              incIndex   = indexVar C..+ C.LitInt 1
 
-          tmp_var   = streamName sId ++ "_tmp"
-          buff_var  = C.Ident $ streamName sId
-          index_var = C.Ident $ indexName sId
-          val       = C.Funcall (C.Ident $ generatorName sId) []
-          cTy       = transType ty
+          tmpVar   = streamName sId ++ "_tmp"
+          buffVar  = C.Ident $ streamName sId
+          indexVar = C.Ident $ indexName sId
+          val      = C.Funcall (C.Ident $ generatorName sId) []
+          cTy      = transType ty
 
     -- Make code that copies an external variable to its local one.
     mkExCopy :: External -> C.Stmt
