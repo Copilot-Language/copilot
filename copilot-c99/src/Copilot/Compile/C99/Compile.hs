@@ -16,12 +16,20 @@ import System.IO            (hPutStrLn, stderr)
 import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
 
-import Copilot.Core
-import Copilot.Compile.C99.Util
-import Copilot.Compile.C99.External
-import Copilot.Compile.C99.Settings
-import Copilot.Compile.C99.Translate
-import Copilot.Compile.C99.CodeGen
+import Copilot.Compile.C99.CodeGen   ( exprTypes, gatherExprs, genFun,
+                                       genFunArray, mkAccessDecln, mkBuffDecln,
+                                       mkExtCpyDecln, mkExtDecln, mkIndexDecln,
+                                       mkStep, mkStructDecln,
+                                       mkStructForwDecln )
+import Copilot.Compile.C99.External  ( External, gatherExts )
+import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
+                                       cSettingsStepFunctionName,
+                                       mkDefaultCSettings )
+import Copilot.Compile.C99.Translate ( transType )
+import Copilot.Compile.C99.Util      ( argNames, generatorName,
+                                       generatorOutputArgName, guardName )
+import Copilot.Core                  ( Spec (..), Stream (..), Trigger (..),
+                                       Type (..), UExpr (..), UType (..) )
 
 -- | Compile a specification to a .h and a .c file.
 --

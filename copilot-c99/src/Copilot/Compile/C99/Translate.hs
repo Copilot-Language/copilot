@@ -8,12 +8,16 @@ module Copilot.Compile.C99.Translate
     )
   where
 
-import           Control.Monad.State
+import           Control.Monad.State (State, modify)
 import qualified Data.List.NonEmpty  as NonEmpty
 
-import Copilot.Core
-import Copilot.Compile.C99.Error (impossible)
-import Copilot.Compile.C99.Util
+import Copilot.Compile.C99.Error ( impossible )
+import Copilot.Compile.C99.Util  ( FunEnv, exCpyName, funCall, stateTell,
+                                   streamAccessorName )
+import Copilot.Core              ( Expr (..), Field (..), Op1 (..), Op2 (..),
+                                   Op3 (..), Type (..), Value (..),
+                                   accessorname, arrayelems, toValues, tylength,
+                                   typename )
 
 import qualified Language.C99.Simple as C
 

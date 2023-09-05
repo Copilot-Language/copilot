@@ -25,12 +25,17 @@ import           Data.Typeable       (Typeable)
 
 import qualified Language.C99.Simple as C
 
-import Copilot.Core
-import Copilot.Compile.C99.Error     (impossible)
-import Copilot.Compile.C99.Util
-import Copilot.Compile.C99.External
-import Copilot.Compile.C99.Settings
-import Copilot.Compile.C99.Translate
+import Copilot.Compile.C99.Error     ( impossible )
+import Copilot.Compile.C99.External  ( External (..) )
+import Copilot.Compile.C99.Settings  ( CSettings, cSettingsStepFunctionName )
+import Copilot.Compile.C99.Translate ( constArray, transExpr, transType )
+import Copilot.Compile.C99.Util      ( argNames, argTempNames, generatorName,
+                                       guardName, indexName, streamAccessorName,
+                                       streamName )
+import Copilot.Core                  ( Expr (..), Id, Stream (..), Struct (..),
+                                       Trigger (..), Type (..), UExpr (..),
+                                       UType (..), Value (..), fieldname,
+                                       tysize )
 
 -- | Write a generator function for a stream.
 genFun :: String -> Expr a -> Type a -> C.FunDef
