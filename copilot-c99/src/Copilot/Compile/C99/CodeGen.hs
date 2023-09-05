@@ -32,12 +32,6 @@ import Copilot.Compile.C99.External
 import Copilot.Compile.C99.Settings
 import Copilot.Compile.C99.Translate
 
--- | Write a declaration for a generator function.
-genDecln :: String -> Type a -> C.Decln
-genDecln name ty = C.FunDecln Nothing cTy name []
-  where
-    cTy = C.decay $ transType ty
-
 -- | Write a generator function for a stream.
 genFun :: String -> Expr a -> Type a -> C.FunDef
 genFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
