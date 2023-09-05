@@ -1,7 +1,6 @@
 -- | Auxiliary helper functions to generate C99 code.
 module Copilot.Compile.C99.Util
     ( FunEnv
-    , stateTell
     , funCall
     , argNames
     , argTempNames
@@ -15,8 +14,6 @@ module Copilot.Compile.C99.Util
     )
   where
 
-import Control.Monad.State
-
 import Copilot.Core  (Id)
 import qualified Language.C99.Simple.AST as C
 
@@ -24,10 +21,6 @@ import qualified Language.C99.Simple.AST as C
 -- used in a function to be generated, since variable declarations are always
 -- listed first at the top of the function body.
 type FunEnv = [C.Decln]
-
--- | `tell` equivalent for `State`.
-stateTell :: Monoid m => m -> State m ()
-stateTell m = modify (flip mappend m)
 
 -- | Turn a stream id into a suitable C variable name.
 streamName :: Id -> String

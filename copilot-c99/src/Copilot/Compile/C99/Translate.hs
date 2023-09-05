@@ -12,7 +12,7 @@ import           Control.Monad.State (State, modify)
 import qualified Data.List.NonEmpty  as NonEmpty
 
 import Copilot.Compile.C99.Error ( impossible )
-import Copilot.Compile.C99.Util  ( FunEnv, exCpyName, funCall, stateTell,
+import Copilot.Compile.C99.Util  ( FunEnv, exCpyName, funCall,
                                    streamAccessorName )
 import Copilot.Core              ( Expr (..), Field (..), Op1 (..), Op2 (..),
                                    Op3 (..), Type (..), Value (..),
@@ -29,7 +29,9 @@ transExpr (Local ty1 _ name e1 e2) = do
   e1' <- transExpr e1
   let cTy1 = transLocalVarDeclType ty1
       init = Just $ C.InitExpr e1'
-  stateTell [C.VarDecln Nothing cTy1 name init]
+
+  -- Add new decl to the tail of the fun env
+  modify (++ [C.VarDecln Nothing cTy1 name init])
 
   transExpr e2
 
