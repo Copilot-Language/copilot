@@ -2,7 +2,11 @@
 
 -- | Represent information about externs needed in the generation of C99 code
 -- for stream declarations and triggers.
-module Copilot.Compile.C99.External where
+module Copilot.Compile.C99.External
+    ( External(..)
+    , gatherExts
+    )
+  where
 
 import Data.List  (unionBy)
 

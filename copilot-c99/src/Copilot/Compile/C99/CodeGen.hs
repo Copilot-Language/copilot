@@ -2,7 +2,21 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | High-level translation of Copilot Core into C99.
-module Copilot.Compile.C99.CodeGen where
+module Copilot.Compile.C99.CodeGen
+    ( genFun
+    , genFunArray
+    , mkAccessDecln
+    , mkBuffDecln
+    , mkExtCpyDecln
+    , mkExtDecln
+    , mkIndexDecln
+    , mkStep
+    , mkStructDecln
+    , mkStructForwDecln
+    , exprTypes
+    , gatherExprs
+    )
+  where
 
 import           Control.Monad.State (runState)
 import           Data.List           (union, unzip4)

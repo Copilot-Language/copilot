@@ -1,5 +1,19 @@
 -- | Auxiliary helper functions to generate C99 code.
-module Copilot.Compile.C99.Util where
+module Copilot.Compile.C99.Util
+    ( FunEnv
+    , stateTell
+    , funCall
+    , argNames
+    , argTempNames
+    , exCpyName
+    , generatorName
+    , generatorOutputArgName
+    , guardName
+    , indexName
+    , streamAccessorName
+    , streamName
+    )
+  where
 
 import Control.Monad.State
 

@@ -1,7 +1,12 @@
 {-# LANGUAGE GADTs #-}
 
 -- | Translate Copilot Core expressions and operators to C99.
-module Copilot.Compile.C99.Translate where
+module Copilot.Compile.C99.Translate
+    ( transExpr
+    , transType
+    , constArray
+    )
+  where
 
 import           Control.Monad.State
 import qualified Data.List.NonEmpty  as NonEmpty
