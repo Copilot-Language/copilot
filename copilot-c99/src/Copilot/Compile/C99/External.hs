@@ -21,11 +21,6 @@ data External = forall a. External
   , extType    :: Type a
   }
 
--- | Union over lists of External, we solely base the equality on the
--- extName's.
-extUnion :: [External] -> [External] -> [External]
-extUnion = unionBy (\a b -> extName a == extName b)
-
 -- | Collect all external variables from the streams and triggers.
 --
 -- Although Copilot specifications can contain also properties and theorems,
@@ -57,3 +52,8 @@ gatherExts streams triggers = streamsExts `extUnion` triggersExts
       Op3 _ e1 e2 e3      -> rec e1 `extUnion` rec e2 `extUnion` rec e3
       Label _ _ e         -> rec e
       _                   -> []
+
+    -- | Union over lists of External, we solely base the equality on the
+    -- extName's.
+    extUnion :: [External] -> [External] -> [External]
+    extUnion = unionBy (\a b -> extName a == extName b)
