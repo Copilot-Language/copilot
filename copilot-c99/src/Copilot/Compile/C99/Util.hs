@@ -1,7 +1,6 @@
 -- | Auxiliary helper functions to generate C99 code.
 module Copilot.Compile.C99.Util
-    ( funCall
-    , argNames
+    ( argNames
     , argTempNames
     , exCpyName
     , generatorName
@@ -14,7 +13,6 @@ module Copilot.Compile.C99.Util
   where
 
 import Copilot.Core  (Id)
-import qualified Language.C99.Simple.AST as C
 
 -- | Turn a stream id into a suitable C variable name.
 streamName :: Id -> String
@@ -60,7 +58,3 @@ argNames base = [aName | n <- [0..], let aName = argName base n]
 -- | Enumerate all temporary variable names based on handler function name.
 argTempNames :: String -> [String]
 argTempNames base = map (argTempName base) [0..]
-
--- | Define a C expression that calls a function with arguments.
-funCall :: C.Ident -> [C.Expr] -> C.Expr
-funCall name args = C.Funcall (C.Ident name) args

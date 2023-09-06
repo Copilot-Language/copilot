@@ -12,7 +12,7 @@ import           Control.Monad.State (State, modify)
 import qualified Data.List.NonEmpty  as NonEmpty
 
 import Copilot.Compile.C99.Error ( impossible )
-import Copilot.Compile.C99.Util  ( exCpyName, funCall, streamAccessorName )
+import Copilot.Compile.C99.Util  ( exCpyName, streamAccessorName )
 import Copilot.Core              ( Expr (..), Field (..), Op1 (..), Op2 (..),
                                    Op3 (..), Type (..), Value (..),
                                    accessorname, arrayelems, toValues, tylength,
@@ -402,3 +402,7 @@ typeIsFloating _      = False
 -- used in a function to be generated, since variable declarations are always
 -- listed first at the top of the function body.
 type FunEnv = [C.Decln]
+
+-- | Define a C expression that calls a function with arguments.
+funCall :: C.Ident -> [C.Expr] -> C.Expr
+funCall name args = C.Funcall (C.Ident name) args
