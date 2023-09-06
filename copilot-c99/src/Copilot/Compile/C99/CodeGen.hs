@@ -13,15 +13,12 @@ module Copilot.Compile.C99.CodeGen
     , mkStep
     , mkStructDecln
     , mkStructForwDecln
-    , exprTypes
-    , gatherExprs
     )
   where
 
 import           Control.Monad.State (runState)
-import           Data.List           (union, unzip4)
+import           Data.List           (unzip4)
 import qualified Data.List.NonEmpty  as NonEmpty
-import           Data.Typeable       (Typeable)
 
 import qualified Language.C99.Simple as C
 
@@ -34,8 +31,7 @@ import Copilot.Compile.C99.Util      ( argNames, argTempNames, generatorName,
                                        streamName )
 import Copilot.Core                  ( Expr (..), Id, Stream (..), Struct (..),
                                        Trigger (..), Type (..), UExpr (..),
-                                       UType (..), Value (..), fieldname,
-                                       tysize )
+                                       Value (..), fieldname, tysize )
 
 -- | Write a generator function for a stream.
 genFun :: String -> Expr a -> Type a -> C.FunDef
@@ -269,36 +265,6 @@ mkStructForwDecln :: Struct a => Type a -> C.Decln
 mkStructForwDecln (Struct x) = C.TypeDecln struct
   where
     struct = C.TypeSpec $ C.Struct (typename x)
-
--- | List all types of an expression, returns items uniquely.
-exprTypes :: Typeable a => Expr a -> [UType]
-exprTypes e = case e of
-  Const ty _            -> typeTypes ty
-  Local ty1 ty2 _ e1 e2 -> typeTypes ty1 `union` typeTypes ty2
-                           `union` exprTypes e1 `union` exprTypes e2
-  Var ty _              -> typeTypes ty
-  Drop ty _ _           -> typeTypes ty
-  ExternVar ty _ _      -> typeTypes ty
-  Op1 _ e1              -> exprTypes e1
-  Op2 _ e1 e2           -> exprTypes e1 `union` exprTypes e2
-  Op3 _ e1 e2 e3        -> exprTypes e1 `union` exprTypes e2 `union` exprTypes e3
-  Label ty _ _          -> typeTypes ty
-
--- | List all types of a type, returns items uniquely.
-typeTypes :: Typeable a => Type a -> [UType]
-typeTypes ty = case ty of
-  Array ty' -> typeTypes ty' `union` [UType ty]
-  Struct x  -> concatMap (\(Value ty' _) -> typeTypes ty') (toValues x) `union` [UType ty]
-  _         -> [UType ty]
-
--- | Collect all expression of a list of streams and triggers and wrap them
--- into an UEXpr.
-gatherExprs :: [Stream] -> [Trigger] -> [UExpr]
-gatherExprs streams triggers =  map streamExpr streams
-                             ++ concatMap triggerExpr triggers
-  where
-    streamExpr  (Stream _ _ expr ty)   = UExpr ty expr
-    triggerExpr (Trigger _ guard args) = UExpr Bool guard : args
 
 -- * Auxiliary functions
 

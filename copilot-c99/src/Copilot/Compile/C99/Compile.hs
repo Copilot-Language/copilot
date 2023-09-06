@@ -6,8 +6,9 @@ module Copilot.Compile.C99.Compile
   ) where
 
 import Text.PrettyPrint     (render)
-import Data.List            (nub)
+import Data.List            (nub, union)
 import Data.Maybe           (catMaybes)
+import Data.Typeable        (Typeable)
 import System.Directory     (createDirectoryIfMissing)
 import System.Exit          (exitFailure)
 import System.FilePath      ((</>))
@@ -16,10 +17,9 @@ import System.IO            (hPutStrLn, stderr)
 import Language.C99.Pretty  (pretty)
 import qualified Language.C99.Simple as C
 
-import Copilot.Compile.C99.CodeGen   ( exprTypes, gatherExprs, genFun,
-                                       genFunArray, mkAccessDecln, mkBuffDecln,
-                                       mkExtCpyDecln, mkExtDecln, mkIndexDecln,
-                                       mkStep, mkStructDecln,
+import Copilot.Compile.C99.CodeGen   ( genFun, genFunArray, mkAccessDecln,
+                                       mkBuffDecln, mkExtCpyDecln, mkExtDecln,
+                                       mkIndexDecln, mkStep, mkStructDecln,
                                        mkStructForwDecln )
 import Copilot.Compile.C99.External  ( External, gatherExts )
 import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
@@ -28,8 +28,9 @@ import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
 import Copilot.Compile.C99.Translate ( transType )
 import Copilot.Compile.C99.Util      ( argNames, generatorName,
                                        generatorOutputArgName, guardName )
-import Copilot.Core                  ( Spec (..), Stream (..), Trigger (..),
-                                       Type (..), UExpr (..), UType (..) )
+import Copilot.Core                  ( Expr (..), Spec (..), Stream (..),
+                                       Struct (..), Trigger (..), Type (..),
+                                       UExpr (..), UType (..), Value (..) )
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -203,3 +204,35 @@ compileTypeDeclns _cSettings spec = C.TransUnit declns []
 safeCRender :: C.TransUnit -> String
 safeCRender (C.TransUnit [] []) = ""
 safeCRender transUnit           = render $ pretty $ C.translate transUnit
+
+-- ** Obtain information from Copilot Core Exprs and Types.
+
+-- | List all types of an expression, returns items uniquely.
+exprTypes :: Typeable a => Expr a -> [UType]
+exprTypes e = case e of
+  Const ty _            -> typeTypes ty
+  Local ty1 ty2 _ e1 e2 -> typeTypes ty1 `union` typeTypes ty2
+                           `union` exprTypes e1 `union` exprTypes e2
+  Var ty _              -> typeTypes ty
+  Drop ty _ _           -> typeTypes ty
+  ExternVar ty _ _      -> typeTypes ty
+  Op1 _ e1              -> exprTypes e1
+  Op2 _ e1 e2           -> exprTypes e1 `union` exprTypes e2
+  Op3 _ e1 e2 e3        -> exprTypes e1 `union` exprTypes e2 `union` exprTypes e3
+  Label ty _ _          -> typeTypes ty
+
+-- | List all types of a type, returns items uniquely.
+typeTypes :: Typeable a => Type a -> [UType]
+typeTypes ty = case ty of
+  Array ty' -> typeTypes ty' `union` [UType ty]
+  Struct x  -> concatMap (\(Value ty' _) -> typeTypes ty') (toValues x) `union` [UType ty]
+  _         -> [UType ty]
+
+-- | Collect all expression of a list of streams and triggers and wrap them
+-- into an UEXpr.
+gatherExprs :: [Stream] -> [Trigger] -> [UExpr]
+gatherExprs streams triggers =  map streamExpr streams
+                             ++ concatMap triggerExpr triggers
+  where
+    streamExpr  (Stream _ _ expr ty)   = UExpr ty expr
+    triggerExpr (Trigger _ guard args) = UExpr Bool guard : args
