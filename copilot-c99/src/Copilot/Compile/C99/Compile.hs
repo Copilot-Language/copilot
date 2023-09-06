@@ -121,10 +121,10 @@ compileC cSettings spec = C.TransUnit declns funs
         triggerGen (Trigger name guard args) = guardDef : argDefs
           where
             guardDef = genFun (guardName name) guard Bool
-            argDefs  = map argGen (zip (argNames name) args)
+            argDefs  = zipWith argGen (argNames name) args
 
-            argGen :: (String, UExpr) -> C.FunDef
-            argGen (argName, UExpr ty expr) = genFun argName expr ty
+            argGen :: String -> UExpr -> C.FunDef
+            argGen argName (UExpr ty expr) = genFun argName expr ty
 
 -- | Generate the .h file from a 'Spec'.
 compileH :: CSettings -> Spec -> C.TransUnit
@@ -160,8 +160,8 @@ compileH cSettings spec = C.TransUnit declns []
         extFunDecln (Trigger name _ args) = C.FunDecln Nothing cTy name params
           where
             cTy    = C.TypeSpec C.Void
-            params = map mkParam $ zip (argNames name) args
-            mkParam (name, UExpr ty _) = C.Param (mkParamTy ty) name
+            params = zipWith mkParam (argNames name) args
+            mkParam name (UExpr ty _) = C.Param (mkParamTy ty) name
 
             -- Special case for Struct, to pass struct arguments by reference.
             -- Arrays are also passed by reference, but using C's array type
