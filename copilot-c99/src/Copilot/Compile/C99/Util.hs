@@ -42,7 +42,7 @@ generatorOutputArgName sId = streamName sId ++ "_output"
 guardName :: String -> String
 guardName name = name ++ "_guard"
 
--- | Turn a trigger name into a an trigger argument name.
+-- | Turn a trigger name into a trigger argument name.
 argName :: String -> Int -> String
 argName name n = name ++ "_arg" ++ show n
 
