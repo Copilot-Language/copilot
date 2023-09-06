@@ -7,7 +7,7 @@ module Copilot.Compile.C99.Compile
 
 import Text.PrettyPrint     (render)
 import Data.List            (nub, union)
-import Data.Maybe           (catMaybes)
+import Data.Maybe           (mapMaybe)
 import Data.Typeable        (Typeable)
 import System.Directory     (createDirectoryIfMissing)
 import System.Exit          (exitFailure)
@@ -141,7 +141,7 @@ compileH cSettings spec = C.TransUnit declns []
            ++ [stepDecln]
 
     mkStructForwDeclns :: [UExpr] -> [C.Decln]
-    mkStructForwDeclns es = catMaybes $ map mkDecln uTypes
+    mkStructForwDeclns es = mapMaybe mkDecln uTypes
       where
         mkDecln (UType ty) = case ty of
           Struct x -> Just $ mkStructForwDecln ty
@@ -189,7 +189,7 @@ compileTypeDeclns _cSettings spec = C.TransUnit declns []
 
     -- Generate type declarations.
     mkTypeDeclns :: [UExpr] -> [C.Decln]
-    mkTypeDeclns es = catMaybes $ map mkTypeDecln uTypes
+    mkTypeDeclns es = mapMaybe mkTypeDecln uTypes
       where
         uTypes = nub $ concatMap (\(UExpr _ e) -> exprTypes e) es
 
