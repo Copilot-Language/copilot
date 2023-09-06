@@ -28,8 +28,8 @@ data External = forall a. External
 gatherExts :: [Stream] -> [Trigger] -> [External]
 gatherExts streams triggers = streamsExts `extUnion` triggersExts
   where
-    streamsExts  = foldr extUnion mempty $ map streamExts streams
-    triggersExts = foldr extUnion mempty $ map triggerExts triggers
+    streamsExts  = foldr (extUnion . streamExts) mempty streams
+    triggersExts = foldr (extUnion . triggerExts) mempty triggers
 
     streamExts :: Stream -> [External]
     streamExts (Stream _ _ expr _) = exprExts expr
