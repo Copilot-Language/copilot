@@ -236,10 +236,8 @@ constTy ty = case ty of
   Word64    -> explicitTy ty . C.LitInt . fromIntegral
   Float     -> explicitTy ty . C.LitFloat
   Double    -> explicitTy ty . C.LitDouble
-  Struct _  -> \v ->
-    C.InitVal (transTypeName ty) (constStruct (toValues v))
-  Array ty' -> \v ->
-    C.InitVal (transTypeName ty) (constArray ty' (arrayelems v))
+  Struct _  -> C.InitVal (transTypeName ty) . constStruct . toValues
+  Array ty' -> C.InitVal (transTypeName ty) . constArray ty' . arrayelems
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- initializer.
