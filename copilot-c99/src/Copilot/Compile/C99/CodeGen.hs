@@ -204,10 +204,10 @@ mkStep cSettings streams triggers exts =
     mkTriggerCheck (Trigger name guard args) =
         (aTmpDeclns, ifStmt)
       where
-        aTmpDeclns = zipWith (\tmpVar arg ->
+        aTmpDeclns = zipWith (\arg tmpVar ->
                                C.VarDecln Nothing (tempType arg) tmpVar Nothing)
-                             aTempNames
                              args
+                             aTempNames
           where
             tempType (UExpr { uExprType = ty }) =
               case ty of
