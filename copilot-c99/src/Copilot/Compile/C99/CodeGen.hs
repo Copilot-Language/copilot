@@ -1,5 +1,4 @@
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
 
 -- | High-level translation of Copilot Core into C99.
 module Copilot.Compile.C99.CodeGen
