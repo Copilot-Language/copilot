@@ -44,14 +44,14 @@ gatherExts streams triggers = streamsExts `extUnion` triggersExts
     uExprExts (UExpr _ expr) = exprExts expr
 
     exprExts :: Expr a -> [External]
-    exprExts expr = let rec = exprExts in case expr of
-      Local _ _ _ e1 e2   -> rec e1 `extUnion` rec e2
-      ExternVar ty name _ -> [External name (exCpyName name) ty]
-      Op1 _ e             -> rec e
-      Op2 _ e1 e2         -> rec e1 `extUnion` rec e2
-      Op3 _ e1 e2 e3      -> rec e1 `extUnion` rec e2 `extUnion` rec e3
-      Label _ _ e         -> rec e
-      _                   -> []
+    exprExts (Local _ _ _ e1 e2)   = exprExts e1 `extUnion` exprExts e2
+    exprExts (ExternVar ty name _) = [External name (exCpyName name) ty]
+    exprExts (Op1 _ e)             = exprExts e
+    exprExts (Op2 _ e1 e2)         = exprExts e1 `extUnion` exprExts e2
+    exprExts (Op3 _ e1 e2 e3)      = exprExts e1 `extUnion` exprExts e2
+                                       `extUnion` exprExts e3
+    exprExts (Label _ _ e)         = exprExts e
+    exprExts _                     = []
 
     -- | Union over lists of External, we solely base the equality on the
     -- extName's.
