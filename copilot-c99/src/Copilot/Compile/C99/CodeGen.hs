@@ -72,8 +72,8 @@ mkExtDecln (External name _ ty) = decln
 mkExtCpyDecln :: External -> C.Decln
 mkExtCpyDecln (External name cpyName ty) = decln
   where
-    cTy   = transType ty
     decln = C.VarDecln (Just C.Static) cTy cpyName Nothing
+    cTy   = transType ty
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkBuffDecln :: Id -> Type a -> [a] -> C.Decln
