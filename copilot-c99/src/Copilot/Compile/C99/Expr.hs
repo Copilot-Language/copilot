@@ -28,11 +28,11 @@ transExpr (Const ty x) = return $ constTy ty x
 
 transExpr (Local ty1 _ name e1 e2) = do
   e1' <- transExpr e1
-  let cTy1 = transLocalVarDeclType ty1
-      init = Just $ C.InitExpr e1'
+  let cTy1     = transLocalVarDeclType ty1
+      initExpr = Just $ C.InitExpr e1'
 
   -- Add new decl to the tail of the fun env
-  modify (++ [C.VarDecln Nothing cTy1 name init])
+  modify (++ [C.VarDecln Nothing cTy1 name initExpr])
 
   transExpr e2
 
