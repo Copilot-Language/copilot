@@ -288,8 +288,8 @@ mkStep cSettings streams triggers exts =
                 assign :: C.Ident -> C.Expr -> C.Expr
                 assign aTempName = C.AssignOp C.Assign (C.Ident aTempName)
 
-                args'        = take (length args) (map argCall (argNames name))
-                argCall name = C.Funcall (C.Ident name) []
+                args'         = take (length args) (map argCall (argNames name))
+                argCall name' = C.Funcall (C.Ident name') []
 
                 -- Build an expression to pass a temporary variable as argument
                 -- to a trigger handler.
