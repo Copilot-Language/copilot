@@ -5,18 +5,24 @@ module Copilot.Compile.C99.Compile
   , compileWith
   ) where
 
-import Text.PrettyPrint     (render)
-import Data.List            (nub, union)
-import Data.Maybe           (mapMaybe)
-import Data.Typeable        (Typeable)
-import System.Directory     (createDirectoryIfMissing)
-import System.Exit          (exitFailure)
-import System.FilePath      ((</>))
-import System.IO            (hPutStrLn, stderr)
-
-import Language.C99.Pretty  (pretty)
+-- External imports
+import           Data.List           ( nub, union )
+import           Data.Maybe          ( mapMaybe )
+import           Data.Typeable       ( Typeable )
+import           Language.C99.Pretty ( pretty )
 import qualified Language.C99.Simple as C
+import           System.Directory    ( createDirectoryIfMissing )
+import           System.Exit         ( exitFailure )
+import           System.FilePath     ( (</>) )
+import           System.IO           ( hPutStrLn, stderr )
+import           Text.PrettyPrint    ( render )
 
+-- Internal imports: Copilot
+import Copilot.Core ( Expr (..), Spec (..), Stream (..), Struct (..),
+                      Trigger (..), Type (..), UExpr (..), UType (..),
+                      Value (..) )
+
+-- Internal imports
 import Copilot.Compile.C99.CodeGen   ( genFun, genFunArray, mkAccessDecln,
                                        mkBuffDecln, mkExtCpyDecln, mkExtDecln,
                                        mkIndexDecln, mkStep, mkStructDecln,
@@ -28,9 +34,6 @@ import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
 import Copilot.Compile.C99.Translate ( transType )
 import Copilot.Compile.C99.Util      ( argNames, generatorName,
                                        generatorOutputArgName, guardName )
-import Copilot.Core                  ( Expr (..), Spec (..), Stream (..),
-                                       Struct (..), Trigger (..), Type (..),
-                                       UExpr (..), UType (..), Value (..) )
 
 -- | Compile a specification to a .h and a .c file.
 --

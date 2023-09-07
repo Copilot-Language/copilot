@@ -8,17 +8,19 @@ module Copilot.Compile.C99.Translate
     )
   where
 
-import           Control.Monad.State (State, modify)
+-- External imports
+import           Control.Monad.State ( State, modify )
 import qualified Data.List.NonEmpty  as NonEmpty
+import qualified Language.C99.Simple as C
 
+-- Internal imports: Copilot
+import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
+                      Type (..), Value (..), accessorname, arrayelems, toValues,
+                      tylength, typename )
+
+-- Internal imports
 import Copilot.Compile.C99.Error ( impossible )
 import Copilot.Compile.C99.Util  ( exCpyName, streamAccessorName )
-import Copilot.Core              ( Expr (..), Field (..), Op1 (..), Op2 (..),
-                                   Op3 (..), Type (..), Value (..),
-                                   accessorname, arrayelems, toValues, tylength,
-                                   typename )
-
-import qualified Language.C99.Simple as C
 
 -- | Translates a Copilot Core expression into a C99 expression.
 transExpr :: Expr a -> State FunEnv C.Expr

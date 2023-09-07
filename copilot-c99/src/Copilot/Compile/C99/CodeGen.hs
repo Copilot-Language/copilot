@@ -15,12 +15,17 @@ module Copilot.Compile.C99.CodeGen
     )
   where
 
-import           Control.Monad.State (runState)
-import           Data.List           (unzip4)
+-- External imports
+import           Control.Monad.State ( runState )
+import           Data.List           ( unzip4 )
 import qualified Data.List.NonEmpty  as NonEmpty
-
 import qualified Language.C99.Simple as C
 
+-- Internal imports: Copilot
+import Copilot.Core ( Expr (..), Id, Stream (..), Struct (..), Trigger (..),
+                      Type (..), UExpr (..), Value (..), fieldname, tysize )
+
+-- Internal imports
 import Copilot.Compile.C99.Error     ( impossible )
 import Copilot.Compile.C99.External  ( External (..) )
 import Copilot.Compile.C99.Settings  ( CSettings, cSettingsStepFunctionName )
@@ -28,9 +33,6 @@ import Copilot.Compile.C99.Translate ( constArray, transExpr, transType )
 import Copilot.Compile.C99.Util      ( argNames, argTempNames, generatorName,
                                        guardName, indexName, streamAccessorName,
                                        streamName )
-import Copilot.Core                  ( Expr (..), Id, Stream (..), Struct (..),
-                                       Trigger (..), Type (..), UExpr (..),
-                                       Value (..), fieldname, tysize )
 
 -- | Write a generator function for a stream.
 genFun :: String -> Expr a -> Type a -> C.FunDef

@@ -8,11 +8,14 @@ module Copilot.Compile.C99.External
     )
   where
 
+-- External imports
 import Data.List  (unionBy)
 
+-- Internal imports: Copilot
+import Copilot.Core ( Expr (..), Stream (..), Trigger (..), Type, UExpr (..) )
+
+-- Internal imports
 import Copilot.Compile.C99.Util ( exCpyName )
-import Copilot.Core             ( Expr (..), Stream (..), Trigger (..), Type,
-                                  UExpr (..) )
 
 -- | Representation of external variables.
 data External = forall a. External

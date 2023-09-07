@@ -12,6 +12,7 @@ module Copilot.Compile.C99.Util
     )
   where
 
+-- External imports: Copilot
 import Copilot.Core (Id)
 
 -- | Turn a stream id into a suitable C variable name.
