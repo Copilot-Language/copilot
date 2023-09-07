@@ -19,8 +19,8 @@ import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
 
 -- Internal imports
 import Copilot.Compile.C99.Error ( impossible )
+import Copilot.Compile.C99.Name  ( exCpyName, streamAccessorName )
 import Copilot.Compile.C99.Type  ( transLocalVarDeclType, transTypeName )
-import Copilot.Compile.C99.Util  ( exCpyName, streamAccessorName )
 
 -- | Translates a Copilot Core expression into a C99 expression.
 transExpr :: Expr a -> State FunEnv C.Expr

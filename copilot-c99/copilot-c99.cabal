@@ -54,7 +54,7 @@ library
   other-modules          : Copilot.Compile.C99.Expr
                          , Copilot.Compile.C99.Type
                          , Copilot.Compile.C99.Error
-                         , Copilot.Compile.C99.Util
+                         , Copilot.Compile.C99.Name
                          , Copilot.Compile.C99.CodeGen
                          , Copilot.Compile.C99.External
                          , Copilot.Compile.C99.Compile

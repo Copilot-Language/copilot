@@ -1,5 +1,5 @@
--- | Auxiliary helper functions to generate C99 code.
-module Copilot.Compile.C99.Util
+-- | Naming of variables and functions in C.
+module Copilot.Compile.C99.Name
     ( argNames
     , argTempNames
     , exCpyName

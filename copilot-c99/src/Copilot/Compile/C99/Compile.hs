@@ -28,12 +28,12 @@ import Copilot.Compile.C99.CodeGen  ( mkAccessDecln, mkBuffDecln, mkExtCpyDecln,
                                       mkIndexDecln, mkStep, mkStructDecln,
                                       mkStructForwDecln )
 import Copilot.Compile.C99.External ( External, gatherExts )
+import Copilot.Compile.C99.Name     ( argNames, generatorName,
+                                      generatorOutputArgName, guardName )
 import Copilot.Compile.C99.Settings ( CSettings, cSettingsOutputDirectory,
                                       cSettingsStepFunctionName,
                                       mkDefaultCSettings )
 import Copilot.Compile.C99.Type     ( transType )
-import Copilot.Compile.C99.Util     ( argNames, generatorName,
-                                      generatorOutputArgName, guardName )
 
 -- | Compile a specification to a .h and a .c file.
 --
