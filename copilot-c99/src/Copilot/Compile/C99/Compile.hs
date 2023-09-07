@@ -84,12 +84,12 @@ compile = compileWith mkDefaultCSettings
 compileC :: CSettings -> Spec -> C.TransUnit
 compileC cSettings spec = C.TransUnit declns funs
   where
+    declns = mkExts exts ++ mkGlobals streams
+    funs   = genFuns streams triggers ++ [mkStep cSettings streams triggers exts]
+
     streams  = specStreams spec
     triggers = specTriggers spec
     exts     = gatherExts streams triggers
-
-    declns = mkExts exts ++ mkGlobals streams
-    funs   = genFuns streams triggers ++ [mkStep cSettings streams triggers exts]
 
     -- Make declarations for copies of external variables.
     mkExts :: [External] -> [C.Decln]
@@ -130,15 +130,15 @@ compileC cSettings spec = C.TransUnit declns funs
 compileH :: CSettings -> Spec -> C.TransUnit
 compileH cSettings spec = C.TransUnit declns []
   where
-    streams  = specStreams spec
-    triggers = specTriggers spec
-    exts     = gatherExts streams triggers
-    exprs    = gatherExprs streams triggers
-
     declns =  mkStructForwDeclns exprs
            ++ mkExts exts
            ++ extFunDeclns triggers
            ++ [stepDecln]
+
+    exprs    = gatherExprs streams triggers
+    exts     = gatherExts streams triggers
+    streams  = specStreams spec
+    triggers = specTriggers spec
 
     mkStructForwDeclns :: [UExpr] -> [C.Decln]
     mkStructForwDeclns es = mapMaybe mkDecln uTypes

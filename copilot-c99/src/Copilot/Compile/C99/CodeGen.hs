@@ -108,15 +108,17 @@ mkStep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkStep cSettings streams triggers exts =
     C.FunDef void (cSettingsStepFunctionName cSettings) [] declns stmts
   where
-
     void = C.TypeSpec C.Void
+
+    declns =  streamDeclns
+           ++ concat triggerDeclns
+
     stmts  =  map mkExCopy exts
            ++ triggerStmts
            ++ tmpAssigns
            ++ bufferUpdates
            ++ indexUpdates
-    declns =  streamDeclns
-           ++ concat triggerDeclns
+
     (streamDeclns, tmpAssigns, bufferUpdates, indexUpdates) =
       unzip4 $ map mkUpdateGlobals streams
     (triggerDeclns, triggerStmts) =
