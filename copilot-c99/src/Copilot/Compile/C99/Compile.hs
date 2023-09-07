@@ -111,7 +111,6 @@ compileC cSettings spec = C.TransUnit declns funs
                              ++ map streamGen streams
                              ++ concatMap triggerGen triggers
       where
-
         accessDecln :: Stream -> C.FunDef
         accessDecln (Stream sId buff _ ty) = mkAccessDecln sId ty buff
 
@@ -164,6 +163,7 @@ compileH cSettings spec = C.TransUnit declns []
           where
             cTy    = C.TypeSpec C.Void
             params = zipWith mkParam (argNames name) args
+
             mkParam name (UExpr ty _) = C.Param (mkParamTy ty) name
 
             -- Special case for Struct, to pass struct arguments by reference.

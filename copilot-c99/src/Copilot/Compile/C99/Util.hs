@@ -12,7 +12,7 @@ module Copilot.Compile.C99.Util
     )
   where
 
-import Copilot.Core  (Id)
+import Copilot.Core (Id)
 
 -- | Turn a stream id into a suitable C variable name.
 streamName :: Id -> String
