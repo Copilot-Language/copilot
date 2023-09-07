@@ -23,10 +23,10 @@ import Copilot.Core ( Expr (..), Spec (..), Stream (..), Struct (..),
                       Value (..) )
 
 -- Internal imports
-import Copilot.Compile.C99.CodeGen   ( genFun, genFunArray, mkAccessDecln,
-                                       mkBuffDecln, mkExtCpyDecln, mkExtDecln,
-                                       mkIndexDecln, mkStep, mkStructDecln,
-                                       mkStructForwDecln )
+import Copilot.Compile.C99.CodeGen   ( mkAccessDecln, mkBuffDecln,
+                                       mkExtCpyDecln, mkExtDecln, mkGenFun,
+                                       mkGenFunArray, mkIndexDecln, mkStep,
+                                       mkStructDecln, mkStructForwDecln )
 import Copilot.Compile.C99.External  ( External, gatherExts )
 import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
                                        cSettingsStepFunctionName,
@@ -90,7 +90,7 @@ compileC cSettings spec = C.TransUnit declns funs
     declns =  mkExts exts
            ++ mkGlobals streams
 
-    funs =  genFuns streams triggers
+    funs =  mkGenFuns streams triggers
          ++ [mkStep cSettings streams triggers exts]
 
     streams  = specStreams spec
@@ -109,27 +109,27 @@ compileC cSettings spec = C.TransUnit declns funs
         indexDecln (Stream sId _    _ _ ) = mkIndexDecln sId
 
     -- Make generator functions, including trigger arguments.
-    genFuns :: [Stream] -> [Trigger] -> [C.FunDef]
-    genFuns streams triggers =  map accessDecln streams
-                             ++ map streamGen streams
-                             ++ concatMap triggerGen triggers
+    mkGenFuns :: [Stream] -> [Trigger] -> [C.FunDef]
+    mkGenFuns streams triggers =  map accessDecln streams
+                               ++ map streamGen streams
+                               ++ concatMap triggerGen triggers
       where
         accessDecln :: Stream -> C.FunDef
         accessDecln (Stream sId buff _ ty) = mkAccessDecln sId ty buff
 
         streamGen :: Stream -> C.FunDef
         streamGen (Stream sId _ expr ty@(Array _)) =
-          genFunArray (generatorName sId) (generatorOutputArgName sId) expr ty
-        streamGen (Stream sId _ expr ty) = genFun (generatorName sId) expr ty
+          mkGenFunArray (generatorName sId) (generatorOutputArgName sId) expr ty
+        streamGen (Stream sId _ expr ty) = mkGenFun (generatorName sId) expr ty
 
         triggerGen :: Trigger -> [C.FunDef]
         triggerGen (Trigger name guard args) = guardDef : argDefs
           where
-            guardDef = genFun (guardName name) guard Bool
+            guardDef = mkGenFun (guardName name) guard Bool
             argDefs  = zipWith argGen (argNames name) args
 
             argGen :: String -> UExpr -> C.FunDef
-            argGen argName (UExpr ty expr) = genFun argName expr ty
+            argGen argName (UExpr ty expr) = mkGenFun argName expr ty
 
 -- | Generate the .h file from a 'Spec'.
 compileH :: CSettings -> Spec -> C.TransUnit

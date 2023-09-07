@@ -2,16 +2,26 @@
 
 -- | High-level translation of Copilot Core into C99.
 module Copilot.Compile.C99.CodeGen
-    ( genFun
-    , genFunArray
-    , mkAccessDecln
-    , mkBuffDecln
-    , mkExtCpyDecln
+    (
+      -- * Externs
+      mkExtCpyDecln
     , mkExtDecln
-    , mkIndexDecln
-    , mkStep
+
+      -- * Type declarations
     , mkStructDecln
     , mkStructForwDecln
+
+      -- * Ring buffers
+    , mkBuffDecln
+    , mkIndexDecln
+    , mkAccessDecln
+
+      -- * Stream generators
+    , mkGenFun
+    , mkGenFunArray
+
+      -- * Monitor processing
+    , mkStep
     )
   where
 
@@ -34,34 +44,7 @@ import Copilot.Compile.C99.Util      ( argNames, argTempNames, generatorName,
                                        guardName, indexName, streamAccessorName,
                                        streamName )
 
--- | Write a generator function for a stream.
-genFun :: String -> Expr a -> Type a -> C.FunDef
-genFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
-  where
-    cTy            = C.decay $ transType ty
-    (cExpr, cVars) = runState (transExpr expr) mempty
-
--- | Write a generator function for a stream that returns an array.
-genFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
-genFunArray name nameArg expr ty@(Array _) =
-    C.FunDef funType name [ outputParam ] varDecls stmts
-  where
-    funType = C.TypeSpec C.Void
-
-    -- The output value is an array
-    outputParam = C.Param cArrayType nameArg
-    cArrayType  = transType ty
-
-    -- Output value, and any variable declarations needed
-    (cExpr, varDecls) = runState (transExpr expr) mempty
-
-    -- Copy expression to output argument
-    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cExpr size ]
-    size  = C.LitInt (fromIntegral $ tysize ty)
-              C..* C.SizeOfType (C.TypeName $ tyElemName ty)
-
-genFunArray name nameArg expr _ =
-  impossible "genFunArray" "copilot-c99"
+-- * Externs
 
 -- | Make a extern declaration of a variable.
 mkExtDecln :: External -> C.Decln
@@ -76,6 +59,26 @@ mkExtCpyDecln (External name cpyName ty) = decln
   where
     decln = C.VarDecln (Just C.Static) cTy cpyName Nothing
     cTy   = transType ty
+
+-- * Type declarations
+
+-- | Write a struct declaration based on its definition.
+mkStructDecln :: Struct a => Type a -> C.Decln
+mkStructDecln (Struct x) = C.TypeDecln struct
+  where
+    struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
+    fields = NonEmpty.fromList $ map mkField (toValues x)
+
+    mkField :: Value a -> C.FieldDecln
+    mkField (Value ty field) = C.FieldDecln (transType ty) (fieldname field)
+
+-- | Write a forward struct declaration.
+mkStructForwDecln :: Struct a => Type a -> C.Decln
+mkStructForwDecln (Struct x) = C.TypeDecln struct
+  where
+    struct = C.TypeSpec $ C.Struct (typename x)
+
+-- * Ring buffers
 
 -- | Make a C buffer variable and initialise it with the stream buffer.
 mkBuffDecln :: Id -> Type a -> [a] -> C.Decln
@@ -94,7 +97,7 @@ mkIndexDecln sId = C.VarDecln (Just C.Static) cTy name initVal
     cTy     = C.TypeSpec $ C.TypedefName "size_t"
     initVal = Just $ C.InitExpr $ C.LitInt 0
 
--- | Define an accessor functions for the ring buffer associated with a stream
+-- | Define an accessor functions for the ring buffer associated with a stream.
 mkAccessDecln :: Id -> Type a -> [a] -> C.FunDef
 mkAccessDecln sId ty xs = C.FunDef cTy name params [] [C.Return (Just expr)]
   where
@@ -105,7 +108,40 @@ mkAccessDecln sId ty xs = C.FunDef cTy name params [] [C.Return (Just expr)]
     index      = (C.Ident (indexName sId) C..+ C.Ident "x") C..% buffLength
     expr       = C.Index (C.Ident (streamName sId)) index
 
--- | Writes the step function, that updates all streams.
+-- * Stream generators
+
+-- | Write a generator function for a stream.
+mkGenFun :: String -> Expr a -> Type a -> C.FunDef
+mkGenFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
+  where
+    cTy            = C.decay $ transType ty
+    (cExpr, cVars) = runState (transExpr expr) mempty
+
+-- | Write a generator function for a stream that returns an array.
+mkGenFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
+mkGenFunArray name nameArg expr ty@(Array _) =
+    C.FunDef funType name [ outputParam ] varDecls stmts
+  where
+    funType = C.TypeSpec C.Void
+
+    -- The output value is an array
+    outputParam = C.Param cArrayType nameArg
+    cArrayType  = transType ty
+
+    -- Output value, and any variable declarations needed
+    (cExpr, varDecls) = runState (transExpr expr) mempty
+
+    -- Copy expression to output argument
+    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cExpr size ]
+    size  = C.LitInt (fromIntegral $ tysize ty)
+              C..* C.SizeOfType (C.TypeName $ tyElemName ty)
+
+mkGenFunArray name nameArg expr _ =
+  impossible "mkGenFunArray" "copilot-c99"
+
+-- * Monitor processing
+
+-- | Define the step function that updates all streams.
 mkStep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkStep cSettings streams triggers exts =
     C.FunDef void (cSettingsStepFunctionName cSettings) [] declns stmts
@@ -252,23 +288,6 @@ mkStep cSettings streams triggers exts =
                                  args'
             args'        = take (length args) (map argCall (argNames name))
             argCall name = C.Funcall (C.Ident name) []
-
-
--- | Write a struct declaration based on its definition.
-mkStructDecln :: Struct a => Type a -> C.Decln
-mkStructDecln (Struct x) = C.TypeDecln struct
-  where
-    struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
-    fields = NonEmpty.fromList $ map mkField (toValues x)
-
-    mkField :: Value a -> C.FieldDecln
-    mkField (Value ty field) = C.FieldDecln (transType ty) (fieldname field)
-
--- | Write a forward struct declaration.
-mkStructForwDecln :: Struct a => Type a -> C.Decln
-mkStructForwDecln (Struct x) = C.TypeDecln struct
-  where
-    struct = C.TypeSpec $ C.Struct (typename x)
 
 -- * Auxiliary functions
 
