@@ -103,16 +103,17 @@ compileC cSettings spec = C.TransUnit declns funs
 
     -- Make buffer and index declarations for streams.
     mkGlobals :: [Stream] -> [C.Decln]
-    mkGlobals streams = map buffDecln streams ++ map indexDecln streams
+    mkGlobals streamList =  map buffDecln streamList
+                         ++ map indexDecln streamList
       where
         buffDecln  (Stream sId buff _ ty) = mkBuffDecln  sId ty buff
         indexDecln (Stream sId _    _ _ ) = mkIndexDecln sId
 
     -- Make generator functions, including trigger arguments.
     mkGenFuns :: [Stream] -> [Trigger] -> [C.FunDef]
-    mkGenFuns streams triggers =  map accessDecln streams
-                               ++ map streamGen streams
-                               ++ concatMap triggerGen triggers
+    mkGenFuns streamList triggerList =  map accessDecln streamList
+                                     ++ map streamGen streamList
+                                     ++ concatMap triggerGen triggerList
       where
         accessDecln :: Stream -> C.FunDef
         accessDecln (Stream sId buff _ ty) = mkAccessDecln sId ty buff
@@ -167,7 +168,7 @@ compileH cSettings spec = C.TransUnit declns []
             cTy    = C.TypeSpec C.Void
             params = zipWith mkParam (argNames name) args
 
-            mkParam name (UExpr ty _) = C.Param (mkParamTy ty) name
+            mkParam paramName (UExpr ty _) = C.Param (mkParamTy ty) paramName
 
             -- Special case for Struct, to pass struct arguments by reference.
             -- Arrays are also passed by reference, but using C's array type
@@ -239,8 +240,8 @@ typeTypes ty = case ty of
 -- | Collect all expression of a list of streams and triggers and wrap them
 -- into an UEXpr.
 gatherExprs :: [Stream] -> [Trigger] -> [UExpr]
-gatherExprs streams triggers =  map streamExpr streams
-                             ++ concatMap triggerExpr triggers
+gatherExprs streams triggers =  map streamUExpr streams
+                             ++ concatMap triggerUExpr triggers
   where
-    streamExpr  (Stream _ _ expr ty)   = UExpr ty expr
-    triggerExpr (Trigger _ guard args) = UExpr Bool guard : args
+    streamUExpr  (Stream _ _ expr ty)   = UExpr ty expr
+    triggerUExpr (Trigger _ guard args) = UExpr Bool guard : args
