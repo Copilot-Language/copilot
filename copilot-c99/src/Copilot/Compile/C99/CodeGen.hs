@@ -56,7 +56,7 @@ mkExtDecln (External name _ ty) = decln
 
 -- | Make a declaration for a copy of an external variable.
 mkExtCpyDecln :: External -> C.Decln
-mkExtCpyDecln (External name cpyName ty) = decln
+mkExtCpyDecln (External _name cpyName ty) = decln
   where
     decln = C.VarDecln (Just C.Static) cTy cpyName Nothing
     cTy   = transType ty
@@ -137,7 +137,7 @@ mkGenFunArray name nameArg expr ty@(Array _) =
     size  = C.LitInt (fromIntegral $ tysize ty)
               C..* C.SizeOfType (C.TypeName $ tyElemName ty)
 
-mkGenFunArray name nameArg expr _ =
+mkGenFunArray _name _nameArg _expr _ty =
   impossible "mkGenFunArray" "copilot-c99"
 
 -- * Monitor processing
@@ -165,7 +165,7 @@ mkStep cSettings streams triggers exts =
 
     -- Write code to update global stream buffers and index.
     mkUpdateGlobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
-    mkUpdateGlobals (Stream sId buff expr ty) =
+    mkUpdateGlobals (Stream sId buff _expr ty) =
       (tmpDecln, tmpAssign, bufferUpdate, indexUpdate)
         where
           tmpDecln = C.VarDecln Nothing cTy tmpVar Nothing
@@ -243,7 +243,7 @@ mkStep cSettings streams triggers exts =
     --    any modifications that the handler called makes to the struct argument
     --    will not affect the internals of the monitoring code.
     mkTriggerCheck :: Trigger -> ([C.Decln], C.Stmt)
-    mkTriggerCheck (Trigger name guard args) =
+    mkTriggerCheck (Trigger name _guard args) =
         (aTmpDeclns, triggerCheckStmt)
       where
         aTmpDeclns :: [C.Decln]

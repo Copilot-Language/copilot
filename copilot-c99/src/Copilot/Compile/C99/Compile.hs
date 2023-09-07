@@ -150,7 +150,7 @@ compileH cSettings spec = C.TransUnit declns []
     mkStructForwDeclns es = mapMaybe mkDecln uTypes
       where
         mkDecln (UType ty) = case ty of
-          Struct x -> Just $ mkStructForwDecln ty
+          Struct _ -> Just $ mkStructForwDecln ty
           _        -> Nothing
 
         uTypes = nub $ concatMap (\(UExpr _ e) -> exprTypes e) es
