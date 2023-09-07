@@ -51,7 +51,8 @@ library
 
   exposed-modules         : Copilot.Compile.C99
 
-  other-modules          : Copilot.Compile.C99.Translate
+  other-modules          : Copilot.Compile.C99.Expr
+                         , Copilot.Compile.C99.Type
                          , Copilot.Compile.C99.Error
                          , Copilot.Compile.C99.Util
                          , Copilot.Compile.C99.CodeGen

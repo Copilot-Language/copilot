@@ -23,17 +23,17 @@ import Copilot.Core ( Expr (..), Spec (..), Stream (..), Struct (..),
                       Value (..) )
 
 -- Internal imports
-import Copilot.Compile.C99.CodeGen   ( mkAccessDecln, mkBuffDecln,
-                                       mkExtCpyDecln, mkExtDecln, mkGenFun,
-                                       mkGenFunArray, mkIndexDecln, mkStep,
-                                       mkStructDecln, mkStructForwDecln )
-import Copilot.Compile.C99.External  ( External, gatherExts )
-import Copilot.Compile.C99.Settings  ( CSettings, cSettingsOutputDirectory,
-                                       cSettingsStepFunctionName,
-                                       mkDefaultCSettings )
-import Copilot.Compile.C99.Translate ( transType )
-import Copilot.Compile.C99.Util      ( argNames, generatorName,
-                                       generatorOutputArgName, guardName )
+import Copilot.Compile.C99.CodeGen  ( mkAccessDecln, mkBuffDecln, mkExtCpyDecln,
+                                      mkExtDecln, mkGenFun, mkGenFunArray,
+                                      mkIndexDecln, mkStep, mkStructDecln,
+                                      mkStructForwDecln )
+import Copilot.Compile.C99.External ( External, gatherExts )
+import Copilot.Compile.C99.Settings ( CSettings, cSettingsOutputDirectory,
+                                      cSettingsStepFunctionName,
+                                      mkDefaultCSettings )
+import Copilot.Compile.C99.Type     ( transType )
+import Copilot.Compile.C99.Util     ( argNames, generatorName,
+                                      generatorOutputArgName, guardName )
 
 -- | Compile a specification to a .h and a .c file.
 --
