@@ -28,9 +28,9 @@ transType ty = case ty of
   Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
-  Array ty' -> C.Array (transType ty') length
+  Array ty' -> C.Array (transType ty') len
     where
-      length = Just $ C.LitInt $ fromIntegral $ tylength ty
+      len = Just $ C.LitInt $ fromIntegral $ tylength ty
   Struct s  -> C.TypeSpec $ C.Struct (typename s)
 
 -- | Translate a Copilot type to a valid (local) variable declaration C99 type.
