@@ -1,9 +1,9 @@
---------------------------------------------------------------------------------
--- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
---------------------------------------------------------------------------------
 {-# LANGUAGE Safe #-}
 
--- | Custom functions to report error messages to users.
+-- |
+-- Copyright: (c) 2011 National Institute of Aerospace / Galois, Inc.
+--
+-- Custom functions to report error messages to users.
 module Copilot.Compile.C99.Error
     ( impossible )
   where
