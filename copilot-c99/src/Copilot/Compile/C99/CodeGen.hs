@@ -243,13 +243,18 @@ mkStep cSettings streams triggers exts =
     --    will not affect the internals of the monitoring code.
     mkTriggerCheck :: Trigger -> ([C.Decln], C.Stmt)
     mkTriggerCheck (Trigger name guard args) =
-        (aTmpDeclns, ifStmt)
+        (aTmpDeclns, triggerCheckStmt)
       where
-        aTmpDeclns = zipWith (\arg tmpVar ->
-                               C.VarDecln Nothing (tempType arg) tmpVar Nothing)
-                             args
-                             aTempNames
+        aTmpDeclns :: [C.Decln]
+        aTmpDeclns = zipWith declare args aTempNames
           where
+            declare :: UExpr -> C.Ident -> C.Decln
+            declare arg tmpVar =
+              C.VarDecln Nothing (tempType arg) tmpVar Nothing
+
+            -- Type of the temporary variable used to store values of the type
+            -- of a given expression.
+            tempType :: UExpr -> C.Type
             tempType (UExpr { uExprType = ty }) =
               case ty of
                 -- If a temporary variable is being used to store an array,
@@ -261,33 +266,47 @@ mkStep cSettings streams triggers exts =
                 Array ty' -> C.Ptr $ transType ty'
                 _         -> transType ty
 
-        aTempNames = take (length args) (argTempNames name)
-
-        ifStmt = C.If guard' fireTrigger
-
-        guard' = C.Funcall (C.Ident $ guardName name) []
-
-        -- The body of the if-statement. This consists of statements that assign
-        -- the values of the temporary variables, following by a final statement
-        -- that passes the temporary variables to the handler function.
-        fireTrigger =  map C.Expr argAssigns
-                    ++ [C.Expr $ C.Funcall (C.Ident name)
-                                           (zipWith passArg aTempNames args)]
+        triggerCheckStmt :: C.Stmt
+        triggerCheckStmt = C.If guard' fireTrigger
           where
-            passArg aTempName (UExpr { uExprType = ty }) =
-              case ty of
-                -- Special case for Struct to pass reference to temporary
-                -- struct variable to handler. (See the comments for
-                -- mktriggercheck for details.)
-                Struct _ -> C.UnaryOp C.Ref $ C.Ident aTempName
-                _        -> C.Ident aTempName
+            guard' = C.Funcall (C.Ident $ guardName name) []
 
-            argAssigns = zipWith (\aTempName arg ->
-                                   C.AssignOp C.Assign (C.Ident aTempName) arg)
-                                 aTempNames
-                                 args'
-            args'        = take (length args) (map argCall (argNames name))
-            argCall name = C.Funcall (C.Ident name) []
+            -- The body of the if-statement. This consists of statements that
+            -- assign the values of the temporary variables, following by a
+            -- final statement that passes the temporary variables to the
+            -- handler function.
+            fireTrigger =  map C.Expr argAssigns
+                        ++ [C.Expr $
+                               C.Funcall (C.Ident name)
+                                         (zipWith passArg aTempNames args)]
+              where
+                -- List of assignments of values of temporary variables.
+                argAssigns :: [C.Expr]
+                argAssigns = zipWith assign aTempNames args'
+
+                assign :: C.Ident -> C.Expr -> C.Expr
+                assign aTempName = C.AssignOp C.Assign (C.Ident aTempName)
+
+                args'        = take (length args) (map argCall (argNames name))
+                argCall name = C.Funcall (C.Ident name) []
+
+                -- Build an expression to pass a temporary variable as argument
+                -- to a trigger handler.
+                --
+                -- We need to pass a reference to the variable in some cases,
+                -- so we also need the type of the expression, which is enclosed
+                -- in the second argument, an UExpr.
+                passArg :: String -> UExpr -> C.Expr
+                passArg aTempName (UExpr { uExprType = ty }) =
+                  case ty of
+                    -- Special case for Struct to pass reference to temporary
+                    -- struct variable to handler. (See the comments for
+                    -- mktriggercheck for details.)
+                    Struct _ -> C.UnaryOp C.Ref $ C.Ident aTempName
+                    _        -> C.Ident aTempName
+
+        aTempNames :: [String]
+        aTempNames = take (length args) (argTempNames name)
 
 -- * Auxiliary functions
 
