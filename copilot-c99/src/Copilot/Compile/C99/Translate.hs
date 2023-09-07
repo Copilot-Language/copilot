@@ -404,5 +404,7 @@ typeIsFloating _      = False
 type FunEnv = [C.Decln]
 
 -- | Define a C expression that calls a function with arguments.
-funCall :: C.Ident -> [C.Expr] -> C.Expr
-funCall name args = C.Funcall (C.Ident name) args
+funCall :: C.Ident   -- ^ Function name
+        -> [C.Expr]  -- ^ Arguments
+        -> C.Expr
+funCall name = C.Funcall (C.Ident name)

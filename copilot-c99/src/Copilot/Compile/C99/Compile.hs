@@ -99,7 +99,7 @@ compileC cSettings spec = C.TransUnit declns funs
 
     -- Make declarations for copies of external variables.
     mkExts :: [External] -> [C.Decln]
-    mkExts exts = map mkExtCpyDecln exts
+    mkExts = map mkExtCpyDecln
 
     -- Make buffer and index declarations for streams.
     mkGlobals :: [Stream] -> [C.Decln]
@@ -159,7 +159,7 @@ compileH cSettings spec = C.TransUnit declns []
     mkExts = map mkExtDecln
 
     extFunDeclns :: [Trigger] -> [C.Decln]
-    extFunDeclns triggers = map extFunDecln triggers
+    extFunDeclns = map extFunDecln
       where
         extFunDecln :: Trigger -> C.Decln
         extFunDecln (Trigger name _ args) = C.FunDecln Nothing cTy name params
