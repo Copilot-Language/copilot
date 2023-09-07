@@ -84,8 +84,11 @@ compile = compileWith mkDefaultCSettings
 compileC :: CSettings -> Spec -> C.TransUnit
 compileC cSettings spec = C.TransUnit declns funs
   where
-    declns = mkExts exts ++ mkGlobals streams
-    funs   = genFuns streams triggers ++ [mkStep cSettings streams triggers exts]
+    declns =  mkExts exts
+           ++ mkGlobals streams
+
+    funs =  genFuns streams triggers
+         ++ [mkStep cSettings streams triggers exts]
 
     streams  = specStreams spec
     triggers = specTriggers spec
@@ -212,7 +215,7 @@ exprTypes :: Typeable a => Expr a -> [UType]
 exprTypes e = case e of
   Const ty _            -> typeTypes ty
   Local ty1 ty2 _ e1 e2 -> typeTypes ty1 `union` typeTypes ty2
-                           `union` exprTypes e1 `union` exprTypes e2
+                             `union` exprTypes e1 `union` exprTypes e2
   Var ty _              -> typeTypes ty
   Drop ty _ _           -> typeTypes ty
   ExternVar ty _ _      -> typeTypes ty

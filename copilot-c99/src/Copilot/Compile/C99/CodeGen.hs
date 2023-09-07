@@ -36,7 +36,7 @@ import Copilot.Core                  ( Expr (..), Id, Stream (..), Struct (..),
 genFun :: String -> Expr a -> Type a -> C.FunDef
 genFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
   where
-    cTy = C.decay $ transType ty
+    cTy            = C.decay $ transType ty
     (cExpr, cVars) = runState (transExpr expr) mempty
 
 -- | Write a generator function for a stream that returns an array.
@@ -140,8 +140,9 @@ mkStep cSettings streams triggers exts =
             Array _ -> C.Expr $ memcpy dest (C.Ident tmpVar) size
               where
                 dest = C.Index buffVar indexVar
-                size = C.LitInt (fromIntegral $ tysize ty)
-                         C..* C.SizeOfType (C.TypeName (tyElemName ty))
+                size = C.LitInt
+                           (fromIntegral $ tysize ty)
+                           C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $
                            C.Index buffVar indexVar C..= C.Ident tmpVar
 
@@ -231,9 +232,9 @@ mkStep cSettings streams triggers exts =
         -- The body of the if-statement. This consists of statements that assign
         -- the values of the temporary variables, following by a final statement
         -- that passes the temporary variables to the handler function.
-        fireTrigger = map C.Expr argAssigns ++
-                      [C.Expr $ C.Funcall (C.Ident name)
-                                          (zipWith passArg aTempNames args)]
+        fireTrigger =  map C.Expr argAssigns
+                    ++ [C.Expr $ C.Funcall (C.Ident name)
+                                           (zipWith passArg aTempNames args)]
           where
             passArg aTempName (UExpr { uExprType = ty }) =
               case ty of
