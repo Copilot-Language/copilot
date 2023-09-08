@@ -6,5 +6,6 @@ module Copilot.Compile.C99
   , mkDefaultCSettings
   ) where
 
-import Copilot.Compile.C99.Compile
-import Copilot.Compile.C99.Settings
+-- Internal imports
+import Copilot.Compile.C99.Compile  ( compile, compileWith )
+import Copilot.Compile.C99.Settings ( CSettings (..), mkDefaultCSettings )
