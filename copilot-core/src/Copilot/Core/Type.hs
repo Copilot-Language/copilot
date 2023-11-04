@@ -35,6 +35,7 @@ module Copilot.Core.Type
     , typename
 
     , Struct
+    , fieldName
     , fieldname
     , accessorname
     )
@@ -78,8 +79,13 @@ data Value a =
 data Field (s :: Symbol) t = Field t
 
 -- | Extract the name of a field.
+fieldName :: forall s t . KnownSymbol s => Field s t -> String
+fieldName _ = symbolVal (Proxy :: Proxy s)
+
+{-# DEPRECATED fieldname "Use fieldName instead." #-}
+-- | Extract the name of a field.
 fieldname :: forall s t . KnownSymbol s => Field s t -> String
-fieldname _ = symbolVal (Proxy :: Proxy s)
+fieldname = fieldName
 
 -- | Extract the name of an accessor (a function that returns a field of a
 -- struct).
@@ -88,7 +94,7 @@ accessorname :: forall a s t . (Struct a, KnownSymbol s)
 accessorname _ = symbolVal (Proxy :: Proxy s)
 
 instance (KnownSymbol s, Show t) => Show (Field s t) where
-  show f@(Field v) = fieldname f ++ ":" ++ show v
+  show f@(Field v) = fieldName f ++ ":" ++ show v
 
 instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
   show t = "<" ++ fields ++ ">"
