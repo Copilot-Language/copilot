@@ -12,7 +12,7 @@ module Copilot.Compile.C99.Type
 import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
-import Copilot.Core ( Type (..), typeLength, typename )
+import Copilot.Core ( Type (..), typeLength, typeName )
 
 -- | Translate a Copilot type to a C99 type.
 transType :: Type a -> C.Type
@@ -31,7 +31,7 @@ transType ty = case ty of
   Array ty' -> C.Array (transType ty') len
     where
       len = Just $ C.LitInt $ fromIntegral $ typeLength ty
-  Struct s  -> C.TypeSpec $ C.Struct (typename s)
+  Struct s  -> C.TypeSpec $ C.Struct (typeName s)
 
 -- | Translate a Copilot type to a valid (local) variable declaration C99 type.
 --

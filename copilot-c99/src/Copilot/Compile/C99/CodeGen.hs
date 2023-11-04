@@ -67,7 +67,7 @@ mkExtCpyDecln (External _name cpyName ty) = decln
 mkStructDecln :: Struct a => Type a -> C.Decln
 mkStructDecln (Struct x) = C.TypeDecln struct
   where
-    struct = C.TypeSpec $ C.StructDecln (Just $ typename x) fields
+    struct = C.TypeSpec $ C.StructDecln (Just $ typeName x) fields
     fields = NonEmpty.fromList $ map mkField (toValues x)
 
     mkField :: Value a -> C.FieldDecln
@@ -77,7 +77,7 @@ mkStructDecln (Struct x) = C.TypeDecln struct
 mkStructForwDecln :: Struct a => Type a -> C.Decln
 mkStructForwDecln (Struct x) = C.TypeDecln struct
   where
-    struct = C.TypeSpec $ C.Struct (typename x)
+    struct = C.TypeSpec $ C.Struct (typeName x)
 
 -- * Ring buffers
 
