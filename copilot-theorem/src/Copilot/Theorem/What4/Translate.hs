@@ -365,7 +365,7 @@ translateConstExpr sym tp a = case tp of
   CT.Float -> XFloat <$> WFP.iFloatLitSingle sym a
   CT.Double -> XDouble <$> WFP.iFloatLitDouble sym a
   CT.Array tp -> do
-    elts <- traverse (translateConstExpr sym tp) (CT.arrayelems a)
+    elts <- traverse (translateConstExpr sym tp) (CT.arrayElems a)
     Some n <- return $ mkNatRepr (genericLength elts)
     case isZeroOrGT1 n of
       Left Refl -> return XEmptyArray
