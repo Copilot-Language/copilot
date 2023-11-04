@@ -23,6 +23,7 @@ module Copilot.Core.Type
     , UType (..)
     , SimpleType (..)
 
+    , typeSize
     , tysize
     , tylength
 
@@ -113,9 +114,14 @@ tylength :: forall n t . KnownNat n => Type (Array n t) -> Int
 tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
 
 -- | Return the total (nested) size of an array from its type
+typeSize :: forall n t . KnownNat n => Type (Array n t) -> Int
+typeSize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
+typeSize ty@(Array _            ) = tylength ty
+
+{-# DEPRECATED tysize "Use typeSize instead." #-}
+-- | Return the total (nested) size of an array from its type
 tysize :: forall n t . KnownNat n => Type (Array n t) -> Int
-tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
-tysize ty@(Array _            ) = tylength ty
+tysize = typeSize
 
 instance TestEquality Type where
   testEquality Bool   Bool   = Just DE.Refl
