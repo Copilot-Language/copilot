@@ -37,6 +37,7 @@ module Copilot.Core.Type
     , Struct
     , fieldName
     , fieldname
+    , accessorName
     , accessorname
     )
   where
@@ -89,9 +90,16 @@ fieldname = fieldName
 
 -- | Extract the name of an accessor (a function that returns a field of a
 -- struct).
+accessorName :: forall a s t . (Struct a, KnownSymbol s)
+             => (a -> Field s t) -> String
+accessorName _ = symbolVal (Proxy :: Proxy s)
+
+{-# DEPRECATED "accessorname" #-}
+-- | Extract the name of an accessor (a function that returns a field of a
+-- struct).
 accessorname :: forall a s t . (Struct a, KnownSymbol s)
              => (a -> Field s t) -> String
-accessorname _ = symbolVal (Proxy :: Proxy s)
+accessorname = accessorName
 
 instance (KnownSymbol s, Show t) => Show (Field s t) where
   show f@(Field v) = fieldName f ++ ":" ++ show v
