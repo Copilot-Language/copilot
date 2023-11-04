@@ -14,7 +14,7 @@ import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
 import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
-                      Type (..), Value (..), accessorName, arrayelems,
+                      Type (..), Value (..), accessorName, arrayElems,
                       toValues )
 
 -- Internal imports
@@ -239,7 +239,7 @@ constTy ty = case ty of
   Float     -> explicitTy ty . C.LitFloat
   Double    -> explicitTy ty . C.LitDouble
   Struct _  -> C.InitVal (transTypeName ty) . constStruct . toValues
-  Array ty' -> C.InitVal (transTypeName ty) . constArray ty' . arrayelems
+  Array ty' -> C.InitVal (transTypeName ty) . constArray ty' . arrayElems
 
 -- | Transform a Copilot Core literal, based on its value and type, into a C99
 -- initializer.
@@ -265,7 +265,7 @@ constInit ty val = case ty of
   -- whole expression as an array of two int32_t's (as opposed to a nested
   -- array). This can either lead to compile-time errors (if you're lucky) or
   -- incorrect runtime semantics (if you're unlucky).
-  Array ty' -> C.InitList $ constArray ty' $ arrayelems val
+  Array ty' -> C.InitList $ constArray ty' $ arrayElems val
 
   -- We use InitArray to initialize a struct because the syntax used for
   -- initializing arrays and structs is compatible. For instance, {1, 2} works
