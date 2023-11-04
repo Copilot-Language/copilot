@@ -14,7 +14,7 @@ import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
 import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
-                      Type (..), Value (..), accessorname, arrayelems,
+                      Type (..), Value (..), accessorName, arrayelems,
                       toValues )
 
 -- Internal imports
@@ -96,7 +96,7 @@ transOp1 op e =
     Floor    ty   -> funCall (specializeMathFunName ty "floor") [e]
     BwNot    _    -> (C..~) e
     Cast     _ ty -> C.Cast (transTypeName ty) e
-    GetField (Struct _)  _ f -> C.Dot e (accessorname f)
+    GetField (Struct _)  _ f -> C.Dot e (accessorName f)
 
 -- | Translates a Copilot binary operator and its arguments into a C99
 -- expression.
