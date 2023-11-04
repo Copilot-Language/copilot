@@ -33,7 +33,7 @@ import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
 import Copilot.Core ( Expr (..), Id, Stream (..), Struct (..), Trigger (..),
-                      Type (..), UExpr (..), Value (..), fieldname, typeSize )
+                      Type (..), UExpr (..), Value (..), fieldName, typeSize )
 
 -- Internal imports
 import Copilot.Compile.C99.Error    ( impossible )
@@ -71,7 +71,7 @@ mkStructDecln (Struct x) = C.TypeDecln struct
     fields = NonEmpty.fromList $ map mkField (toValues x)
 
     mkField :: Value a -> C.FieldDecln
-    mkField (Value ty field) = C.FieldDecln (transType ty) (fieldname field)
+    mkField (Value ty field) = C.FieldDecln (transType ty) (fieldName field)
 
 -- | Write a forward struct declaration.
 mkStructForwDecln :: Struct a => Type a -> C.Decln
