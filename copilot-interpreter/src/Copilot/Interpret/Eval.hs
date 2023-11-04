@@ -17,7 +17,7 @@ module Copilot.Interpret.Eval
 
 import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
                                 Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
-                                Trigger (..), Type (..), UExpr (..), arrayelems,
+                                Trigger (..), Type (..), UExpr (..), arrayElems,
                                 specObservers, specStreams, specTriggers)
 import Copilot.Interpret.Error (badUsage)
 
@@ -242,7 +242,7 @@ evalOp2 op = case op of
   BwXor _      -> (xor)
   BwShiftL _ _ -> ( \ !a !b -> shiftL a $! fromIntegral b )
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
-  Index    _   -> \xs n -> (arrayelems xs) !! (fromIntegral n)
+  Index    _   -> \xs n -> (arrayElems xs) !! (fromIntegral n)
 
 -- | Apply a function to two numbers, so long as the second one is
 -- not zero.
