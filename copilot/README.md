@@ -222,7 +222,7 @@ does not constitute any form of endorsement._
 - [sketch-frp-copilot](https://hackage.haskell.org/package/sketch-frp-copilot)
   extends Copilot with an FRP-like interface.
 
-- [zephir-copilot](https://hackage.haskell.org/package/zephyr-copilot)
+- [zephyr-copilot](https://hackage.haskell.org/package/zephyr-copilot)
   facilitates building copilot applications that run on boards supported by the
   Zephyr project.
 
