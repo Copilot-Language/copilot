@@ -860,7 +860,7 @@ varDeclC Word64       v = "uint64_t " ++ v
 varDeclC Float        v = "float " ++ v
 varDeclC Double       v = "double " ++ v
 varDeclC t@(Array tE) v =
-  typeC tE ++ " " ++ v ++ "[" ++ show (tylength t) ++ "]"
+  typeC tE ++ " " ++ v ++ "[" ++ show (typeLength t) ++ "]"
 varDeclC _            _ = error
   "copilot-c99 (test): Input variables of type struct are not yet supported."
 
@@ -877,7 +877,7 @@ sizeC Word32       = "sizeof(uint32_t)"
 sizeC Word64       = "sizeof(uint64_t)"
 sizeC Float        = "sizeof(float)"
 sizeC Double       = "sizeof(double)"
-sizeC t@(Array tE) = show (tylength t) ++ "* sizeof(" ++ typeC tE ++ ")"
+sizeC t@(Array tE) = show (typeLength t) ++ "* sizeof(" ++ typeC tE ++ ")"
 sizeC _            = error
   "copilot-c99 (test): Input variables of type struct are not yet supported."
 
