@@ -1,5 +1,6 @@
-2023-11-03
+2023-11-05
         * Relax version constraint on what4. (#461)
+        * Replace uses of deprecated functions. (#457)
 
 2023-09-07
         * Version bump (3.16.1). (#455)
