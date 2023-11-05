@@ -144,8 +144,8 @@ tylength = typeLength
 
 -- | Return the total (nested) size of an array from its type
 typeSize :: forall n t . KnownNat n => Type (Array n t) -> Int
-typeSize ty@(Array ty'@(Array _)) = tylength ty * typeSize ty'
-typeSize ty@(Array _            ) = tylength ty
+typeSize ty@(Array ty'@(Array _)) = typeLength ty * typeSize ty'
+typeSize ty@(Array _            ) = typeLength ty
 
 {-# DEPRECATED tysize "Use typeSize instead." #-}
 -- | Return the total (nested) size of an array from its type
