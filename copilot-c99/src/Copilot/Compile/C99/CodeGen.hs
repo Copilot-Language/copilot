@@ -33,7 +33,7 @@ import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
 import Copilot.Core ( Expr (..), Id, Stream (..), Struct (..), Trigger (..),
-                      Type (..), UExpr (..), Value (..), fieldname, tysize )
+                      Type (..), UExpr (..), Value (..), fieldname, typeSize )
 
 -- Internal imports
 import Copilot.Compile.C99.Error    ( impossible )
@@ -134,7 +134,7 @@ mkGenFunArray name nameArg expr ty@(Array _) =
 
     -- Copy expression to output argument
     stmts = [ C.Expr $ memcpy (C.Ident nameArg) cExpr size ]
-    size  = C.LitInt (fromIntegral $ tysize ty)
+    size  = C.LitInt (fromIntegral $ typeSize ty)
               C..* C.SizeOfType (C.TypeName $ tyElemName ty)
 
 mkGenFunArray _name _nameArg _expr _ty =
@@ -180,7 +180,7 @@ mkStep cSettings streams triggers exts =
               where
                 dest = C.Index buffVar indexVar
                 size = C.LitInt
-                           (fromIntegral $ tysize ty)
+                           (fromIntegral $ typeSize ty)
                            C..* C.SizeOfType (C.TypeName (tyElemName ty))
             _       -> C.Expr $
                            C.Index buffVar indexVar C..= C.Ident tmpVar
@@ -203,7 +203,7 @@ mkStep cSettings streams triggers exts =
         where
           exVar  = C.Ident cpyName
           locVar = C.Ident name
-          size   = C.LitInt (fromIntegral $ tysize ty)
+          size   = C.LitInt (fromIntegral $ typeSize ty)
                      C..* C.SizeOfType (C.TypeName (tyElemName ty))
 
       _       -> C.Ident cpyName C..= C.Ident name
