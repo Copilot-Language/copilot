@@ -23,16 +23,21 @@ module Copilot.Core.Type
     , UType (..)
     , SimpleType (..)
 
+    , typeSize
     , tysize
+    , typeLength
     , tylength
 
     , Value (..)
     , toValues
     , Field (..)
+    , typeName
     , typename
 
     , Struct
+    , fieldName
     , fieldname
+    , accessorName
     , accessorname
     )
   where
@@ -50,11 +55,19 @@ import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
 -- Internal imports
 import Copilot.Core.Type.Array (Array)
 
+{-# DEPRECATED typename "Use typeName instead." #-}
+
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
 class Struct a where
   -- | Returns the name of struct in the target language.
+  typeName :: a -> String
+  typeName = typename
+
+  -- | Returns the name of struct in the target language.
   typename :: a -> String
+  typename = typeName
+
   -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
 
@@ -67,17 +80,29 @@ data Value a =
 data Field (s :: Symbol) t = Field t
 
 -- | Extract the name of a field.
-fieldname :: forall s t . KnownSymbol s => Field s t -> String
-fieldname _ = symbolVal (Proxy :: Proxy s)
+fieldName :: forall s t . KnownSymbol s => Field s t -> String
+fieldName _ = symbolVal (Proxy :: Proxy s)
 
+{-# DEPRECATED fieldname "Use fieldName instead." #-}
+-- | Extract the name of a field.
+fieldname :: forall s t . KnownSymbol s => Field s t -> String
+fieldname = fieldName
+
+-- | Extract the name of an accessor (a function that returns a field of a
+-- struct).
+accessorName :: forall a s t . (Struct a, KnownSymbol s)
+             => (a -> Field s t) -> String
+accessorName _ = symbolVal (Proxy :: Proxy s)
+
+{-# DEPRECATED accessorname "Use accessorName instead." #-}
 -- | Extract the name of an accessor (a function that returns a field of a
 -- struct).
 accessorname :: forall a s t . (Struct a, KnownSymbol s)
              => (a -> Field s t) -> String
-accessorname _ = symbolVal (Proxy :: Proxy s)
+accessorname = accessorName
 
 instance (KnownSymbol s, Show t) => Show (Field s t) where
-  show f@(Field v) = fieldname f ++ ":" ++ show v
+  show f@(Field v) = fieldName f ++ ":" ++ show v
 
 instance {-# OVERLAPPABLE #-} (Typed t, Struct t) => Show t where
   show t = "<" ++ fields ++ ">"
@@ -109,13 +134,23 @@ data Type :: * -> * where
   Struct :: (Typed a, Struct a) => a -> Type a
 
 -- | Return the length of an array from its type
+typeLength :: forall n t . KnownNat n => Type (Array n t) -> Int
+typeLength _ = fromIntegral $ natVal (Proxy :: Proxy n)
+
+{-# DEPRECATED tylength "Use typeLength instead." #-}
+-- | Return the length of an array from its type
 tylength :: forall n t . KnownNat n => Type (Array n t) -> Int
-tylength _ = fromIntegral $ natVal (Proxy :: Proxy n)
+tylength = typeLength
 
 -- | Return the total (nested) size of an array from its type
+typeSize :: forall n t . KnownNat n => Type (Array n t) -> Int
+typeSize ty@(Array ty'@(Array _)) = typeLength ty * typeSize ty'
+typeSize ty@(Array _            ) = typeLength ty
+
+{-# DEPRECATED tysize "Use typeSize instead." #-}
+-- | Return the total (nested) size of an array from its type
 tysize :: forall n t . KnownNat n => Type (Array n t) -> Int
-tysize ty@(Array ty'@(Array _)) = tylength ty * tysize ty'
-tysize ty@(Array _            ) = tylength ty
+tysize = typeSize
 
 instance TestEquality Type where
   testEquality Bool   Bool   = Just DE.Refl

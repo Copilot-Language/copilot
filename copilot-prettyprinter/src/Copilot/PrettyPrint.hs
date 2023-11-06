@@ -71,7 +71,7 @@ ppOp1 op = case op of
   Floor _                 -> ppPrefix "floor"
   BwNot _                 -> ppPrefix "~"
   Cast _ _                -> ppPrefix "(cast)"
-  GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorname f)
+  GetField (Struct _) _ f -> \e -> ppInfix "#" e (text $ accessorName f)
   GetField _ _ _          -> impossible "ppOp1" "Copilot.PrettyPrint"
 
 -- | Pretty-print a binary operation.

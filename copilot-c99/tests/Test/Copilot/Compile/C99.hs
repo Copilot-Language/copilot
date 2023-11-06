@@ -279,7 +279,7 @@ arbitraryArrayIx :: forall t n . (Typed t, KnownNat n, Num t)
                         , [Array n t] -> [Word32] -> [t]
                         )
 arbitraryArrayIx = return
-  (Op2 (Index typeOf), zipWith (\x y -> arrayelems x !! fromIntegral y))
+  (Op2 (Index typeOf), zipWith (\x y -> arrayElems x !! fromIntegral y))
 
 -- | Generator of functions on Floating point numbers.
 arbitraryOpFloat :: (Floating t, Typed t) => Gen (Fun t t, [t] -> [t])
@@ -860,7 +860,7 @@ varDeclC Word64       v = "uint64_t " ++ v
 varDeclC Float        v = "float " ++ v
 varDeclC Double       v = "double " ++ v
 varDeclC t@(Array tE) v =
-  typeC tE ++ " " ++ v ++ "[" ++ show (tylength t) ++ "]"
+  typeC tE ++ " " ++ v ++ "[" ++ show (typeLength t) ++ "]"
 varDeclC _            _ = error
   "copilot-c99 (test): Input variables of type struct are not yet supported."
 
@@ -877,7 +877,7 @@ sizeC Word32       = "sizeof(uint32_t)"
 sizeC Word64       = "sizeof(uint64_t)"
 sizeC Float        = "sizeof(float)"
 sizeC Double       = "sizeof(double)"
-sizeC t@(Array tE) = show (tylength t) ++ "* sizeof(" ++ typeC tE ++ ")"
+sizeC t@(Array tE) = show (typeLength t) ++ "* sizeof(" ++ typeC tE ++ ")"
 sizeC _            = error
   "copilot-c99 (test): Input variables of type struct are not yet supported."
 
@@ -920,7 +920,7 @@ instance CShow Bool where
   cshow False = "false"
 
 instance CShow t => CShow (Array n t) where
-  cshow a = intercalate "," $ map cshow $ arrayelems a
+  cshow a = intercalate "," $ map cshow $ arrayElems a
 
 -- | Read a value of a given type in C.
 class ReadableFromC a where

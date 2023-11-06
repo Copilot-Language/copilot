@@ -13,7 +13,7 @@ import Test.QuickCheck                      (Gen, Property, arbitrary, forAll,
                                              vectorOf)
 
 -- Internal imports: library modules being tested
-import Copilot.Core.Type.Array (Array, array, arrayelems)
+import Copilot.Core.Type.Array (Array, array, arrayElems)
 
 -- | All unit tests for copilot-core:Copilot.Core.Array.
 tests :: Test.Framework.Test
@@ -30,13 +30,13 @@ tests =
 -- * Individual tests
 
 -- | Test that building an array from a list and extracting the elements with
--- the function 'arrayelems' will result in the same list.
+-- the function 'arrayElems' will result in the same list.
 testArrayElemsLeft :: forall n . KnownNat n => Proxy n -> Property
 testArrayElemsLeft len =
     forAll xsInt64 $ \ls ->
       let array' :: Array n Int64
           array' = array ls
-      in arrayelems array' == ls
+      in arrayElems array' == ls
 
   where
 

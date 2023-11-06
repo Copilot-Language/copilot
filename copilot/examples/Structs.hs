@@ -19,7 +19,7 @@ data Volts = Volts
 
 -- | `Struct` instance for `Volts`.
 instance Struct Volts where
-  typename _ = "volts"
+  typeName _ = "volts"
   toValues volts = [ Value Word16 (numVolts volts)
                    , Value Bool   (flag volts)
                    ]
@@ -36,7 +36,7 @@ data Battery = Battery
 
 -- | `Battery` instance for `Struct`.
 instance Struct Battery where
-  typename _ = "battery"
+  typeName _ = "battery"
   toValues battery = [ Value typeOf (temp battery)
                      , Value typeOf (volts battery)
                      , Value typeOf (other battery)
