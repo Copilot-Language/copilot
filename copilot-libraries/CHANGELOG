@@ -1,3 +1,6 @@
+2023-11-07
+        * Version bump (3.17). (#466)
+
 2023-09-07
         * Version bump (3.16.1). (#455)
         * Fix semantics of since in Copilot.Library.PTLTL. (#443)
