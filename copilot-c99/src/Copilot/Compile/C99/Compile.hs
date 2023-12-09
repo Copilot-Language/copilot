@@ -130,7 +130,10 @@ compileC cSettings spec = C.TransUnit declns funs
             argDefs  = zipWith argGen (argNames name) args
 
             argGen :: String -> UExpr -> C.FunDef
-            argGen argName (UExpr ty expr) = mkGenFun argName expr ty
+            argGen argName (UExpr ty expr) =
+              case ty of
+                Array _ -> mkGenFunArray argName (argName ++ "_output") expr ty
+                _       -> mkGenFun argName expr ty
 
 -- | Generate the .h file from a 'Spec'.
 compileH :: CSettings -> Spec -> C.TransUnit

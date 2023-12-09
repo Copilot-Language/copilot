@@ -250,22 +250,8 @@ mkStep cSettings streams triggers exts =
         aTmpDeclns = zipWith declare args aTempNames
           where
             declare :: UExpr -> C.Ident -> C.Decln
-            declare arg tmpVar =
-              C.VarDecln Nothing (tempType arg) tmpVar Nothing
-
-            -- Type of the temporary variable used to store values of the type
-            -- of a given expression.
-            tempType :: UExpr -> C.Type
-            tempType (UExpr { uExprType = ty }) =
-              case ty of
-                -- If a temporary variable is being used to store an array,
-                -- declare the type of the temporary variable as a pointer, not
-                -- an array. The problem with declaring it as an array is that
-                -- the `arg` function will return a pointer, not an array, and
-                -- C doesn't make it easy to cast directly from an array to a
-                -- pointer.
-                Array ty' -> C.Ptr $ transType ty'
-                _         -> transType ty
+            declare (UExpr { uExprType = ty }) tmpVar =
+              C.VarDecln Nothing (transType ty) tmpVar Nothing
 
         triggerCheckStmt :: C.Stmt
         triggerCheckStmt = C.If guard' fireTrigger
@@ -283,13 +269,21 @@ mkStep cSettings streams triggers exts =
               where
                 -- List of assignments of values of temporary variables.
                 argAssigns :: [C.Expr]
-                argAssigns = zipWith assign aTempNames args'
+                argAssigns = zipWith3 assign aTempNames aArgNames args
 
-                assign :: C.Ident -> C.Expr -> C.Expr
-                assign aTempName = C.AssignOp C.Assign (C.Ident aTempName)
+                assign :: C.Ident -> C.Ident -> UExpr -> C.Expr
+                assign aTempName aArgName (UExpr { uExprType = ty }) =
+                  case ty of
+                    Array _ -> argCall aArgName [C.Ident aTempName]
+                    _       -> C.AssignOp C.Assign
+                                          (C.Ident aTempName)
+                                          (argCall aArgName [])
 
-                args'         = take (length args) (map argCall (argNames name))
-                argCall name' = C.Funcall (C.Ident name') []
+                aArgNames :: [C.Ident]
+                aArgNames = take (length args) (argNames name)
+
+                argCall :: C.Ident -> [C.Expr] -> C.Expr
+                argCall name' = C.Funcall (C.Ident name')
 
                 -- Build an expression to pass a temporary variable as argument
                 -- to a trigger handler.
