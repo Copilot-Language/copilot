@@ -1,6 +1,7 @@
-2023-12-17
+2023-12-19
         * Change return type of main generated for tests. (#468)
         * Print constants in tests using portable suffixes. (#471).
+        * Pass output arrays as arguments to trigger argument functions. (#431)
 
 2023-11-07
         * Version bump (3.17). (#466)
