@@ -157,7 +157,7 @@ testRun = ioProperty $ do
           , "void nop () {"
           , "}"
           , ""
-          , "void main () {"
+          , "int main () {"
           , "  step();"
           , "}"
           ]
