@@ -886,28 +886,52 @@ class CShow s where
   cshow :: s -> String
 
 instance CShow Int8 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "INT8_C(" ++ show x ++ ")"
 
 instance CShow Int16 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "INT16_C(" ++ show x ++ ")"
 
 instance CShow Int32 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "INT32_C(" ++ show x ++ ")"
 
 instance CShow Int64 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "INT64_C(" ++ show x ++ ")"
 
 instance CShow Word8 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "UINT8_C(" ++ show x ++ ")"
 
 instance CShow Word16 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "UINT16_C(" ++ show x ++ ")"
 
 instance CShow Word32 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "UINT32_C(" ++ show x ++ ")"
 
 instance CShow Word64 where
-  cshow = show
+  -- Use a macro to ensure that any necessary suffixes are added to the number.
+  -- We choose this macro instead of specifically adding a suffix for reasons
+  -- of portability.
+  cshow x = "UINT64_C(" ++ show x ++ ")"
 
 instance CShow Float where
   cshow = show
