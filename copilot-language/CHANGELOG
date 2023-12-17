@@ -1,3 +1,6 @@
+2023-12-17
+        * Add type annotation to help type inference engine. (#469)
+
 2023-11-07
         * Version bump (3.17). (#466)
 
