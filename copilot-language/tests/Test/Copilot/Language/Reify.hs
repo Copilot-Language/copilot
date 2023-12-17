@@ -31,7 +31,7 @@ import qualified Copilot.Language.Operators.Integral as Copilot
 import qualified Copilot.Language.Operators.Mux      as Copilot
 import qualified Copilot.Language.Operators.Ord      as Copilot
 import           Copilot.Language.Reify              (reify)
-import           Copilot.Language.Spec               (observer)
+import           Copilot.Language.Spec               (Spec, observer)
 import           Copilot.Language.Stream             (Stream)
 import qualified Copilot.Language.Stream             as Copilot
 
@@ -732,7 +732,11 @@ semanticsShowK steps (SemanticsP (expr, exprList)) =
 checkSemanticsP :: Int -> [a] -> SemanticsP -> IO Bool
 checkSemanticsP steps _streams (SemanticsP (expr, exprList)) = do
     -- Spec with just one observer of one expression.
-    let spec = observer testObserverName expr
+    --
+    -- Because SemanticsP is an existential type, we need to help GHC figure
+    -- out the type of spec.
+    let spec :: Spec
+        spec = observer testObserverName expr
 
     -- Reified stream (low-level)
     llSpec <- reify spec
