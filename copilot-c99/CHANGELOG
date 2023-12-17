@@ -1,3 +1,6 @@
+2023-12-14
+        * Change return type of main generated for tests. (#468)
+
 2023-11-07
         * Version bump (3.17). (#466)
         * Replace uses of deprecated functions. (#457)
