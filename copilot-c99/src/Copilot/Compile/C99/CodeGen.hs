@@ -163,6 +163,16 @@ mkStep cSettings streams triggers exts =
     (triggerDeclns, triggerStmts) =
       unzip $ map mkTriggerCheck triggers
 
+    -- Update the value of a variable with the result of calling a function that
+    -- generates the next value in a stream expression. If the type of the
+    -- variable is an array, then we cannot perform a direct C assignment, so
+    -- we instead pass the variable as an output array to the function.
+    updateVar :: C.Ident -> C.Ident -> Type a -> C.Expr
+    updateVar varName genName (Array _) =
+      C.Funcall (C.Ident genName) [C.Ident varName]
+    updateVar varName genName _ =
+      C.AssignOp C.Assign (C.Ident varName) (C.Funcall (C.Ident genName) [])
+
     -- Write code to update global stream buffers and index.
     mkUpdateGlobals :: Stream -> (C.Decln, C.Stmt, C.Stmt, C.Stmt)
     mkUpdateGlobals (Stream sId buff _expr ty) =
@@ -170,10 +180,7 @@ mkStep cSettings streams triggers exts =
         where
           tmpDecln = C.VarDecln Nothing cTy tmpVar Nothing
 
-          tmpAssign = case ty of
-            Array _ -> C.Expr $ C.Funcall (C.Ident $ generatorName sId)
-                                          [ C.Ident tmpVar ]
-            _       -> C.Expr $ C.Ident tmpVar C..= val
+          tmpAssign = C.Expr $ updateVar tmpVar (generatorName sId) ty
 
           bufferUpdate = case ty of
             Array _ -> C.Expr $ memcpy dest (C.Ident tmpVar) size
@@ -193,7 +200,6 @@ mkStep cSettings streams triggers exts =
           tmpVar   = streamName sId ++ "_tmp"
           buffVar  = C.Ident $ streamName sId
           indexVar = C.Ident $ indexName sId
-          val      = C.Funcall (C.Ident $ generatorName sId) []
           cTy      = transType ty
 
     -- Make code that copies an external variable to its local one.
@@ -273,17 +279,10 @@ mkStep cSettings streams triggers exts =
 
                 assign :: C.Ident -> C.Ident -> UExpr -> C.Expr
                 assign aTempName aArgName (UExpr { uExprType = ty }) =
-                  case ty of
-                    Array _ -> argCall aArgName [C.Ident aTempName]
-                    _       -> C.AssignOp C.Assign
-                                          (C.Ident aTempName)
-                                          (argCall aArgName [])
+                  updateVar aTempName aArgName ty
 
                 aArgNames :: [C.Ident]
                 aArgNames = take (length args) (argNames name)
-
-                argCall :: C.Ident -> [C.Expr] -> C.Expr
-                argCall name' = C.Funcall (C.Ident name')
 
                 -- Build an expression to pass a temporary variable as argument
                 -- to a trigger handler.
