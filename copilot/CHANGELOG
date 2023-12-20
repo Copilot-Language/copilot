@@ -1,3 +1,6 @@
+2023-12-18
+        * Enable tests for copilot-theorem in CI script. (#474)
+
 2023-11-07
         * Version bump (3.17). (#466)
         * Replace uses of deprecated functions. (#457)

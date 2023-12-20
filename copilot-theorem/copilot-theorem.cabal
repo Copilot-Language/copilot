@@ -108,3 +108,31 @@ library
                           , Copilot.Theorem.TransSys.Type
 
                           , Copilot.Theorem.What4.Translate
+
+test-suite unit-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Main.hs
+
+  other-modules:
+    Test.Copilot.Theorem.What4
+
+  build-depends:
+      base
+    , QuickCheck
+    , test-framework
+    , test-framework-quickcheck2
+
+    , copilot-core
+    , copilot-theorem
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
