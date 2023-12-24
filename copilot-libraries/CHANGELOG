@@ -1,3 +1,6 @@
+2023-12-24
+        * Introduce testing infrastructure for Copilot.Library. (#475)
+
 2023-11-07
         * Version bump (3.17). (#466)
 
