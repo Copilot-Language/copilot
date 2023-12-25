@@ -33,6 +33,7 @@ script:
   #
   # Only libraries with tests are listed below or the v2-test command fails.
   #
-  # Testing copilot-theorem requires z3. See above conditional installation,
-  # and keep GHC version numbers in both places in sync.
-  - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-core copilot-language copilot-interpreter copilot-c99 copilot-theorem; fi
+  # Testing copilot-theorem and copilot-libraries requires z3. See above
+  # conditional installation, and keep GHC version numbers in both places in
+  # sync.
+  - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-core copilot-language copilot-interpreter copilot-c99 copilot-theorem copilot-libraries; fi
