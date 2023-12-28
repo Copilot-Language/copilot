@@ -43,7 +43,8 @@ import Test.QuickCheck.Monadic (monadicIO, run)
 import           Copilot.Interpret.Eval              (ExecTrace (interpObservers),
                                                       ShowType (Haskell), eval)
 import           Copilot.Language                    (Spec, Stream, Typed,
-                                                      forall, observer, prop)
+                                                      observer, prop)
+import qualified Copilot.Language                    as Copilot
 import qualified Copilot.Language.Operators.Boolean  as Copilot
 import qualified Copilot.Language.Operators.Constant as Copilot
 import qualified Copilot.Language.Operators.Eq       as Copilot
@@ -67,7 +68,7 @@ testWithTheorem gen =
         propName = "prop"
 
         spec :: Spec
-        spec = void $ prop propName $ forall stream
+        spec = void $ prop propName $ Copilot.forAll stream
 
     monadicIO $ run $ checkResult Z3 propName spec expectation
 
