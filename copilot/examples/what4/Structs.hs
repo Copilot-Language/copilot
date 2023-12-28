@@ -56,12 +56,12 @@ spec = do
 
   -- Check equality, indexing into nested structs and arrays. Note that this is
   -- trivial by equality.
-  void $ prop "Example 1" $ forall $
+  void $ prop "Example 1" $ forAll $
     (((battery#volts) .!! 0)#numVolts) == (((battery#volts) .!! 0)#numVolts)
 
   -- Same as previous example, but get a different array index (so should be
   -- false).
-  void $ prop "Example 2" $ forall $
+  void $ prop "Example 2" $ forAll $
     (((battery#other) .!! 2) .!! 3) == (((battery#other) .!! 2) .!! 4)
 
 main :: IO ()

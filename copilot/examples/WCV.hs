@@ -151,8 +151,8 @@ horizontalWCV tvar s v =
   (((dcpa s v) <= dthr) && (0 <= (tvar s v)) && ((tvar s v) <= tthr))
 
 spec = do
-  Monad.void $ prop "1a" (forall $ (tau s v) ~= (tau (neg s) (neg v)))
-  -- Monad.void $ prop "3d" (forall $ (wcv tep s sz v vz)    == (wcv tep (neg s) (-sz) (neg v) (-vz)))
+  Monad.void $ prop "1a" (forAll $ (tau s v) ~= (tau (neg s) (neg v)))
+  -- Monad.void $ prop "3d" (forAll $ (wcv tep s sz v vz)    == (wcv tep (neg s) (-sz) (neg v) (-vz)))
 
 main :: IO ()
 main = do

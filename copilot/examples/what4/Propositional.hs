@@ -13,38 +13,38 @@ spec :: Spec
 spec = do
   -- The constant value true, which is translated as the corresponding SMT
   -- boolean literal.
-  void $ prop "Example 1" (forall true)
+  void $ prop "Example 1" (forAll true)
 
   -- The constant value false, which is translated as the corresponding SMT
   -- boolean literal.
-  void $ prop "Example 2" (forall false)
+  void $ prop "Example 2" (forAll false)
 
   -- An inductively defined flavor of true, which requires induction to prove,
   -- and hence is found to be invalid by the SMT solver (since no inductive
   -- hypothesis is made).
   let a = [True] ++ a
-  void $ prop "Example 3" (forall a)
+  void $ prop "Example 3" (forAll a)
 
   -- An inductively defined "a or not a" proposition, which is unprovable by
   -- the SMT solver.
   let a = [False] ++ b
       b = [True] ++ a
-  void $ prop "Example 4" (forall (a || b))
+  void $ prop "Example 4" (forAll (a || b))
 
   -- A version of "a or not a" proposition which does not require any sort of
   -- inductive argument, and hence is provable.
   let a = [False] ++ b
       b = not a
-  void $ prop "Example 5" (forall (a || b))
+  void $ prop "Example 5" (forAll (a || b))
 
   -- A bit more convoluted version of Example 5, which is provable.
   let a = [True, False] ++ b
       b = [False] ++ not (drop 1 a)
-  void $ prop "Example 6" (forall (a || b))
+  void $ prop "Example 6" (forAll (a || b))
 
   -- An example using external streams.
   let a = extern "a" Nothing
-  void $ prop "Example 7" (forall (a || not a))
+  void $ prop "Example 7" (forAll (a || not a))
 
 main :: IO ()
 main = do

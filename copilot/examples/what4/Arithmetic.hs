@@ -21,22 +21,22 @@ spec = do
       efloat = extern "efloat" Nothing
 
   -- The simplest example involving numbers: equality on constant values.
-  void $ prop "Example 1" (forall ((constant (1 :: Int8)) == (constant 1)))
+  void $ prop "Example 1" (forAll ((constant (1 :: Int8)) == (constant 1)))
 
   -- Testing "a < a + 1". This should fail, because it isn't true.
-  void $ prop "Example 2" (forall (eint8 < (eint8 + 1)))
+  void $ prop "Example 2" (forAll (eint8 < (eint8 + 1)))
 
   -- Adding another condition to the above property to make it true.
-  void $ prop "Example 3" (forall ((eint8 < (eint8 + 1)) || (eint8 == 127)))
+  void $ prop "Example 3" (forAll ((eint8 < (eint8 + 1)) || (eint8 == 127)))
 
   -- Just like the previous example, but with words.
-  void $ prop "Example 4" (forall ((eword8 < (eword8 + 1)) || (eword8 == 255)))
+  void $ prop "Example 4" (forAll ((eword8 < (eword8 + 1)) || (eword8 == 255)))
 
   -- An example with floats.
-  void $ prop "Example 5" (forall ((2 * efloat) == (efloat + efloat)))
+  void $ prop "Example 5" (forAll ((2 * efloat) == (efloat + efloat)))
 
   -- Another example with floats. This fails, because it isn't true.
-  void $ prop "Example 6" (forall ((efloat + 1) /= efloat))
+  void $ prop "Example 6" (forAll ((efloat + 1) /= efloat))
 
 main :: IO ()
 main = do
