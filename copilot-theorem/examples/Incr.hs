@@ -7,9 +7,9 @@ import Copilot.Theorem
 import Copilot.Theorem.Prover.Z3
 
 spec = do
-  bounds <- prop "bounds" (forall $ x < 255)
-  theorem "gt1" (forall $ x > 1) (assume bounds >> induct)
-  theorem "neq0" (forall $ x /= 0) (assume bounds >> induct)
+  bounds <- prop "bounds" (forAll $ x < 255)
+  theorem "gt1" (forAll $ x > 1) (assume bounds >> induct)
+  theorem "neq0" (forAll $ x /= 0) (assume bounds >> induct)
 
   where
     x :: Stream Word8

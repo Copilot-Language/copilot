@@ -184,41 +184,41 @@ horizontalWCV tvar s v = (norm s <= dthr) || ((dcpa s v <= dthr) && (0 <= tvar s
 
 -- Horizontal symmetry --
 horizSymmetry = do
-  theorem "1a" (forall $ tau s v    ~= tau (neg s) (neg v))     arith
-  theorem "1b" (forall $ tcpa s v   ~= tcpa (neg s) (neg v))    arith
-  theorem "1c" (forall $ taumod s v ~= taumod (neg s) (neg v))  arith
-  theorem "1d" (forall $ tep s v    ~= tep (neg s) (neg v))     arith
+  theorem "1a" (forAll $ tau s v    ~= tau (neg s) (neg v))     arith
+  theorem "1b" (forAll $ tcpa s v   ~= tcpa (neg s) (neg v))    arith
+  theorem "1c" (forAll $ taumod s v ~= taumod (neg s) (neg v))  arith
+  theorem "1d" (forAll $ tep s v    ~= tep (neg s) (neg v))     arith
 
 -- Horizontal ordering --
 horizOrdering = do
-  theorem "2a" (forall $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
+  theorem "2a" (forAll $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
     ==> (tep s v <= taumod s v))
     arith
-  theorem "2b" (forall $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
+  theorem "2b" (forAll $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
     ==> (taumod s v <= tcpa s v))
     arith
-  theorem "2c" (forall $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
+  theorem "2c" (forAll $ ((s |*| v) < 0 && norm s > dthr && dcpa s v <= dthr)
     ==> (tcpa s v <= tau s v))
     arith
 
 -- Symmetry --
 symmetry = do
-  theorem "3a" (forall $ wcv tau s sz v vz    == wcv tau (neg s) (-sz) (neg v) (-vz))
+  theorem "3a" (forAll $ wcv tau s sz v vz    == wcv tau (neg s) (-sz) (neg v) (-vz))
     arith
-  theorem "3b" (forall $ wcv tcpa s sz v vz   == wcv tcpa (neg s) (-sz) (neg v) (-vz))
+  theorem "3b" (forAll $ wcv tcpa s sz v vz   == wcv tcpa (neg s) (-sz) (neg v) (-vz))
     arith
-  theorem "3c" (forall $ wcv taumod s sz v vz == wcv taumod (neg s) (-sz) (neg v) (-vz))
+  theorem "3c" (forAll $ wcv taumod s sz v vz == wcv taumod (neg s) (-sz) (neg v) (-vz))
     arith
-  theorem "3d" (forall $ wcv tep s sz v vz    == wcv tep (neg s) (-sz) (neg v) (-vz))
+  theorem "3d" (forAll $ wcv tep s sz v vz    == wcv tep (neg s) (-sz) (neg v) (-vz))
     arith
 
 -- Inclusion --
 inclusion = do
-  theorem "4i"   (forall $ wcv tau s sz v vz    ==> wcv tcpa s sz v vz)
+  theorem "4i"   (forAll $ wcv tau s sz v vz    ==> wcv tcpa s sz v vz)
     arith
-  theorem "4ii"  (forall $ wcv tcpa s sz v vz   ==> wcv taumod s sz v vz )
+  theorem "4ii"  (forAll $ wcv tcpa s sz v vz   ==> wcv taumod s sz v vz )
     arith
-  theorem "4iii" (forall $ wcv taumod s sz v vz ==> wcv tep s sz v vz)
+  theorem "4iii" (forAll $ wcv taumod s sz v vz ==> wcv tep s sz v vz)
     arith
 
 -- Local convexity --
@@ -235,10 +235,10 @@ locallyConvex tvar = (0 <= t1 && t1 <= t2 && t2 <= t3)
       &&  wcv tvar (sx + t3*vx, sy + t3*vy) (sz + t3*vz) v vz)
 
 localConvexity = do
-  theorem "5a" (forall $ locallyConvex tcpa)        arith
-  theorem "5b" (forall $ locallyConvex taumod)      arith
-  theorem "5c" (forall $ locallyConvex tep)         arith
-  theorem "6"  (P.not (forall $ locallyConvex tau)) arithSat
+  theorem "5a" (forAll $ locallyConvex tcpa)        arith
+  theorem "5b" (forAll $ locallyConvex taumod)      arith
+  theorem "5c" (forAll $ locallyConvex tep)         arith
+  theorem "6"  (P.not (forAll $ locallyConvex tau)) arithSat
 
 arith :: Proof Universal
 arith    = onlyValidity def { nraNLSat = True, debug = False }

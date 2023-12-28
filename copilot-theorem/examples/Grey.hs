@@ -22,8 +22,8 @@ greyTick reset = a && b
     b = (not reset) && ([False] ++ a)
 
 spec = do
-  theorem "iResetOk"   (forall $ r ==> (ic == 0)) induct
-  theorem "eqCounters" (forall $ it == gt) $ kinduct 3
+  theorem "iResetOk"   (forAll $ r ==> (ic == 0)) induct
+  theorem "eqCounters" (forAll $ it == gt) $ kinduct 3
 
   where
     ic = intCounter r

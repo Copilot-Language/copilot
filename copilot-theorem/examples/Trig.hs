@@ -25,37 +25,37 @@ arithSat = onlySat def { debug = False } dReal
 a ~= b = abs (a - b) < 0.001
 
 spec = do
-  bounds <- prop "bounds" (forall $ bounds)
+  bounds <- prop "bounds" (forAll $ bounds)
 
   -- dReal/metit fails this one.
-  -- theorem "dist_eq"     (forall $ d1 ~= d2)
+  -- theorem "dist_eq"     (forAll $ d1 ~= d2)
   --   $ assume bounds >> arith
-  theorem_ "2sin"           (forall $ (2 * (sin x)) <= 3)
+  theorem_ "2sin"           (forAll $ (2 * (sin x)) <= 3)
     $ assume bounds >> arith
-  theorem_ "sin_cos"        (forall $ ((sin x) ** 2 + (cos x) ** 2) ~= 1)
+  theorem_ "sin_cos"        (forAll $ ((sin x) ** 2 + (cos x) ** 2) ~= 1)
     $ assume bounds >> arith
-  theorem_ "sin_cos_pi"     ( forall $ ((sin x) ** 2 + (cos $ x + pi) ** 2) ~= 1)
+  theorem_ "sin_cos_pi"     ( forAll $ ((sin x) ** 2 + (cos $ x + pi) ** 2) ~= 1)
     $ assume bounds >> arith
-  theorem_ "sin_2pi"        ( forall $ (sin x) ~= (sin $ x + 2 * pi))
+  theorem_ "sin_2pi"        ( forAll $ (sin x) ~= (sin $ x + 2 * pi))
     $ assume bounds >> arith
-  theorem_ "cos_2pi"        ( forall $ (cos x) ~= (cos $ x + 2 * pi))
+  theorem_ "cos_2pi"        ( forAll $ (cos x) ~= (cos $ x + 2 * pi))
     $ assume bounds >> arith
-  theorem_ "sin_eq_cos_pi2" ( forall $ (sin x) ~= (cos $ x - (pi/2)))
+  theorem_ "sin_eq_cos_pi2" ( forAll $ (sin x) ~= (cos $ x - (pi/2)))
     $ assume bounds >> arith
-  theorem_ "x^2_2"          ( forall $ (x ** 2 + 1) >= x)
+  theorem_ "x^2_2"          ( forAll $ (x ** 2 + 1) >= x)
     $ assume bounds >> arith
-  theorem_ "sqrt_x"         ( forall $ (x > 2) ==> ((sqrt x) < x))
+  theorem_ "sqrt_x"         ( forAll $ (x > 2) ==> ((sqrt x) < x))
     $ assume bounds >> arith
 
-  theorem_ "x = y"        (P.not $ forall $ x == y)
+  theorem_ "x = y"        (P.not $ forAll $ x == y)
     $ assume bounds >> arithSat
-  theorem_ "sin_cos_3"    (P.not $ forall $ ((sin x) ** 2 + (cos $ x + 3) ** 2) ~= 1)
+  theorem_ "sin_cos_3"    (P.not $ forAll $ ((sin x) ** 2 + (cos $ x + 3) ** 2) ~= 1)
     $ assume bounds >> arithSat
-  theorem_ "sin_pi"       (P.not $ forall $ (sin x) ~= (sin $ x + pi))
+  theorem_ "sin_pi"       (P.not $ forAll $ (sin x) ~= (sin $ x + pi))
     $ assume bounds >> arithSat
-  theorem_ "sin_eq_cos_3" (P.not $ forall $ (sin x) ~= (cos $ x - (3/2)))
+  theorem_ "sin_eq_cos_3" (P.not $ forAll $ (sin x) ~= (cos $ x - (3/2)))
     $ assume bounds >> arithSat
-  theorem_ "sin_eq_cos"   (P.not $ forall $ (sin x) ~= (cos x))
+  theorem_ "sin_eq_cos"   (P.not $ forAll $ (sin x) ~= (cos x))
     $ assume bounds >> arithSat
 
   where

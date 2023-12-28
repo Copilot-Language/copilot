@@ -48,8 +48,8 @@ spec = do
   observer "s" s
   observer "j" j
 
-  inRange <- prop "inRange" (forall $ input < 3)
-  theorem "J"  (forall j) $ assume inRange >> induct
+  inRange <- prop "inRange" (forAll $ input < 3)
+  theorem "J"  (forAll j) $ assume inRange >> induct
 
   where
     input = externW64 "in" (Just [1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1])
