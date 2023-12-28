@@ -27,6 +27,7 @@ module Copilot.Language.Spec
   , Prop (..)
   , prop, properties
   , theorem, theorems
+  , forAll
   , forall, exists
   , extractProp
   , Universal, Existential
@@ -161,8 +162,13 @@ data Prop a where
   Exists :: Stream Bool -> Prop Existential
 
 -- | Universal quantification of boolean streams over time.
+forAll :: Stream Bool -> Prop Universal
+forAll = Forall
+
+{-# DEPRECATED forall "Use forAll instead." #-}
+-- | Universal quantification of boolean streams over time.
 forall :: Stream Bool -> Prop Universal
-forall = Forall
+forall = forAll
 
 -- | Existential quantification of boolean streams over time.
 exists :: Stream Bool -> Prop Existential
