@@ -1,5 +1,6 @@
-2023-12-18
+2023-12-27
         * Introduce testing infrastructure for Copilot.Theorem.What4. (#474)
+        * Replace uses of forall with forAll. (#470)
 
 2023-11-07
         * Version bump (3.17). (#466)

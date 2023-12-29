@@ -1,5 +1,6 @@
-2023-12-17
+2023-12-27
         * Add type annotation to help type inference engine. (#469)
+        * Rename forall to forAll. (#470)
 
 2023-11-07
         * Version bump (3.17). (#466)

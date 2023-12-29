@@ -37,6 +37,7 @@ module Copilot.Language
   , arg
   , prop
   , theorem
+  , forAll
   , forall, exists
   ) where
 

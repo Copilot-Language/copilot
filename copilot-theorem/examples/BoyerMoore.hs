@@ -54,9 +54,9 @@ spec = do
     observer ((P.++) "s" (show k)) s
   observer "maj" maj
 
-  i1 <- prop "i1" (forall $ s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
-  theorem "r1" (forall $ maj == 1) $ assume i1 >> induct
-  theorem "OK" (forall $ okWith (arbitraryCst "n") ss maj) induct
+  i1 <- prop "i1" (forAll $ s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1)
+  theorem "r1" (forAll $ maj == 1) $ assume i1 >> induct
+  theorem "OK" (forAll $ okWith (arbitraryCst "n") ss maj) induct
 
   where
     s1 = externW8 "s1" (Just $ repeat 1)
