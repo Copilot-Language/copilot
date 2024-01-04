@@ -100,7 +100,8 @@ mkIndexDecln sId = C.VarDecln (Just C.Static) cTy name initVal
 
 -- | Define an accessor functions for the ring buffer associated with a stream.
 mkAccessDecln :: Id -> Type a -> [a] -> C.FunDef
-mkAccessDecln sId ty xs = C.FunDef cTy name params [] [C.Return (Just expr)]
+mkAccessDecln sId ty xs =
+    C.FunDef Nothing cTy name params [] [C.Return (Just expr)]
   where
     cTy        = C.decay $ transType ty
     name       = streamAccessorName sId
@@ -113,7 +114,8 @@ mkAccessDecln sId ty xs = C.FunDef cTy name params [] [C.Return (Just expr)]
 
 -- | Write a generator function for a stream.
 mkGenFun :: String -> Expr a -> Type a -> C.FunDef
-mkGenFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
+mkGenFun name expr ty =
+    C.FunDef Nothing cTy name [] cVars [C.Return $ Just cExpr]
   where
     cTy            = C.decay $ transType ty
     (cExpr, cVars) = runState (transExpr expr) mempty
@@ -121,7 +123,7 @@ mkGenFun name expr ty = C.FunDef cTy name [] cVars [C.Return $ Just cExpr]
 -- | Write a generator function for a stream that returns an array.
 mkGenFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
 mkGenFunArray name nameArg expr ty@(Array _) =
-    C.FunDef funType name [ outputParam ] varDecls stmts
+    C.FunDef Nothing funType name [ outputParam ] varDecls stmts
   where
     funType = C.TypeSpec C.Void
 
@@ -145,7 +147,7 @@ mkGenFunArray _name _nameArg _expr _ty =
 -- | Define the step function that updates all streams.
 mkStep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
 mkStep cSettings streams triggers exts =
-    C.FunDef void (cSettingsStepFunctionName cSettings) [] declns stmts
+    C.FunDef Nothing void (cSettingsStepFunctionName cSettings) [] declns stmts
   where
     void = C.TypeSpec C.Void
 
