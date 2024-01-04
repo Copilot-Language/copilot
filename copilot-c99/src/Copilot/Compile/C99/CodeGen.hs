@@ -101,8 +101,9 @@ mkIndexDecln sId = C.VarDecln (Just C.Static) cTy name initVal
 -- | Define an accessor functions for the ring buffer associated with a stream.
 mkAccessDecln :: Id -> Type a -> [a] -> C.FunDef
 mkAccessDecln sId ty xs =
-    C.FunDef Nothing cTy name params [] [C.Return (Just expr)]
+    C.FunDef static cTy name params [] [C.Return (Just expr)]
   where
+    static     = Just C.Static
     cTy        = C.decay $ transType ty
     name       = streamAccessorName sId
     buffLength = C.LitInt $ fromIntegral $ length xs
@@ -115,16 +116,18 @@ mkAccessDecln sId ty xs =
 -- | Write a generator function for a stream.
 mkGenFun :: String -> Expr a -> Type a -> C.FunDef
 mkGenFun name expr ty =
-    C.FunDef Nothing cTy name [] cVars [C.Return $ Just cExpr]
+    C.FunDef static cTy name [] cVars [C.Return $ Just cExpr]
   where
+    static         = Just C.Static
     cTy            = C.decay $ transType ty
     (cExpr, cVars) = runState (transExpr expr) mempty
 
 -- | Write a generator function for a stream that returns an array.
 mkGenFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
 mkGenFunArray name nameArg expr ty@(Array _) =
-    C.FunDef Nothing funType name [ outputParam ] varDecls stmts
+    C.FunDef static funType name [ outputParam ] varDecls stmts
   where
+    static  = Just C.Static
     funType = C.TypeSpec C.Void
 
     -- The output value is an array
