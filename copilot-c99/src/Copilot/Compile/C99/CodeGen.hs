@@ -106,7 +106,12 @@ mkAccessDecln sId ty xs =
     static     = Just C.Static
     cTy        = C.decay $ transType ty
     name       = streamAccessorName sId
-    buffLength = C.LitInt $ fromIntegral $ length xs
+
+    -- We cast the buffer length to a size_t to make sure that there are no
+    -- implicit conversions. This is a requirement for compliance with MISRA C
+    -- (Rule 10.4).
+    buffLength = C.Cast sizeT $ C.LitInt $ fromIntegral $ length xs
+    sizeT      = C.TypeName $ C.TypeSpec $ C.TypedefName "size_t"
     params     = [C.Param (C.TypeSpec $ C.TypedefName "size_t") "x"]
     index      = (C.Ident (indexName sId) C..+ C.Ident "x") C..% buffLength
     expr       = C.Index (C.Ident (streamName sId)) index
@@ -199,8 +204,12 @@ mkStep cSettings streams triggers exts =
 
           indexUpdate = C.Expr $ indexVar C..= (incIndex C..% buffLength)
             where
-              buffLength = C.LitInt $ fromIntegral $ length buff
-              incIndex   = indexVar C..+ C.LitInt 1
+              -- We cast the buffer length and the literal one to a size_t to
+              -- make sure that there are no implicit conversions. This is a
+              -- requirement for compliance with MISRA C (Rule 10.4).
+              buffLength = C.Cast sizeT $ C.LitInt $ fromIntegral $ length buff
+              incIndex   = indexVar C..+ C.Cast sizeT (C.LitInt 1)
+              sizeT      = C.TypeName $ C.TypeSpec $ C.TypedefName "size_t"
 
           tmpVar   = streamName sId ++ "_tmp"
           buffVar  = C.Ident $ streamName sId
