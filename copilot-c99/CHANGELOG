@@ -1,7 +1,8 @@
-2023-12-19
+2024-01-06
         * Change return type of main generated for tests. (#468)
         * Print constants in tests using portable suffixes. (#471).
         * Pass output arrays as arguments to trigger argument functions. (#431)
+        * Compliance with MISRA C 2023 / MISRA C 2012. (#472)
 
 2023-11-07
         * Version bump (3.17). (#466)

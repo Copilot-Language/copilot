@@ -1,3 +1,6 @@
+# dist should be at least focal because we need cppcheck >= 1.88.
+dist: focal
+
 # NB: don't set `language: haskell` here
 
 # The following enables several GHC versions to be tested; often it's enough to
@@ -16,9 +19,9 @@ before_install:
   - travis_retry sudo apt-get update
   - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER # see note about happy/alex
 
-  # We install z3 only for the tests, since it is not needed for normal
-  # compilation.
-  - if [ "${GHCVER}" == "8.10.4" ]; then travis_retry sudo apt-get install --yes z3; fi
+  # We install z3 and cppcheck only for the tests, since they are not needed
+  # for normal compilation.
+  - if [ "${GHCVER}" == "8.10.4" ]; then travis_retry sudo apt-get install --yes z3 cppcheck; fi
 
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
   - cabal --version
@@ -27,7 +30,10 @@ before_install:
   - git submodule update --remote
 
 script:
-  - travis_wait 30 cabal v2-install --lib copilot
+  # We explicitly install all libraries so that they are exposed and we can use
+  # them for tests (e.g., with runhaskell). There is no harm in doing this
+  # instead of installing just copilot.
+  - travis_wait 30 cabal v2-install --lib copilot copilot-core copilot-c99 copilot-language copilot-libraries copilot-theorem copilot-interpreter copilot-prettyprinter
 
   # Run tests only on GHC 8.10.4
   #
@@ -37,3 +43,8 @@ script:
   # conditional installation, and keep GHC version numbers in both places in
   # sync.
   - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-core copilot-language copilot-interpreter copilot-c99 copilot-theorem copilot-libraries; fi
+
+  # Check that the code produced by Copilot complies with MISRA C 2012. We
+  # explicitly make cppcheck produce a non-zero exit code on non-compliance
+  # with the standard to make the CI build fail.
+  - if [ "${GHCVER}" == "8.10.4" ]; then runhaskell copilot/examples/Heater.hs; cppcheck --force --addon=misra.py --suppress=misra-c2012-14.4 --error-exitcode=2 heater.c; fi
