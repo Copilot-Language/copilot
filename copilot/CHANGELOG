@@ -1,8 +1,9 @@
-2024-01-06
+2024-01-07
         * Enable tests for copilot-theorem in CI script. (#474)
         * Enable tests for copilot-libraries in CI script. (#475)
         * Replace uses of forall with forAll. (#470)
         * Update CI job to check for MISRA compliance with cppcheck. (#472)
+        * Relax version constraint on optparse-applicative. (#488)
 
 2023-11-07
         * Version bump (3.17). (#466)
