@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 
 -- | Utility / auxiliary functions.
 module Copilot.Theorem.Misc.Utils
