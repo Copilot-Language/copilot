@@ -22,6 +22,7 @@ import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
 import Control.Applicative (liftA2)
+import Control.Monad        (ap, liftM)
 import Control.Monad.Writer
 
 -- | Output produced by a prover, containing the 'Status' of the proof and

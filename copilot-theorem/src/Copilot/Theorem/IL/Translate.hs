@@ -14,6 +14,7 @@ import qualified Copilot.Core as C
 
 import qualified Data.Map.Strict as Map
 
+import Control.Monad       (forM, liftM2, when)
 import Control.Monad.State
 
 import Data.Char
