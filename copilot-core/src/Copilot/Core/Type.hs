@@ -25,7 +25,6 @@ module Copilot.Core.Type
 
     , typeSize
     , typeLength
-    , tylength
 
     , Value (..)
     , toValues
@@ -135,11 +134,6 @@ data Type :: * -> * where
 -- | Return the length of an array from its type
 typeLength :: forall n t . KnownNat n => Type (Array n t) -> Int
 typeLength _ = fromIntegral $ natVal (Proxy :: Proxy n)
-
-{-# DEPRECATED tylength "Use typeLength instead." #-}
--- | Return the length of an array from its type
-tylength :: forall n t . KnownNat n => Type (Array n t) -> Int
-tylength = typeLength
 
 -- | Return the total (nested) size of an array from its type
 typeSize :: forall n t . KnownNat n => Type (Array n t) -> Int
