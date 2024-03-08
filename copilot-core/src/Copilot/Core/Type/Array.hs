@@ -14,7 +14,6 @@ module Copilot.Core.Type.Array
     ( Array
     , array
     , arrayElems
-    , arrayelems
     )
   where
 
@@ -43,8 +42,3 @@ array xs | datalen == typelen = Array xs
 -- | Return the elements of an array.
 arrayElems :: Array n a -> [a]
 arrayElems (Array xs) = xs
-
-{-# DEPRECATED arrayelems "Use ArrayElems instead." #-}
--- | Return the elemts of an array.
-arrayelems :: Array n a -> [a]
-arrayelems = arrayElems

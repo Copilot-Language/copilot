@@ -1,3 +1,7 @@
+2024-03-07
+        * Remove deprecated functions in Copilot.Core.Type and
+          Copilot.Core.Type.Array. (#500)
+
 2024-01-07
         * Version bump (3.18.1). (#493)
 
