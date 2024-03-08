@@ -33,7 +33,6 @@ module Copilot.Core.Type
 
     , Struct
     , fieldName
-    , fieldname
     , accessorName
     , accessorname
     )
@@ -72,11 +71,6 @@ data Field (s :: Symbol) t = Field t
 -- | Extract the name of a field.
 fieldName :: forall s t . KnownSymbol s => Field s t -> String
 fieldName _ = symbolVal (Proxy :: Proxy s)
-
-{-# DEPRECATED fieldname "Use fieldName instead." #-}
--- | Extract the name of a field.
-fieldname :: forall s t . KnownSymbol s => Field s t -> String
-fieldname = fieldName
 
 -- | Extract the name of an accessor (a function that returns a field of a
 -- struct).
