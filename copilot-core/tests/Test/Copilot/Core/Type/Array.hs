@@ -9,8 +9,9 @@ import Data.Proxy                           (Proxy (..))
 import GHC.TypeNats                         (KnownNat, natVal)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck                      (Gen, Property, arbitrary, forAll,
-                                             vectorOf)
+import Test.QuickCheck                      (Gen, Property, arbitrary,
+                                             expectFailure, forAll, property,
+                                             vector, vectorOf)
 
 -- Internal imports: library modules being tested
 import Copilot.Core.Type.Array (Array, array, arrayElems)
@@ -25,6 +26,10 @@ tests =
         (testArrayElemsLeft (Proxy :: Proxy 5))
     , testProperty "arrayElems . array (identity; 200)"
         (testArrayElemsLeft (Proxy :: Proxy 200))
+    , testProperty "array of incorrect length"
+        testArrayElemsFail
+    , testProperty "Show for arrays"
+        testShowArray
     ]
 
 -- * Individual tests
@@ -43,3 +48,15 @@ testArrayElemsLeft len =
     -- Generator for lists of Int64 of known length.
     xsInt64 :: Gen [Int64]
     xsInt64 = vectorOf (fromIntegral (natVal len)) arbitrary
+
+-- | Test that arrays cannot be properly evaluated if their length does not
+-- match their type.
+testArrayElemsFail :: Property
+testArrayElemsFail = expectFailure $ forAll (vector 3) $ \l ->
+  let v = array l :: Array 4 Int64
+  in arrayElems v == l
+
+-- | Test show for arrays.
+testShowArray :: Property
+testShowArray = forAll (vector 3) $ \l -> property $
+  show (array l :: Array 3 Int64) == show (l :: [Int64])
