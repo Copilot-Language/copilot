@@ -30,7 +30,6 @@ module Copilot.Core.Type
     , toValues
     , Field (..)
     , typeName
-    , typename
 
     , Struct
     , fieldName
@@ -53,18 +52,11 @@ import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
 -- Internal imports
 import Copilot.Core.Type.Array (Array)
 
-{-# DEPRECATED typename "Use typeName instead." #-}
-
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
 class Struct a where
   -- | Returns the name of struct in the target language.
   typeName :: a -> String
-  typeName = typename
-
-  -- | Returns the name of struct in the target language.
-  typename :: a -> String
-  typename = typeName
 
   -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
