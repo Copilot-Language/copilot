@@ -1,3 +1,6 @@
+2024-05-05
+        * Fix handling of unsatisfiable properties with Kind2. (#495)
+
 2024-03-07
         * Version bump (3.19). (#504)
 
