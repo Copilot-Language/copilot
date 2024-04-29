@@ -67,8 +67,8 @@ Let's say we want to check that `gt0` holds. For this, we use the `prove ::
 Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Theorem`.
 This function takes three arguments:
 
-* The prover we want to use. For now, two provers are available, exported by
-  the `Copilot.Theorem.Light` and `Copilot.Theorem.Kind2` module.
+* The prover we want to use. For now, several provers are available, exported by
+  the `Copilot.Theorem.Provers.SMT` and `Copilot.Theorem.Kind2` modules.
 * A *proof scheme*, which is a sequence of instructions like *check*, *assume*,
   *assert*...
 * The Copilot specification
@@ -119,64 +119,6 @@ argument
 * A conclusion
 
 and checks if the assumptions logically entail the conclusion.
-
-Two provers are provided by default: `Light` and `Kind2`.
-
-#### The light prover
-
-The *light prover* is a really simple prover which uses the Yices SMT solver
-with the `QF_UFLIA` theory and is limited to prove *k-inductive* properties,
-that is properties such that there exists some *k* such that:
-
-* The property holds during the first *k* steps of the algorithm.
-* From the hypothesis the property has held during *k* consecutive steps, we
-  can prove it is still true one step further.
-
-For instance, in this example
-
-```haskell
-spec :: Spec
-spec = do
-  prop "gt0"  (x > 0)
-  prop "neq0" (x /= 0)
-  where
-    x = [1] ++ (1 + x)
-```
-the property `"gt0"` is inductive (1-inductive) but the property `"neq0"` is
-not.
-
-
-The *light prover* is defined in `Copilot.Theorem.Light`. This module exports the
-`lightProver :: Options -> Prover` function which builds a prover from a record
-of type `Options` :
-
-```haskell
-data Options = Options
-  { kTimeout  :: Integer
-  , onlyBmc   :: Bool
-  , debugMode :: Bool }
-```
-
-Here,
-
-* `kTimeout` is the maximum number of steps of the k-induction algorithm the
-  prover executes before giving up.
-* If `onlyBmc` is set to `True`, the prover will only search for
-  counterexamples and won't try to prove the properties discharged to it.
-* If `debugMode` is set to `True`, the SMTLib queries produced by the prover
-  are displayed in the standard output.
-
-`Options` is an instance of the `Data.Default` typeclass:
-
-```haskell
-instance Default Options where
-  def = Options
-    { kTimeout  = 100
-    , debugMode = False
-    , onlyBmc   = False }
-```
-
-Therefore, `def` stands for the default configuration.
 
 #### The Kind2 prover
 
@@ -283,8 +225,8 @@ available:
 * The **IL** format: a Copilot program is translated into a list of
   quantifier-free equations over integer sequences, implicitly universally
   quantified by a free variable *n*. Each sequence roughly corresponds to a
-  stream. This format is the one used in G. Hagen's thesis [4]. The *light
-  prover* works with this format.
+  stream. This format is the one used in G. Hagen's thesis [4]. Several provers
+  work with this format.
 
 * The **TransSys** format: a Copilot program is *flattened* and translated
   into a *state transition system* [1]. Moreover, in order to keep some
@@ -389,66 +331,6 @@ non-determinism or uninterpreted functions.
 
 The file `CoreUtils/Operators` contains helper functions to translate Copilot
 operators into *copilot-theorem* operators.
-
-
-#### The Light prover
-
-As said in the tutorial, the *light prover* is a simple tool implementing the
-basic *k-induction* algorithm [1]. The `Light` directory contains three files:
-
-* `Prover.hs`: the prover and the *k-induction* algorithm are implemented in
-  this file.
-* `SMT.hs` contains some functions to interact with the Yices SMT provers.
-* `SMTLib.hs` is a set of functions to output SMTLib directives. It uses the
-  `Misc.SExpr` module to deal with S-expressions.
-
-The code is both concise and simple and should be worth a look.
-
-The prover first translates the copilot specification into the *IL* format.
-This translation is implemented in `IL.Translate`. It is straightforward as the
-*IL* format does not differ a lot from the *copilot core* format. This is the
-case because the reification process has transformed the copilot program such
-that the `++` operator only occurs at the top of a stream definition.
-Therefore, each stream definition directly gives us a recurrence equation and
-initial conditions for the associated sequence.
-
-The translation process mostly:
-
-* converts the types and operators, using uninterpreted functions to handle
-  non-linear operators and external functions.
-* creates a sequence for each stream, local stream ands external stream.
-
-The reader is invited to use the *light prover* on the examples with `debugMode
-= true`, in order to have a look at the SMTLib code produced. For instance, if
-we check the property `"pos"` on the previous example involving the Fibonacci
-sequence, we get:
-
-```
-<step>  (set-logic QF_UFLIA)
-<step>  (declare-fun n () Int)
-<step>  (declare-fun s0 (Int) Int)
-<step>  (assert (= (s0 (+ n 2)) (+ (s0 (+ n 0)) (s0 (+ n 1)))))
-<step>  (assert (= (s0 (+ n 3)) (+ (s0 (+ n 1)) (s0 (+ n 2)))))
-<step>  (assert (> (s0 (+ n 0)) 0))
-<step>  (push 1)
-<step>  (assert (or false (not (> (s0 (+ n 1)) 0))))
-<step>  (check-sat)
-<step>  (pop 1)
-<step>  (assert (= (s0 (+ n 4)) (+ (s0 (+ n 2)) (s0 (+ n 3)))))
-<step>  (assert (> (s0 (+ n 1)) 0))
-<step>  (push 1)
-<step>  (assert (or false (not (> (s0 (+ n 2)) 0))))
-<step>  (check-sat)
-unsat
-<step>  (pop 1)
-```
-
-Here, we just kept the outputs related to the `<step>` psolver, which is the
-solver trying to prove the *continuation step*.
-
-You can see that the SMT solver is used in an incremental way (`push` and `pop`
-instructions), so we don't need to restart it at each step of the algorithm
-(see [2]).
 
 
 #### The Kind2 prover
@@ -801,14 +683,6 @@ architecture of Kind2.
     transition problem (see the section about Copilot limitations)
 
 ## FAQ
-
-### Why does the light prover not deliver counterexamples ?
-
-The problem is the light prover is using uninterpreted functions to represent
-streams and Yices2 can't give you values for uninterpreted functions when you
-ask it for a valid assignment. Maybe we could get better performances and
-easily counterexample display if we rewrite the *light prover* so that it works
-with *transition systems* instead of *IL*.
 
 ### Why does the code related to transition systems look so complex ?
 
