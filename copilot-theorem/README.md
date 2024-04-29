@@ -202,7 +202,7 @@ precise* output. It would be interesting to implement other merging behaviours
 in the future. For instance, a *lazy* one such that C launches B only if A has
 returns *unknown* or *error*.
 
-As an example, the following prover is used in `Driver.hs`:
+As an example:
 
 ```haskell
 prover =
@@ -251,12 +251,7 @@ later.
 
 ### Some examples
 
-Some examples are in the *examples* folder. The `Driver.hs` contains the `main`
-function to run any example. Each other example file exports a specification
-`spec` and a proof scheme `scheme`. You can change the example being run just
-by changing one *import* directive in `Driver.hs`.
-
-These examples include:
+Some examples are in the *examples* folder, including:
 
 * `Incr.hs` : a straightforward example in the style of the previous one.
 * `Grey.hs` : an example where two different implementations of a periodical
