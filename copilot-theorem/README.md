@@ -76,10 +76,10 @@ This function takes three arguments:
 Here, we can just write
 
 ```haskell
-prove (lightProver def) (check "gt0") spec
+prove (kInduction def) (check "gt0") spec
 ```
 
-where `lightProver def` stands for the *light prover* with default
+where `kInduction def` stands for the *K-Induction prover* with default
 configuration.
 
 ### The Prover interface
@@ -133,7 +133,7 @@ It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prov
 data Options = Options { bmcMax :: Int }
 ```
 and where `bmcMax` corresponds to the `--bmc_max` option of *kind2* and is
-equivalent to the `kTimeout` option of the light prover. Its default value is
+equivalent to the `maxK` option of the K-Induction prover. Its default value is
 0, which stands for infinity.
 
 #### Combining provers
@@ -148,7 +148,7 @@ As an example:
 
 ```haskell
 prover =
-  lightProver def {onlyBmc = True, kTimeout = 5}
+  kInduction def {kTimeout = 5}
   `combine` kind2Prover def
 ```
 
@@ -563,14 +563,14 @@ The use of SMT solvers introduces two kind of limitations:
 
 Let's consider the first point. SMT solving is costly and its performances are
 sometimes unpredictable. For instance, when running the `SerialBoyerMoore`
-example with the *light prover*, Yices2 does not terminate. However, the *z3*
+example with the *k-induction prover*, Yices2 does not terminate. However, the *z3*
 SMT solver used by *Kind2* solves the problem instantaneously. Note that this
 performance gap is not due to the use of the IC3 algorithm because the property
 to check is inductive. It could be related to the fact the SMT problem produced
-by the *light prover* uses uninterpreted functions for encoding streams instead
+by the *k-induction prover* uses uninterpreted functions for encoding streams instead
 of simple integer variables, which is the case when the copilot program is
 translated into a transition system. However, this wouldn't explain why the
-*light prover* still terminates instantaneously on the `BoyerMoore` example,
+*k-induction prover* still terminates instantaneously on the `BoyerMoore` example,
 which seems not simpler by far.
 
 The second point keeps you from expressing or proving some properties
