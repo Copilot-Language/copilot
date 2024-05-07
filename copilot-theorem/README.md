@@ -58,7 +58,7 @@ For instance, here is a straightforward specification declaring one property:
 ```haskell
 spec :: Spec
 spec = do
-  void $ prop "gt0" (x > 0)
+  void $ prop "gt0" (forAll $ x > 0)
   where
     x = [1] ++ (1 + x)
 ```
@@ -162,8 +162,8 @@ Let's consider again this example:
 ```haskell
 spec :: Spec
 spec = do
-  void $ prop "gt0"  (x > 0)
-  void $ prop "neq0" (x /= 0)
+  void $ prop "gt0"  (forAll $ x > 0)
+  void $ prop "neq0" (forAll $ x /= 0)
   where
     x = [1] ++ (1 + x)
 ```
@@ -249,7 +249,7 @@ The following program:
 
 ```haskell
 spec = do
-  void $ prop "pos" (fib > 0)
+  void $ prop "pos" (forAll $ fib > 0)
 
   where
     fib :: Stream Word64
