@@ -82,44 +82,6 @@ main = do
 where `kind2Prover def` stands for the *Kind2 prover* with default
 configuration.
 
-### The Prover interface
-
-The `Copilot.Theorem.Prover` defines a general interface for provers. Therefore,
-it is really easy to add a new prover by creating a new object of type
-`Prover`. The latter is defined like this:
-
-```haskell
-data Cex = Cex
-
-type Infos = [String]
-
-data Output = Output Status Infos
-
-data Status
-  = Valid
-  | Invalid (Maybe Cex)
-  | Unknown
-  | Error
-
-data Feature = GiveCex | HandleAssumptions
-
-data Prover = forall r . Prover
-  { proverName     :: String
-  , hasFeature     :: Feature -> Bool
-  , startProver    :: Core.Spec -> IO r
-  , askProver      :: r -> [PropId] -> PropId -> IO Output
-  , closeProver    :: r -> IO ()
-  }
-```
-
-Each prover mostly has to provide a `askProver` function which takes as an
-argument
-* The prover descriptor
-* A list of assumptions
-* A conclusion
-
-and checks if the assumptions logically entail the conclusion.
-
 #### The Kind2 prover
 
 The *Kind2* prover uses the model checker with the same name, from Iowa
