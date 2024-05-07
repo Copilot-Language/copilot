@@ -98,42 +98,6 @@ and where `bmcMax` corresponds to the `--bmc_max` option of *kind2* and is
 equivalent to the `maxK` option of the K-Induction prover. Its default value is
 0, which stands for infinity.
 
-### Proof schemes
-
-Let's consider again this example:
-
-```haskell
-spec :: Spec
-spec = do
-  void $ prop "gt0"  (forAll $ x > 0)
-  void $ prop "neq0" (forAll $ x /= 0)
-  where
-    x = [1] ++ (1 + x)
-```
-
-and let's say we want to prove `"neq0"`. Currently, the two available solvers
-fail at showing this non-inductive property (we will discuss this limitation
-later). Therefore, we can prove the more general inductive lemma `"gt0"` and
-deduce our main goal from this. For this, we use the proof scheme
-
-```haskell
-assert "gt0" >> check "neq0"
-```
-instead of just `check "neq0"`. A proof scheme is chain of primitives schemes
-glued by the `>>` operator. For now, the available primitives are:
-
-* `check "prop"` checks whether or not a given property is true in the current
-  context.
-* `assume "prop"` adds an assumption in the current context.
-* `assert "prop"` is a shortcut for `check "prop" >> assume "prop"`.
-* `assuming :: [PropId] -> ProofScheme -> ProofScheme` is such that `assuming
-  props scheme` assumes the list of properties *props*, executes the proof
-  scheme *scheme* in this context, and forgets the assumptions.
-* `msg "..."` displays a string in the standard output
-
-We will discuss the limitations of this tool and a way to use it in practice
-later.
-
 ### Some examples
 
 Some examples are in the *examples* folder, including:
