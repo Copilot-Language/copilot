@@ -62,22 +62,24 @@ spec = do
 ```
 
 Let's say we want to check that `gt0` holds. For this, we use the `prove ::
-Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Theorem`.
+Copilot.Core.Spec.Spec -> String -> UProof -> IO Bool` function exported by
+`Copilot.Theorem`.
 This function takes three arguments:
 
-* The prover we want to use. For now, several provers are available, exported by
-  the `Copilot.Theorem.Provers.SMT` and `Copilot.Theorem.Kind2` modules.
-* A *proof scheme*, which is a sequence of instructions like *check*, *assume*,
-  *assert*...
-* The Copilot specification
+* A reified Copilot.Language.Spec.
+* The name of the proposition we want to check.
+* A strategy to prove the proposition.
 
-Here, we can just write
+In this case the proposition is simple enough so that we can check it directly
+by k-induction using `kind2Prover`. Therefore we can just write:
 
 ```haskell
-prove (kInduction def) (check "gt0") spec
+main = do
+  spec' <- reify spec
+  prove spec' "gt0" (tell [Check $ kind2Prover def])
 ```
 
-where `kInduction def` stands for the *K-Induction prover* with default
+where `kind2Prover def` stands for the *Kind2 prover* with default
 configuration.
 
 ### The Prover interface
