@@ -28,15 +28,13 @@ properties on Copilot programs. It includes:
 
 *copilot-theorem* needs the following dependencies to be installed:
 
-* The *copilot-core* and *copilot-language* Haskell libraries
+* The *copilot-core* and *copilot-prettyprinter* Haskell libraries
 * The *Yices2* SMT-solver: `yices-smt2` must be in your `$PATH`
 * The *Z3* SMT-solver: `z3` must be in your `$PATH`
 * The *Kind2* model checker: `kind2` must be in your `$PATH`
 
-To build it, just clone this repository and use `cabal install`. You will find
-some examples in the `examples` folder, which can be built with `cabal install`
-too, producing an executable `copilot-theorem-example` in your `.cabal/bin`
-folder.
+To build it, just install the Copilot library as described in the top-level
+README.
 
 ### First steps
 
