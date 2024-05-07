@@ -98,25 +98,6 @@ and where `bmcMax` corresponds to the `--bmc_max` option of *kind2* and is
 equivalent to the `maxK` option of the K-Induction prover. Its default value is
 0, which stands for infinity.
 
-#### Combining provers
-
-The `combine :: Prover -> Prover -> Prover` function lets you merge two provers
-A and B into a prover C which launches both A and B and returns the *most
-precise* output. It would be interesting to implement other merging behaviours
-in the future. For instance, a *lazy* one such that C launches B only if A has
-returns *unknown* or *error*.
-
-As an example:
-
-```haskell
-prover =
-  kInduction def {kTimeout = 5}
-  `combine` kind2Prover def
-```
-
-We will discuss the internals and the experimental results of these provers
-later.
-
 ### Proof schemes
 
 Let's consider again this example:
