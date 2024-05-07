@@ -147,9 +147,6 @@ contains at least
 * `PrettyPrint.hs` for pretty printing (useful for debugging)
 * `Translate.hs` where the translation process from `Core.Spec` is defined.
 
-These three formats share a simplified set of types and operators, defined
-respectively in `Misc.Type` and `Misc.Operator`.
-
 ##### An example
 
 The following program:
@@ -225,20 +222,6 @@ other Copilot libraries. *copilot-theorem* handles only three types which are
 *copilot-theorem* works with *pure* reals and integers. Thus, it is unsafe in the
 sense it ignores integer overflow problems and the loss of precision due to
 floating point arithmetic.
-
-The rules of translation between Copilot types and *copilot-theorem* types are
-defined in `Misc/Cast`.
-
-#### Operators
-
-The operators provided by `Misc.Operator` mostly consists in boolean
-connectors, linear operators, equality and inequality operators. If other
-operators are used in the Copilot program, they are handled using
-non-determinism or uninterpreted functions.
-
-The file `CoreUtils/Operators` contains helper functions to translate Copilot
-operators into *copilot-theorem* operators.
-
 
 #### The Kind2 prover
 
@@ -493,8 +476,7 @@ arbitrary constant stream because it is the quantified property which is
 inductive and not the property specialized for a given constant stream. That's
 why we have no other solution than replacing universal quantification by
 *bounded* universal quantification by assuming all the elements of the input
-stream are in the finite list `allowed` and using the function `forAllCst`
-defined in `Copilot.Kind.Lib`:
+stream are in the finite list `allowed` and using the function `forAllCst`:
 
 ```haskell
 conj :: [Stream Bool] -> Stream Bool
@@ -564,15 +546,6 @@ architecture of Kind2.
 
 + Use Template Haskell to declare automatically some observers with the same
   names used in the original program.
-
-### Refactoring suggestions
-
-+ Implement a cleaner way to deal with arbitrary streams and arbitrary
-  constants by extending the `Copilot.Core.Expr type`. See the
-  `Copilot.Kind.Lib` module to observe how inelegant the current solution is.
-
-+ Use `Cnub` as an intermediary step in the translation from `Core.Spec` to
-  `IL.Spec` and `TransSys.Spec`.
 
 ### More advanced enhancements
 
