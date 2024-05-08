@@ -28,15 +28,13 @@ properties on Copilot programs. It includes:
 
 *copilot-theorem* needs the following dependencies to be installed:
 
-* The *copilot-core* and *copilot-language* Haskell libraries
+* The *copilot-core* and *copilot-prettyprinter* Haskell libraries
 * The *Yices2* SMT-solver: `yices-smt2` must be in your `$PATH`
 * The *Z3* SMT-solver: `z3` must be in your `$PATH`
 * The *Kind2* model checker: `kind2` must be in your `$PATH`
 
-To build it, just clone this repository and use `cabal install`. You will find
-some examples in the `examples` folder, which can be built with `cabal install`
-too, producing an executable `copilot-theorem-example` in your `.cabal/bin`
-folder.
+To build it, just install the Copilot library as described in the top-level
+README.
 
 ### First steps
 
@@ -58,125 +56,31 @@ For instance, here is a straightforward specification declaring one property:
 ```haskell
 spec :: Spec
 spec = do
-  prop "gt0" (x > 0)
+  void $ prop "gt0" (forAll $ x > 0)
   where
     x = [1] ++ (1 + x)
 ```
 
 Let's say we want to check that `gt0` holds. For this, we use the `prove ::
-Prover -> ProofScheme -> Spec -> IO ()` function exported by `Copilot.Theorem`.
+Copilot.Core.Spec.Spec -> String -> UProof -> IO Bool` function exported by
+`Copilot.Theorem`.
 This function takes three arguments:
 
-* The prover we want to use. For now, two provers are available, exported by
-  the `Copilot.Theorem.Light` and `Copilot.Theorem.Kind2` module.
-* A *proof scheme*, which is a sequence of instructions like *check*, *assume*,
-  *assert*...
-* The Copilot specification
+* A reified Copilot.Language.Spec.
+* The name of the proposition we want to check.
+* A strategy to prove the proposition.
 
-Here, we can just write
+In this case the proposition is simple enough so that we can check it directly
+by k-induction using `kind2Prover`. Therefore we can just write:
 
 ```haskell
-prove (lightProver def) (check "gt0") spec
+main = do
+  spec' <- reify spec
+  prove spec' "gt0" (tell [Check $ kind2Prover def])
 ```
 
-where `lightProver def` stands for the *light prover* with default
+where `kind2Prover def` stands for the *Kind2 prover* with default
 configuration.
-
-### The Prover interface
-
-The `Copilot.Theorem.Prover` defines a general interface for provers. Therefore,
-it is really easy to add a new prover by creating a new object of type
-`Prover`. The latter is defined like this:
-
-```haskell
-data Cex = Cex
-
-type Infos = [String]
-
-data Output = Output Status Infos
-
-data Status
-  = Valid
-  | Invalid (Maybe Cex)
-  | Unknown
-  | Error
-
-data Feature = GiveCex | HandleAssumptions
-
-data Prover = forall r . Prover
-  { proverName     :: String
-  , hasFeature     :: Feature -> Bool
-  , startProver    :: Core.Spec -> IO r
-  , askProver      :: r -> [PropId] -> PropId -> IO Output
-  , closeProver    :: r -> IO ()
-  }
-```
-
-Each prover mostly has to provide a `askProver` function which takes as an
-argument
-* The prover descriptor
-* A list of assumptions
-* A conclusion
-
-and checks if the assumptions logically entail the conclusion.
-
-Two provers are provided by default: `Light` and `Kind2`.
-
-#### The light prover
-
-The *light prover* is a really simple prover which uses the Yices SMT solver
-with the `QF_UFLIA` theory and is limited to prove *k-inductive* properties,
-that is properties such that there exists some *k* such that:
-
-* The property holds during the first *k* steps of the algorithm.
-* From the hypothesis the property has held during *k* consecutive steps, we
-  can prove it is still true one step further.
-
-For instance, in this example
-
-```haskell
-spec :: Spec
-spec = do
-  prop "gt0"  (x > 0)
-  prop "neq0" (x /= 0)
-  where
-    x = [1] ++ (1 + x)
-```
-the property `"gt0"` is inductive (1-inductive) but the property `"neq0"` is
-not.
-
-
-The *light prover* is defined in `Copilot.Theorem.Light`. This module exports the
-`lightProver :: Options -> Prover` function which builds a prover from a record
-of type `Options` :
-
-```haskell
-data Options = Options
-  { kTimeout  :: Integer
-  , onlyBmc   :: Bool
-  , debugMode :: Bool }
-```
-
-Here,
-
-* `kTimeout` is the maximum number of steps of the k-induction algorithm the
-  prover executes before giving up.
-* If `onlyBmc` is set to `True`, the prover will only search for
-  counterexamples and won't try to prove the properties discharged to it.
-* If `debugMode` is set to `True`, the SMTLib queries produced by the prover
-  are displayed in the standard output.
-
-`Options` is an instance of the `Data.Default` typeclass:
-
-```haskell
-instance Default Options where
-  def = Options
-    { kTimeout  = 100
-    , debugMode = False
-    , onlyBmc   = False }
-```
-
-Therefore, `def` stands for the default configuration.
 
 #### The Kind2 prover
 
@@ -191,72 +95,12 @@ It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prov
 data Options = Options { bmcMax :: Int }
 ```
 and where `bmcMax` corresponds to the `--bmc_max` option of *kind2* and is
-equivalent to the `kTimeout` option of the light prover. Its default value is
+equivalent to the `maxK` option of the K-Induction prover. Its default value is
 0, which stands for infinity.
-
-#### Combining provers
-
-The `combine :: Prover -> Prover -> Prover` function lets you merge two provers
-A and B into a prover C which launches both A and B and returns the *most
-precise* output. It would be interesting to implement other merging behaviours
-in the future. For instance, a *lazy* one such that C launches B only if A has
-returns *unknown* or *error*.
-
-As an example, the following prover is used in `Driver.hs`:
-
-```haskell
-prover =
-  lightProver def {onlyBmc = True, kTimeout = 5}
-  `combine` kind2Prover def
-```
-
-We will discuss the internals and the experimental results of these provers
-later.
-
-### Proof schemes
-
-Let's consider again this example:
-
-```haskell
-spec :: Spec
-spec = do
-  prop "gt0"  (x > 0)
-  prop "neq0" (x /= 0)
-  where
-    x = [1] ++ (1 + x)
-```
-
-and let's say we want to prove `"neq0"`. Currently, the two available solvers
-fail at showing this non-inductive property (we will discuss this limitation
-later). Therefore, we can prove the more general inductive lemma `"gt0"` and
-deduce our main goal from this. For this, we use the proof scheme
-
-```haskell
-assert "gt0" >> check "neq0"
-```
-instead of just `check "neq0"`. A proof scheme is chain of primitives schemes
-glued by the `>>` operator. For now, the available primitives are:
-
-* `check "prop"` checks whether or not a given property is true in the current
-  context.
-* `assume "prop"` adds an assumption in the current context.
-* `assert "prop"` is a shortcut for `check "prop" >> assume "prop"`.
-* `assuming :: [PropId] -> ProofScheme -> ProofScheme` is such that `assuming
-  props scheme` assumes the list of properties *props*, executes the proof
-  scheme *scheme* in this context, and forgets the assumptions.
-* `msg "..."` displays a string in the standard output
-
-We will discuss the limitations of this tool and a way to use it in practice
-later.
 
 ### Some examples
 
-Some examples are in the *examples* folder. The `Driver.hs` contains the `main`
-function to run any example. Each other example file exports a specification
-`spec` and a proof scheme `scheme`. You can change the example being run just
-by changing one *import* directive in `Driver.hs`.
-
-These examples include:
+Some examples are in the *examples* folder, including:
 
 * `Incr.hs` : a straightforward example in the style of the previous one.
 * `Grey.hs` : an example where two different implementations of a periodical
@@ -288,8 +132,8 @@ available:
 * The **IL** format: a Copilot program is translated into a list of
   quantifier-free equations over integer sequences, implicitly universally
   quantified by a free variable *n*. Each sequence roughly corresponds to a
-  stream. This format is the one used in G. Hagen's thesis [4]. The *light
-  prover* works with this format.
+  stream. This format is the one used in G. Hagen's thesis [4]. Several provers
+  work with this format.
 
 * The **TransSys** format: a Copilot program is *flattened* and translated
   into a *state transition system* [1]. Moreover, in order to keep some
@@ -303,16 +147,13 @@ contains at least
 * `PrettyPrint.hs` for pretty printing (useful for debugging)
 * `Translate.hs` where the translation process from `Core.Spec` is defined.
 
-These three formats share a simplified set of types and operators, defined
-respectively in `Misc.Type` and `Misc.Operator`.
-
 ##### An example
 
 The following program:
 
 ```haskell
 spec = do
-  prop "pos" (fib > 0)
+  void $ prop "pos" (forAll $ fib > 0)
 
   where
     fib :: Stream Word64
@@ -381,80 +222,6 @@ other Copilot libraries. *copilot-theorem* handles only three types which are
 *copilot-theorem* works with *pure* reals and integers. Thus, it is unsafe in the
 sense it ignores integer overflow problems and the loss of precision due to
 floating point arithmetic.
-
-The rules of translation between Copilot types and *copilot-theorem* types are
-defined in `Misc/Cast`.
-
-#### Operators
-
-The operators provided by `Misc.Operator` mostly consists in boolean
-connectors, linear operators, equality and inequality operators. If other
-operators are used in the Copilot program, they are handled using
-non-determinism or uninterpreted functions.
-
-The file `CoreUtils/Operators` contains helper functions to translate Copilot
-operators into *copilot-theorem* operators.
-
-
-#### The Light prover
-
-As said in the tutorial, the *light prover* is a simple tool implementing the
-basic *k-induction* algorithm [1]. The `Light` directory contains three files:
-
-* `Prover.hs`: the prover and the *k-induction* algorithm are implemented in
-  this file.
-* `SMT.hs` contains some functions to interact with the Yices SMT provers.
-* `SMTLib.hs` is a set of functions to output SMTLib directives. It uses the
-  `Misc.SExpr` module to deal with S-expressions.
-
-The code is both concise and simple and should be worth a look.
-
-The prover first translates the copilot specification into the *IL* format.
-This translation is implemented in `IL.Translate`. It is straightforward as the
-*IL* format does not differ a lot from the *copilot core* format. This is the
-case because the reification process has transformed the copilot program such
-that the `++` operator only occurs at the top of a stream definition.
-Therefore, each stream definition directly gives us a recurrence equation and
-initial conditions for the associated sequence.
-
-The translation process mostly:
-
-* converts the types and operators, using uninterpreted functions to handle
-  non-linear operators and external functions.
-* creates a sequence for each stream, local stream ands external stream.
-
-The reader is invited to use the *light prover* on the examples with `debugMode
-= true`, in order to have a look at the SMTLib code produced. For instance, if
-we check the property `"pos"` on the previous example involving the Fibonacci
-sequence, we get:
-
-```
-<step>  (set-logic QF_UFLIA)
-<step>  (declare-fun n () Int)
-<step>  (declare-fun s0 (Int) Int)
-<step>  (assert (= (s0 (+ n 2)) (+ (s0 (+ n 0)) (s0 (+ n 1)))))
-<step>  (assert (= (s0 (+ n 3)) (+ (s0 (+ n 1)) (s0 (+ n 2)))))
-<step>  (assert (> (s0 (+ n 0)) 0))
-<step>  (push 1)
-<step>  (assert (or false (not (> (s0 (+ n 1)) 0))))
-<step>  (check-sat)
-<step>  (pop 1)
-<step>  (assert (= (s0 (+ n 4)) (+ (s0 (+ n 2)) (s0 (+ n 3)))))
-<step>  (assert (> (s0 (+ n 1)) 0))
-<step>  (push 1)
-<step>  (assert (or false (not (> (s0 (+ n 2)) 0))))
-<step>  (check-sat)
-unsat
-<step>  (pop 1)
-```
-
-Here, we just kept the outputs related to the `<step>` psolver, which is the
-solver trying to prove the *continuation step*.
-
-You can see that the SMT solver is used in an incremental way (`push` and `pop`
-instructions), so we don't need to restart it at each step of the algorithm
-(see [2]).
-
 
 #### The Kind2 prover
 
@@ -686,14 +453,14 @@ The use of SMT solvers introduces two kind of limitations:
 
 Let's consider the first point. SMT solving is costly and its performances are
 sometimes unpredictable. For instance, when running the `SerialBoyerMoore`
-example with the *light prover*, Yices2 does not terminate. However, the *z3*
+example with the *k-induction prover*, Yices2 does not terminate. However, the *z3*
 SMT solver used by *Kind2* solves the problem instantaneously. Note that this
 performance gap is not due to the use of the IC3 algorithm because the property
 to check is inductive. It could be related to the fact the SMT problem produced
-by the *light prover* uses uninterpreted functions for encoding streams instead
+by the *k-induction prover* uses uninterpreted functions for encoding streams instead
 of simple integer variables, which is the case when the copilot program is
 translated into a transition system. However, this wouldn't explain why the
-*light prover* still terminates instantaneously on the `BoyerMoore` example,
+*k-induction prover* still terminates instantaneously on the `BoyerMoore` example,
 which seems not simpler by far.
 
 The second point keeps you from expressing or proving some properties
@@ -709,8 +476,7 @@ arbitrary constant stream because it is the quantified property which is
 inductive and not the property specialized for a given constant stream. That's
 why we have no other solution than replacing universal quantification by
 *bounded* universal quantification by assuming all the elements of the input
-stream are in the finite list `allowed` and using the function `forAllCst`
-defined in `Copilot.Kind.Lib`:
+stream are in the finite list `allowed` and using the function `forAllCst`:
 
 ```haskell
 conj :: [Stream Bool] -> Stream Bool
@@ -781,15 +547,6 @@ architecture of Kind2.
 + Use Template Haskell to declare automatically some observers with the same
   names used in the original program.
 
-### Refactoring suggestions
-
-+ Implement a cleaner way to deal with arbitrary streams and arbitrary
-  constants by extending the `Copilot.Core.Expr type`. See the
-  `Copilot.Kind.Lib` module to observe how inelegant the current solution is.
-
-+ Use `Cnub` as an intermediary step in the translation from `Core.Spec` to
-  `IL.Spec` and `TransSys.Spec`.
-
 ### More advanced enhancements
 
 + Enhance the proof scheme system such that when proving a property depending
@@ -806,14 +563,6 @@ architecture of Kind2.
     transition problem (see the section about Copilot limitations)
 
 ## FAQ
-
-### Why does the light prover not deliver counterexamples ?
-
-The problem is the light prover is using uninterpreted functions to represent
-streams and Yices2 can't give you values for uninterpreted functions when you
-ask it for a valid assignment. Maybe we could get better performances and
-easily counterexample display if we rewrite the *light prover* so that it works
-with *transition systems* instead of *IL*.
 
 ### Why does the code related to transition systems look so complex ?
 
