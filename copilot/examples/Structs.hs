@@ -2,6 +2,7 @@
 -- nested structs) are compiled to C using copilot-c99.
 
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
@@ -11,42 +12,31 @@ import Control.Monad (void, forM_)
 import Language.Copilot
 import Copilot.Compile.C99
 
+import GHC.Generics
+
 -- | Definition for `Volts`.
 data Volts = Volts
   { numVolts :: Field "numVolts" Word16
   , flag     :: Field "flag"     Bool
   }
+  deriving Generic
 
 -- | `Struct` instance for `Volts`.
+-- toValues is automatically implemented using Generic
+-- Also, no need to manually implement `Typed` is necessary.
 instance Struct Volts where
   typeName _ = "volts"
-  toValues volts = [ Value Word16 (numVolts volts)
-                   , Value Bool   (flag volts)
-                   ]
-
--- | `Volts` instance for `Typed`.
-instance Typed Volts where
-  typeOf = Struct (Volts (Field 0) (Field False))
 
 data Battery = Battery
   { temp  :: Field "temp"  Word16
   , volts :: Field "volts" (Array 10 Volts)
   , other :: Field "other" (Array 10 (Array 5 Word32))
   }
+  deriving Generic
 
 -- | `Battery` instance for `Struct`.
 instance Struct Battery where
   typeName _ = "battery"
-  toValues battery = [ Value typeOf (temp battery)
-                     , Value typeOf (volts battery)
-                     , Value typeOf (other battery)
-                     ]
-
--- | `Battery` instance for `Typed`. Note that `undefined` is used as an
--- argument to `Field`. This argument is never used, so `undefined` will never
--- throw an error.
-instance Typed Battery where
-  typeOf = Struct (Battery (Field 0) (Field undefined) (Field undefined))
 
 spec :: Spec
 spec = do
