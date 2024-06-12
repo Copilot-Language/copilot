@@ -8,6 +8,8 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE TypeApplications #-}
 -- |
 -- Description: Typing for Core.
 -- Copyright:   (c) 2011 National Institute of Aerospace / Galois, Inc.
@@ -47,6 +49,8 @@ import Data.Word          (Word16, Word32, Word64, Word8)
 import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
                            symbolVal)
 
+import GHC.Generics
+
 -- Internal imports
 import Copilot.Core.Type.Array (Array)
 
@@ -58,6 +62,32 @@ class Struct a where
 
   -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
+  default toValues :: (Generic a, GStruct (Rep a)) => a -> [Value a]
+  toValues x = coerceValuePhantom <$> gToValues (from x)
+
+class GStruct f where
+  gToValues :: f p -> [Value (f p)]
+
+instance GStruct U1 where
+  -- A unit-like type has no fields, so its values list is empty
+  gToValues U1 = []
+
+instance (GStruct f) => GStruct (M1 _i _t f) where
+  -- Generics Metadata is not used by this typeclass
+  -- we are only interested in its contents
+  gToValues (M1 x) = coerceValuePhantom <$> gToValues x
+
+instance (Typed ty, KnownSymbol name) => GStruct (K1 i (Field name ty)) where
+  -- Base case for each contained field
+  gToValues (K1 field) = [Value typeOf field]
+
+instance (GStruct f, GStruct g) => GStruct (f :*: g) where
+  -- Product types (structs) contain the fields of all their elements
+  gToValues (f :*: g) = (coerceValuePhantom <$> (gToValues f)) ++ (coerceValuePhantom <$> (gToValues g))
+
+-- Turn one Value into another, changing its phantom type
+coerceValuePhantom :: forall a b. Value a -> Value b
+coerceValuePhantom (Value t v) = (Value t v) 
 
 -- | The field of a struct, together with a representation of its type.
 data Value a =
@@ -190,6 +220,9 @@ instance Eq SimpleType where
 class (Show a, Typeable a) => Typed a where
   typeOf     :: Type a
   simpleType :: Type a -> SimpleType
+
+instance {-# OVERLAPPABLE #-} (Show a, Typeable a, Struct a) => Typed a where
+  typeOf = Struct undefined
   simpleType _ = SStruct
 
 instance Typed Bool where
