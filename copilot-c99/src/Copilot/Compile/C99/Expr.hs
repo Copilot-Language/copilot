@@ -32,7 +32,9 @@ transExpr (Local ty1 _ name e1 e2) = do
       initExpr = Just $ C.InitExpr e1'
 
   -- Add new decl to the tail of the fun env
-  modify (++ [C.VarDecln Nothing cTy1 name initExpr])
+  modify (\(i, x, y)
+             -> (i, x ++ [C.VarDecln Nothing cTy1 name initExpr], y)
+         )
 
   transExpr e2
 
@@ -368,7 +370,7 @@ typeIsFloating _      = False
 -- | Auxiliary type used to collect all the declarations of all the variables
 -- used in a function to be generated, since variable declarations are always
 -- listed first at the top of the function body.
-type FunEnv = [C.Decln]
+type FunEnv = (Int, [C.Decln], [C.Stmt])
 
 -- | Define a C expression that calls a function with arguments.
 funCall :: C.Ident   -- ^ Function name
