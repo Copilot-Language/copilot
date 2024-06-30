@@ -8,19 +8,20 @@ module Copilot.Compile.C99.Expr
   where
 
 -- External imports
-import           Control.Monad.State ( State, modify )
+import           Control.Monad.State ( State, get, modify )
 import qualified Data.List.NonEmpty  as NonEmpty
 import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
 import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
                       Type (..), Value (..), accessorName, arrayElems,
-                      toValues )
+                      toValues, typeSize )
 
 -- Internal imports
 import Copilot.Compile.C99.Error ( impossible )
 import Copilot.Compile.C99.Name  ( exCpyName, streamAccessorName )
-import Copilot.Compile.C99.Type  ( transLocalVarDeclType, transTypeName )
+import Copilot.Compile.C99.Type  ( transLocalVarDeclType, transType,
+                                   transTypeName )
 
 -- | Translates a Copilot Core expression into a C99 expression.
 transExpr :: Expr a -> State FunEnv C.Expr
@@ -52,6 +53,48 @@ transExpr (Label _ _ e) = transExpr e -- ignore label
 transExpr (Op1 op e) = do
   e' <- transExpr e
   return $ transOp1 op e'
+
+transExpr (Op2 (UpdateField ty1@(Struct _) ty2 f) e1 e2) = do
+  -- Translating a struct update Op requires initializing a variable to the
+  -- "old" value, updating the field, and returning the new value.
+  e1' <- transExpr e1
+  e2' <- transExpr e2
+
+  -- Variable to hold the updated struct
+  (i, _, _) <- get
+  let varName = "_v" ++ show i
+  modify (\(i, x, y) -> (i + 1, x, y))
+
+  -- Add new var decl
+  let initDecl = C.VarDecln Nothing cTy1 varName Nothing
+      cTy1     = transLocalVarDeclType ty1
+  modify (\(i, x, y) -> (i, x ++ [initDecl], y))
+
+  -- Initialize the var to the same value as the original struct
+  let initStmt = C.Expr
+               $ C.AssignOp
+                   C.Assign
+                   (C.Ident varName)
+                   e1'
+
+  -- Update field f with given value e2.
+  let updateStmt = case ty2 of
+        Array _ -> C.Expr $ memcpy dest e2' size
+          where
+            dest = C.Dot (C.Ident varName) (accessorName f)
+            size = C.LitInt
+                       (fromIntegral $ typeSize ty2)
+                       C..* C.SizeOfType (C.TypeName (tyElemName ty2))
+
+        _       -> C.Expr
+                 $ C.AssignOp
+                     C.Assign
+                     (C.Dot (C.Ident varName) (accessorName f))
+                     e2'
+
+  modify (\(i, x, y) -> (i, x, y ++ [ initStmt, updateStmt ]))
+
+  return $ C.Ident varName
 
 transExpr (Op2 op e1 e2) = do
   e1' <- transExpr e1
@@ -102,32 +145,35 @@ transOp1 op e =
 
 -- | Translates a Copilot binary operator and its arguments into a C99
 -- expression.
+--
+-- PRE: op is not a struct update operation (i.e., 'UpdateField').
 transOp2 :: Op2 a b c -> C.Expr -> C.Expr -> C.Expr
 transOp2 op e1 e2 = case op of
-  And          -> e1 C..&& e2
-  Or           -> e1 C..|| e2
-  Add      _   -> e1 C..+  e2
-  Sub      _   -> e1 C..-  e2
-  Mul      _   -> e1 C..*  e2
-  Mod      _   -> e1 C..%  e2
-  Div      _   -> e1 C../  e2
-  Fdiv     _   -> e1 C../  e2
-  Pow      ty  -> funCall (specializeMathFunName ty "pow") [e1, e2]
-  Logb     ty  -> funCall (specializeMathFunName ty "log") [e2] C../
-                  funCall (specializeMathFunName ty "log") [e1]
-  Atan2    ty  -> funCall (specializeMathFunName ty "atan2") [e1, e2]
-  Eq       _   -> e1 C..== e2
-  Ne       _   -> e1 C..!= e2
-  Le       _   -> e1 C..<= e2
-  Ge       _   -> e1 C..>= e2
-  Lt       _   -> e1 C..<  e2
-  Gt       _   -> e1 C..>  e2
-  BwAnd    _   -> e1 C..&  e2
-  BwOr     _   -> e1 C..|  e2
-  BwXor    _   -> e1 C..^  e2
-  BwShiftL _ _ -> e1 C..<< e2
-  BwShiftR _ _ -> e1 C..>> e2
-  Index    _   -> C.Index e1 e2
+  And               -> e1 C..&& e2
+  Or                -> e1 C..|| e2
+  Add         _     -> e1 C..+  e2
+  Sub         _     -> e1 C..-  e2
+  Mul         _     -> e1 C..*  e2
+  Mod         _     -> e1 C..%  e2
+  Div         _     -> e1 C../  e2
+  Fdiv        _     -> e1 C../  e2
+  Pow         ty    -> funCall (specializeMathFunName ty "pow") [e1, e2]
+  Logb        ty    -> funCall (specializeMathFunName ty "log") [e2] C../
+                       funCall (specializeMathFunName ty "log") [e1]
+  Atan2       ty    -> funCall (specializeMathFunName ty "atan2") [e1, e2]
+  Eq          _     -> e1 C..== e2
+  Ne          _     -> e1 C..!= e2
+  Le          _     -> e1 C..<= e2
+  Ge          _     -> e1 C..>= e2
+  Lt          _     -> e1 C..<  e2
+  Gt          _     -> e1 C..>  e2
+  BwAnd       _     -> e1 C..&  e2
+  BwOr        _     -> e1 C..|  e2
+  BwXor       _     -> e1 C..^  e2
+  BwShiftL    _ _   -> e1 C..<< e2
+  BwShiftR    _ _   -> e1 C..>> e2
+  Index       _     -> C.Index e1 e2
+  UpdateField _ _ _ -> impossible "transOp2" "copilot-c99"
 
 -- | Translates a Copilot ternary operator and its arguments into a C99
 -- expression.
@@ -377,3 +423,17 @@ funCall :: C.Ident   -- ^ Function name
         -> [C.Expr]  -- ^ Arguments
         -> C.Expr
 funCall name = C.Funcall (C.Ident name)
+
+-- Write a call to the memcpy function.
+memcpy :: C.Expr -> C.Expr -> C.Expr -> C.Expr
+memcpy dest src size = C.Funcall (C.Ident "memcpy") [dest, src, size]
+
+-- Translate a Copilot type to a C99 type, handling arrays especially.
+--
+-- If the given type is an array (including multi-dimensional arrays), the
+-- type is that of the elements in the array. Otherwise, it is just the
+-- equivalent representation of the given type in C.
+tyElemName :: Type a -> C.Type
+tyElemName ty = case ty of
+  Array ty' -> tyElemName ty'
+  _         -> transType ty
