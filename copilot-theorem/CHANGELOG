@@ -1,3 +1,6 @@
+2024-07-06
+        * What4 upper-bound dependency version bump. (#514)
+
 2024-05-07
         * Version bump (3.19.1). (#512)
         * Fix handling of unsatisfiable properties with Kind2. (#495)
