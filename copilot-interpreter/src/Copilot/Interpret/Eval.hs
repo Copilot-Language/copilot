@@ -2,10 +2,11 @@
 
 -- | A tagless interpreter for Copilot specifications.
 
-{-# LANGUAGE BangPatterns       #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE Safe               #-}
+{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE Safe                #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Copilot.Interpret.Eval
   ( Env
@@ -17,8 +18,9 @@ module Copilot.Interpret.Eval
 
 import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
                                 Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
-                                Trigger (..), Type (..), UExpr (..), arrayElems,
-                                specObservers, specStreams, specTriggers)
+                                Trigger (..), Type (..), UExpr (..), Value (..),
+                                arrayElems, specObservers, specStreams,
+                                specTriggers, updateField)
 import Copilot.Interpret.Error (badUsage)
 
 import           Prelude hiding (id)
@@ -243,6 +245,12 @@ evalOp2 op = case op of
   BwShiftL _ _ -> ( \ !a !b -> shiftL a $! fromIntegral b )
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
   Index    _   -> \xs n -> (arrayElems xs) !! (fromIntegral n)
+
+  UpdateField (Struct _) ty (fieldAccessor :: a -> Field s b) ->
+    \stream fieldValue ->
+      let newField :: Field s b
+          newField = Field fieldValue
+      in updateField stream (Value ty newField)
 
 -- | Apply a function to two numbers, so long as the second one is
 -- not zero.
