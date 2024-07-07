@@ -1,3 +1,6 @@
+2024-07-06
+        * Update README to reflect support for GHC 9.8. (#518)
+
 2024-05-07
         * Version bump (3.19.1). (#512)
 
