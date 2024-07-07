@@ -1,3 +1,6 @@
+2024-07-07
+        * Add support for struct field updates. (#520)
+
 2024-05-07
         * Version bump (3.19.1). (#512)
 
