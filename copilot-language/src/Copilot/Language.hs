@@ -38,7 +38,7 @@ module Copilot.Language
   , prop
   , theorem
   , forAll
-  , forall, exists
+  , exists
   ) where
 
 import Data.Int hiding (Int)

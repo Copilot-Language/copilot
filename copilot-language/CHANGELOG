@@ -1,3 +1,6 @@
+2024-07-06
+        * Remove deprecated function Copilot.Language.Spec.forall. (#518)
+
 2024-05-07
         * Version bump (3.19.1). (#512)
 
