@@ -100,6 +100,9 @@ ppOp2 op = case op of
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
   Index    _   -> ppInfix ".!!"
+  UpdateField (Struct _) _ f -> \ doc1 doc2 ->
+    parens $ doc1 <+> text "##" <+> text (accessorName f) <+> text "=:" <+> doc2
+  UpdateField _ _ _ -> impossible "ppOp2" "Copilot.PrettyPrint"
 
 -- | Pretty-print a ternary operation.
 ppOp3 :: Op3 a b c d -> Doc -> Doc -> Doc -> Doc
