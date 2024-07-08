@@ -1,5 +1,6 @@
-2024-07-06
+2024-07-07
         * Remove deprecated function Copilot.Language.Spec.forall. (#518)
+        * Add support for struct field updates. (#520)
 
 2024-05-07
         * Version bump (3.19.1). (#512)

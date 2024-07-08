@@ -121,11 +121,13 @@ mkAccessDecln sId ty xs =
 -- | Write a generator function for a stream.
 mkGenFun :: String -> Expr a -> Type a -> C.FunDef
 mkGenFun name expr ty =
-    C.FunDef static cTy name [] cVars [C.Return $ Just cExpr]
+    C.FunDef static cTy name [] cVars stmts
   where
-    static         = Just C.Static
-    cTy            = C.decay $ transType ty
-    (cExpr, cVars) = runState (transExpr expr) mempty
+    static             = Just C.Static
+    cTy                = C.decay $ transType ty
+    (cExpr, state')    = runState (transExpr expr) (0, mempty, mempty)
+    (_, cVars, stmts') = state'
+    stmts              = stmts' ++ [C.Return $ Just cExpr]
 
 -- | Write a generator function for a stream that returns an array.
 mkGenFunArray :: String -> String -> Expr a -> Type a -> C.FunDef
@@ -139,13 +141,20 @@ mkGenFunArray name nameArg expr ty@(Array _) =
     outputParam = C.Param cArrayType nameArg
     cArrayType  = transType ty
 
-    -- Output value, and any variable declarations needed
-    (cExpr, varDecls) = runState (transExpr expr) mempty
+    -- Statements to execute as part of the generator. They include statements
+    -- related to calculating the values of intermediate expressions, and
+    -- statements related to copying the final value to the destination array.
+    stmts = stmts' ++ [ copyStmt ]
 
-    -- Copy expression to output argument
-    stmts = [ C.Expr $ memcpy (C.Ident nameArg) cExpr size ]
-    size  = C.LitInt (fromIntegral $ typeSize ty)
-              C..* C.SizeOfType (C.TypeName $ tyElemName ty)
+    -- Output value, variable declarations needed, and other statements that
+    -- must be executed to calculate intermediate values.
+    (cExpr, state')       = runState (transExpr expr) (0, mempty, mempty)
+    (_, varDecls, stmts') = state'
+
+    -- Copy expression to output argument.
+    copyStmt = C.Expr $ memcpy (C.Ident nameArg) cExpr size
+    size     = C.LitInt (fromIntegral $ typeSize ty)
+                 C..* C.SizeOfType (C.TypeName $ tyElemName ty)
 
 mkGenFunArray _name _nameArg _expr _ty =
   impossible "mkGenFunArray" "copilot-c99"

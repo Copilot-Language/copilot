@@ -13,9 +13,10 @@ module Copilot.Core.Operators
   where
 
 -- External imports
-import Data.Bits    (Bits)
-import Data.Word    (Word32)
-import GHC.TypeLits (KnownSymbol)
+import Data.Bits     (Bits)
+import Data.Typeable (Typeable)
+import Data.Word     (Word32)
+import GHC.TypeLits  (KnownSymbol)
 
 -- Internal imports
 import Copilot.Core.Type       (Field (..), Type (..))
@@ -95,6 +96,11 @@ data Op2 a b c where
   -- Array operator.
   Index    :: Type (Array n t) -> Op2 (Array n t) Word32 t
               -- ^ Array access/projection of an array element.
+
+  -- Struct operator.
+  UpdateField :: (Typeable b, KnownSymbol s, Show b)
+              => Type a -> Type b -> (a -> Field s b) -> Op2 a b a
+              -- ^ Update a field of a struct.
 
 -- | Ternary operators.
 data Op3 a b c d where

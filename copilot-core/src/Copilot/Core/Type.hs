@@ -34,6 +34,7 @@ module Copilot.Core.Type
     , Struct
     , fieldName
     , accessorName
+    , updateField
     )
   where
 
@@ -58,6 +59,9 @@ class Struct a where
 
   -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
+
+  updateField :: a -> Value t -> a
+  updateField = error "Field updates not supported for this type."
 
 -- | The field of a struct, together with a representation of its type.
 data Value a =
