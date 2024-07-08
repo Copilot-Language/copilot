@@ -799,6 +799,8 @@ translateOp2 sym origExpr op xe1 xe2 = case (op, xe1, xe2) of
   (CE.BwShiftL _ _, xe1, xe2) -> translateBwShiftL xe1 xe2
   (CE.BwShiftR _ _, xe1, xe2) -> translateBwShiftR xe1 xe2
   (CE.Index _, xe1, xe2) -> translateIndex xe1 xe2
+  (CE.UpdateField atp _ftp extractor, structXe, fieldXe) ->
+    translateUpdateField atp extractor structXe fieldXe
   where
     -- Translate an 'CE.Add' operation and its arguments into a what4
     -- representation of the appropriate type.
@@ -963,6 +965,55 @@ translateOp2 sym origExpr op xe1 xe2 = case (op, xe1, xe2) of
 
         liftIO $ buildIndexExpr sym ix xes
       _ -> unexpectedValues "index operation"
+
+    -- Translate an 'CE.UpdateField' operation and its arguments into a what4
+    -- representation. This function will panic if one of the following does not
+    -- hold:
+    --
+    -- - The argument is not a struct.
+    --
+    -- - The struct's field cannot be found.
+    translateUpdateField :: forall struct s.
+                            KnownSymbol s
+                         => CT.Type struct
+                         -- ^ The type of the struct argument
+                         -> (struct -> CT.Field s b)
+                         -- ^ Extract a struct field
+                         -> XExpr sym
+                         -- ^ The first argument value (should be a struct)
+                         -> XExpr sym
+                         -- ^ The second argument value (should be the same type
+                         -- as the struct field)
+                         -> TransM sym (XExpr sym)
+                         -- ^ The first argument value, but with an updated
+                         -- value for the supplied field.
+    translateUpdateField structTp extractor structXe newFieldXe =
+      case (structTp, structXe) of
+        (CT.Struct s, XStruct structFieldXes) ->
+          case mIx s of
+            Just ix -> return $ XStruct $ updateAt ix newFieldXe structFieldXes
+            Nothing ->
+              panic [ "Could not find field " ++ show fieldNameRepr
+                    , show s
+                    ]
+        _ -> unexpectedValues "update-field operation"
+      where
+        -- Update an element of a list at a particular index. This assumes the
+        -- preconditions that the index is a non-negative number that is less
+        -- than the length of the list.
+        updateAt :: forall a. Int -> a -> [a] -> [a]
+        updateAt _ _ [] = []
+        updateAt 0 new (_:xs) = new : xs
+        updateAt n new (x:xs) = x : updateAt (n-1) new xs
+
+        fieldNameRepr :: SymbolRepr s
+        fieldNameRepr = fieldName (extractor undefined)
+
+        structFieldNameReprs :: CT.Struct struct => struct -> [Some SymbolRepr]
+        structFieldNameReprs s = valueName <$> CT.toValues s
+
+        mIx :: CT.Struct struct => struct -> Maybe Int
+        mIx s = elemIndex (Some fieldNameRepr) (structFieldNameReprs s)
 
     -- Check the types of the arguments. If the arguments are bitvector values,
     -- apply the 'BVOp2'. If the arguments are floating-point values, apply the
