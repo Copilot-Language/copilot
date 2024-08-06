@@ -106,3 +106,6 @@ data Op2 a b c where
 data Op3 a b c d where
   -- Conditional operator.
   Mux :: Type a -> Op3 Bool a a a
+  -- Array operator.
+  UpdateArray :: Type (Array n t) -> Op3 (Array n t) Word32 t (Array n t)
+           -- ^ Update an element of an array.
