@@ -13,9 +13,9 @@ import qualified Data.List.NonEmpty  as NonEmpty
 import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
-import Copilot.Core ( Expr (..), Field (..), Op1 (..), Op2 (..), Op3 (..),
-                      Type (..), Value (..), accessorName, arrayElems,
-                      toValues, typeSize )
+import Copilot.Core ( Array, Expr (..), Field (..), Op1 (..), Op2 (..),
+                      Op3 (..), Type (..), Value (..), accessorName,
+                      arrayElems, toValues, typeLength, typeSize )
 
 -- Internal imports
 import Copilot.Compile.C99.Error ( impossible )
@@ -101,6 +101,47 @@ transExpr (Op2 op e1 e2) = do
   e2' <- transExpr e2
   return $ transOp2 op e1' e2'
 
+transExpr e@(Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
+  e1' <- transExpr e1
+  e2' <- transExpr e2
+  e3' <- transExpr e3
+
+  -- Variable to hold the updated array
+  (i, _, _) <- get
+  let varName = "_v" ++ show i
+  modify (\(i, x, y) -> (i + 1, x, y))
+
+  -- Add new var decl
+  let initDecl = C.VarDecln Nothing cTy1 varName Nothing
+      cTy1     = transType arrTy
+  modify (\(i, x, y) -> (i, x ++ [initDecl], y))
+
+  let size :: Type (Array n t) -> C.Expr
+      size arrTy@(Array ty) = C.LitInt (fromIntegral $ typeLength arrTy)
+                         C..* C.SizeOfType (C.TypeName $ transType ty)
+
+  -- Initialize the var to the same value as the original array
+  let initStmt = C.Expr $ memcpy (C.Ident varName) e1' (size arrTy)
+
+  -- Update element of array
+  let updateStmt = case ty2 of
+        Array _ -> C.Expr $ memcpy dest e3' size
+          where
+            dest = C.Index (C.Ident varName) e2'
+            size = C.LitInt
+                       (fromIntegral $ typeSize ty2)
+                       C..* C.SizeOfType (C.TypeName (tyElemName ty2))
+
+        _ -> C.Expr
+           $ C.AssignOp
+                 C.Assign
+                 (C.Index (C.Ident varName) e2')
+                 e3'
+
+  modify (\(i, x, y) -> (i, x, y ++ [ initStmt, updateStmt ]))
+
+  return $ C.Ident varName
+
 transExpr (Op3 op e1 e2 e3) = do
   e1' <- transExpr e1
   e2' <- transExpr e2
@@ -179,7 +220,8 @@ transOp2 op e1 e2 = case op of
 -- expression.
 transOp3 :: Op3 a b c d -> C.Expr -> C.Expr -> C.Expr -> C.Expr
 transOp3 op e1 e2 e3 = case op of
-  Mux _ -> C.Cond e1 e2 e3
+  Mux         _ -> C.Cond e1 e2 e3
+  UpdateArray _ -> impossible "transOp3" "copilot-c99"
 
 -- | Translate @'Abs' e@ in Copilot Core into a C99 expression.
 --
