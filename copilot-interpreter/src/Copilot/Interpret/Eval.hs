@@ -19,8 +19,8 @@ module Copilot.Interpret.Eval
 import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
                                 Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
                                 Trigger (..), Type (..), UExpr (..), Value (..),
-                                arrayElems, specObservers, specStreams,
-                                specTriggers, updateField)
+				arrayElems, arrayUpdate, specObservers,
+                                specStreams, specTriggers, updateField)
 import Copilot.Interpret.Error (badUsage)
 
 import           Prelude hiding (id)
@@ -32,6 +32,7 @@ import Data.Dynamic      (Dynamic, fromDynamic, toDyn)
 import Data.List         (transpose)
 import Data.Maybe        (fromJust)
 import Data.Typeable     (Typeable)
+import GHC.TypeLits      (KnownNat, Nat, natVal)
 
 -- | Exceptions that may be thrown during interpretation of a Copilot
 -- specification.
@@ -265,7 +266,8 @@ catchZero f x y = f x y
 -- Haskell function operating on the same types as the
 -- 'Copilot.Core.Operators.Op3'.
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
-evalOp3 (Mux _) = \ !v !x !y -> if v then x else y
+evalOp3 (Mux         _)  = \ !v !x !y -> if v then x else y
+evalOp3 (UpdateArray ty) = \xs n x -> arrayUpdate xs (fromIntegral n) x
 
 -- | Turn a stream into a key-value pair that can be added to an 'Env' for
 -- simulation.
