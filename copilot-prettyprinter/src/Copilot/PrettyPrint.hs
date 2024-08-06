@@ -111,6 +111,8 @@ ppOp3 op = case op of
     text "(if"   <+> doc1 <+>
     text "then" <+> doc2 <+>
     text "else" <+> doc3 <> text ")"
+  UpdateArray _ -> \ doc1 doc2 doc3 ->
+    parens $ doc1 <+> text "!!" <+> doc2 <+> text "=:" <+> doc3
 
 -- | Parenthesize two 'Doc's, separated by an infix 'String'.
 ppInfix :: String -> Doc -> Doc -> Doc
