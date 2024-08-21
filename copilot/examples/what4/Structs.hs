@@ -64,6 +64,10 @@ spec = do
   void $ prop "Example 2" $ forAll $
     (((battery#other) .!! 2) .!! 3) == (((battery#other) .!! 2) .!! 4)
 
+  -- Update a struct field, then check it for equality.
+  void $ prop "Example 3" $ forAll $
+    ((battery ## temp =$ (+1))#temp == (battery#temp + 1))
+
 main :: IO ()
 main = do
   spec' <- reify spec
