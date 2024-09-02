@@ -1,3 +1,6 @@
+2024-08-30
+        * Add support for pretty-printing struct update expressions. (#526)
+
 2024-07-07
         * Version bump (3.20). (#522)
 
