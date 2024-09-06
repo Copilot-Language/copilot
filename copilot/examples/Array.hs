@@ -26,7 +26,7 @@ spec = do
   -- It passes the current value of arr as an argument.
   -- The prototype of 'func' would be:
   -- void func (int8_t arg[3]);
-  trigger "func" (arr .!! 0) [arg arr]
+  trigger "func" (arr ! 0) [arg arr]
 
 -- Compile the spec
 main :: IO ()
