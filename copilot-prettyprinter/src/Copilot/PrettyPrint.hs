@@ -99,7 +99,7 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
-  Index    _   -> ppInfix ".!!"
+  Index    _   -> ppInfix "!"
   UpdateField (Struct _) _ f -> \ doc1 doc2 ->
     parens $ doc1 <+> text "##" <+> text (accessorName f) <+> text "=:" <+> doc2
   UpdateField _ _ _ -> impossible "ppOp2" "Copilot.PrettyPrint"
