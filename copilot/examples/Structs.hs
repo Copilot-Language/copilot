@@ -56,13 +56,13 @@ spec = do
   -- Check equality, indexing into nested structs and arrays. Note that this is
   -- trivial by equality.
   trigger "equalitySameIndex"
-    ((((battery#volts) .!! 0)#numVolts) == (((battery#volts) .!! 0)#numVolts))
+    ((((battery#volts) ! 0)#numVolts) == (((battery#volts) ! 0)#numVolts))
     [arg battery]
 
   -- Same as previous example, but get a different array index (so should be
   -- false).
   trigger "equalityDifferentIndices"
-    ((((battery#other) .!! 2) .!! 3) == (((battery#other) .!! 2) .!! 4))
+    ((((battery#other) ! 2) ! 3) == (((battery#other) ! 2) ! 4))
     [arg battery]
 
 main :: IO ()

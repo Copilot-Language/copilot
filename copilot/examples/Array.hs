@@ -26,7 +26,21 @@ spec = do
   -- It passes the current value of arr as an argument.
   -- The prototype of 'func' would be:
   -- void func (int8_t arg[3]);
-  trigger "func" (arr .!! 0) [arg arr]
+  trigger "func" (arr ! 0) [arg arr]
+
+  -- A trigger that fires 'func2' every time.
+  -- It passes the current value of arr as an argument, but updating the first
+  -- element of the array to always be True.
+  -- The prototype of 'func2' would be:
+  -- void func2 (int8_t arg[3]);
+  trigger "func2" true [arg (arr !! 0 =: true)]
+
+  -- A trigger that fires 'func2' every time.
+  -- It passes the current value of arr as an argument, but negating the second
+  -- element of the array.
+  -- The prototype of 'func3' would be:
+  -- void func3 (int8_t arg[3]);
+  trigger "func3" true [arg (arr !! 1 =$ not)]
 
 -- Compile the spec
 main :: IO ()

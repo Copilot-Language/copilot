@@ -52,16 +52,18 @@ import           Data.Maybe                     (fromJust)
 import           Data.Parameterized.Classes     (KnownRepr (..))
 import           Data.Parameterized.Context     (EmptyCtx, type (::>))
 import           Data.Parameterized.NatRepr     (LeqProof (..), NatCases (..),
-                                                 NatRepr, decNat, isZeroOrGT1,
+                                                 NatRepr, decNat, incNat,
+                                                 intValue, isZeroOrGT1,
                                                  knownNat, minusPlusCancel,
-                                                 mkNatRepr, testNatCases)
+                                                 mkNatRepr, testNatCases,
+                                                 testStrictLeq)
 import           Data.Parameterized.Some        (Some (..))
 import           Data.Parameterized.SymbolRepr  (SymbolRepr, knownSymbol)
 import qualified Data.Parameterized.Vector      as V
 import           Data.Type.Equality             (TestEquality (..), (:~:) (..))
 import           Data.Word                      (Word32)
 import           GHC.TypeLits                   (KnownSymbol)
-import           GHC.TypeNats                   (KnownNat, type (<=))
+import           GHC.TypeNats                   (KnownNat, type (<=), type (+))
 import qualified Panic                          as Panic
 
 import qualified What4.BaseTypes                as WT
@@ -1141,7 +1143,37 @@ translateOp3 :: forall sym a b c d .
 translateOp3 sym origExpr op xe1 xe2 xe3 = case (op, xe1, xe2, xe3) of
     (CE.Mux _, XBool te, xe1, xe2) -> liftIO $ mkIte sym te xe1 xe2
     (CE.Mux _, _, _, _) -> unexpectedValues "mux operation"
+    (CE.UpdateArray _, xe1, xe2, xe3) -> translateUpdateArray xe1 xe2 xe3
   where
+    -- Translate an 'CE.UpdateArray' operation and its arguments into a what4
+    -- representation. This checks that the first argument is an 'XArray' and
+    -- the second argument is an 'XWord32', invoking 'panic' is this invariant
+    -- is not upheld.
+    --
+    -- Note: Currently, copilot only checks if array indices are out of bounds
+    -- as a side condition. The method of translation we are using simply
+    -- creates a nest of if-then-else expression to check the index expression
+    -- against all possible indices. If the index expression is known by the
+    -- solver to be out of bounds (for instance, if it is a constant 5 for an
+    -- array of 5 elements), then the if-then-else will trivially resolve to
+    -- true.
+    translateUpdateArray :: XExpr sym
+                         -> XExpr sym
+                         -> XExpr sym
+                         -> TransM sym (XExpr sym)
+    translateUpdateArray xe1 xe2 newXe = case (xe1, xe2) of
+      (XArray xes, XWord32 ix) -> do
+        -- The second argument should not be out of bounds (i.e., greater than
+        -- or equal to the length of the array)
+        xesLenBV <- liftIO $ WI.bvLit sym knownNat $ BV.mkBV knownNat
+                           $ toInteger $ V.lengthInt xes
+        inRange <- liftIO $ WI.bvUlt sym ix xesLenBV
+        addSidePred inRange
+
+        xes' <- liftIO $ buildUpdateArrayExpr sym xes ix newXe
+        pure $ XArray xes'
+      _ -> unexpectedValues "update array operation"
+
     unexpectedValues :: forall m x . (Panic.HasCallStack, MonadIO m)
                      => String -> m x
     unexpectedValues op =
@@ -1179,6 +1211,52 @@ buildIndexExpr sym ix = loop 0
         curIxExpr <- WI.bvLit sym knownNat (BV.word32 curIx)
         ixEq <- WI.bvEq sym curIxExpr ix
         mkIte sym ixEq xe rstExpr
+
+-- | Construct an expression that updates an array element at a particular index
+-- by building a chain of @if@ expressions, where each expression checks if the
+-- current index is equal to a given index in the array. If the indices are
+-- equal, return the array with the element at that index updated. Otherwise,
+-- proceed to the next @if@ expression, which checks the next index in the
+-- array.
+buildUpdateArrayExpr :: forall sym n.
+                        (1 <= n, WFP.IsInterpretedFloatExprBuilder sym)
+                     => sym
+                     -> V.Vector n (XExpr sym)
+                     -- ^ Elements
+                     -> WI.SymBV sym 32
+                     -- ^ Index
+                     -> XExpr sym
+                     -- ^ New element
+                     -> IO (V.Vector n (XExpr sym))
+buildUpdateArrayExpr sym xelts ix newXe = loop (knownNat @0)
+  where
+    n :: NatRepr n
+    n = V.length xelts
+
+    n32 :: NatRepr 32
+    n32 = knownNat @32
+
+    loop :: forall i.
+            ((i + 1) <= n)
+         => NatRepr i
+         -> IO (V.Vector n (XExpr sym))
+    loop curIx =
+      case testStrictLeq nextIx n of
+        -- Recursive case
+        Left LeqProof -> do
+          rstExpr <- loop nextIx
+          curIxExpr <- WI.bvLit sym n32 $ BV.mkBV n32 $ intValue curIx
+          ixEq <- WI.bvEq sym curIxExpr ix
+          V.zipWithM (mkIte sym ixEq) newXelts rstExpr
+        -- Base case, we are at the last possible index (n - 1)
+        Right Refl ->
+          pure newXelts
+      where
+        nextIx :: NatRepr (i + 1)
+        nextIx = incNat curIx
+
+        newXelts :: V.Vector n (XExpr sym)
+        newXelts = V.insertAt curIx newXe xelts
 
 -- | Construct an @if@ expression of the appropriate type.
 mkIte :: WFP.IsInterpretedFloatExprBuilder sym

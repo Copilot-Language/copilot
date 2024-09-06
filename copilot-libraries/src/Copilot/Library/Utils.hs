@@ -13,10 +13,10 @@ module Copilot.Library.Utils
          -- ** Scans
          nscanl, nscanr, nscanl1, nscanr1,
          -- ** Indexing
-         case', (!!))
+         case', (!!), (!!!))
 where
 
-import Copilot.Language
+import Copilot.Language hiding ((!!))
 import qualified Prelude as P
 
 -- | Given a stream, produce an infinite list of streams dropping an increasing
@@ -135,21 +135,28 @@ case' predicates alternatives =
 --
 -- WARNING: Very expensive! Consider using this only for very short lists.
 (!!) :: (Typed a, Eq b, Num b, Typed b) => [Stream a] -> Stream b -> Stream a
-ls !! n = let indices      = map
+(!!) = (!!!)
+{-# DEPRECATED (!!) "This function is deprecated in Copilot 4. Use (!!!)." #-}
+
+-- | Index.
+--
+-- WARNING: Very expensive! Consider using this only for very short lists.
+(!!!) :: (Typed a, Eq b, Num b, Typed b) => [Stream a] -> Stream b -> Stream a
+ls !!! n = let indices      = map
                              ( constant . fromIntegral )
                              [ 0 .. P.length ls - 1 ]
-              select [] _  = last ls
-              select
-                ( i : is )
-                ( x : xs ) = mux ( i == n ) x ( select is xs )
-                             -- should not happen
-              select _ []  = badUsage ("in (!!) defined in Utils.hs " P.++
-                               "in copilot-libraries")
-          in if null ls then
-               badUsage ("in (!!) defined in Utils.hs " P.++
-                            "indexing the empty list with !! is not defined")
-             else
-               select indices ls
+               select [] _  = last ls
+               select
+                 ( i : is )
+                 ( x : xs ) = mux ( i == n ) x ( select is xs )
+                              -- should not happen
+               select _ []  = badUsage ("in (!!) defined in Utils.hs " P.++
+                                "in copilot-libraries")
+           in if null ls then
+                badUsage ("in (!!) defined in Utils.hs " P.++
+                             "indexing the empty list with !! is not defined")
+              else
+                select indices ls
 
 -- | Cycle a list to form an infinite stream.
 cycle :: ( Typed a ) => [ a ] -> Stream a

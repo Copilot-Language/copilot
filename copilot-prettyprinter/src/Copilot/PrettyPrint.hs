@@ -99,7 +99,7 @@ ppOp2 op = case op of
   BwXor    _   -> ppInfix "^"
   BwShiftL _ _ -> ppInfix "<<"
   BwShiftR _ _ -> ppInfix ">>"
-  Index    _   -> ppInfix ".!!"
+  Index    _   -> ppInfix "!"
   UpdateField (Struct _) _ f -> \ doc1 doc2 ->
     parens $ doc1 <+> text "##" <+> text (accessorName f) <+> text "=:" <+> doc2
   UpdateField _ _ _ -> impossible "ppOp2" "Copilot.PrettyPrint"
@@ -111,6 +111,8 @@ ppOp3 op = case op of
     text "(if"   <+> doc1 <+>
     text "then" <+> doc2 <+>
     text "else" <+> doc3 <> text ")"
+  UpdateArray _ -> \ doc1 doc2 doc3 ->
+    parens $ doc1 <+> text "!!" <+> doc2 <+> text "=:" <+> doc3
 
 -- | Parenthesize two 'Doc's, separated by an infix 'String'.
 ppInfix :: String -> Doc -> Doc -> Doc
