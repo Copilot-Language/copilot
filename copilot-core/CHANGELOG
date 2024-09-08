@@ -1,4 +1,5 @@
-2024-09-03
+2024-09-07
+        * Version bump (4.0). (#532)
         * Update Op3, Array to support array updates. (#36)
 
 2024-07-07
