@@ -1,4 +1,5 @@
-2024-09-03
+2024-09-07
+        * Version bump (4.0). (#532)
         * Add support for struct updates in Copilot.Theorem.What4. (#524)
         * Add support for array updates in Copilot.Theorem.What4. (#36)
 

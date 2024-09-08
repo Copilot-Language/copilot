@@ -1,4 +1,5 @@
-2024-09-03
+2024-09-07
+        * Version bump (4.0). (#532)
         * Add support for pretty-printing struct update expressions. (#526)
         * Add support for pretty-printing array update expressions. (#36)
 

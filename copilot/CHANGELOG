@@ -1,4 +1,5 @@
-2024-09-03
+2024-09-07
+        * Version bump (4.0). (#532)
         * Update example to demonstrate struct update support. (#524)
         * Update example to demonstrate array update support. (#36)
 
