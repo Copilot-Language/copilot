@@ -1,3 +1,6 @@
+2024-09-27
+        * Make the what4-propositional example's comments match results. (#535)
+
 2024-09-07
         * Version bump (4.0). (#532)
         * Update example to demonstrate struct update support. (#524)
