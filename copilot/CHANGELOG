@@ -1,6 +1,7 @@
-2024-10-14
+2024-10-18
         * Update contribution guidelines (#476).
         * Update README with missing publications. (#544)
+        * Make the what4-propositional example's comments match results. (#535)
 
 2024-09-07
         * Version bump (4.0). (#532)
