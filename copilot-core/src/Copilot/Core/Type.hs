@@ -60,6 +60,25 @@ class Struct a where
   -- | Transforms all the struct's fields into a list of values.
   toValues :: a -> [Value a]
 
+  -- | Update the value of a struct field. This is only used by the Copilot
+  -- interpreter, so if you do not plan to use the interpreter, it is safe to
+  -- omit an implementation of this method.
+  --
+  -- In order to implement 'updateField', you should do the following for each
+  -- 'Field' in a struct:
+  --
+  -- 1. Check that the name of the 'Field' matches the name of the supplied
+  --    'Value' (using 'GHC.TypeLits.sameSymbol').
+  --
+  -- 2. Check that the type of the 'Field' matches the 'Type' of the supplied
+  --    'Value' (using 'DE.testEquality').
+  --
+  -- 3. If both (1) and (2) succeed, update the corresponding struct field using
+  --    a record update.
+  --
+  -- For a complete end-to-end example that demonstrates how to implement
+  -- 'updateField' and use it in the Copilot interpreter, see the
+  -- @examples/StructsUpdateField.hs@ example in the @copilot@ library.
   updateField :: a -> Value t -> a
   updateField = error "Field updates not supported for this type."
 
