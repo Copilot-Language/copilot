@@ -2,6 +2,7 @@
         * Update contribution guidelines (#476).
         * Update README with missing publications. (#544)
         * Make the what4-propositional example's comments match results. (#535)
+        * Add example describing how to implement updateField. (#525)
 
 2024-09-07
         * Version bump (4.0). (#532)
