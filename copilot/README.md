@@ -281,12 +281,34 @@ tutorial, please visit the Copilot website:
 # Contributions
 <sup>[(Back to top)](#table-of-contents)</sup>
 
-Copilot cannot accept pull requests or code contributions from developers
-outside the development team at this point.
+We'd love to receive your contributions, be it code fixes, new features, bug
+reports, discussions, or anything else that can help the Copilot project.
 
-If you have a question, find a bug, or would like to request a change, please
-file an issue adding as much information as you can to help us reproduce the
-error or identify the use case. Please file the issue with no labels.
+If you have any comments, questions, ideas, or other topics that you think may
+be of interest, start a new discussion
+[here](https://github.com/Copilot-Language/copilot/discussions).
+
+If you would like to contribute a fix for an issue, please comment on the issue
+indicating that you want to fix it so that we can assign it to you and track
+the status on our end. If the issue does not exist, create it first or ask that
+an existing discussion be promoted to an issue.
+
+If you are unsure about whether your submission should be filed as an issue or
+as a discussion, file it as a discussion. We can always move it later.
+
+To facilitate merging any pull requests that you send, please:
+- Reference the issue you are addressing with the text `Refs #<ISSUENUMBER>.`
+  at the end of the subject line of each commit message, in *every commit*.
+  Replace `<ISSUENUMBER>` with the number of the specific issue that your pull
+  request is addressing.
+- Describe what each commit does individually *in the commit's message*. It's
+  best to err on the side of being more descriptive than less.
+- Update the CHANGELOGs in the *last commit(s)*.
+
+You can take a look at the repository's [commit
+history](https://github.com/Copilot-Language/copilot/commits/master/) to better
+understand the process we follow. Click on each commit to see how we write
+commit messages.
 
 # Acknowledgements
 <sup>[(Back to top)](#table-of-contents)</sup>
