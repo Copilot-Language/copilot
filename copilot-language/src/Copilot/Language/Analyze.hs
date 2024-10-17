@@ -17,6 +17,7 @@ import qualified Copilot.Core as C
 import Copilot.Language.Stream (Stream (..))
 import Copilot.Language.Spec
 import Copilot.Language.Error (badUsage)
+import Copilot.Theorem.Prove (UProof)
 
 import Data.List (groupBy)
 import Data.IORef
@@ -268,10 +269,16 @@ analyzeExts ExternEnv { externVarEnv  = vars
 -- | Obtain all the externs in a specification.
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
-  env <- foldM triggerExts
-           (ExternEnv [] [] [] [])
-           (triggers $ runSpec spec)
-  foldM observerExts env (observers $ runSpec spec)
+  env0 <- foldM triggerExts
+            (ExternEnv [] [] [] [])
+            (triggers $ runSpec spec)
+  env1 <- foldM observerExts
+            env0
+            (observers $ runSpec spec)
+  env2 <- foldM propertyExts
+            env1
+            (properties $ runSpec spec)
+  foldM theoremExts env2 (theorems $ runSpec spec)
 
   where
   observerExts :: ExternEnv -> Observer -> IO ExternEnv
@@ -282,6 +289,12 @@ specExts refStreams spec = do
     env' <- collectExts refStreams guard env
     foldM (\env'' (Arg arg_) -> collectExts refStreams arg_ env'')
           env' args
+
+  propertyExts :: ExternEnv -> Property -> IO ExternEnv
+  propertyExts env (Property _ stream) = collectExts refStreams stream env
+
+  theoremExts :: ExternEnv -> (Property, UProof) -> IO ExternEnv
+  theoremExts env (p, _) = propertyExts env p
 
 -- | Obtain all the externs in a stream.
 collectExts :: C.Typed a => IORef Env -> Stream a -> ExternEnv -> IO ExternEnv
