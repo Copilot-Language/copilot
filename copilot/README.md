@@ -257,6 +257,28 @@ is:
 
 Other relevant papers include:
 
+- [Runtime Verification in Real-Time with the Copilot Language: A Tutorial](https://link.springer.com/chapter/10.1007/978-3-031-71177-0_27)
+
+- [Trustworthy Runtime Verification via Bisimulation (Experience Report)](https://dl.acm.org/doi/abs/10.1145/3607841)
+
+- [An Introduction to Copilot](https://copilot-language.github.io/downloads/copilot_tutorial.pdf)
+
+- [Assuring the Guardians](https://link.springer.com/chapter/10.1007/978-3-319-23820-3_6)
+
+- [Experience report: a do-it-yourself high-assurance compiler](https://dl.acm.org/doi/abs/10.1145/2364527.2364553)
+
+- [Compiling an Haskell EDSL to C: A new C back-end for the Copilot runtime verification framework](https://studenttheses.uu.nl/handle/20.500.12932/29176)
+
+- [Challenges in High-Assurance Runtime Verification](https://link.springer.com/chapter/10.1007/978-3-319-47166-2_31)
+
+- [Runtime Monitoring On Hard Real-Time Operating Systems](http://hdl.handle.net/10342/4999)
+
+- [Design and Testing of an Approach to Automated In-Flight Safety Risk Management for sUAS Operations](https://ntrs.nasa.gov/citations/20220005948)
+
+- [The Essence of Reactivity](https://dl.acm.org/doi/10.1145/3609026.3609727)
+
+- [Types that Change: The Extensible Type Design Pattern](https://dl.acm.org/doi/abs/10.1145/3609025.3609475)
+
 - [Automated Translation of Natural Language Requirements to Runtime Monitors](https://link.springer.com/chapter/10.1007/978-3-030-99524-9_21)
 
 - [Copilot: A Hard Real-Time Runtime Monitor](https://link.springer.com/chapter/10.1007/978-3-642-16612-9_26)
