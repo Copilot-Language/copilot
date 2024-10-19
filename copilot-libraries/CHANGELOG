@@ -1,3 +1,6 @@
+2024-10-19
+        * Standardize changelog format. (#550)
+
 2024-09-07
         * Version bump (4.0). (#532)
         * Rename operator to avoid name clash. (#36)
@@ -87,8 +90,8 @@
         * Completed the documentation. (#127)
 
 2020-12-06
-        * Version bump (3.2).
-        * Update description, bug-reports, homepage fields in cabal file (#129).
+        * Version bump (3.2). (#65)
+        * Update description, bug-reports, homepage fields in cabal file. (#129)
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
-        * Version bump (3.1).
+2019-11-22
+        * Version bump (3.1). (#46)

@@ -1,3 +1,6 @@
+2024-10-19
+        * Standardize changelog format. (#550)
+
 2024-09-07
         * Version bump (4.0). (#532)
         * Add support for struct updates in Copilot.Theorem.What4. (#524)
@@ -89,18 +92,18 @@
         * Version bump (3.4). (#231)
 
 2021-05-07
-        * Version bump (3.3). (#217).
-        * Adjust contraints on version of what4. (#90).
+        * Version bump (3.3). (#217)
+        * Adjust contraints on version of what4. (#90)
 
 2021-03-07
-        * Version bump (3.2.1). (#92).
-        * Completed the documentation. (#95, #93).
+        * Version bump (3.2.1). (#92)
+        * Completed the documentation. (#95, #93)
 
 2020-12-06
-        * Version bump (3.2).
-        * Update description, bug-reports and homepage field in cabal file
-          (#97).
+        * Version bump (3.2). (#65)
+        * Update description, bug-reports and homepage field in cabal file.
+          (#97)
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
-        * Version bump (3.1).
-        * Remove ExternFun (#99).
+2019-11-22
+        * Version bump (3.1). (#46)
+        * Remove ExternFun. (#99)

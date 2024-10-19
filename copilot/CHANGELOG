@@ -1,8 +1,9 @@
-2024-10-18
-        * Update contribution guidelines (#476).
+2024-10-19
+        * Update contribution guidelines. (#476)
         * Update README with missing publications. (#544)
         * Make the what4-propositional example's comments match results. (#535)
         * Add example describing how to implement updateField. (#525)
+        * Standardize changelog format. (#550)
 
 2024-09-07
         * Version bump (4.0). (#532)
@@ -123,11 +124,11 @@
 
 2020-12-06
         * Update optparse-applicative dependency version for newer base
-          versions. (#61).
-        * Add Ivan Perez as co-maintainer (#51).
-        * Update description in cabal file to match copilot-core (#50).
+          versions. (#61)
+        * Add Ivan Perez as co-maintainer. (#51)
+        * Update description in cabal file to match copilot-core. (#50)
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
-        * Version bump (3.1).
-        * Update multiple examples (#41).
-        * Update instructions to match new repositry name (#45).
+2019-11-22
+        * Version bump (3.1). (#46)
+        * Update multiple examples. (#41)
+        * Update instructions to match new repositry name. (#45)

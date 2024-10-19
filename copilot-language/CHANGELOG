@@ -1,5 +1,6 @@
-2024-10-15
+2024-10-19
         * Reject duplicate externs in properties and theorems. (#536)
+        * Standardize changelog format. (#550)
 
 2024-09-07
         * Version bump (4.0). (#532)
@@ -111,12 +112,12 @@
         * Completed the documentation. (#112)
 
 2020-05-07
-        * Version bump (3.2).
-        * Fixed the reverse order of triggers (#114).
-        * Update description, bug-reports, changelog fields in cabal file
-          (#116).
-        * Bump ghc-prim version bounds (#122).
+        * Version bump (3.2). (#65)
+        * Fixed the reverse order of triggers. (#114)
+        * Update description, bug-reports, changelog fields in cabal file.
+          (#116)
+        * Bump ghc-prim version bounds. (#122)
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
-        * Version bump (3.1).
-        * Remove ExternFun (#118).
+2019-11-22
+        * Version bump (3.1). (#46)
+        * Remove ExternFun. (#118)
