@@ -1,5 +1,6 @@
-2024-10-18
+2024-10-19
         * Add Haddocks for updateField. (#525)
+        * Standardize changelog format. (#550)
 
 2024-09-07
         * Version bump (4.0). (#532)
