@@ -1,5 +1,6 @@
-2024-10-15
+2024-10-19
         * Reject duplicate externs in properties and theorems. (#536)
+        * Standardize changelog format. (#550)
 
 2024-09-07
         * Version bump (4.0). (#532)
