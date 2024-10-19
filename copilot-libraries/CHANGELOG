@@ -1,3 +1,6 @@
+2024-10-19
+        * Standardize changelog format. (#550)
+
 2024-09-07
         * Version bump (4.0). (#532)
         * Rename operator to avoid name clash. (#36)
