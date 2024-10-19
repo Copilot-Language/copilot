@@ -207,6 +207,18 @@ executable structs
     else
       buildable: False
 
+executable structs-update-field
+    main-is:            StructsUpdateField.hs
+    hs-source-dirs:     examples
+    build-depends:      base              >= 4.9  && < 5
+                      , copilot
+                      , copilot-c99
+    default-language:   Haskell2010
+    if flag(examples)
+      buildable: True
+    else
+      buildable: False
+
 executable voting
     main-is:            Voting.hs
     hs-source-dirs:     examples

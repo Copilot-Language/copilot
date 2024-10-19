@@ -23,6 +23,11 @@ instance Struct Volts where
   toValues volts = [ Value Word16 (numVolts volts)
                    , Value Bool   (flag volts)
                    ]
+  -- Note that we do not implement `updateField` here. `updateField` is only
+  -- needed to make updates to structs work in the Copilot interpreter, and we
+  -- do not use the interpreter in this example. (See
+  -- `examples/StructsUpdateField.hs` for an example that does implement
+  -- `updateField`.)
 
 -- | `Volts` instance for `Typed`.
 instance Typed Volts where
@@ -41,6 +46,8 @@ instance Struct Battery where
                      , Value typeOf (volts battery)
                      , Value typeOf (other battery)
                      ]
+  -- Note that we do not implement `updateField` here for the same reasons as in
+  -- the `Struct Volts` instance above.
 
 -- | `Battery` instance for `Typed`. Note that `undefined` is used as an
 -- argument to `Field`. This argument is never used, so `undefined` will never
