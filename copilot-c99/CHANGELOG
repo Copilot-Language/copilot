@@ -111,7 +111,7 @@
         * Completed the documentation. (#171)
 
 2020-12-06
-        * Version bump (3.2).
+        * Version bump (3.2). (#65)
         * Implemented arrays in test driver. (#176)
         * Fixed nested array initialisation bug. (#173)
         * Fixed length of buffer allocation for n-dimensional arrays. (#174)
@@ -126,16 +126,16 @@
         * Implemented basic quickcheck based testing. (#185)
 
 2020-03-30
-        * Version bump (3.1.2).
+        * Version bump (3.1.2). (#187)
         * Fixed bug where stream buffers are updated too soon. (#188)
         * Updated description of cabal package. (#192)
 
 2019-12-23
-        * Version bump (3.1.1).
+        * Version bump (3.1.1). (#191)
         * Fixed bug with constant structs and arrays. (#200)
 
 2019-11-22
-        * Version bump (3.1).
+        * Version bump (3.1). (#46)
         * Remove ExternFun. (#207)
         * Fix bug in code generation for local expression. (#198)
         * Implement code generation for labels (trivially). (#199)
