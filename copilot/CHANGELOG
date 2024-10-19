@@ -128,6 +128,6 @@
         * Update description in cabal file to match copilot-core. (#50)
 
 2019-11-22 Ivan Perez <ivan.perez@nianet.org>
-        * Version bump (3.1).
+        * Version bump (3.1). (#46)
         * Update multiple examples. (#41)
         * Update instructions to match new repositry name. (#45)
