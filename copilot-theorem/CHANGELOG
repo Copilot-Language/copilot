@@ -1,3 +1,6 @@
+2024-10-19
+        * Standardize changelog format. (#550)
+
 2024-09-07
         * Version bump (4.0). (#532)
         * Add support for struct updates in Copilot.Theorem.What4. (#524)
