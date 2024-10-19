@@ -117,6 +117,6 @@
           (#116)
         * Bump ghc-prim version bounds. (#122)
 
-2019-11-22 Ivan Perez <ivan.perez@nianet.org>
+2019-11-22
         * Version bump (3.1). (#46)
         * Remove ExternFun. (#118)
