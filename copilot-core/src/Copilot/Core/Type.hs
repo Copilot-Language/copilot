@@ -80,7 +80,10 @@ class Struct a where
   -- 'updateField' and use it in the Copilot interpreter, see the
   -- @examples/StructsUpdateField.hs@ example in the @copilot@ library.
   updateField :: a -> Value t -> a
-  updateField = error "Field updates not supported for this type."
+  updateField = error $ unlines
+    [ "Field updates not supported for this type."
+    , "(Perhaps you need to implement 'updateField' for a 'Struct' instance?)"
+    ]
 
 -- | The field of a struct, together with a representation of its type.
 data Value a =
