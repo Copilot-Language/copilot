@@ -76,6 +76,25 @@ It should end with a line like the following and not print any error messages:
 ghci> ghci> Leaving GHCi.
 ```
 
+### Fedora
+
+On Fedora 40 or newer, Copilot can be installed directly
+from the package repositories with:
+
+```sh
+$ sudo dnf install ghc-copilot-devel
+```
+
+To test that Copilot is available, execute the following:
+```sh
+$ ghci <<< 'import Language.Copilot'
+```
+
+It should end with a line like the following and not print any error messages:
+```sh
+ghci> ghci> Leaving GHCi.
+```
+
 ### Other Linux distributions
 
 On other Linux distributions or older Debian-based distributions, to use
