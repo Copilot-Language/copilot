@@ -1,9 +1,10 @@
-2024-10-19
+2024-10-22
         * Update contribution guidelines. (#476)
         * Update README with missing publications. (#544)
         * Make the what4-propositional example's comments match results. (#535)
         * Add example describing how to implement updateField. (#525)
         * Standardize changelog format. (#550)
+        * Add installation instructions for Fedora 40 and up. (#542)
 
 2024-09-07
         * Version bump (4.0). (#532)
