@@ -1,6 +1,7 @@
-2024-10-19
+2024-10-28
         * Add Haddocks for updateField. (#525)
         * Standardize changelog format. (#550)
+        * Deprecate Copilot.Core.Type.UType.uTypeType. (#484)
 
 2024-09-07
         * Version bump (4.0). (#532)
