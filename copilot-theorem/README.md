@@ -391,7 +391,7 @@ the model-checking techniques we are using.
 The reification process used to build the `Core.Spec` object looses many
 informations about the structure of the original Copilot program. In fact, a
 stream is kept in the reified program only if it is recursively defined.
-Otherwise, all its occurences will be inlined. Moreover, let's look at the
+Otherwise, all its occurrences will be inlined. Moreover, let's look at the
 `intCounter` function defined in the example `Grey.hs`:
 
 ```haskell
