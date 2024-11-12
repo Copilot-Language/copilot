@@ -1,3 +1,6 @@
+2024-11-13
+        * Update struct examples to use generic method implementations. (#564)
+
 2024-11-07
         * Version bump (4.1). (#561)
         * Update contribution guidelines. (#476)
