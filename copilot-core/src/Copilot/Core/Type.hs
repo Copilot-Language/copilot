@@ -4,8 +4,9 @@
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE KindSignatures            #-}
-{-# LANGUAGE Safe                      #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE Trustworthy               #-}
+{-# LANGUAGE TypeApplications          #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE UndecidableInstances      #-}
 -- |
@@ -35,18 +36,26 @@ module Copilot.Core.Type
     , fieldName
     , accessorName
     , updateField
+
+    , typeNameDefault
+    , toValuesDefault
+    , updateFieldDefault
+    , typeOfDefault
     )
   where
 
 -- External imports
+import Data.Char          (isUpper, toLower)
+import Data.Coerce        (coerce)
 import Data.Int           (Int16, Int32, Int64, Int8)
 import Data.List          (intercalate)
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality as DE
 import Data.Typeable      (Typeable, eqT, typeRep)
 import Data.Word          (Word16, Word32, Word64, Word8)
+import GHC.Generics
 import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
-                           symbolVal)
+                           sameSymbol, symbolVal)
 
 -- Internal imports
 import Copilot.Core.Type.Array (Array)
@@ -272,3 +281,154 @@ data UType = forall a . Typeable a => UType { uTypeType :: Type a }
 
 instance Eq UType where
   UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
+
+-- * GHC.Generics-based defaults
+
+-- | A default implementation of 'typeName' that leverages 'Generic'. In order
+-- to use this, make sure you derive a 'Generic' instance for your data type and
+-- then define @'typeName' = 'typeNameDefault'@ in its 'Struct' instance.
+--
+-- This generates a struct name that consists of the name of the original
+-- Haskell data type, but converted to snake_case.
+typeNameDefault :: (Generic a, GDatatype (Rep a)) => a -> String
+typeNameDefault = snakeCase . gTypeName . from
+  where
+    snakeCase :: String -> String
+    snakeCase = convert . applyFirst toLower
+
+    convert :: String -> String
+    convert [] = []
+    convert (x:xs)
+      | isUpper x = '_' : toLower x : convert xs
+      | otherwise = x : convert xs
+
+    applyFirst :: (a -> a) -> [a] -> [a]
+    applyFirst _ []     = []
+    applyFirst f (x:xs) = f x : xs
+
+-- | A default implementation of 'toValues' that leverages 'Generic'. In order
+-- to use this, make sure you derive a 'Generic' instance for your data type and
+-- then define @'toValues' = 'toValuesDefault'@ in its 'Struct' instance.
+toValuesDefault :: (Generic a, GStruct (Rep a)) => a -> [Value a]
+toValuesDefault x = coerce $ gToValues $ from x
+
+-- | A default implementation of 'updateField' that leverages 'Generic'. In
+-- order to use this, make sure you derive a 'Generic' instance for your data
+-- type and then define @'updateField' = 'updateFieldDefault'@ in its 'Struct'
+-- instance.
+updateFieldDefault :: (Generic a, GStruct (Rep a)) => a -> Value t -> a
+updateFieldDefault a v@(Value _ field)
+    | updated   = to a'
+    | otherwise = error $ "Unexpected field: " ++ show field
+  where
+    (a', updated) = gUpdateField (from a) v
+
+-- | A default implementation of 'typeOf' that leverages 'Generic'. In order to
+-- use this, make sure you derive a 'Generic' instance for your data type and
+-- then define @'typeOf' = 'typeOfDefault'@ in its 'Typed' instance.
+typeOfDefault ::
+  forall a. (Typed a, Struct a, Generic a, GTypedStruct (Rep a)) => Type a
+typeOfDefault = Struct $ to $ gStructPlaceholder @(Rep a) @()
+
+-- ** Generic-based classes (not exported)
+
+-- | A class for capturing the name of a Haskell data type from its 'Generic'
+-- metadata.
+class GDatatype f where
+  -- | Returns the name of a Haskell data type. (Note that this differs from
+  -- 'typeName', which is expected to return the name of the struct in the
+  -- /target/ language).
+  gTypeName :: f p -> String
+
+-- | The only 'GDatatype' instance we need is for 'D1', which describes
+-- 'Datatype' metadata (@d@). We ignore all other metadata (@_f@).
+instance Datatype d => GDatatype (D1 d _f) where
+  gTypeName = datatypeName
+
+-- | A class for performing struct-related operations on 'Generic'
+-- representation types.
+class GStruct f where
+  -- | Transforms all the struct representation's fields into a list of values.
+  gToValues :: f p -> [Value (f p)]
+
+  -- | Update the value of a struct representation's field. This returns two
+  -- things:
+  --
+  -- 1. @f p@: The struct representation, but with the field updated.
+  --
+  -- 2. 'Bool': This is 'True' if the field was successfully updated and 'False'
+  --    otherwise. If this returns 'False', it is the responsibility of the
+  --    caller to raise an error.
+  gUpdateField :: f p -> Value t -> (f p, Bool)
+
+-- | 'U1' represents a data constructor with no fields. As such, 'gToValues'
+-- returns an empty list of 'Value's, and 'gUpdateField' does not update
+-- anything.
+instance GStruct U1 where
+  gToValues U1 = []
+  gUpdateField u _ = (u, False)
+
+-- | 'M1' is only used to store metadata, which the 'GStruct' class does not
+-- make use of. As such, this instance discards the metadata and recurses.
+instance GStruct f => GStruct (M1 _i _c f) where
+  gToValues (M1 x) = coerce (gToValues x)
+  gUpdateField (M1 x) v = (M1 x', updated)
+    where
+      (x', updated) = gUpdateField x v
+
+-- | @(':*:')@ represents a data constructor with multiple fields.
+instance (GStruct f, GStruct g) => GStruct (f :*: g) where
+  -- Recursively compute two lists of Values and append them.
+  gToValues (f :*: g) = coerce (gToValues f) ++ coerce (gToValues g)
+  -- Recursively attempt to update the field in both branches and combine the
+  -- updated branches. We will have successfully updated the field if either
+  -- branch was successfully updated.
+  gUpdateField (f :*: g) v = (f' :*: g', updatedF || updatedG)
+    where
+      (f', updatedF) = gUpdateField f v
+      (g', updatedG) = gUpdateField g v
+
+-- | 'K1' represents a single field in a data constructor. This is the base
+-- case.
+instance (KnownSymbol name, Typed ty, c ~ Field name ty) =>
+    GStruct (K1 _i c) where
+  -- Now that we have the field, return it in a singleton list.
+  gToValues (K1 field) = [Value typeOf field]
+  -- In order to update the field, we check that the field names and types
+  -- match. If they do, return the updated field and declare the update as
+  -- successful. Otherwise, return the old field and declare the update as
+  -- unsuccessful.
+  gUpdateField (K1 oldField) (Value newTy (newField :: Field newName newTy)) =
+    case (sameSymbol pName pNewName, testEquality ty newTy) of
+      (Just Refl, Just Refl) -> (K1 newField, True)
+      _                      -> (K1 oldField, False)
+    where
+      pName    = Proxy @name
+      pNewName = Proxy @newName
+      ty       = typeOf @ty
+
+-- | A class which computes a 'Generic' placeholder value to use for a struct
+-- type.
+class GTypedStruct f where
+  -- | A placeholder value to supply to use in a generic implementation of
+  -- 'typeOf' for a struct type.
+  gStructPlaceholder :: f p
+
+-- | The implementation for 'U1' is straightforward and uninteresting.
+instance GTypedStruct U1 where
+  gStructPlaceholder = U1
+
+-- | The implementation for 'M1' is straightforward and uninteresting.
+instance GTypedStruct f => GTypedStruct (M1 _i _c f) where
+  gStructPlaceholder = M1 gStructPlaceholder
+
+-- | The implementation for @(':*:')@ is straightforward and uninteresting.
+instance (GTypedStruct f, GTypedStruct g) => GTypedStruct (f :*: g) where
+  gStructPlaceholder = gStructPlaceholder :*: gStructPlaceholder
+
+-- The implementation for 'K1' is the base case. Somewhat interestingly, we
+-- return 'undefined' as the actual value for 'Field'. This is fine to do
+-- because Copilot never inspects the value in this 'Field', so we can put
+-- whatever value we'd like here.
+instance (c ~ Field name ty) => GTypedStruct (K1 _i c) where
+  gStructPlaceholder = K1 $ Field undefined
