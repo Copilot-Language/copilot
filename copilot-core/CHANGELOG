@@ -1,3 +1,6 @@
+2024-11-13
+        * Define generic implementations of Struct and Typed methods. (#564)
+
 2024-11-07
         * Version bump (4.1). (#561)
         * Add Haddocks for updateField. (#525)
