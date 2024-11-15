@@ -1,3 +1,6 @@
+2024-11-15
+        * Remove uses of Copilot.Core.Expr.UExpr.uExprExpr. (#565)
+
 2024-11-07
         * Version bump (4.1). (#561)
 
