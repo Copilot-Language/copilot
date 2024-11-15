@@ -71,3 +71,4 @@ data UExpr = forall a . Typeable a => UExpr
   { uExprType :: Type a
   , uExprExpr :: Expr a
   }
+{-# DEPRECATED uExprType, uExprExpr "These fields are deprecated in Copilot 4.2. Use pattern matching instead." #-}
