@@ -43,7 +43,7 @@ ppExpr e0 = case e0 of
 --
 -- The type is ignored, and only the expression is pretty-printed.
 ppUExpr :: UExpr -> Doc
-ppUExpr UExpr { uExprExpr = e0 } = ppExpr e0
+ppUExpr (UExpr _ e0) = ppExpr e0
 
 -- | Pretty-print a unary operation.
 ppOp1 :: Op1 a b -> Doc -> Doc
