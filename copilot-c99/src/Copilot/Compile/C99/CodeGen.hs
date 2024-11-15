@@ -279,7 +279,7 @@ mkStep cSettings streams triggers exts =
         aTmpDeclns = zipWith declare args aTempNames
           where
             declare :: UExpr -> C.Ident -> C.Decln
-            declare (UExpr { uExprType = ty }) tmpVar =
+            declare (UExpr ty _) tmpVar =
               C.VarDecln Nothing (transType ty) tmpVar Nothing
 
         triggerCheckStmt :: C.Stmt
@@ -301,7 +301,7 @@ mkStep cSettings streams triggers exts =
                 argAssigns = zipWith3 assign aTempNames aArgNames args
 
                 assign :: C.Ident -> C.Ident -> UExpr -> C.Expr
-                assign aTempName aArgName (UExpr { uExprType = ty }) =
+                assign aTempName aArgName (UExpr ty _) =
                   updateVar aTempName aArgName ty
 
                 aArgNames :: [C.Ident]
@@ -314,7 +314,7 @@ mkStep cSettings streams triggers exts =
                 -- so we also need the type of the expression, which is enclosed
                 -- in the second argument, an UExpr.
                 passArg :: String -> UExpr -> C.Expr
-                passArg aTempName (UExpr { uExprType = ty }) =
+                passArg aTempName (UExpr ty _) =
                   case ty of
                     -- Special case for Struct to pass reference to temporary
                     -- struct variable to handler. (See the comments for
