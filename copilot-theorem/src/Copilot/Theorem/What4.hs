@@ -324,7 +324,7 @@ computeTriggerState sym spec = forM (CS.specTriggers spec) $
          args' <- mapM computeArg args
          return (nm, guard', args')
   where
-   computeArg (CE.UExpr { CE.uExprType = tp, CE.uExprExpr = ex }) = do
+   computeArg (CE.UExpr tp ex) = do
      v <- translateExpr sym mempty ex (RelativeOffset 0)
      return (Some tp, v)
 

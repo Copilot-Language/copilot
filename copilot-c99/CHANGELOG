@@ -1,3 +1,6 @@
+2024-11-14
+        * Remove uses of Copilot.Core.Expr.UExpr.uExprType. (#565)
+
 2024-11-07
         * Version bump (4.1). (#561)
         * Standardize changelog format. (#550)
