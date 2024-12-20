@@ -36,14 +36,17 @@ import Copilot.Core ( Expr (..), Id, Stream (..), Struct (..), Trigger (..),
                       Type (..), UExpr (..), Value (..), fieldName, typeSize )
 
 -- Internal imports
-import Copilot.Compile.C99.Error    ( impossible )
-import Copilot.Compile.C99.Expr     ( constArray, transExpr )
-import Copilot.Compile.C99.External ( External (..) )
-import Copilot.Compile.C99.Name     ( argNames, argTempNames, generatorName,
-                                      guardName, indexName, streamAccessorName,
-                                      streamName )
-import Copilot.Compile.C99.Settings ( CSettings, cSettingsStepFunctionName )
-import Copilot.Compile.C99.Type     ( transType )
+import Copilot.Compile.C99.Error          ( impossible )
+import Copilot.Compile.C99.Expr           ( constArray, transExpr )
+import Copilot.Compile.C99.External       ( External (..) )
+import Copilot.Compile.C99.Name           ( argNames, argTempNames,
+                                            generatorName, guardName,
+                                            indexName, streamAccessorName,
+                                            streamName )
+import Copilot.Compile.C99.Settings       ( CSettings,
+                                            cSettingsStepFunctionName )
+import Copilot.Compile.C99.Type           ( transType )
+import Copilot.Compile.C99.Representation ( UniqueTrigger (..) )
 
 -- * Externs
 
@@ -162,7 +165,7 @@ mkGenFunArray _name _nameArg _expr _ty =
 -- * Monitor processing
 
 -- | Define the step function that updates all streams.
-mkStep :: CSettings -> [Stream] -> [Trigger] -> [External] -> C.FunDef
+mkStep :: CSettings -> [Stream] -> [UniqueTrigger] -> [External] -> C.FunDef
 mkStep cSettings streams triggers exts =
     C.FunDef Nothing void (cSettingsStepFunctionName cSettings) [] declns stmts
   where
@@ -271,8 +274,8 @@ mkStep cSettings streams triggers exts =
     -- 2. Assigning a struct to a temporary variable defensively ensures that
     --    any modifications that the handler called makes to the struct argument
     --    will not affect the internals of the monitoring code.
-    mkTriggerCheck :: Trigger -> ([C.Decln], C.Stmt)
-    mkTriggerCheck (Trigger name _guard args) =
+    mkTriggerCheck :: UniqueTrigger -> ([C.Decln], C.Stmt)
+    mkTriggerCheck (UniqueTrigger uniqueName (Trigger name _guard args)) =
         (aTmpDeclns, triggerCheckStmt)
       where
         aTmpDeclns :: [C.Decln]
@@ -285,12 +288,14 @@ mkStep cSettings streams triggers exts =
         triggerCheckStmt :: C.Stmt
         triggerCheckStmt = C.If guard' fireTrigger
           where
-            guard' = C.Funcall (C.Ident $ guardName name) []
+            guard' = C.Funcall (C.Ident $ guardName uniqueName) []
 
             -- The body of the if-statement. This consists of statements that
             -- assign the values of the temporary variables, following by a
             -- final statement that passes the temporary variables to the
             -- handler function.
+            -- Note that we call 'name' here instead of 'uniqueName', as 'name'
+            -- is the name of the actual external function.
             fireTrigger =  map C.Expr argAssigns
                         ++ [C.Expr $
                                C.Funcall (C.Ident name)
@@ -305,7 +310,7 @@ mkStep cSettings streams triggers exts =
                   updateVar aTempName aArgName ty
 
                 aArgNames :: [C.Ident]
-                aArgNames = take (length args) (argNames name)
+                aArgNames = take (length args) (argNames uniqueName)
 
                 -- Build an expression to pass a temporary variable as argument
                 -- to a trigger handler.
@@ -323,7 +328,7 @@ mkStep cSettings streams triggers exts =
                     _        -> C.Ident aTempName
 
         aTempNames :: [String]
-        aTempNames = take (length args) (argTempNames name)
+        aTempNames = take (length args) (argTempNames uniqueName)
 
 -- * Auxiliary functions
 
