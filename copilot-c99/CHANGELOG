@@ -1,5 +1,6 @@
-2024-11-14
+2024-12-20
         * Remove uses of Copilot.Core.Expr.UExpr.uExprType. (#565)
+        * Allow using same trigger name in multiple declarations. (#296)
 
 2024-11-07
         * Version bump (4.1). (#561)
