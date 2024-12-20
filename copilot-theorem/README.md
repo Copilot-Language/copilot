@@ -44,7 +44,7 @@ Intuitively, a safety property is a property which express the idea that
 disproved by a finite execution trace of the program called a
 **counterexample**. Safety properties are often opposed to **liveness**
 properties, which express the idea that *something good will eventually
-happen*. The latters are out of the scope of *copilot-theorem*.
+happen*. The latter are out of the scope of *copilot-theorem*.
 
 Safety properties are simply expressed with standard boolean streams. In
 addition to triggers and observers declarations, it is possible to bind a
@@ -139,7 +139,7 @@ available:
   into a *state transition system* [1]. Moreover, in order to keep some
   structure in this representation, the variables of this system are grouped by
   *nodes*, each node exporting and importing variables. The *Kind2 prover* uses
-  this format, which can be easily translated into the  native format.
+  this format, which can be easily translated into the native format.
 
 For each of these formats, there is a folder in `src/Copilot/Theorem` which
 contains at least
@@ -388,7 +388,7 @@ the model-checking techniques we are using.
 
 #### Limitations related to Copilot implementation
 
-The reification process used to build the `Core.Spec` object looses many
+The reification process used to build the `Core.Spec` object loses many
 informations about the structure of the original Copilot program. In fact, a
 stream is kept in the reified program only if it is recursively defined.
 Otherwise, all its occurrences will be inlined. Moreover, let's look at the
@@ -487,7 +487,7 @@ forAllCst l f = conj $ map (f . constant) l
 ```
 
 However, this solution isn't completely satisfying because the size of the
-property generated is proportionnal to the cardinal of `allowed`.
+property generated is proportional to the cardinal of `allowed`.
 
 #### Some scalability issues
 
