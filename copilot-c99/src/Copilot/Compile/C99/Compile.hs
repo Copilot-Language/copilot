@@ -47,10 +47,18 @@ import Copilot.Compile.C99.Representation ( UniqueTrigger (..),
 -- The second argument is used as prefix for the .h and .c files generated.
 compileWith :: CSettings -> String -> Spec -> IO ()
 compileWith cSettings prefix spec
-  | null (specTriggers spec)
+  | null triggers
   = do hPutStrLn stderr $
          "Copilot error: attempt at compiling empty specification.\n"
          ++ "You must define at least one trigger to generate C monitors."
+       exitFailure
+
+  | incompatibleTriggers triggers
+  = do hPutStrLn stderr $
+         "Copilot error: attempt at compiling specification with conflicting "
+         ++ "trigger definitions.\n"
+         ++ "Multiple triggers have the same name, but different argument "
+         ++ "types.\n"
        exitFailure
 
   | otherwise
@@ -74,6 +82,24 @@ compileWith cSettings prefix spec
        writeFile (dir </> prefix ++ ".c") $ cMacros ++ cFile
        writeFile (dir </> prefix ++ ".h") hFile
        writeFile (dir </> prefix ++ "_types.h") typeDeclnsFile
+  where
+    triggers = specTriggers spec
+
+    -- Check that two triggers do no conflict, that is: if their names are
+    -- equal, the types of their arguments should be equal as well.
+    incompatibleTriggers :: [Trigger] -> Bool
+    incompatibleTriggers = pairwiseAny conflict
+      where
+        conflict :: Trigger -> Trigger -> Bool
+        conflict t1@(Trigger name1 _ _) t2@(Trigger name2 _ _) =
+          name1 == name2 && not (compareTrigger t1 t2)
+
+        -- True if the function holds for any pair of elements. We assume that
+        -- the function is commutative.
+        pairwiseAny :: (a -> a -> Bool) -> [a] -> Bool
+        pairwiseAny _ []     = False
+        pairwiseAny _ (_:[]) = False
+        pairwiseAny f (x:xs) = any (f x) xs || pairwiseAny f xs
 
 -- | Compile a specification to a .h and a .c file.
 --
