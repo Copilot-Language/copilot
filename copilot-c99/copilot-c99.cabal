@@ -59,6 +59,7 @@ library
                          , Copilot.Compile.C99.External
                          , Copilot.Compile.C99.Compile
                          , Copilot.Compile.C99.Settings
+                         , Copilot.Compile.C99.Representation
 
 test-suite unit-tests
   type:
