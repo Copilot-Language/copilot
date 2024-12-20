@@ -34,6 +34,7 @@ import Copilot.Compile.C99.Settings ( CSettings, cSettingsOutputDirectory,
                                       cSettingsStepFunctionName,
                                       mkDefaultCSettings )
 import Copilot.Compile.C99.Type     ( transType )
+import Copilot.Compile.C99.Representation ( UniqueTrigger (..), mkUniqueTriggers )
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -90,11 +91,12 @@ compileC cSettings spec = C.TransUnit declns funs
     declns =  mkExts exts
            ++ mkGlobals streams
 
-    funs =  mkGenFuns streams triggers
-         ++ [mkStep cSettings streams triggers exts]
+    funs =  mkGenFuns streams uniqueTriggers
+         ++ [mkStep cSettings streams uniqueTriggers exts]
 
     streams  = specStreams spec
     triggers = specTriggers spec
+    uniqueTriggers = mkUniqueTriggers triggers
     exts     = gatherExts streams triggers
 
     -- Make declarations for copies of external variables.
@@ -110,7 +112,7 @@ compileC cSettings spec = C.TransUnit declns funs
         indexDecln (Stream sId _    _ _ ) = mkIndexDecln sId
 
     -- Make generator functions, including trigger arguments.
-    mkGenFuns :: [Stream] -> [Trigger] -> [C.FunDef]
+    mkGenFuns :: [Stream] -> [UniqueTrigger] -> [C.FunDef]
     mkGenFuns streamList triggerList =  map accessDecln streamList
                                      ++ map streamGen streamList
                                      ++ concatMap triggerGen triggerList
@@ -122,11 +124,11 @@ compileC cSettings spec = C.TransUnit declns funs
         streamGen (Stream sId _ expr ty) =
           exprGen (generatorName sId) (generatorOutputArgName sId) expr ty
 
-        triggerGen :: Trigger -> [C.FunDef]
-        triggerGen (Trigger name guard args) = guardDef : argDefs
+        triggerGen :: UniqueTrigger -> [C.FunDef]
+        triggerGen (UniqueTrigger uniqueName (Trigger _name guard args)) = guardDef : argDefs
           where
-            guardDef = mkGenFun (guardName name) guard Bool
-            argDefs  = zipWith argGen (argNames name) args
+            guardDef = mkGenFun (guardName uniqueName) guard Bool
+            argDefs  = zipWith argGen (argNames uniqueName) args
 
             argGen :: String -> UExpr -> C.FunDef
             argGen argName (UExpr ty expr) =
