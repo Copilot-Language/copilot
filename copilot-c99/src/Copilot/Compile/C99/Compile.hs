@@ -6,8 +6,9 @@ module Copilot.Compile.C99.Compile
   ) where
 
 -- External imports
-import           Data.List           ( nub, union )
+import           Data.List           ( nub, nubBy, union )
 import           Data.Maybe          ( mapMaybe )
+import           Data.Type.Equality  ( testEquality, (:~:)(Refl) )
 import           Data.Typeable       ( Typeable )
 import           Language.C99.Pretty ( pretty )
 import qualified Language.C99.Simple as C
@@ -160,7 +161,9 @@ compileH cSettings spec = C.TransUnit declns []
     exprs    = gatherExprs streams triggers
     exts     = gatherExts streams triggers
     streams  = specStreams spec
-    triggers = specTriggers spec
+
+    -- Remove duplicates due to multiple guards for the same trigger.
+    triggers = nubBy compareTrigger (specTriggers spec)
 
     mkStructForwDeclns :: [UExpr] -> [C.Decln]
     mkStructForwDeclns es = mapMaybe mkDecln uTypes
@@ -261,3 +264,21 @@ gatherExprs streams triggers =  map streamUExpr streams
   where
     streamUExpr  (Stream _ _ expr ty)   = UExpr ty expr
     triggerUExpr (Trigger _ guard args) = UExpr Bool guard : args
+
+-- | We consider triggers to be equal, if their names match and the number and
+-- types of arguments.
+compareTrigger :: Trigger -> Trigger -> Bool
+compareTrigger (Trigger name1 _ args1) (Trigger name2 _ args2)
+  = name1 == name2 && compareArguments args1 args2
+
+  where
+    compareArguments :: [UExpr] -> [UExpr] -> Bool
+    compareArguments []     []     = True
+    compareArguments []     _      = False
+    compareArguments _      []     = False
+    compareArguments (x:xs) (y:ys) = compareUExpr x y && compareArguments xs ys
+
+    compareUExpr :: UExpr -> UExpr -> Bool
+    compareUExpr (UExpr ty1 _) (UExpr ty2 _)
+      | Just Refl <- testEquality ty1 ty2 = True
+      | otherwise                         = False
