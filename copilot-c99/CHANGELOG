@@ -1,4 +1,5 @@
-2024-11-14
+2024-12-20
+        * Allow using same trigger name in multiple declarations. (#296)
         * Remove uses of Copilot.Core.Expr.UExpr.uExprType. (#565)
 
 2024-11-07
