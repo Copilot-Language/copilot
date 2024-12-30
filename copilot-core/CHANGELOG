@@ -1,5 +1,6 @@
-2024-11-15
+2024-12-29
         * Deprecate fields of Copilot.Core.Expr.UExpr. (#565)
+        * Increase test coverage. (#555)
 
 2024-11-07
         * Version bump (4.1). (#561)
