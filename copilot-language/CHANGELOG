@@ -1,3 +1,6 @@
+2025-01-02
+        * Bump upper version constraint on containers. (#570)
+
 2024-11-07
         * Version bump (4.1). (#561)
         * Reject duplicate externs in properties and theorems. (#536)
