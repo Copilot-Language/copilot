@@ -1,3 +1,6 @@
+2025-01-02
+        * Bump upper version constraint on filepath. (#570)
+
 2024-11-07
         * Version bump (4.1). (#561)
         * Update contribution guidelines. (#476)
