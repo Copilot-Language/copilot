@@ -6,8 +6,9 @@ module Copilot.Compile.C99.Compile
   ) where
 
 -- External imports
-import           Data.List           ( nub, union )
+import           Data.List           ( nub, nubBy, union )
 import           Data.Maybe          ( mapMaybe )
+import           Data.Type.Equality  ( testEquality, (:~:)(Refl) )
 import           Data.Typeable       ( Typeable )
 import           Language.C99.Pretty ( pretty )
 import qualified Language.C99.Simple as C
@@ -23,17 +24,21 @@ import Copilot.Core ( Expr (..), Spec (..), Stream (..), Struct (..),
                       Value (..) )
 
 -- Internal imports
-import Copilot.Compile.C99.CodeGen  ( mkAccessDecln, mkBuffDecln, mkExtCpyDecln,
-                                      mkExtDecln, mkGenFun, mkGenFunArray,
-                                      mkIndexDecln, mkStep, mkStructDecln,
-                                      mkStructForwDecln )
-import Copilot.Compile.C99.External ( External, gatherExts )
-import Copilot.Compile.C99.Name     ( argNames, generatorName,
-                                      generatorOutputArgName, guardName )
-import Copilot.Compile.C99.Settings ( CSettings, cSettingsOutputDirectory,
-                                      cSettingsStepFunctionName,
-                                      mkDefaultCSettings )
-import Copilot.Compile.C99.Type     ( transType )
+import Copilot.Compile.C99.CodeGen        ( mkAccessDecln, mkBuffDecln,
+                                            mkExtCpyDecln, mkExtDecln,
+                                            mkGenFun, mkGenFunArray,
+                                            mkIndexDecln, mkStep,
+                                            mkStructDecln, mkStructForwDecln )
+import Copilot.Compile.C99.External       ( External, gatherExts )
+import Copilot.Compile.C99.Name           ( argNames, generatorName,
+                                            generatorOutputArgName, guardName )
+import Copilot.Compile.C99.Settings       ( CSettings,
+                                            cSettingsOutputDirectory,
+                                            cSettingsStepFunctionName,
+                                            mkDefaultCSettings )
+import Copilot.Compile.C99.Type           ( transType )
+import Copilot.Compile.C99.Representation ( UniqueTrigger (..),
+                                            mkUniqueTriggers )
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -42,10 +47,18 @@ import Copilot.Compile.C99.Type     ( transType )
 -- The second argument is used as prefix for the .h and .c files generated.
 compileWith :: CSettings -> String -> Spec -> IO ()
 compileWith cSettings prefix spec
-  | null (specTriggers spec)
+  | null triggers
   = do hPutStrLn stderr $
          "Copilot error: attempt at compiling empty specification.\n"
          ++ "You must define at least one trigger to generate C monitors."
+       exitFailure
+
+  | incompatibleTriggers triggers
+  = do hPutStrLn stderr $
+         "Copilot error: attempt at compiling specification with conflicting "
+         ++ "trigger definitions.\n"
+         ++ "Multiple triggers have the same name, but different argument "
+         ++ "types.\n"
        exitFailure
 
   | otherwise
@@ -69,6 +82,24 @@ compileWith cSettings prefix spec
        writeFile (dir </> prefix ++ ".c") $ cMacros ++ cFile
        writeFile (dir </> prefix ++ ".h") hFile
        writeFile (dir </> prefix ++ "_types.h") typeDeclnsFile
+  where
+    triggers = specTriggers spec
+
+    -- Check that two triggers do no conflict, that is: if their names are
+    -- equal, the types of their arguments should be equal as well.
+    incompatibleTriggers :: [Trigger] -> Bool
+    incompatibleTriggers = pairwiseAny conflict
+      where
+        conflict :: Trigger -> Trigger -> Bool
+        conflict t1@(Trigger name1 _ _) t2@(Trigger name2 _ _) =
+          name1 == name2 && not (compareTrigger t1 t2)
+
+        -- True if the function holds for any pair of elements. We assume that
+        -- the function is commutative.
+        pairwiseAny :: (a -> a -> Bool) -> [a] -> Bool
+        pairwiseAny _ []     = False
+        pairwiseAny _ (_:[]) = False
+        pairwiseAny f (x:xs) = any (f x) xs || pairwiseAny f xs
 
 -- | Compile a specification to a .h and a .c file.
 --
@@ -90,12 +121,13 @@ compileC cSettings spec = C.TransUnit declns funs
     declns =  mkExts exts
            ++ mkGlobals streams
 
-    funs =  mkGenFuns streams triggers
-         ++ [mkStep cSettings streams triggers exts]
+    funs =  mkGenFuns streams uniqueTriggers
+         ++ [mkStep cSettings streams uniqueTriggers exts]
 
-    streams  = specStreams spec
-    triggers = specTriggers spec
-    exts     = gatherExts streams triggers
+    streams        = specStreams spec
+    triggers       = specTriggers spec
+    uniqueTriggers = mkUniqueTriggers triggers
+    exts           = gatherExts streams triggers
 
     -- Make declarations for copies of external variables.
     mkExts :: [External] -> [C.Decln]
@@ -110,7 +142,7 @@ compileC cSettings spec = C.TransUnit declns funs
         indexDecln (Stream sId _    _ _ ) = mkIndexDecln sId
 
     -- Make generator functions, including trigger arguments.
-    mkGenFuns :: [Stream] -> [Trigger] -> [C.FunDef]
+    mkGenFuns :: [Stream] -> [UniqueTrigger] -> [C.FunDef]
     mkGenFuns streamList triggerList =  map accessDecln streamList
                                      ++ map streamGen streamList
                                      ++ concatMap triggerGen triggerList
@@ -122,11 +154,11 @@ compileC cSettings spec = C.TransUnit declns funs
         streamGen (Stream sId _ expr ty) =
           exprGen (generatorName sId) (generatorOutputArgName sId) expr ty
 
-        triggerGen :: Trigger -> [C.FunDef]
-        triggerGen (Trigger name guard args) = guardDef : argDefs
+        triggerGen :: UniqueTrigger -> [C.FunDef]
+        triggerGen (UniqueTrigger uniqueName (Trigger _name guard args)) = guardDef : argDefs
           where
-            guardDef = mkGenFun (guardName name) guard Bool
-            argDefs  = zipWith argGen (argNames name) args
+            guardDef = mkGenFun (guardName uniqueName) guard Bool
+            argDefs  = zipWith argGen (argNames uniqueName) args
 
             argGen :: String -> UExpr -> C.FunDef
             argGen argName (UExpr ty expr) =
@@ -155,7 +187,9 @@ compileH cSettings spec = C.TransUnit declns []
     exprs    = gatherExprs streams triggers
     exts     = gatherExts streams triggers
     streams  = specStreams spec
-    triggers = specTriggers spec
+
+    -- Remove duplicates due to multiple guards for the same trigger.
+    triggers = nubBy compareTrigger (specTriggers spec)
 
     mkStructForwDeclns :: [UExpr] -> [C.Decln]
     mkStructForwDeclns es = mapMaybe mkDecln uTypes
@@ -256,3 +290,21 @@ gatherExprs streams triggers =  map streamUExpr streams
   where
     streamUExpr  (Stream _ _ expr ty)   = UExpr ty expr
     triggerUExpr (Trigger _ guard args) = UExpr Bool guard : args
+
+-- | We consider triggers to be equal, if their names match and the number and
+-- types of arguments.
+compareTrigger :: Trigger -> Trigger -> Bool
+compareTrigger (Trigger name1 _ args1) (Trigger name2 _ args2)
+  = name1 == name2 && compareArguments args1 args2
+
+  where
+    compareArguments :: [UExpr] -> [UExpr] -> Bool
+    compareArguments []     []     = True
+    compareArguments []     _      = False
+    compareArguments _      []     = False
+    compareArguments (x:xs) (y:ys) = compareUExpr x y && compareArguments xs ys
+
+    compareUExpr :: UExpr -> UExpr -> Bool
+    compareUExpr (UExpr ty1 _) (UExpr ty2 _)
+      | Just Refl <- testEquality ty1 ty2 = True
+      | otherwise                         = False
