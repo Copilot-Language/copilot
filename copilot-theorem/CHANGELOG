@@ -1,5 +1,6 @@
-2024-11-15
+2025-01-02
         * Remove uses of Copilot.Core.Expr.UExpr.uExprType,uExprExpr. (#565)
+        * Bump upper constraint on containers, data-default. (#570)
 
 2024-11-07
         * Version bump (4.1). (#561)
