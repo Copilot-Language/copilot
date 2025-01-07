@@ -2,28 +2,29 @@
 -- structs and arrays. Particular focus is on nested structs.
 -- For general usage of structs, refer to the general structs example.
 
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
 import qualified Prelude as P
 import Control.Monad (void, forM_)
+import GHC.Generics (Generic)
 
 import Language.Copilot
 import Copilot.Theorem.What4
 
 -- | Definition for `Volts`.
 data Volts = Volts
-  { numVolts :: Field "numVolts" Word16
-  , flag     :: Field "flag"     Bool
-  }
+    { numVolts :: Field "numVolts" Word16
+    , flag     :: Field "flag"     Bool
+    }
+  deriving Generic
 
 -- | `Struct` instance for `Volts`.
 instance Struct Volts where
-  typeName _ = "volts"
-  toValues volts = [ Value Word16 (numVolts volts)
-                   , Value Bool   (flag volts)
-                   ]
+  typeName = typeNameDefault
+  toValues = toValuesDefault
   -- Note that we do not implement `updateField` here. `updateField` is only
   -- needed to make updates to structs work in the Copilot interpreter, and we
   -- do not use the interpreter in this example. (See
@@ -32,29 +33,25 @@ instance Struct Volts where
 
 -- | `Volts` instance for `Typed`.
 instance Typed Volts where
-  typeOf = Struct (Volts (Field 0) (Field False))
+  typeOf = typeOfDefault
 
 data Battery = Battery
-  { temp  :: Field "temp"  Word16
-  , volts :: Field "volts" (Array 10 Volts)
-  , other :: Field "other" (Array 10 (Array 5 Word32))
-  }
+    { temp  :: Field "temp"  Word16
+    , volts :: Field "volts" (Array 10 Volts)
+    , other :: Field "other" (Array 10 (Array 5 Word32))
+    }
+  deriving Generic
 
 -- | `Battery` instance for `Struct`.
 instance Struct Battery where
-  typeName _ = "battery"
-  toValues battery = [ Value typeOf (temp battery)
-                     , Value typeOf (volts battery)
-                     , Value typeOf (other battery)
-                     ]
+  typeName = typeNameDefault
+  toValues = toValuesDefault
   -- Note that we do not implement `updateField` here for the same reasons as in
   -- the `Struct Volts` instance above.
 
--- | `Battery` instance for `Typed`. Note that `undefined` is used as an
--- argument to `Field`. This argument is never used, so `undefined` will never
--- throw an error.
+-- | `Battery` instance for `Typed`.
 instance Typed Battery where
-  typeOf = Struct (Battery (Field 0) (Field undefined) (Field undefined))
+  typeOf = typeOfDefault
 
 spec :: Spec
 spec = do

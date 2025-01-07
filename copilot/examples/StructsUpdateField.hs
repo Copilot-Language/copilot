@@ -3,6 +3,7 @@
 -- copilot-c99.
 
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -13,6 +14,7 @@ import qualified Prelude as P
 import Control.Monad (void, forM_)
 import Data.Proxy (Proxy(..))
 import Data.Type.Equality (TestEquality(..), (:~:)(..))
+import GHC.Generics (Generic)
 import GHC.TypeLits (sameSymbol)
 
 import Language.Copilot
@@ -20,20 +22,22 @@ import Copilot.Compile.C99
 
 -- | Definition for `Volts`.
 data Volts = Volts
-  { numVolts :: Field "numVolts" Word16
-  , flag     :: Field "flag"     Bool
-  }
+    { numVolts :: Field "numVolts" Word16
+    , flag     :: Field "flag"     Bool
+    }
+  deriving Generic
 
 -- | `Struct` instance for `Volts`.
 instance Struct Volts where
-  typeName _ = "volts"
-  toValues volts = [ Value Word16 (numVolts volts)
-                   , Value Bool   (flag volts)
-                   ]
+  typeName = typeNameDefault
+  toValues = toValuesDefault
   -- In order to run struct updates (as used in the "equalityStructUpdate"
   -- trigger below) in the Copilot interpreter, we must implement the
   -- `updateField` method. To do so, we must check to see if the supplied
   -- `Value` has a `Field` with the same name and type as a field in `Volts`.
+  -- (Alternatively, we could define this as @updateField = updateFieldDefault@,
+  -- but we demonstrate how to manually implement it below for educational
+  -- purposes.)
   updateField volts (Value fieldTy (field :: Field fieldName a))
       -- For each field in `Volts`, we must:
       --
@@ -67,23 +71,23 @@ instance Struct Volts where
 
 -- | `Volts` instance for `Typed`.
 instance Typed Volts where
-  typeOf = Struct (Volts (Field 0) (Field False))
+  typeOf = typeOfDefault
 
 data Battery = Battery
-  { temp  :: Field "temp"  Word16
-  , volts :: Field "volts" (Array 10 Volts)
-  , other :: Field "other" (Array 10 (Array 5 Word32))
-  }
+    { temp  :: Field "temp"  Word16
+    , volts :: Field "volts" (Array 10 Volts)
+    , other :: Field "other" (Array 10 (Array 5 Word32))
+    }
+  deriving Generic
 
 -- | `Battery` instance for `Struct`.
 instance Struct Battery where
-  typeName _ = "battery"
-  toValues battery = [ Value typeOf (temp battery)
-                     , Value typeOf (volts battery)
-                     , Value typeOf (other battery)
-                     ]
+  typeName = typeNameDefault
+  toValues = toValuesDefault
   -- We implement `updateField` similarly to how we implement it in the
-  -- `Struct Volts` instance above.
+  -- `Struct Volts` instance above. (Alternatively, we could define this as
+  -- @updateField = updateFieldDefault@, but we demonstrate how to manually
+  -- implement it below for educational purposes.)
   updateField battery (Value fieldTy (field :: Field fieldName a))
     | Just Refl <- sameSymbol (Proxy @fieldName) (Proxy @"temp")
     , Just Refl <- testEquality fieldTy Word16
@@ -103,11 +107,9 @@ instance Struct Battery where
     | otherwise
     = error $ "Unexpected field: " P.++ show field
 
--- | `Battery` instance for `Typed`. Note that `undefined` is used as an
--- argument to `Field`. This argument is never used, so `undefined` will never
--- throw an error.
+-- | `Battery` instance for `Typed`.
 instance Typed Battery where
-  typeOf = Struct (Battery (Field 0) (Field undefined) (Field undefined))
+  typeOf = typeOfDefault
 
 spec :: Spec
 spec = do

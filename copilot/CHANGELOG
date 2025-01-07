@@ -1,5 +1,6 @@
-2025-01-02
+2025-01-06
         * Bump upper version constraint on filepath. (#570)
+        * Update struct examples to use generic method implementations. (#564)
 
 2024-11-07
         * Version bump (4.1). (#561)
