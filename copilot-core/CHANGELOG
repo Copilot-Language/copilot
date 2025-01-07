@@ -1,4 +1,5 @@
-2025-01-06
+2025-01-07
+        * Version bump (4.2). (#577)
         * Deprecate fields of Copilot.Core.Expr.UExpr. (#565)
         * Increase test coverage. (#555)
         * Define generic implementations of Struct and Typed methods. (#564)
