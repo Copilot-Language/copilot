@@ -1,0 +1,16 @@
+[type.hs]
+extend-glob = []
+extend-ignore-identifiers-re = []
+extend-ignore-words-re = []
+extend-ignore-re = []
+
+[type.hs.extend-identifiers]
+sIy = "sIy"
+vIy = "vIy"
+tre = "tre"
+inh = "inh"
+TypeLits = "TypeLits"
+fof = "fof"
+
+[type.hs.extend-words]
+alse = "alse"
