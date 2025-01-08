@@ -283,7 +283,7 @@ typeTypes ty = case ty of
   _         -> [UType ty]
 
 -- | Collect all expression of a list of streams and triggers and wrap them
--- into an UEXpr.
+-- into an UExpr.
 gatherExprs :: [Stream] -> [Trigger] -> [UExpr]
 gatherExprs streams triggers =  map streamUExpr streams
                              ++ concatMap triggerUExpr triggers
