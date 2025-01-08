@@ -32,7 +32,7 @@ min n s = nfoldl1 n smallest s
       smallest = \ x y -> mux ( x <= y ) x y
 
 -- | Mean value.  @n@ must not overflow
--- for word size @a@ for streams over which computation is peformed.
+-- for word size @a@ for streams over which computation is performed.
 mean :: ( Typed a, Eq a, Fractional a ) => Int -> Stream a -> Stream a
 mean n s = ( sum n s ) / ( fromIntegral n )
 

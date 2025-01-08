@@ -60,13 +60,13 @@ instance Show AnalyzeException where
   show (DifferentTypes name) = badUsage $
     "The external symbol \'" ++ name ++ "\' has been declared to have two different types!"
   show (Redeclared name) = badUsage $
-    "The external symbol \'" ++ name ++ "\' has been redeclared to be a different symbol (e.g., a variable and an array, or a variable and a funciton symbol, etc.)."
+    "The external symbol \'" ++ name ++ "\' has been redeclared to be a different symbol (e.g., a variable and an array, or a variable and a function symbol, etc.)."
   show (BadNumberOfArgs name) = badUsage $
     "The function symbol \'" ++ name ++ "\' has been redeclared to have different number of arguments."
   show (BadFunctionArgType name) = badUsage $
     "The function symbol \'" ++ name ++ "\' has been redeclared to an argument with different types."
 
--- | 'Exception' instance so we can throw and catch 'AnalyzeExcetion's.
+-- | 'Exception' instance so we can throw and catch 'AnalyzeException's.
 instance Exception AnalyzeException
 
 -- | Max level of recursion supported. Any level above this constant

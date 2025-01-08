@@ -1,6 +1,6 @@
 -- | This example shows an implementation of the Well-Clear Violation
 -- algorithm, it follows the implementation described in 'Analysis of
--- Well-Clear Bounday Models for the Integration of UAS in the NAS',
+-- Well-Clear Boundary Models for the Integration of UAS in the NAS',
 -- https://ntrs.nasa.gov/citations/20140010078.
 
 {-# LANGUAGE DataKinds        #-}

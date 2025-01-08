@@ -9,7 +9,7 @@ module Main where
 import Language.Copilot
 import qualified Prelude as P
 
--- If the majority of the engine temperature probes exeeds 250 degrees, then
+-- If the majority of the engine temperature probes exceeds 250 degrees, then
 -- the cooler is engaged and remains engaged until the majority of the engine
 -- temperature probes drop to 250 or below.  Otherwise, trigger an immediate
 -- shutdown of the engine.

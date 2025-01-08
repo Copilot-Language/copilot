@@ -216,7 +216,7 @@ process* [7] and so we have no way to keep them.
 #### Types
 
 In these three formats, GADTs are used to statically ensure a part of the
-type-corectness of the specification, in the same spirit it is done in the
+type-correctness of the specification, in the same spirit it is done in the
 other Copilot libraries. *copilot-theorem* handles only three types which are
 `Integer`, `Real` and `Bool` and which are handled by the SMTLib standard.
 *copilot-theorem* works with *pure* reals and integers. Thus, it is unsafe in the
@@ -389,9 +389,9 @@ the model-checking techniques we are using.
 #### Limitations related to Copilot implementation
 
 The reification process used to build the `Core.Spec` object looses many
-informations about the structure of the original Copilot program. In fact, a
+information about the structure of the original Copilot program. In fact, a
 stream is kept in the reified program only if it is recursively defined.
-Otherwise, all its occurences will be inlined. Moreover, let's look at the
+Otherwise, all its occurrences will be inlined. Moreover, let's look at the
 `intCounter` function defined in the example `Grey.hs`:
 
 ```haskell
@@ -413,7 +413,7 @@ There are many problems with this:
 * It makes the inputs given to the SMT solvers larger and repetitive.
 
 We can't rewrite the Copilot reification process in order to avoid these
-inconvenients as these informations are lost by GHC itself before it occurs.
+inconvenients as these information are lost by GHC itself before it occurs.
 The only solution we can see would be to use *Template Haskell* to generate
 automatically some structural annotations, which might not be worth the dirt
 introduced.
@@ -423,7 +423,7 @@ introduced.
 ##### Limitations of the IC3 algorithm
 
 The IC3 algorithm was shown to be a very powerful tool for hardware
-certification. However, the problems encountered when verifying softwares are
+certification. However, the problems encountered when verifying software are
 much more complex. For now, very few non-inductive properties can be proved by
 *Kind2* when basic integer arithmetic is involved.
 
@@ -433,7 +433,7 @@ the inductiveness* (CTI) for a property, these techniques are used to find a
 lemma discarding it which is general enough so that all CTIs can be discarded
 in a finite number of steps.
 
-The lemmas found by the current version fo *Kind2* are often too weak. Some
+The lemmas found by the current version of *Kind2* are often too weak. Some
 suggestions to enhance this are presented in [1]. We hope some progress will be
 made in this area in a near future.
 
@@ -487,7 +487,7 @@ forAllCst l f = conj $ map (f . constant) l
 ```
 
 However, this solution isn't completely satisfying because the size of the
-property generated is proportionnal to the cardinal of `allowed`.
+property generated is proportional to the cardinal of `allowed`.
 
 #### Some scalability issues
 
@@ -517,7 +517,7 @@ in the Kind2 SMT solver.
 Counterexamples are not displayed with the Kind2 prover because Kind2 doesn't
 support XML output of counterexamples. If the last feature is provided, it
 should be easy to implement counterexamples displaying in *copilot-theorem*. For
-this, we recommend to keep some informations about *observers* in
+this, we recommend to keep some information about *observers* in
 `TransSys.Spec` and to add one variable per observer in the Kind2 output file.
 
 #### Bad handling of non-linear operators and external functions
@@ -576,12 +576,12 @@ complexity added. It's especially true at the time I write this in the sense
 that:
 
 * Each predicate introduced is used only one time (which is true because
-  copilot doesn't handle functions or parametrized streams like Lustre does and
+  copilot doesn't handle functions or parameterized streams like Lustre does and
   everything is inlined during the reification process).
 * A similar form of structure could be obtained from a flattened Kind2 native
   input file with some basic static analysis by producing a dependency graph
   between variables.
-* For now, the *Kind2* model-checker ignores these structure informations.
+* For now, the *Kind2* model-checker ignores these structure information.
 
 However, the current code offers some nice transformation tools (node merging,
 `Renaming` monad...) which could be useful if you intend to write a tool for

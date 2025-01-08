@@ -106,7 +106,7 @@ data ExecTrace = ExecTrace
 
 -- We could write this in a beautiful lazy style like above, but that creates a
 -- space leak in the interpreter that is hard to fix while maintaining laziness.
--- We take a more brute-force appraoch below.
+-- We take a more brute-force approach below.
 
 -- | Evaluate a specification for a number of steps.
 eval :: ShowType   -- ^ Show booleans as @0@\/@1@ (C) or @True@\/@False@

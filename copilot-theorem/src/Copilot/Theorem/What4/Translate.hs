@@ -479,7 +479,7 @@ translateOp1 sym origExpr op xe = case (op, xe) of
       recip fiRepr e = do
         one <- fpLit fiRepr 1.0
         WFP.iFloatDiv @_ @fi sym fpRM one e
-  -- The argument should not cause the result to overflow or underlow
+  -- The argument should not cause the result to overflow or underflow
   (CE.Exp _, xe) -> liftIO $ fpSpecialOp WSF.Exp xe
   -- The argument should not be less than -0
   (CE.Sqrt _, xe) ->

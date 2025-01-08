@@ -266,10 +266,10 @@ complete spec =
                 -- To get readable names, we don't prefix variables
                 -- which come from merged nodes as they are already
                 -- decorated
-                let preferedName
+                let preferredName
                      | head ncNodeIdSep `elem` n' = v
                      | otherwise = n' `prefix` v
-                alias <- getFreshName [preferedName, n' `prefix` v]
+                alias <- getFreshName [preferredName, n' `prefix` v]
                 return $ Bimap.tryInsert alias ev acc
 
           foldM tryImport (nodeImportedVars n) toImportVars

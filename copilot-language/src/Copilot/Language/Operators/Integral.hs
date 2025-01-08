@@ -46,4 +46,4 @@ x `mod` y = Op2 (Core.Mod typeOf) x y
 (Const x) ^ (Const y)  = Const (x P.^ y)
 (Const 2) ^ y          = (Const 1) .<<. y
 x ^ (Const y)          = foldl' ((P.*)) (Const 1) (replicate (P.fromIntegral y) x)
-_ ^ _                  = Err.badUsage "in ^: in x ^ y, either x must be the constant 2, or y must be a constant.  (Do not confuse ^ with bitwise XOR (.^.) or with ** for exponentation of floats/doubles.)"
+_ ^ _                  = Err.badUsage "in ^: in x ^ y, either x must be the constant 2, or y must be a constant.  (Do not confuse ^ with bitwise XOR (.^.) or with ** for exponentiation of floats/doubles.)"

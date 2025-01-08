@@ -267,7 +267,7 @@ mkStep cSettings streams triggers exts =
     --
     -- We create temporary variables because:
     --
-    -- 1. We want to pass structs by reference intead of by value. To this end,
+    -- 1. We want to pass structs by reference instead of by value. To this end,
     --    we use C's & operator to obtain a reference to a temporary variable
     --    of a struct type and pass that to the handler function.
     --
