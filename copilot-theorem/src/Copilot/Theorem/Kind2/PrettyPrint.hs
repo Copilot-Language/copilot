@@ -9,7 +9,7 @@ import Copilot.Theorem.Kind2.AST
 
 import Data.List (intercalate)
 
--- | A tree of expressions, in which the leafs are strings.
+-- | A tree of expressions, in which the leaves are strings.
 type SSExpr = SExpr String
 
 -- | Reserved keyword prime.

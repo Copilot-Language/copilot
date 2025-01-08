@@ -74,11 +74,11 @@ data Node = Node
                                            --   its local name.
   , nodeConstrs       :: [Expr Bool] }
 
--- | Identifer of a variable in the local (within one node) namespace.
+-- | Identifier of a variable in the local (within one node) namespace.
 data Var      =  Var {varName :: String}
   deriving (Eq, Show, Ord)
 
--- | Identifer of a variable in the global namespace by specifying both a node
+-- | Identifier of a variable in the global namespace by specifying both a node
 -- name and a variable.
 data ExtVar   =  ExtVar {extVarNode :: NodeId, extVarLocalPart :: Var }
   deriving (Eq, Ord)
@@ -115,7 +115,7 @@ foldExpr f expr = f expr <> fargs
 foldUExpr :: (Monoid m) => (forall t . Expr t -> m) -> U Expr -> m
 foldUExpr f (U e) = foldExpr f e
 
--- | Apply an arbitrary transformation to the leafs of an expression.
+-- | Apply an arbitrary transformation to the leaves of an expression.
 transformExpr :: (forall a . Expr a -> Expr a) -> Expr t -> Expr t
 transformExpr f = tre
   where
@@ -126,7 +126,7 @@ transformExpr f = tre
     tre e                 = f e
 
 -- | The set of variables related to a node (union of the local variables and
--- the imported variables after deferencing them).
+-- the imported variables after dereferencing them).
 nodeVarsSet :: Node -> Set Var
 nodeVarsSet = liftA2 Set.union
   nodeLocalVarsSet

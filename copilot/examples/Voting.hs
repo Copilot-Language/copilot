@@ -10,7 +10,7 @@ import Language.Copilot
 
 vote :: Spec
 vote = do
-  -- majority selects element with the biggest occurance.
+  -- majority selects element with the biggest occurrence.
   trigger "maj"  true [arg maj]
 
   -- aMajority checks if the selected element has a majority.

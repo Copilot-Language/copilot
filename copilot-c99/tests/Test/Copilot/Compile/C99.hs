@@ -240,9 +240,9 @@ arbitraryOpBoolBits =
     ]
 
 -- | Generator of functions that take Nums and produce booleans.
-arbitaryOpBoolOrdEqNum :: (Typed a, Eq a, Ord a, Num a)
+arbitraryOpBoolOrdEqNum :: (Typed a, Eq a, Ord a, Num a)
                        => Gen (Fun a Bool, [a] -> [Bool])
-arbitaryOpBoolOrdEqNum =
+arbitraryOpBoolOrdEqNum =
   frequency
     [ (1, funCompose2 <$> arbitraryOp2Eq  <*> arbitraryOpNum <*> arbitraryOpNum)
     , (1, funCompose2 <$> arbitraryOp2Ord <*> arbitraryOpNum <*> arbitraryOpNum)
@@ -379,7 +379,7 @@ arbitraryOpIntegralBool = frequency
 
     -- we need to use +1 because certain operations overflow the number
   , (2, mkTestCase1
-          arbitaryOpBoolOrdEqNum
+          arbitraryOpBoolOrdEqNum
           (chooseBoundedIntegral (minBound + 1, maxBound)))
   ]
 

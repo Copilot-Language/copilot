@@ -3,7 +3,7 @@
 -- | This is a simple example for arrays. As a program, it does not make much
 -- sense, however it shows of the features of arrays nicely.
 
--- | Enable compiler extension for type-level data, necesary for the array
+-- | Enable compiler extension for type-level data, necessary for the array
 -- length.
 
 {-# LANGUAGE DataKinds        #-}

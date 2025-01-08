@@ -69,7 +69,7 @@ testProveZ3False =
     spec :: Spec
     spec = propSpec propName $ Const typeOf False
 
--- | Test that Z3 is able to prove the following expresion valid:
+-- | Test that Z3 is able to prove the following expression valid:
 -- @
 --   for all (x :: Int8), constant x == constant x
 -- @
@@ -84,7 +84,7 @@ testProveZ3EqConst = forAll arbitrary $ \x ->
     spec x = propSpec propName $
       Op2 (Eq typeOf) (Const typeOf x) (Const typeOf x)
 
--- | Test that Z3 is able to prove the following expresion valid:
+-- | Test that Z3 is able to prove the following expression valid:
 -- @
 --   for all (s :: MyStruct),
 --   ((s ## testField =$ (+1)) # testField) == ((s # testField) + 1)

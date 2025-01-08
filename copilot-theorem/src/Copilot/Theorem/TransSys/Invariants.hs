@@ -8,7 +8,7 @@ module Copilot.Theorem.TransSys.Invariants
   , prop
   ) where
 
--- | Type class for types with additional invariants or contraints.
+-- | Type class for types with additional invariants or constraints.
 class HasInvariants a where
 
   invariants :: a -> [(String, Bool)]

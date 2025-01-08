@@ -16,7 +16,7 @@ import Text.PrettyPrint
 
 import Prelude hiding ((<>))
 
--- | Render an execution trace as a table, formatted to faciliate readability.
+-- | Render an execution trace as a table, formatted to facilitate readability.
 renderAsTable :: ExecTrace -> String
 renderAsTable
   ExecTrace
@@ -112,7 +112,7 @@ pad :: Int -> Int -> a -> [a] -> [a]
 pad lx max b ls = ls ++ replicate (max - lx) b
 
 -- | Pad a list of strings on the right with spaces.
-pad' :: Int      -- ^ Mininum number of spaces to add
+pad' :: Int      -- ^ Minimum number of spaces to add
      -> Int      -- ^ Maximum number of spaces to add
      -> [[Doc]]  -- ^ List of documents to pad
      -> [[Doc]]
