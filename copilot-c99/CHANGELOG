@@ -1,4 +1,5 @@
-2025-01-02
+2025-01-07
+        * Version bump (4.2). (#577)
         * Remove uses of Copilot.Core.Expr.UExpr.uExprType. (#565)
         * Allow using same trigger name in multiple declarations. (#296)
         * Bump upper version constraint on filepath. (#570)
