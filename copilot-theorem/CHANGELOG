@@ -1,3 +1,6 @@
+2025-01-25
+        * Fix multiple typos in README. (#560)
+
 2025-01-07
         * Version bump (4.2). (#577)
         * Remove uses of Copilot.Core.Expr.UExpr.uExprType,uExprExpr. (#565)
