@@ -4,7 +4,7 @@
 
 Highly automated proof techniques are a necessary step for the widespread
 adoption of formal methods in the software industry. Moreover, it could provide
-a partial answer to one of its main issue which is scalability.
+a partial answer to one of its main issues, which is scalability.
 
 *copilot-theorem* is a Copilot library aimed at checking automatically some safety
 properties on Copilot programs. It includes:
@@ -17,9 +17,9 @@ properties on Copilot programs. It includes:
   proving basic k-inductive properties and for pedagogical purposes.
 
 * A prover producing native inputs for the *Kind2* model checker, developed at
-  University of Iowa. The latter uses both the *k-induction algorithm* extended
-  with *path compression* and *structural abstraction* [2] and the **IC3
-  algorithm** with counterexample generalization based on *approximate
+  the University of Iowa. The latter uses both the *k-induction algorithm*
+  extended with *path compression* and *structural abstraction* [2] and the
+  **IC3 algorithm** with counterexample generalization based on *approximate
   quantifier elimination* [3].
 
 ## A Tutorial
@@ -39,12 +39,12 @@ README.
 ### First steps
 
 *copilot-theorem* is aimed at checking **safety properties** on Copilot programs.
-Intuitively, a safety property is a property which express the idea that
+Intuitively, a safety property is a property that expresses the idea that
 *nothing bad can happen*. In particular, any invalid safety property can be
 disproved by a finite execution trace of the program called a
 **counterexample**. Safety properties are often opposed to **liveness**
 properties, which express the idea that *something good will eventually
-happen*. The latters are out of the scope of *copilot-theorem*.
+happen*. The latter is out of the scope of *copilot-theorem*.
 
 Safety properties are simply expressed with standard boolean streams. In
 addition to triggers and observers declarations, it is possible to bind a
@@ -70,7 +70,7 @@ This function takes three arguments:
 * The name of the proposition we want to check.
 * A strategy to prove the proposition.
 
-In this case the proposition is simple enough so that we can check it directly
+In this case, the proposition is simple enough so that we can check it directly
 by k-induction using `kind2Prover`. Therefore we can just write:
 
 ```haskell
@@ -79,14 +79,15 @@ main = do
   prove spec' "gt0" (tell [Check $ kind2Prover def])
 ```
 
-where `kind2Prover def` stands for the *Kind2 prover* with default
+where `kind2Prover def` stands for the *Kind2 prover* with the default
 configuration.
 
 #### The Kind2 prover
 
-The *Kind2* prover uses the model checker with the same name, from Iowa
-university. It translates the Copilot specification into a *modular transition
-system* (the Kind2 native format) and then calls the `kind2` executable.
+The *Kind2* prover uses the model checker with the same name, from the
+University of Iowa. It translates the Copilot specification into a *modular
+transition system* (the Kind2 native format) and then calls the `kind2`
+executable.
 
 It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prover
 :: Options -> Prover` where the `Options` type is defined as
@@ -117,7 +118,7 @@ Some examples are in the *examples* folder, including:
 ### An introduction to SMT-based model checking
 
 An introduction to the model-checking techniques used by *copilot-theorem* can be
-found in the `doc` folder of this repository. It consists in a self sufficient
+found in the `doc` folder of this repository. It consists of a self-sufficient
 set of slides. You can find some additional readings in the *References*
 section.
 
@@ -216,16 +217,16 @@ process* [7] and so we have no way to keep them.
 #### Types
 
 In these three formats, GADTs are used to statically ensure a part of the
-type-corectness of the specification, in the same spirit it is done in the
-other Copilot libraries. *copilot-theorem* handles only three types which are
-`Integer`, `Real` and `Bool` and which are handled by the SMTLib standard.
+type-correctness of the specification, in the same spirit as in
+other Copilot libraries. *copilot-theorem* works with only three types,
+`Integer`, `Real` and `Bool`, all of which SMT-Lib can handle.
 *copilot-theorem* works with *pure* reals and integers. Thus, it is unsafe in the
 sense it ignores integer overflow problems and the loss of precision due to
 floating point arithmetic.
 
 #### The Kind2 prover
 
-The *Kind2 prover* first translates the copilot specification into a *modular
+The *Kind2 prover* first translates the Copilot specification into a *modular
 transition system*. Then, a chain of transformations is applied to this system
 (for instance, in order to remove dependency cycles among nodes). After this,
 the system is translated into the *Kind2 native format* and the `kind2`
@@ -234,7 +235,7 @@ this process.
 
 ##### Modular transition systems
 
-Let's look at the definition of a *modular transition systems*, in the
+Let's look at the definition of a *modular transition system*, in the
 `TransSys.Spec` module:
 
 ```haskell
@@ -295,10 +296,10 @@ types of variables:
 
 ##### The translation process
 
-First, a copilot specification is translated into a modular transition system.
+First, a Copilot specification is translated into a modular transition system.
 This process is defined in the `TransSys.Translate` module. Each stream is
-associated to a node. The most significant task of this translation process is
-to *flatten* the copilot specification so the value of all streams at time *n*
+associated with a node. The most significant task of this translation process is
+to *flatten* the Copilot specification so the value of all streams at time *n*
 only depends on the values of all the streams at time *n - 1*, which is not the
 case in the `Fib` example shown earlier. This is done by a simple program
 transformation which turns this:
@@ -337,13 +338,13 @@ consistent. However, it can't be directly translated into the *Kind2 native
 file format*. Indeed, it is natural to bind each node to a predicate but the
 Kind2 file format requires that each predicate only uses previously defined
 predicates. However, some nodes in our transition system could be mutually
-recursive. Therefore, the goal of the `removeCycles :: Spec -> Spec` function
-defined in `TransSys.Transform` is to remove such dependency cycles.
+recursive. Therefore, the goal of the `removeCycles :: Spec -> Spec` function,
+defined in `TransSys.Transform`, is to remove such dependency cycles.
 
-This function relies on the `mergeNodes :: [NodeId] -> Spec -> Spec` function
-which signature is self-explicit. The latter solves name conflicts by using the
-`Misc.Renaming` monad. Some code complexity has been added so the variable
-names remains as clear as possible after merging two nodes.
+This function relies on the `mergeNodes :: [NodeId] -> Spec -> Spec` function,
+whose signature is self-explicit. The latter solves name conflicts by using the
+`Misc.Renaming` monad. Some code complexity has been added so variable names
+remain as clear as possible after merging two nodes.
 
 The function `removeCycles` computes the strongly connected components of the
 dependency graph and merge each one into a single node. The complexity of this
@@ -354,7 +355,7 @@ merged in most practical cases.
 After the cycles have been removed, it is useful to apply another
 transformation which makes the translation from `TransSys.Spec` to `Kind2.AST`
 easier. This transformation is implemented in the `complete` function. In a
-nutshell, it transforms a system such that
+nutshell, it transforms a system such that:
 
 * If a node depends on another, it imports *all* its variables.
 * The dependency graph is transitive, that is if *A* depends of *B* which
@@ -374,7 +375,7 @@ inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
 
 which discards all the structure of a *modular transition system* and turns it
 into a *non-modular transition system* with only one node. In fact, when
-translating a copilot specification to a kind2 file, two styles are available:
+translating a Copilot specification to a Kind2 file, two styles are available:
 the `Kind2.toKind2` function takes a `Style` argument which can take the value
 `Inlined` or `Modular`. The only difference is that in the first case, a call
 to `removeCycles` is replaced by a call to `inline`.
@@ -382,17 +383,17 @@ to `removeCycles` is replaced by a call to `inline`.
 ### Limitations of copilot-theorem
 
 Now, we will discuss some limitations of the *copilot-theorem* tool. These
-limitations are organized in two categories: the limitations related to the
-Copilot language itself and its implementation, and the limitations related to
-the model-checking techniques we are using.
+limitations are split into two categories: limitations related to the Copilot
+language itself and its implementation, and limitations related to the
+model-checking techniques we are using.
 
 #### Limitations related to Copilot implementation
 
-The reification process used to build the `Core.Spec` object looses many
-informations about the structure of the original Copilot program. In fact, a
-stream is kept in the reified program only if it is recursively defined.
-Otherwise, all its occurences will be inlined. Moreover, let's look at the
-`intCounter` function defined in the example `Grey.hs`:
+The reification process used to build the `Core.Spec` object loses information
+about the structure of the original Copilot program. In fact, a stream is kept
+in the reified program only if it is recursively defined.  Otherwise, all its
+occurrences will be inlined. Moreover, let's look at the `intCounter` function
+defined in the example `Grey.hs`:
 
 ```haskell
 intCounter :: Stream Bool -> Stream Word64
@@ -413,8 +414,8 @@ There are many problems with this:
 * It makes the inputs given to the SMT solvers larger and repetitive.
 
 We can't rewrite the Copilot reification process in order to avoid these
-inconvenients as these informations are lost by GHC itself before it occurs.
-The only solution we can see would be to use *Template Haskell* to generate
+inconveniences as this information is lost by GHC itself before it occurs. The
+only solution we can see would be to use *Template Haskell* to generate
 automatically some structural annotations, which might not be worth the dirt
 introduced.
 
@@ -423,7 +424,7 @@ introduced.
 ##### Limitations of the IC3 algorithm
 
 The IC3 algorithm was shown to be a very powerful tool for hardware
-certification. However, the problems encountered when verifying softwares are
+certification. However, the problems encountered when verifying software are
 much more complex. For now, very few non-inductive properties can be proved by
 *Kind2* when basic integer arithmetic is involved.
 
@@ -433,32 +434,32 @@ the inductiveness* (CTI) for a property, these techniques are used to find a
 lemma discarding it which is general enough so that all CTIs can be discarded
 in a finite number of steps.
 
-The lemmas found by the current version fo *Kind2* are often too weak. Some
+The lemmas found by the current version of *Kind2* are often too weak. Some
 suggestions to enhance this are presented in [1]. We hope some progress will be
-made in this area in a near future.
+made in this area in the near future.
 
-A workaround to this problem would be to write kind of an interactive mode
-where the user is invited to provide some additional lemmas when automatic
-techniques fail. Another solution would be to make the properties being checked
+A workaround to this problem would be to write an interactive mode where the
+user is invited to provide some additional lemmas when automatic techniques
+fail. Another solution would be to make the properties being checked
 quasi-inductive by hand. In this case, *copilot-theorem* is still a useful tool
 (especially for finding bugs) but the verification of a program can be long and
-requires a high level of technicity.
+requires a high level of technical knowledge.
 
 ##### Limitations related to the SMT solvers
 
-The use of SMT solvers introduces two kind of limitations:
+The use of SMT solvers introduces two kinds of limitations:
 
 1. We are limited by the computing power needed by the SMT solvers
 2. SMT solvers can't handle quantifiers efficiently
 
 Let's consider the first point. SMT solving is costly and its performances are
 sometimes unpredictable. For instance, when running the `SerialBoyerMoore`
-example with the *k-induction prover*, Yices2 does not terminate. However, the *z3*
+example with the *k-induction prover*, Yices2 does not terminate. However, the *Z3*
 SMT solver used by *Kind2* solves the problem instantaneously. Note that this
 performance gap is not due to the use of the IC3 algorithm because the property
 to check is inductive. It could be related to the fact the SMT problem produced
 by the *k-induction prover* uses uninterpreted functions for encoding streams instead
-of simple integer variables, which is the case when the copilot program is
+of simple integer variables, which is the case when the Copilot program is
 translated into a transition system. However, this wouldn't explain why the
 *k-induction prover* still terminates instantaneously on the `BoyerMoore` example,
 which seems not simpler by far.
@@ -472,10 +473,10 @@ property. This fact could be used to enhance the proof scheme system (see the
 *Future work* section). However, this trick is not always possible. For
 instance, in the `SerialBoyerMoore` example, the property being checked should
 be quantified over all integer constants. Here, we can't just introduce an
-arbitrary constant stream because it is the quantified property which is
+arbitrary constant stream because it is the quantified property that is
 inductive and not the property specialized for a given constant stream. That's
-why we have no other solution than replacing universal quantification by
-*bounded* universal quantification by assuming all the elements of the input
+why we have no other solution than replacing universal quantification with
+*bounded* universal quantification, assuming all the elements of the input
 stream are in the finite list `allowed` and using the function `forAllCst`:
 
 ```haskell
@@ -487,13 +488,13 @@ forAllCst l f = conj $ map (f . constant) l
 ```
 
 However, this solution isn't completely satisfying because the size of the
-property generated is proportionnal to the cardinal of `allowed`.
+property generated is proportional to the length of `allowed`.
 
 #### Some scalability issues
 
-A standard way to prove large programs is to rely on its logical structure by
-writing a specification for each of its functions. This very natural approach
-is hard to follow in our case because of
+A standard way to prove large programs is to rely on their logical structure,
+by writing a specification for each of their functions. This very natural
+approach is hard to follow in our case due to:
 
 * The difficulty to deal with universal quantification.
 * The lack of *true* functions in Copilot: the latter offers metaprogramming
@@ -503,7 +504,7 @@ is hard to follow in our case because of
 
 Once again, *copilot-theorem* is still a very useful tool, especially for
 debugging purposes. However, we don't think it is adapted to write and check a
-complete specification for large scale programs.
+complete specification for large-scale programs.
 
 ## Future work
 
@@ -512,19 +513,19 @@ complete specification for large scale programs.
 These features are not currently provided due to the lack of important features
 in the Kind2 SMT solver.
 
-#### Counterexamples displaying
+#### Displaying counterexamples
 
 Counterexamples are not displayed with the Kind2 prover because Kind2 doesn't
 support XML output of counterexamples. If the last feature is provided, it
-should be easy to implement counterexamples displaying in *copilot-theorem*. For
-this, we recommend to keep some informations about *observers* in
+should be easy to implement displaying of counterexamples in *copilot-theorem*.
+For this, we recommend keeping some information about *observers* in
 `TransSys.Spec` and to add one variable per observer in the Kind2 output file.
 
 #### Bad handling of non-linear operators and external functions
 
 Non-linear Copilot operators and external functions are poorly handled because
-of the lack of support of uninterpreted functions in the Kind2 native format. A
-good way to handle these would be to use uninterpreted functions. With this
+of the lack of support for uninterpreted functions in the Kind2 native format.
+A good way to handle these would be to use uninterpreted functions. With this
 solution, properties like
 ```haskell
 2 * sin x + 1 <= 3
@@ -533,7 +534,7 @@ with `x` any stream can't be proven but at least the following can be proved
 ```haskell
 let y = x in sin x == sin y
 ```
-Currently, the *Kind2 prover* fail with the last example, as the results of
+Currently, the *Kind2 prover* fails with the last example, as the results of
 unknown functions are turned into fresh unconstrained variables.
 
 ### Simple extensions
@@ -542,7 +543,7 @@ The following extensions would be really simple to implement given the current
 architecture of Kind2.
 
 + If inductive proving of a property fails, giving the user a concrete CTI
-  (*Counterexample To The Inductiveness*, see the [1]).
+  (*Counterexample To The Inductiveness*, see [1]).
 
 + Use Template Haskell to declare automatically some observers with the same
   names used in the original program.
@@ -559,29 +560,29 @@ architecture of Kind2.
 
   - Declare assumptions and invariants next to the associated code instead of
     gathering all properties in a single place.
-  - Declare a frequent code pattern which should be factorized in the
-    transition problem (see the section about Copilot limitations)
+  - Declare a frequent code pattern that can be factorized in the transition
+    problem (see the section about Copilot limitations)
 
 ## FAQ
 
-### Why does the code related to transition systems look so complex ?
+### Why does the code related to transition systems look so complex?
 
-It is true the code of `TransSys` is quite complex. In fact, it would be really
-straightforward to produce a flattened transition system and then a Kind2 file
-with just a single *top* predicate. In fact, It would be as easy as producing
-an *IL* specification.
+It is true that the code of `TransSys` is quite complex. In fact, it would be
+really straightforward to produce a flattened transition system and then a
+Kind2 file with just a single *top* predicate. In fact, It would be as easy as
+producing an *IL* specification.
 
 To be honest, I'm not sure producing a modular *Kind2* output is worth the
 complexity added. It's especially true at the time I write this in the sense
 that:
 
 * Each predicate introduced is used only one time (which is true because
-  copilot doesn't handle functions or parametrized streams like Lustre does and
-  everything is inlined during the reification process).
+  Copilot doesn't handle functions or parameterized streams like Lustre does
+  and everything is inlined during the reification process).
 * A similar form of structure could be obtained from a flattened Kind2 native
   input file with some basic static analysis by producing a dependency graph
   between variables.
-* For now, the *Kind2* model-checker ignores these structure informations.
+* For now, the *Kind2* model-checker ignores these structures.
 
 However, the current code offers some nice transformation tools (node merging,
 `Renaming` monad...) which could be useful if you intend to write a tool for
