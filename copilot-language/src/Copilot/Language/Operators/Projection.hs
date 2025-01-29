@@ -23,7 +23,7 @@ infixl 8 =$
 -- | Common interface to manipulate portions of a larger data structure.
 --
 -- A projectable d s t means that it is possible to manipulate a sub-element s
--- of type t carried in a stream of type d..
+-- of type t carried in a stream of type d.
 class Projectable d s t | d s -> t where
 
   -- | Unapplied projection or element access on a type.

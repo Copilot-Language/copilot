@@ -1,3 +1,6 @@
+2025-01-28
+        * Fix typo in documentation. (#587)
+
 2025-01-07
         * Version bump (4.2). (#577)
         * Bump upper version constraint on containers. (#570)

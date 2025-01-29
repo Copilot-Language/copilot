@@ -31,7 +31,7 @@ singleton a  = List [Atom a]        -- (s)
 list = List                 -- (ss)
 
 -- | Sequence of expressions with a root or main note, and a series of
--- additional expressions or arguments..
+-- additional expressions or arguments.
 node a l = List (Atom a : l)    -- (s ss)
 
 -- A straightforward string representation for 'SExpr's of Strings that
