@@ -1,3 +1,6 @@
+2025-02-28
+        * Update pretty-printing to handle Props. (#254)
+
 2025-01-07
         * Version bump (4.2). (#577)
         * Remove uses of Copilot.Core.Expr.UExpr.uExprExpr. (#565)
