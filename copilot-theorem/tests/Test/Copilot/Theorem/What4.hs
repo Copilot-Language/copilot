@@ -251,7 +251,7 @@ checkCounterExample solver propName spec cexPred = do
 -- contains the given streams, and is defined by the given boolean expression.
 propSpec :: String -> [Stream] -> Expr Bool -> Spec
 propSpec propName propStreams propExpr =
-  Spec propStreams [] [] [Copilot.Property propName propExpr]
+  Spec propStreams [] [] [Copilot.Property propName (Copilot.Forall propExpr)]
 
 -- | Equality for 'SatResult'.
 --

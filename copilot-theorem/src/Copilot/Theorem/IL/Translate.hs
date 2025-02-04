@@ -63,8 +63,13 @@ translate' b (C.Spec {C.specStreams, C.specProperties}) = runTrans b $ do
   localConstraints <- popLocalConstraints
   properties <- Map.fromList <$>
     forM specProperties
-      (\(C.Property {C.propertyName, C.propertyExpr}) -> do
-        e' <- expr propertyExpr
+      (\(C.Property {C.propertyName, C.propertyProp}) -> do
+        -- Soundness note: it is OK to call `extractProp` here to drop the
+        -- quantifier from the proposition `propertyProp`. This is because we
+        -- IL translation always occurs within the context of a function that
+        -- returns a `Proof`, and these `Proof` functions are always careful to
+        -- use `Prover`s that respect the propositions's quantifier.
+        e' <- expr (C.extractProp propertyProp)
         propConds <- popLocalConstraints
         return (propertyName, (propConds, e')))
 
