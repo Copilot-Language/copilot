@@ -1,5 +1,6 @@
-2025-01-28
+2025-02-28
         * Fix typo in documentation. (#587)
+        * Record how a Property's underlying proposition is quantified. (#254)
 
 2025-01-07
         * Version bump (4.2). (#577)
