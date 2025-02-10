@@ -1,6 +1,7 @@
-2025-01-28
+2025-02-24
         * Fix multiple typos in README. (#560)
         * Fix typo in documentation. (#587)
+        * Add function to produce counterexamples for invalid properties. (#589)
 
 2025-01-07
         * Version bump (4.2). (#577)
