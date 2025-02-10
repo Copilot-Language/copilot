@@ -45,9 +45,10 @@ module Copilot.Theorem.What4
   , XExpr(..)
   ) where
 
-import qualified Copilot.Core.Expr as CE
-import qualified Copilot.Core.Spec as CS
-import qualified Copilot.Core.Type as CT
+import qualified Copilot.Core.Expr       as CE
+import qualified Copilot.Core.Spec       as CS
+import qualified Copilot.Core.Type       as CT
+import qualified Copilot.Core.Type.Array as CTA
 
 import qualified What4.Config                   as WC
 import qualified What4.Expr.Builder             as WB
@@ -66,6 +67,7 @@ import qualified Data.Map as Map
 import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
+import qualified Data.Parameterized.Vector as V
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import LibBF (BigFloat, bfToDouble, pattern NearEven)
 import qualified Panic as Panic
@@ -387,10 +389,14 @@ expectedBool :: forall m sym a.
 expectedBool what xe =
   panic [what ++ " expected to have boolean result", show xe]
 
-data CopilotValue a = CopilotValue { cvType :: CT.Type a
-                                   , cvVal :: a
-                                   }
+-- | A Copilot value paired with its 'CT.Type'.
+data CopilotValue a where
+  CopilotValue :: CT.Typed a => CT.Type a -> a -> CopilotValue a
 
+-- | Convert a symbolic 'XExpr' into a concrete 'CopilotValue'.
+--
+-- Struct values are not currently supported, so attempting to convert an
+-- 'XStruct' value will raise an error.
 valFromExpr :: forall sym t st fm.
                ( sym ~ WB.ExprBuilder t st (WB.Flags fm)
                , WI.KnownRepr WB.FloatModeRepr fm
@@ -420,7 +426,23 @@ valFromExpr ge xe = case xe of
                        (fst . bfToDouble NearEven)
                        fromRational
                        (castWord64ToDouble . fromInteger . BV.asUnsigned)
-  _ -> error "valFromExpr unhandled case"
+  XEmptyArray tp ->
+    pure $ Some $ CopilotValue (CT.Array @0 tp) (CTA.array [])
+  XArray es -> do
+    (someCVs :: V.Vector n (Some CopilotValue)) <- traverse (valFromExpr ge) es
+    (Some (CopilotValue headTp _headVal), _) <- pure $ V.uncons someCVs
+    cvs <-
+      traverse
+        (\(Some (CopilotValue tp val)) ->
+          case tp `testEquality` headTp of
+            Just Refl -> pure val
+            Nothing -> panic [ "XArray with mismatched element types"
+                             , show tp
+                             , show headTp
+                             ])
+        someCVs
+    pure $ Some $ CopilotValue (CT.Array @n headTp) (CTA.array (V.toList cvs))
+  XStruct _ -> error "valFromExpr: Structs not currently handled"
   where
     fromBV :: forall a w . Num a => BV.BV w -> a
     fromBV = fromInteger . BV.asUnsigned
