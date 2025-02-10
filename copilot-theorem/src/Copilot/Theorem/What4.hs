@@ -69,6 +69,7 @@ import qualified Data.BitVector.Sized as BV
 import Data.Foldable (foldrM)
 import Data.List (genericLength)
 import qualified Data.Map as Map
+import Data.Parameterized.Classes (ShowF)
 import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
@@ -100,6 +101,7 @@ data SatResult = Valid | Invalid | Unknown
 -- each property in a spec. This is largely the same as 'SatResult', except that
 -- 'InvalidCex' also records a 'CounterExample'.
 data SatResultCex = ValidCex | InvalidCex CounterExample | UnknownCex
+  deriving Show
 
 -- | Concrete values that cause a property in a Copilot specification to be
 -- invalid. As a simple example, consider the following spec:
@@ -218,38 +220,42 @@ data SatResultCex = ValidCex | InvalidCex CounterExample | UnknownCex
 -- Be aware that counterexamples involving struct values are not currently
 -- supported.
 data CounterExample = CounterExample
-  { -- | A list of base cases in the proof, where each entry in the list
-    -- corresponds to a particular time step. For instance, the first element
-    -- in the list corresponds to the initial time step, the second element in
-    -- the list corresponds to the second time step, and so on. A 'False' entry
-    -- anywhere in this list will cause the overall proof to be 'InvalidCex'.
-    --
-    -- Because the proof uses @k@-induction, the number of base cases (i.e., the
-    -- number of entries in this list) is equal to the value of @k@, which is
-    -- chosen using heuristics.
-    baseCases :: [Bool]
-    -- | Whether the induction step of the proof was valid or not. That is,
-    -- given an arbitrary time step @n@, if the property is assumed to hold at
-    -- time steps @n@, @n+1@, ..., @n+k@, then this will be @True@ is the
-    -- property can the be proven to hold at time step @n+k+1@ (and 'False'
-    -- otherwise). If this is 'False', then the overall proof will be
-    -- 'InvalidCex'.
-  , inductionStep :: Bool
-    -- | The concrete values in the Copilot specification's extern streams that
-    -- lead to the property being invalid.
-    --
-    -- Each key in the 'Map.Map' is the 'CE.Name' of an extern stream paired
-    -- with a 'StreamOffset' representing the time step. The key's corresponding
-    -- value is the concrete value of the extern stream at that time step.
-  , concreteExternValues :: Map.Map (CE.Name, StreamOffset) (Some CopilotValue)
-    -- | The concrete values in the Copilot specification's streams (excluding
-    -- extern streams) that lead to the property being invalid.
-    --
-    -- Each key in the 'Map.Map' is the 'CE.Id' of a stream paired with a
-    -- 'StreamOffset' representing the time step. The key's corresponding value
-    -- is the concrete value of the extern stream at that time step.
-  , concreteStreamValues :: Map.Map (CE.Id, StreamOffset) (Some CopilotValue)
-  }
+    { -- | A list of base cases in the proof, where each entry in the list
+      -- corresponds to a particular time step. For instance, the first element
+      -- in the list corresponds to the initial time step, the second element
+      -- in the list corresponds to the second time step, and so on. A 'False'
+      -- entry anywhere in this list will cause the overall proof to be
+      -- 'InvalidCex'.
+      --
+      -- Because the proof uses @k@-induction, the number of base cases (i.e.,
+      -- the number of entries in this list) is equal to the value of @k@,
+      -- which is chosen using heuristics.
+      baseCases :: [Bool]
+      -- | Whether the induction step of the proof was valid or not. That is,
+      -- given an arbitrary time step @n@, if the property is assumed to hold
+      -- at time steps @n@, @n+1@, ..., @n+k@, then this will be @True@ is the
+      -- property can the be proven to hold at time step @n+k+1@ (and 'False'
+      -- otherwise). If this is 'False', then the overall proof will be
+      -- 'InvalidCex'.
+    , inductionStep :: Bool
+      -- | The concrete values in the Copilot specification's extern streams
+      -- that lead to the property being invalid.
+      --
+      -- Each key in the 'Map.Map' is the 'CE.Name' of an extern stream paired
+      -- with a 'StreamOffset' representing the time step. The key's
+      -- corresponding value is the concrete value of the extern stream at that
+      -- time step.
+    , concreteExternValues ::
+        Map.Map (CE.Name, StreamOffset) (Some CopilotValue)
+      -- | The concrete values in the Copilot specification's streams
+      -- (excluding extern streams) that lead to the property being invalid.
+      --
+      -- Each key in the 'Map.Map' is the 'CE.Id' of a stream paired with a
+      -- 'StreamOffset' representing the time step. The key's corresponding
+      -- value is the concrete value of the extern stream at that time step.
+    , concreteStreamValues :: Map.Map (CE.Id, StreamOffset) (Some CopilotValue)
+    }
+  deriving Show
 
 -- | Attempt to prove all of the properties in a spec via an SMT solver (which
 -- must be installed locally on the host). Return an association list mapping
@@ -623,6 +629,24 @@ expectedBool what xe =
 -- | A Copilot value paired with its 'CT.Type'.
 data CopilotValue a where
   CopilotValue :: CT.Typed a => CT.Type a -> a -> CopilotValue a
+
+instance Show (CopilotValue a) where
+  showsPrec p (CopilotValue ty val) =
+    case ty of
+      CT.Bool      -> showsPrec p val
+      CT.Int8      -> showsPrec p val
+      CT.Int16     -> showsPrec p val
+      CT.Int32     -> showsPrec p val
+      CT.Int64     -> showsPrec p val
+      CT.Word8     -> showsPrec p val
+      CT.Word16    -> showsPrec p val
+      CT.Word32    -> showsPrec p val
+      CT.Word64    -> showsPrec p val
+      CT.Float     -> showsPrec p val
+      CT.Double    -> showsPrec p val
+      CT.Array {}  -> showsPrec p val
+      CT.Struct {} -> showsPrec p val
+instance ShowF CopilotValue
 
 -- | Convert a symbolic 'XExpr' into a concrete 'CopilotValue'.
 --
