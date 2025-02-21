@@ -65,7 +65,7 @@ trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
     preds = map (trNode spec predCallsGraph) (specNodes spec)
     props = map trProp $
       filter ((`elem` checkedProps) . fst) $
-      Map.toList (specProps spec)
+        Map.toList $ Map.map fst $ specProps spec
 
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)
@@ -98,7 +98,7 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
 
     vars =
       let bindings   = nodeImportedVars (specTopNode spec)
-          toExtVar a = fromJust $ Map.lookup a (specProps spec)
+          toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
           toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
       in map (varName . toTopVar . toExtVar) assumptions
 

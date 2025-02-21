@@ -24,6 +24,8 @@ module Copilot.Theorem.TransSys.Spec
   , specDependenciesGraph
   , specTopNode ) where
 
+import qualified Copilot.Core as C
+
 import Copilot.Theorem.TransSys.Type
 import Copilot.Theorem.TransSys.Operators
 import Copilot.Theorem.TransSys.Invariants
@@ -55,7 +57,7 @@ type PropId = String
 data TransSys = TransSys
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
-  , specProps         :: Map PropId ExtVar }
+  , specProps         :: Map PropId (ExtVar, C.Prop) }
 
 -- | A node is a set of variables living in a local namespace and corresponding
 -- to the 'Var' type.

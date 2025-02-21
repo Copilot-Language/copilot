@@ -27,7 +27,8 @@ pSpec spec = items $$ props
     items = foldr (($$) . pNode) empty (specNodes spec)
     props = text "PROPS" $$
       Map.foldrWithKey (\k -> ($$) . pProp k)
-        empty (specProps spec)
+        empty
+        (Map.map fst (specProps spec))
 
 pProp pId extvar = quotes (text pId) <+> text "is" <+> pExtVar extvar
 

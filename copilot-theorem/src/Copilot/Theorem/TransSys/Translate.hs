@@ -96,10 +96,12 @@ translate cspec =
     cprops :: [C.Property]
     cprops = C.specProperties cspec
 
-    propBindings :: Map PropId ExtVar
+    propBindings :: Map PropId (ExtVar, C.Prop)
     propBindings = Map.fromList $ do
-      pid <- map C.propertyName cprops
-      return (pid, mkExtVar topNodeId pid)
+      cprop <- cprops
+      let pid  = C.propertyName cprop
+          prop = C.propertyProp cprop
+      return (pid, (mkExtVar topNodeId pid, prop))
 
     ((modelNodes, propNodes), extvarNodesNames) = runTrans $
       liftM2 (,) (mapM stream (C.specStreams cspec)) (mkPropNodes cprops)
