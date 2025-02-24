@@ -19,10 +19,12 @@ import Copilot.Theorem.Misc.Utils (openTempFile)
 
 import System.Process
 
-import System.Directory
-import Data.Default
+import           System.Directory
+import           Data.Default
+import qualified Data.Map         as Map
 
-import qualified Copilot.Theorem.TransSys as TS
+import qualified Copilot.Theorem.Misc.Error as Err
+import qualified Copilot.Theorem.TransSys   as TS
 
 -- | Options for Kind2
 data Options = Options
@@ -68,4 +70,12 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
   putStrLn kind2Input
 
   removeFile tempName
-  return $ parseOutput (head toCheck) output
+
+  let propId         = head toCheck
+      propQuantifier = case Map.lookup propId (TS.specProps spec) of
+                         Just (_, quantifier) ->
+                           quantifier
+                         Nothing ->
+                           Err.impossible $
+                             "askKind2: " ++ propId ++ " not in specProps"
+  return $ parseOutput propId propQuantifier output

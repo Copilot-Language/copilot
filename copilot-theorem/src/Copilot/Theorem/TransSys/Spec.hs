@@ -53,7 +53,8 @@ type NodeId = String
 type PropId = String
 
 -- | A modular transition system is defined by a graph of nodes and a series
--- of properties, each mapped to a variable.
+-- of properties, each mapped to a variable and a 'C.Prop' describing how the
+-- property is quantified.
 data TransSys = TransSys
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
