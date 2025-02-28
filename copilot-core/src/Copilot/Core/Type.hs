@@ -5,6 +5,7 @@
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE StandaloneDeriving        #-}
 {-# LANGUAGE Trustworthy               #-}
 {-# LANGUAGE TypeApplications          #-}
 {-# LANGUAGE TypeOperators             #-}
@@ -154,6 +155,7 @@ data Type :: * -> * where
                          , Typed t
                          ) => Type t -> Type (Array n t)
   Struct :: (Typed a, Struct a) => a -> Type a
+deriving instance Show (Type a)
 
 -- | Return the length of an array from its type
 typeLength :: forall n t . KnownNat n => Type (Array n t) -> Int

@@ -1,5 +1,6 @@
-2025-01-28
+2025-02-24
         * Fix typo in documentation. (#587)
+        * Add a Show instance for Type. (#589)
 
 2025-01-07
         * Version bump (4.2). (#577)

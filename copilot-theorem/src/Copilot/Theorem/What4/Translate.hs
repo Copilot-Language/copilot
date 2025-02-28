@@ -56,7 +56,7 @@ import           Data.Parameterized.NatRepr     (LeqProof (..), NatCases (..),
                                                  intValue, isZeroOrGT1,
                                                  knownNat, minusPlusCancel,
                                                  mkNatRepr, testNatCases,
-                                                 testStrictLeq)
+                                                 testStrictLeq, withKnownNat)
 import           Data.Parameterized.Some        (Some (..))
 import           Data.Parameterized.SymbolRepr  (SymbolRepr, knownSymbol)
 import qualified Data.Parameterized.Vector      as V
@@ -370,10 +370,10 @@ translateConstExpr sym tp a = case tp of
     elts <- traverse (translateConstExpr sym tp) (CT.arrayElems a)
     Some n <- return $ mkNatRepr (genericLength elts)
     case isZeroOrGT1 n of
-      Left Refl -> return XEmptyArray
+      Left Refl -> return $ XEmptyArray tp
       Right LeqProof -> do
         let Just v = V.fromList n elts
-        return $ XArray v
+        return $ withKnownNat n $ XArray v
   CT.Struct _ -> do
     elts <- forM (CT.toValues a) $ \(CT.Value tp (CT.Field a)) ->
       translateConstExpr sym tp a
@@ -409,7 +409,7 @@ freshCPConstant sym nm tp = case tp of
   atp@(CT.Array itp) -> do
     let n = arrayLen atp
     case isZeroOrGT1 n of
-      Left Refl -> return XEmptyArray
+      Left Refl -> return $ XEmptyArray itp
       Right LeqProof -> do
         Refl <- return $ minusPlusCancel n (knownNat @1)
         elts :: V.Vector n (XExpr t) <-
@@ -1281,7 +1281,13 @@ mkIte sym pred xe1 xe2 = case (xe1, xe2) of
     XDouble <$> WFP.iFloatIte @_ @WFP.DoubleFloat sym pred e1 e2
   (XStruct xes1, XStruct xes2) ->
     XStruct <$> zipWithM (mkIte sym pred) xes1 xes2
-  (XEmptyArray, XEmptyArray) -> return XEmptyArray
+  (XEmptyArray tp1, XEmptyArray tp2) ->
+    case tp1 `testEquality` tp2 of
+      Just Refl -> return (XEmptyArray tp1)
+      Nothing -> panic [ "Element type mismatch in ite"
+                       , show tp1
+                       , show tp2
+                       ]
   (XArray xes1, XArray xes2) ->
     case V.length xes1 `testEquality` V.length xes2 of
       Just Refl -> XArray <$> V.zipWithM (mkIte sym pred) xes1 xes2
@@ -1438,25 +1444,34 @@ data XExpr sym where
                    sym
                    (WFP.SymInterpretedFloatType sym WFP.DoubleFloat)
               -> XExpr sym
-  XEmptyArray :: XExpr sym
-  XArray      :: 1 <= n => V.Vector n (XExpr sym) -> XExpr sym
+
+  -- | An empty array. The 'CT.Typed' constraint and accompanying 'CT.Type'
+  -- field are necessary in order to record evidence that the array type can be
+  -- used in a context where 'CT.Typed' is required.
+  XEmptyArray :: CT.Typed t => CT.Type t -> XExpr sym
+
+  -- | A non-empty array. The 'KnownNat' constraint is necessary in order to
+  -- record evidence that the array type can be used in a context for 'CT.Typed'
+  -- is required.
+  XArray      :: (KnownNat n, 1 <= n) => V.Vector n (XExpr sym) -> XExpr sym
+
   XStruct     :: [XExpr sym] -> XExpr sym
 
 instance WI.IsExprBuilder sym => Show (XExpr sym) where
-  show (XBool e)    = "XBool " ++ show (WI.printSymExpr e)
-  show (XInt8 e)    = "XInt8 " ++ show (WI.printSymExpr e)
-  show (XInt16 e)   = "XInt16 " ++ show (WI.printSymExpr e)
-  show (XInt32 e)   = "XInt32 " ++ show (WI.printSymExpr e)
-  show (XInt64 e)   = "XInt64 " ++ show (WI.printSymExpr e)
-  show (XWord8 e)   = "XWord8 " ++ show (WI.printSymExpr e)
-  show (XWord16 e)  = "XWord16 " ++ show (WI.printSymExpr e)
-  show (XWord32 e)  = "XWord32 " ++ show (WI.printSymExpr e)
-  show (XWord64 e)  = "XWord64 " ++ show (WI.printSymExpr e)
-  show (XFloat e)   = "XFloat " ++ show (WI.printSymExpr e)
-  show (XDouble e)  = "XDouble " ++ show (WI.printSymExpr e)
-  show XEmptyArray  = "[]"
-  show (XArray vs)  = showList (V.toList vs) ""
-  show (XStruct xs) = "XStruct " ++ showList xs ""
+  show (XBool e)       = "XBool " ++ show (WI.printSymExpr e)
+  show (XInt8 e)       = "XInt8 " ++ show (WI.printSymExpr e)
+  show (XInt16 e)      = "XInt16 " ++ show (WI.printSymExpr e)
+  show (XInt32 e)      = "XInt32 " ++ show (WI.printSymExpr e)
+  show (XInt64 e)      = "XInt64 " ++ show (WI.printSymExpr e)
+  show (XWord8 e)      = "XWord8 " ++ show (WI.printSymExpr e)
+  show (XWord16 e)     = "XWord16 " ++ show (WI.printSymExpr e)
+  show (XWord32 e)     = "XWord32 " ++ show (WI.printSymExpr e)
+  show (XWord64 e)     = "XWord64 " ++ show (WI.printSymExpr e)
+  show (XFloat e)      = "XFloat " ++ show (WI.printSymExpr e)
+  show (XDouble e)     = "XDouble " ++ show (WI.printSymExpr e)
+  show (XEmptyArray _) = "[]"
+  show (XArray vs)     = showList (V.toList vs) ""
+  show (XStruct xs)    = "XStruct " ++ showList xs ""
 
 -- * Stream offsets
 
