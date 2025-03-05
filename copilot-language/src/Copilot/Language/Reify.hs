@@ -4,6 +4,7 @@
 -- specification.
 
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE Safe                      #-}
 
@@ -105,11 +106,22 @@ mkProperty
   -> IORef [Core.Stream]
   -> Property
   -> IO Core.Property
-mkProperty refMkId refStreams refMap (Property name guard) = do
-  w1 <- mkExpr refMkId refStreams refMap guard
+mkProperty refMkId refStreams refMap (Property name p) = do
+  p' <- mkProp refMkId refStreams refMap p
   return Core.Property
     { Core.propertyName  = name
-    , Core.propertyExpr  = w1 }
+    , Core.propertyProp  = p' }
+
+-- | Transform a Copilot proposition into a Copilot Core proposition.
+mkProp :: IORef Int
+       -> IORef (Map Core.Id)
+       -> IORef [Core.Stream]
+       -> Prop a
+       -> IO Core.Prop
+mkProp refMkId refStreams refMap prop =
+  case prop of
+    Forall e -> Core.Forall <$> mkExpr refMkId refStreams refMap e
+    Exists e -> Core.Exists <$> mkExpr refMkId refStreams refMap e
 
 -- | Transform a Copilot stream expression into a Copilot Core expression.
 {-# INLINE mkExpr #-}

@@ -153,7 +153,7 @@ trigger name e args = tell [TriggerItem $ Trigger name e args]
 -- | A property, representing a boolean stream that is existentially or
 -- universally quantified over time.
 data Property where
-  Property :: String -> Stream Bool -> Property
+  Property :: String -> Prop a -> Property
 
 -- | A proposition, representing the quantification of a boolean streams over
 -- time.
@@ -170,6 +170,12 @@ exists :: Stream Bool -> Prop Existential
 exists = Exists
 
 -- | Extract the underlying stream from a quantified proposition.
+--
+-- Think carefully before using this function, as this function will remove the
+-- quantifier from a proposition. Universally quantified streams usually require
+-- separate treatment from existentially quantified ones, so carelessly using
+-- this function to remove quantifiers can result in hard-to-spot soundness
+-- bugs.
 extractProp :: Prop a -> Stream Bool
 extractProp (Forall p) = p
 extractProp (Exists p) = p
@@ -180,7 +186,7 @@ extractProp (Exists p) = p
 -- This function returns, in the monadic context, a reference to the
 -- proposition.
 prop :: String -> Prop a -> Writer [SpecItem] (PropRef a)
-prop name e = tell [PropertyItem $ Property name (extractProp e)]
+prop name e = tell [PropertyItem $ Property name e]
   >> return (PropRef name)
 
 -- | A theorem, or proposition together with a proof.
@@ -188,7 +194,7 @@ prop name e = tell [PropertyItem $ Property name (extractProp e)]
 -- This function returns, in the monadic context, a reference to the
 -- proposition.
 theorem :: String -> Prop a -> Proof a -> Writer [SpecItem] (PropRef a)
-theorem name e (Proof p) = tell [TheoremItem (Property name (extractProp e), p)]
+theorem name e (Proof p) = tell [TheoremItem (Property name e, p)]
   >> return (PropRef name)
 
 -- | Construct a function argument from a stream.
