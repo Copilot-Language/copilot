@@ -350,9 +350,10 @@ proveInternal solver spec k = do
   -- This process performs k-induction where we use @k = maxBufLen@.
   -- The choice for @k@ is heuristic, but often effective.
   let proveProperties = forM (CS.specProperties spec) $ \pr -> do
+        let prop = CS.extractProp (CS.propertyProp pr)
         -- State the base cases for k induction.
         base_cases <- forM [0 .. maxBufLen - 1] $ \i -> do
-          xe <- translateExpr sym mempty (CS.propertyExpr pr) (AbsoluteOffset i)
+          xe <- translateExpr sym mempty prop (AbsoluteOffset i)
           case xe of
             XBool p -> return p
             _ -> expectedBool "Property" xe
@@ -360,7 +361,7 @@ proveInternal solver spec k = do
         -- Translate the induction hypothesis for all values up to maxBufLen in
         -- the past
         ind_hyps <- forM [0 .. maxBufLen-1] $ \i -> do
-          xe <- translateExpr sym mempty (CS.propertyExpr pr) (RelativeOffset i)
+          xe <- translateExpr sym mempty prop (RelativeOffset i)
           case xe of
             XBool hyp -> return hyp
             _ -> expectedBool "Property" xe
@@ -369,7 +370,7 @@ proveInternal solver spec k = do
         ind_goal <- do
           xe <- translateExpr sym
                               mempty
-                              (CS.propertyExpr pr)
+                              prop
                               (RelativeOffset maxBufLen)
           case xe of
             XBool p -> return p
@@ -599,7 +600,7 @@ computeAssumptions sym properties spec =
     -- user-provided property assumptions.
     specPropertyExprs :: [CE.Expr Bool]
     specPropertyExprs =
-      [ CS.propertyExpr p
+      [ CS.extractProp (CS.propertyProp p)
       | p <- CS.specProperties spec
       , elem (CS.propertyName p) properties
       ]
