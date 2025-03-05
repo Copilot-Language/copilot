@@ -112,7 +112,8 @@ Once the compiler is installed, install Copilot from
 [Hackage](https://hackage.haskell.org/package/copilot) with:
 
 ```sh
-cabal v2-install --lib copilot
+cabal v2-install --lib copilot copilot-core copilot-c99 copilot-language \
+    copilot-theorem copilot-libraries copilot-interpreter copilot-prettyprinter
 ```
 
 To test that Copilot is available, execute the following:
@@ -141,7 +142,8 @@ Once the compiler is installed, install Copilot from
 [Hackage](https://hackage.haskell.org/package/copilot) with:
 
 ```sh
-$ cabal v2-install --lib copilot
+$ cabal v2-install --lib copilot copilot-core copilot-c99 copilot-language \
+    copilot-theorem copilot-libraries copilot-interpreter copilot-prettyprinter
 ```
 
 To test that Copilot is available, execute the following:
