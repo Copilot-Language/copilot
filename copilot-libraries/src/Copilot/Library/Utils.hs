@@ -13,10 +13,10 @@ module Copilot.Library.Utils
          -- ** Scans
          nscanl, nscanr, nscanl1, nscanr1,
          -- ** Indexing
-         case', (!!), (!!!))
+         case', (!!!))
 where
 
-import Copilot.Language hiding ((!!))
+import Copilot.Language
 import qualified Prelude as P
 
 -- | Given a stream, produce an infinite list of streams dropping an increasing
@@ -130,13 +130,6 @@ case' predicates alternatives =
                    P.++ "length of alternatives list is not "
                    P.++ "greater by one than the length of predicates list"
   in case'' predicates alternatives
-
--- | Index.
---
--- WARNING: Very expensive! Consider using this only for very short lists.
-(!!) :: (Typed a, Eq b, Num b, Typed b) => [Stream a] -> Stream b -> Stream a
-(!!) = (!!!)
-{-# DEPRECATED (!!) "This function is deprecated in Copilot 4. Use (!!!)." #-}
 
 -- | Index.
 --
