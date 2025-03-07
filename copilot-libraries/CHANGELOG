@@ -1,3 +1,6 @@
+2025-03-07
+        * Remove deprecated function Copilot.Library.Utils.(!!). (#599)
+
 2025-01-07
         * Version bump (4.2). (#577)
         * Bump upper version constraint on containers. (#570)
