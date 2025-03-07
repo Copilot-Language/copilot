@@ -175,10 +175,15 @@ ppProperty :: Property -> Doc
 ppProperty
   Property
     { propertyName     = name
-    , propertyExpr     = e }
+    , propertyProp     = p }
   =   text "property \"" <> text name <> text "\""
   <+> text "="
-  <+> ppExpr e
+  <+> ppProp p
+
+-- | Pretty-print a Copilot proposition.
+ppProp :: Prop -> Doc
+ppProp (Forall e) = text "forall" <+> parens (ppExpr e)
+ppProp (Exists e) = text "exists" <+> parens (ppExpr e)
 
 -- | Pretty-print a Copilot specification, in the following order:
 --

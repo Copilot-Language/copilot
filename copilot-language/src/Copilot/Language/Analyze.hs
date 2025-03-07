@@ -110,7 +110,11 @@ analyzeObserver refStreams (Observer _ e) = analyzeExpr refStreams e
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
 analyzeProperty :: IORef Env -> Property -> IO ()
-analyzeProperty refStreams (Property _ e) = analyzeExpr refStreams e
+analyzeProperty refStreams (Property _ p) =
+  -- Soundness note: it is OK to call `extractProp` here to drop the quantifier
+  -- from the proposition `p`, as the analysis does not depend on what the
+  -- quantifier is.
+  analyzeExpr refStreams (extractProp p)
 
 data SeenExtern = NoExtern
                 | SeenFun
@@ -291,7 +295,12 @@ specExts refStreams spec = do
           env' args
 
   propertyExts :: ExternEnv -> Property -> IO ExternEnv
-  propertyExts env (Property _ stream) = collectExts refStreams stream env
+  propertyExts env (Property _ p) =
+    -- Soundness note: it is OK to call `extractProp` here to drop the
+    -- quantifier from the proposition `p`. This is because we are simply
+    -- gathering externs from `p`, and the presence of externs does not depend
+    -- on what the quantifier is.
+    collectExts refStreams (extractProp p) env
 
   theoremExts :: ExternEnv -> (Property, UProof) -> IO ExternEnv
   theoremExts env (p, _) = propertyExts env p

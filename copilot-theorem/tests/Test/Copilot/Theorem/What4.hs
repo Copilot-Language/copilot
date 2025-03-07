@@ -1,4 +1,6 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
 -- The following warning is disabled due to a necessary instance of SatResult
 -- defined in this module.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -6,11 +8,15 @@
 module Test.Copilot.Theorem.What4 where
 
 -- External imports
+import Control.Exception                    (Exception, try)
 import Data.Int                             (Int8)
+import Data.Proxy                           (Proxy (..))
+import Data.Typeable                        (typeRep)
 import Data.Word                            (Word32)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit                           (assertFailure)
+import Test.HUnit                           (Assertion, assertBool,
+                                             assertFailure)
 import Test.QuickCheck                      (Arbitrary (arbitrary), Property,
                                              arbitrary, forAll)
 import Test.QuickCheck.Monadic              (monadicIO, run)
@@ -26,9 +32,9 @@ import           Copilot.Core.Type      (Field (..),
                                          Value (..))
 
 -- Internal imports: Modules being tested
-import Copilot.Theorem.What4 (CounterExample (..), SatResult (..),
-                              SatResultCex (..), Solver (..), prove,
-                              proveWithCounterExample)
+import Copilot.Theorem.What4 (CounterExample (..), ProveException (..),
+                              SatResult (..), SatResultCex (..), Solver (..),
+                              prove, proveWithCounterExample)
 
 -- * Constants
 
@@ -42,6 +48,7 @@ tests =
     , testProperty "Prove via Z3 that a struct update is valid" testProveZ3StructUpdate
     , testProperty "Counterexample with invalid base case" testCounterExampleBaseCase
     , testProperty "Counterexample with invalid induction step" testCounterExampleInductionStep
+    , testProperty "Check that the What4 backend rejects existential quantification" testWhat4ExistsException
     ]
 
 -- * Individual tests
@@ -58,7 +65,7 @@ testProveZ3True =
     propName = "prop"
 
     spec :: Spec
-    spec = propSpec propName [] $ Const typeOf True
+    spec = forallPropSpec propName [] $ Const typeOf True
 
 -- | Test that Z3 is able to prove the following expression invalid:
 -- @
@@ -72,7 +79,7 @@ testProveZ3False =
     propName = "prop"
 
     spec :: Spec
-    spec = propSpec propName [] $ Const typeOf False
+    spec = forallPropSpec propName [] $ Const typeOf False
 
 -- | Test that Z3 is able to prove the following expresion valid:
 -- @
@@ -86,7 +93,7 @@ testProveZ3EqConst = forAll arbitrary $ \x ->
     propName = "prop"
 
     spec :: Int8 -> Spec
-    spec x = propSpec propName [] $
+    spec x = forallPropSpec propName [] $
       Op2 (Eq typeOf) (Const typeOf x) (Const typeOf x)
 
 -- | Test that Z3 is able to prove the following expresion valid:
@@ -102,7 +109,7 @@ testProveZ3StructUpdate = forAll arbitrary $ \x ->
     propName = "prop"
 
     spec :: TestStruct -> Spec
-    spec s = propSpec propName [] $
+    spec s = forallPropSpec propName [] $
       Op2
         (Eq typeOf)
         (getField
@@ -151,7 +158,7 @@ testCounterExampleBaseCase =
     sId = 0
 
     spec :: Spec
-    spec = propSpec propName [s] $ Drop typeOf 0 sId
+    spec = forallPropSpec propName [s] $ Drop typeOf 0 sId
 
 -- | Test that Z3 is able to produce a counterexample to the following property,
 -- where the induction step is proved invalid:
@@ -183,7 +190,23 @@ testCounterExampleInductionStep =
     sId = 0
 
     spec :: Spec
-    spec = propSpec propName [s] $ Drop typeOf 0 sId
+    spec = forallPropSpec propName [s] $ Drop typeOf 0 sId
+
+-- | Test that @copilot-theorem@'s @what4@ backend will throw an exception if it
+-- attempts to prove an existentially quantified proposition.
+testWhat4ExistsException :: Property
+testWhat4ExistsException =
+    monadicIO $ run $
+      checkException (prove Z3 spec) isUnexpectedExistentialProposition
+  where
+    isUnexpectedExistentialProposition :: ProveException -> Bool
+    isUnexpectedExistentialProposition UnexpectedExistentialProposition = True
+
+    propName :: String
+    propName = "prop"
+
+    spec :: Spec
+    spec = existsPropSpec propName [] $ Const typeOf True
 
 -- | A simple data type with a 'Struct' instance and a 'Field'. This is only
 -- used as part of 'testProveZ3StructUpdate'.
@@ -245,13 +268,41 @@ checkCounterExample solver propName spec cexPred = do
     UnknownCex {} ->
       assertFailure "Expected invalid result, but result was unknown"
 
+-- | Check that the given 'IO' action throws a particular exception. This is
+-- largely taken from the implementation of @shouldThrow@ in
+-- @hspec-expectations@ (note that this test suite uses @test-framework@ instead
+-- of @hspec@).
+checkException :: forall e a. Exception e => IO a -> (e -> Bool) -> Assertion
+checkException action p = do
+    r <- try action
+    case r of
+      Right _ ->
+        assertFailure $
+          "did not get expected exception: " ++ exceptionType
+      Left e ->
+        assertBool
+          ("predicate failed on expected exception: " ++ exceptionType ++
+           "\n" ++ show e)
+          (p e)
+  where
+    -- String representation of the expected exception's type
+    exceptionType = show $ typeRep $ Proxy @e
+
 -- * Auxiliary
 
 -- | Build a 'Spec' that contains one property with the given name, which
--- contains the given streams, and is defined by the given boolean expression.
-propSpec :: String -> [Stream] -> Expr Bool -> Spec
-propSpec propName propStreams propExpr =
-  Spec propStreams [] [] [Copilot.Property propName propExpr]
+-- contains the given streams, and is defined by the given boolean expression,
+-- which is universally quantified.
+forallPropSpec :: String -> [Stream] -> Expr Bool -> Spec
+forallPropSpec propName propStreams propExpr =
+  Spec propStreams [] [] [Copilot.Property propName (Copilot.Forall propExpr)]
+
+-- | Build a 'Spec' that contains one property with the given name, which
+-- contains the given streams, and is defined by the given boolean expression,
+-- which is existentially quantified.
+existsPropSpec :: String -> [Stream] -> Expr Bool -> Spec
+existsPropSpec propName propStreams propExpr =
+  Spec propStreams [] [] [Copilot.Property propName (Copilot.Exists propExpr)]
 
 -- | Equality for 'SatResult'.
 --

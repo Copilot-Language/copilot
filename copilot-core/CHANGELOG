@@ -1,6 +1,7 @@
-2025-02-24
+2025-02-28
         * Fix typo in documentation. (#587)
         * Add a Show instance for Type. (#589)
+        * Add a Prop type to capture how a property is quantified. (#254)
 
 2025-01-07
         * Version bump (4.2). (#577)

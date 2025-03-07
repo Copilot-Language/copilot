@@ -1,7 +1,8 @@
-2025-02-24
+2025-02-28
         * Fix multiple typos in README. (#560)
         * Fix typo in documentation. (#587)
         * Add function to produce counterexamples for invalid properties. (#589)
+        * Reject existentially quantified properties in What4 backend. (#254)
 
 2025-01-07
         * Version bump (4.2). (#577)

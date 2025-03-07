@@ -20,6 +20,8 @@ module Copilot.Core.Spec
     , Trigger (..)
     , Spec (..)
     , Property (..)
+    , Prop (..)
+    , extractProp
     )
   where
 
@@ -62,8 +64,25 @@ data Trigger = Trigger
 -- universally quantified over time.
 data Property = Property
   { propertyName :: Name
-  , propertyExpr :: Expr Bool
+  , propertyProp :: Prop
   }
+
+-- | A proposition, representing a boolean stream that is existentially or
+-- universally quantified over time.
+data Prop
+  = Forall (Expr Bool)
+  | Exists (Expr Bool)
+
+-- | Extract the underlying stream from a quantified proposition.
+--
+-- Think carefully before using this function, as this function will remove the
+-- quantifier from a proposition. Universally quantified streams usually require
+-- separate treatment from existentially quantified ones, so carelessly using
+-- this function to remove quantifiers can result in hard-to-spot soundness
+-- bugs.
+extractProp :: Prop -> Expr Bool
+extractProp (Forall e) = e
+extractProp (Exists e) = e
 
 -- | A Copilot specification is a list of streams, together with monitors on
 -- these streams implemented as observers, triggers or properties.
