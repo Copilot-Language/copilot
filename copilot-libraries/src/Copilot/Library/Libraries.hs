@@ -23,6 +23,6 @@ import Copilot.Library.LTL
 import Copilot.Library.PTLTL
 import Copilot.Library.Statistics
 import Copilot.Library.RegExp
-import Copilot.Library.Utils      hiding ((!!))
+import Copilot.Library.Utils
 import Copilot.Library.Voting
 import Copilot.Library.Stacks
