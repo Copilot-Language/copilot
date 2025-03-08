@@ -1,4 +1,5 @@
-2025-03-05
+2025-03-07
+        * Version bump (4.3). (#604)
         * Include missing dependencies in installation instructions. (#591)
         * Update version of GHC in README. (#590)
         * Add example of how to use proveWithCounterExample. (#589)
