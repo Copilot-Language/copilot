@@ -1,4 +1,5 @@
 2025-03-07
+        * Version bump (4.3). (#604)
         * Fix typo in documentation. (#587)
         * Record how a Property's underlying proposition is quantified. (#254)
         * Remove deprecated function Copilot.Language.Operators.Array.(.!!).
