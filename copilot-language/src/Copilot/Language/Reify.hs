@@ -148,8 +148,8 @@ mkExpr refMkId refStreams refMap = go
 
     Drop k e1 -> case e1 of
       Append _ _ _ -> do
-        s <- mkStream refMkId refStreams refMap e1
-        return $ Core.Drop typeOf (fromIntegral k) s
+          s <- mkStream refMkId refStreams refMap e1
+          return $ Core.Drop typeOf (fromIntegral k) s
       _ -> impossible "mkExpr" "copilot-language"
 
     ------------------------------------------------------
