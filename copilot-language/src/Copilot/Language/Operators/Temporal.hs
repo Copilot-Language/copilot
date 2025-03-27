@@ -32,10 +32,10 @@ infixr 1 ++
 -- prepending an equal or greater number of elements to them first, as it
 -- could result in undefined samples.
 drop :: (Typed a) => Int -> Stream a -> Stream a
-drop 0 s = s
+drop 0 s                                = s
 -- Along with simplifying the Stream, this also avoids the invalid C code
 -- generated from append (array) and drop (indexing) when their lengths are the same
-drop i (Append a _ s) | i == length a = s
-drop _ (Const j) = Const j
-drop i (Drop j s) = Drop (fromIntegral i + j) s
-drop i s = Drop (fromIntegral i) s
+drop i ( Append a _ s ) | i == length a = s
+drop _ ( Const j )                      = Const j
+drop i ( Drop  j s )                    = Drop (fromIntegral i + j) s
+drop i s                                = Drop (fromIntegral i)     s
