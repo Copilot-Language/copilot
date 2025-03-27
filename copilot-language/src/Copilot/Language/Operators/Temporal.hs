@@ -1,5 +1,4 @@
 -- Copyright © 2011 National Institute of Aerospace / Galois, Inc.
-
 {-# LANGUAGE Safe #-}
 
 -- | Temporal stream transformations.
@@ -11,7 +10,7 @@ module Copilot.Language.Operators.Temporal
 import Copilot.Core (Typed)
 import Copilot.Language.Prelude
 import Copilot.Language.Stream
-import Prelude ()
+import Prelude ((==))
 
 infixr 1 ++
 
@@ -32,8 +31,11 @@ infixr 1 ++
 -- elements. For most kinds of streams, you cannot drop elements without
 -- prepending an equal or greater number of elements to them first, as it
 -- could result in undefined samples.
-drop :: Typed a => Int -> Stream a -> Stream a
-drop 0 s             = s
-drop _ ( Const j )   = Const j
-drop i ( Drop  j s ) = Drop (fromIntegral i + j) s
-drop i s             = Drop (fromIntegral i)     s
+drop :: (Typed a) => Int -> Stream a -> Stream a
+drop 0 s = s
+-- Along with simplifying the Stream, this also avoids the invalid C code
+-- generated from append (array) and drop (indexing) when their lengths are the same
+drop i (Append a _ s) | i == length a = s
+drop _ (Const j) = Const j
+drop i (Drop j s) = Drop (fromIntegral i + j) s
+drop i s = Drop (fromIntegral i) s
