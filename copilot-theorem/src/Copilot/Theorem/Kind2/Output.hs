@@ -8,19 +8,38 @@ import Text.XML.Light       hiding (findChild)
 import Copilot.Theorem.Prove  as P
 import Data.Maybe           (fromJust)
 
+import qualified Copilot.Core as C
+
 import qualified Copilot.Theorem.Misc.Error as Err
 
 simpleName s = QName s Nothing Nothing
 
 -- | Parse output of Kind2.
 parseOutput :: String    -- ^ Property whose validity is being checked.
+            -> C.Prop    -- ^ The property's quantifier.
             -> String    -- ^ XML output of Kind2
             -> P.Output
-parseOutput prop xml = fromJust $ do
+parseOutput propId propQuantifier xml = fromJust $ do
   root <- parseXMLDoc xml
   case findAnswer . findPropTag $ root of
-    "valid"       -> return (Output Valid   [])
-    "falsifiable" -> return (Output Invalid [])
+    "valid"       -> case propQuantifier of
+                       -- We encode a universally quantified property P as
+                       -- ∀x.P(x) in Kind2, so the original property is valid
+                       -- iff the Kind2 property is valid.
+                       C.Forall {} -> return (Output Valid   [])
+                       -- We encode an existentially quantified property P as
+                       -- ¬(∀x.¬(P(x))) in Kind2, so the original property is
+                       -- invalid iff the Kind2 property is valid.
+                       C.Exists {} -> return (Output Invalid [])
+    "falsifiable" -> case propQuantifier of
+                       -- We encode a universally quantified property P as
+                       -- ∀x.P(x) in Kind2, so the original property is invalid
+                       -- iff the Kind2 property is invalid.
+                       C.Forall {} -> return (Output Invalid [])
+                       -- We encode an existentially quantified property P as
+                       -- ¬(∀x.¬(P(x))) in Kind2, so the original property is
+                       -- valid iff the Kind2 property is invalid.
+                       C.Exists {} -> return (Output Valid   [])
     s             -> err $ "Unrecognized status : " ++ s
 
   where
@@ -31,10 +50,10 @@ parseOutput prop xml = fromJust $ do
       let rightElement elt =
             qName (elName elt) == "Property"
             && lookupAttr (simpleName "name") (elAttribs elt)
-                == Just prop
+                == Just propId
       in case filterChildren rightElement root of
            tag : _ -> tag
-           _ -> err $ "Tag for property " ++ prop ++ " not found"
+           _ -> err $ "Tag for property " ++ propId ++ " not found"
 
     findAnswer tag =
       case findChildren (simpleName "Answer") tag of

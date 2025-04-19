@@ -1,3 +1,6 @@
+2025-04-17
+        * Translate quantifiers correctly in Kind2 backend. (#594)
+
 2025-03-07
         * Version bump (4.3). (#604)
         * Fix multiple typos in README. (#560)

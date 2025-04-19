@@ -42,7 +42,8 @@ mergeNodes toMergeIds spec =
   spec
     { specNodes = newNode :
         map (updateOtherNode newNodeId toMergeIds renamingExtF) otherNodes
-    , specProps = Map.map renamingExtF (specProps spec) }
+    , specProps =
+        Map.map (\(ev, prop) -> (renamingExtF ev, prop)) (specProps spec) }
 
   where
     nodes = specNodes spec

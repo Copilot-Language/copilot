@@ -96,10 +96,12 @@ translate cspec =
     cprops :: [C.Property]
     cprops = C.specProperties cspec
 
-    propBindings :: Map PropId ExtVar
+    propBindings :: Map PropId (ExtVar, C.Prop)
     propBindings = Map.fromList $ do
-      pid <- map C.propertyName cprops
-      return (pid, mkExtVar topNodeId pid)
+      cprop <- cprops
+      let pid  = C.propertyName cprop
+          prop = C.propertyProp cprop
+      return (pid, (mkExtVar topNodeId pid, prop))
 
     ((modelNodes, propNodes), extvarNodesNames) = runTrans $
       liftM2 (,) (mapM stream (C.specStreams cspec)) (mkPropNodes cprops)
@@ -139,7 +141,15 @@ streamOfProp :: C.Property -> C.Stream
 streamOfProp prop =
   C.Stream { C.streamId = 42
            , C.streamBuffer = []
-           , C.streamExpr = C.extractProp (C.propertyProp prop)
+             -- TransSys encodes all properties using universal quantification.
+             -- Therefore, in order to encode an existentially quantified
+             -- property ∃x.P(x), we must first convert it to ¬(∀x.¬(P(x))).
+             -- The `Exists` case below handles the ∀x.¬(P(x)) part by adding
+             -- an `Op1 Not` around the property. The outermost negation is
+             -- handled elsewhere (e.g., in Copilot.Theorem.Kind2.Output.parse).
+           , C.streamExpr = case C.propertyProp prop of
+                              C.Forall p -> p
+                              C.Exists p -> C.Op1 C.Not p
            , C.streamExprType = C.Bool }
 
 stream :: C.Stream -> Trans Node

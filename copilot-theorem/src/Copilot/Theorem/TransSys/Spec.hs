@@ -24,6 +24,8 @@ module Copilot.Theorem.TransSys.Spec
   , specDependenciesGraph
   , specTopNode ) where
 
+import qualified Copilot.Core as C
+
 import Copilot.Theorem.TransSys.Type
 import Copilot.Theorem.TransSys.Operators
 import Copilot.Theorem.TransSys.Invariants
@@ -51,11 +53,12 @@ type NodeId = String
 type PropId = String
 
 -- | A modular transition system is defined by a graph of nodes and a series
--- of properties, each mapped to a variable.
+-- of properties, each mapped to a variable and a 'C.Prop' describing how the
+-- property is quantified.
 data TransSys = TransSys
   { specNodes         :: [Node]
   , specTopNodeId     :: NodeId
-  , specProps         :: Map PropId ExtVar }
+  , specProps         :: Map PropId (ExtVar, C.Prop) }
 
 -- | A node is a set of variables living in a local namespace and corresponding
 -- to the 'Var' type.
