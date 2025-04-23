@@ -289,8 +289,7 @@ instance (Typeable t, Typed t, KnownNat n) => Typed (Array n t) where
   simpleType (Array t) = SArray t
 
 -- | A untyped type (no phantom type).
-data UType = forall a . Typeable a => UType { uTypeType :: Type a }
-{-# DEPRECATED uTypeType "This field is deprecated in Copilot 4.1. Use pattern matching instead." #-}
+data UType = forall a . Typeable a => UType (Type a)
 
 instance Eq UType where
   UType ty1 == UType ty2 = typeRep ty1 == typeRep ty2
