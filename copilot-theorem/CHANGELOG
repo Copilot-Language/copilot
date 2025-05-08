@@ -1,4 +1,5 @@
-2025-04-17
+2025-05-07
+        * Version bump (4.4). (#618)
         * Translate quantifiers correctly in Kind2 backend. (#594)
 
 2025-03-07

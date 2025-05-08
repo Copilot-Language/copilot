@@ -1,3 +1,6 @@
+2025-05-07
+        * Version bump (4.4). (#618)
+
 2025-03-07
         * Version bump (4.3). (#604)
         * Remove deprecated function Copilot.Library.Utils.(!!). (#599)
