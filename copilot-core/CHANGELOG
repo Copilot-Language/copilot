@@ -1,4 +1,5 @@
-2025-04-21
+2025-05-07
+        * Version bump (4.4). (#618)
         * Remove deprecated Copilot.Core.Type.uTypeType. (#615)
 
 2025-03-07
