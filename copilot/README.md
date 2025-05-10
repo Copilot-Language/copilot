@@ -6,10 +6,10 @@
 [![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
 
 Copilot is a runtime verification framework for hard real-time systems.
-Programs can be interpreted for testing, or translated into C99 code to be
-incorporated in a project or standalone application. The C99 code generated
-is constant in memory and time, making it suitable for systems with hard
-real-time requirements.
+Programs can be interpreted for testing, or translated into code to be
+incorporated in a project or standalone application. The C99 and Bluespec code
+generated is constant in memory and time, making it suitable for systems with
+hard real-time requirements.
 
 [Installation](#installation) •
 [Examples](#examples) •
@@ -24,7 +24,8 @@ real-time requirements.
 
 - Write simple, high-level specifications using a stream-based language.
 
-- Produce hard real-time C99 runtime monitors that run in constant memory and time.
+- Produce hard real-time C99 or Bluespec runtime monitors that run in constant
+  memory and time.
 
 - Catch errors in specifications early using expressive static type system.
 
@@ -112,8 +113,9 @@ Once the compiler is installed, install Copilot from
 [Hackage](https://hackage.haskell.org/package/copilot) with:
 
 ```sh
-cabal v2-install --lib copilot copilot-core copilot-c99 copilot-language \
-    copilot-theorem copilot-libraries copilot-interpreter copilot-prettyprinter
+cabal v2-install --lib copilot copilot-bluespec copilot-core copilot-c99 \
+    copilot-language copilot-theorem copilot-libraries copilot-interpreter \
+    copilot-prettyprinter
 ```
 
 To test that Copilot is available, execute the following:
@@ -260,6 +262,7 @@ The API is documented throughout the different libraries and published on
 Hackage:
 
 - [copilot](https://hackage.haskell.org/package/copilot)
+- [copilot-bluespec](https://hackage.haskell.org/package/copilot-bluespec)
 - [copilot-c99](https://hackage.haskell.org/package/copilot-c99)
 - [copilot-core](https://hackage.haskell.org/package/copilot-core)
 - [copilot-interpreter](https://hackage.haskell.org/package/copilot-interpreter)

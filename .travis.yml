@@ -19,9 +19,19 @@ before_install:
   - travis_retry sudo apt-get update
   - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER # see note about happy/alex
 
-  # We install z3 and cppcheck only for the tests, since they are not needed
-  # for normal compilation.
-  - if [ "${GHCVER}" == "8.10.4" ]; then travis_retry sudo apt-get install --yes z3 cppcheck; fi
+  # We install z3, cppcheck, and bsc only for the tests, since they are not
+  # needed for normal compilation.
+  - if [ "${GHCVER}" == "8.10.4" ]; then do
+      # Install z3 and cppcheck
+      travis_retry sudo apt-get install --yes z3 cppcheck;
+      # Install bsc
+      BSC_VERSION="2023.07"
+      BSC_DIR="bsc-${BSC_VERSION}-ubuntu-20.04"
+      wget "https://github.com/B-Lang-org/bsc/releases/download/${BSC_VERSION}/${BSC_DIR}.tar.gz"
+      tar -xzf "${BSC_DIR}.tar.gz"
+      rm "${BSC_DIR}.tar.gz"
+      export PATH="${PWD}/${BSC_DIR}/bin:${PATH}"
+    fi
 
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
   - cabal --version
@@ -33,7 +43,7 @@ script:
   # We explicitly install all libraries so that they are exposed and we can use
   # them for tests (e.g., with runhaskell). There is no harm in doing this
   # instead of installing just copilot.
-  - travis_wait 30 cabal v2-install --lib copilot copilot-core copilot-c99 copilot-language copilot-libraries copilot-theorem copilot-interpreter copilot-prettyprinter
+  - travis_wait 30 cabal v2-install --lib copilot copilot-bluespec copilot-core copilot-c99 copilot-language copilot-libraries copilot-theorem copilot-interpreter copilot-prettyprinter
 
   # Run tests only on GHC 8.10.4
   #
@@ -42,7 +52,7 @@ script:
   # Testing copilot-theorem and copilot-libraries requires z3. See above
   # conditional installation, and keep GHC version numbers in both places in
   # sync.
-  - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-core copilot-language copilot-interpreter copilot-c99 copilot-theorem copilot-libraries; fi
+  - if [ "${GHCVER}" == "8.10.4" ]; then cabal v2-test -j1 copilot-bluespec copilot-core copilot-language copilot-interpreter copilot-c99 copilot-theorem copilot-libraries; fi
 
   # Check that the code produced by Copilot complies with MISRA C 2012. We
   # explicitly make cppcheck produce a non-zero exit code on non-compliance
