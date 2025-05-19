@@ -14,10 +14,10 @@ stability:           Experimental
 description:
   Copilot is a stream-based runtime verification framework implemented as an
   embedded domain-specific language (EDSL) in Haskell. Programs can be
-  interpreted for testing, or translated into C99 code to be incorporated in a
-  project, or as a standalone application. The C99 backend output is constant
-  in memory and time, making it suitable for systems with hard realtime
-  requirements.
+  interpreted for testing, or translated into code to be incorporated in a
+  project, or as a standalone application. The C99 and Bluespec backend output
+  is constant in memory and time, making it suitable for systems with hard
+  realtime requirements.
   .
   This package is the main entry-point for using Copilot.
   .
@@ -52,6 +52,7 @@ library
                      , directory             >= 1.3  && < 1.4
                      , filepath              >= 1.4  && < 1.6
 
+                     , copilot-bluespec      >= 4.4 && < 4.5
                      , copilot-core          >= 4.4 && < 4.5
                      , copilot-theorem       >= 4.4 && < 4.5
                      , copilot-language      >= 4.4 && < 4.5

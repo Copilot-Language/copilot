@@ -1,0 +1,44 @@
+2025-05-18
+        * Include `copilot-bluespec` in mainline `copilot` repo. (#623)
+
+2025-05-08
+        * Version bump (4.4). (copilot-bluespec#43)
+
+2025-05-05
+        * Version bump (4.3.1). (copilot-bluespec#41)
+        * Move Copilot.Compile.Bluespec.External out of shared directory.
+          (copilot-bluespec#36)
+        * Allow building with filepath-1.5.*. (copilot-bluespec#39)
+
+2025-03-10
+        * Version bump (4.3). (copilot-bluespec#34)
+
+2025-01-20
+        * Version bump (4.2). (copilot-bluespec#31)
+        * Implement missing floating-point operations. (copilot-bluespec#28)
+        * Allow using same trigger name in multiple declarations.
+          (copilot-bluespec#30)
+
+2024-11-08
+        * Version bump (4.1). (copilot-bluespec#25)
+
+2024-09-09
+        * Version bump (4.0). (copilot-bluespec#23)
+        * Support translating Copilot array updates to Bluespec.
+          (copilot-bluespec#19)
+
+2024-08-03
+        * Test GHC 9.4 through 9.8. (copilot-bluespec#20)
+
+2024-07-11
+        * Version bump (3.20). (copilot-bluespec#11)
+        * Support translating Copilot struct updates to Bluespec.
+          (copilot-bluespec#10)
+        * Fix a bug in the translation of the signum function.
+          (copilot-bluespec#14)
+        * Fix a bug in the translation of floating-point comparisons.
+          (copilot-bluespec#15)
+
+2024-03-08
+        * Version bump (3.19). (copilot-bluespec#5)
+        * Create new library for Bluespec backend.
