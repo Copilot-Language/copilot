@@ -1,3 +1,6 @@
+2025-05-18
+        * Include `copilot-bluespec` in mainline `copilot` repo. (#623)
+
 2025-05-08
         * Version bump (4.4). (copilot-bluespec#43)
 
