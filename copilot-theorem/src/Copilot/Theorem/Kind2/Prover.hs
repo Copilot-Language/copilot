@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 
 -- | A prover backend based on Kind2.
