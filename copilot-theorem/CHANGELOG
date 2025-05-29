@@ -1,3 +1,6 @@
+2025-05-29
+        * Removed unused pragmas. (#613)
+
 2025-05-07
         * Version bump (4.4). (#618)
         * Translate quantifiers correctly in Kind2 backend. (#594)
