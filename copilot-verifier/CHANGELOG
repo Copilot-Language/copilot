@@ -1,3 +1,6 @@
+2025-06-20
+        * Include `copilot-verifier` in mainline `copilot` repo. (#622)
+
 2025-05-08
         * Version bump (4.4). (copilot-verifier#85)
 
