@@ -1,0 +1,40 @@
+2025-05-08
+        * Version bump (4.4). (#85)
+
+2025-03-10
+        * Version bump (4.3). (#82)
+        * Add `smtSolver` option to `VerifierOptions`. (#78)
+        * Add `smtFloatMode` option to `VerifierOptions`. (#79)
+
+2025-01-20
+        * Version bump (4.2). (#76)
+        * Reject specs that use multiple triggers with the same name. (#74)
+
+2024-11-08
+        * Version bump (4.1). (#72)
+
+2024-09-09
+        * Version bump (4.0). (#69)
+        * Support verifying programs that use array updates. (#63)
+        * Support verifying programs that use struct updates. (#57)
+
+2024-08-03
+        * Support building with `crucible-llvm-0.7` and `crux-llvm-0.9`. (#64)
+        * Support GHC 9.4 through 9.8. (#65)
+
+2024-07-30
+        * When using `Noisy` verbosity, always log proof goals related to the
+          core correspondence proof, even if the goals are trivial. (#51)
+        * When using `Noisy` verbosity, log more information about which proof
+          goals arise before or after calling the `step()` function. (#52)
+
+2024-07-11
+        * Version bump (3.20). (#58)
+
+2024-03-08
+        * Version bump (3.19). (#53)
+        * Provide more detailed feedback upon a successful run of the verifier.
+        * Make the examples build with Copilot 3.19. (#53)
+
+2024-02-06
+        * Initial release of `copilot-verifier`.
