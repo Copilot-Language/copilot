@@ -1,12 +1,6 @@
 2025-05-29
-        * Version bump (4.4.1). (#613)
-        * Removed unused pragma: GeneralizedNewtypeDeriving from 'What4.hs' (#613)
-        * Removed unused pragma: MultiWayIf from 'What4.hs'  (#613)
-        * Removed unused pragma: StandaloneDeriving from 'What4.hs'  (#613)
-        * Removed unused pragma: TemplateHaskell from 'What4.hs'  (#613)
-        * Removed unused pragma: TupleSections from 'What4.hs'  (#613)
-        * Removed unused pragma: LambdaCase from 'Prover.hs' (#613)
-        * Removed unused pragma: LambdaCase from 'SMTIO.hs' (#613)
+        * Removed unused pragma. (#613)
+
 2025-05-07
         * Version bump (4.4). (#618)
         * Translate quantifiers correctly in Kind2 backend. (#594)
