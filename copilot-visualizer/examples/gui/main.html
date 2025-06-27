@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <title>Copilot Visualizer</title>
+
+    <!-- Style sheets -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700" />
+    <link rel="stylesheet" type="text/css" href="./copilot.css"  />
+
+    <!-- Scripts -->
+    <!-- A copilot-specific script is loaded at the end of the body -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <!-- Timeline -->
+    <div id="timeline-parent" style="display: inline-block;" class="ml-4 mt-4" >
+    <svg id="timeline"></svg>
+    </div>
+
+    <!-- Fixed button list under timeline -->
+    <div class="ml-4">
+      <button id="copyPNG">Copy as PNG</button>
+      <button id="copySVG">Copy as SVG</button>
+      <button id="downloadPNG">Save as PNG</button>
+      <button id="downloadSVG">Save as SVG</button>
+      <button id="stepUp">+1 step</button>
+      <button id="stepDown">-1 step</button>
+      <button id="addStream">Add Stream</button>
+    </div>
+
+    <!-- Toggle button for high-contrast mode -->
+    <div class="ml-4 mt-4">
+      <label class="flex items-center text">
+        High-contrast mode
+        <input type="checkbox" class="appearance-none sr-only peer" id="high_contrast" unchecked />
+        <span class="w-12 h-7 flex items-center flex-shrink-0 ml-4 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-5 after:h-5 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-5"></span>
+      </label>
+    </div>
+
+    <!-- Pop up used to query new expressions to simulate -->
+    <div id="popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+        <!-- Label -->
+        <h3 class="text-lg font-semibold mb-4">Enter new stream details</h3>
+
+        <!-- Text boxes -->
+        <input type="text" id="inputName" placeholder="Name" class="w-full p-2 border rounded-md mb-2">
+        <input type="text" id="inputExpr" placeholder="Expression" class="w-full p-2 border rounded-md mb-4">
+
+        <!-- Buttons -->
+        <div class="flex justify-between">
+          <button id="submitPopup" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+            Add
+          </button>
+          <button id="closePopup" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copilot-specific routines -->
+    <script src="./copilot.js"></script>
+  </body>
+</html>

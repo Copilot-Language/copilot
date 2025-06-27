@@ -1,0 +1,37 @@
+{{=<% %>=}}
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikz-timing}
+\usepackage{xcolor}
+\definecolor{false}{HTML}{ECD9ED}
+\definecolor{true}{HTML}{D9ECED}
+\begin{document}
+\newcommand{\true}{T}
+\newcommand{\false}{F}
+\tikzset{
+every picture/.style={
+  execute at end picture={
+    \path (current bounding box.south west) +(-1,-1) (current bounding box.north east) +(1,1);
+    }
+}
+}
+
+\tikzset{
+timing/.style={x=5ex,y=2ex},
+timing/rowdist=4ex,
+timing/dslope=0.1,
+x=5ex,
+timing/coldist=1ex,
+timing/name/.style={font=\sffamily\scriptsize},
+timing/d/text/.style={font=\sffamily\tiny},
+}
+\begin{tikztimingtable}
+<%#adTraceElems%>
+<%teName%> & g<%#teValues%><%#tvIsEmpty%>S<%/tvIsEmpty%><%^tvIsEmpty%><%#teIsBoolean%>[fill=<%tvValue%>]D{\<%tvValue%>}<%/teIsBoolean%><%^teIsBoolean%>D{<%tvValue%>}<%/teIsBoolean%><%/tvIsEmpty%><%/teValues%>\\
+<%/adTraceElems%>
+\extracode
+\begin{background}[shift={(0.05,0)},help lines]
+\vertlines[help lines,opacity=0.3]{-0.3ex,...,<%adLastSample%>}
+\end{background}
+\end{tikztimingtable}
+\end{document}

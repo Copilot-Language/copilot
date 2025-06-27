@@ -1,0 +1,130 @@
+cabal-version:       >= 1.10
+name:                copilot-visualizer
+version:             4.4
+synopsis:            Visualizer for Copilot.
+description:
+  Visualizer for Copilot.
+  .
+  Copilot is a stream (i.e., infinite lists) domain-specific language (DSL) in
+  Haskell that compiles into embedded C. Copilot contains an interpreter,
+  multiple back-end compilers, and other verification tools.
+  .
+  A tutorial, examples, and other information are available at
+  <https://copilot-language.github.io>.
+
+author:              Ivan Perez, Frank Dedden, Ryan Scott, Kyle Beechly
+license:             BSD3
+license-file:        LICENSE
+maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
+homepage:            https://copilot-language.github.io
+bug-reports:         https://github.com/Copilot-Language/copilot/issues
+stability:           Experimental
+category:            Language, Embedded
+build-type:          Simple
+extra-source-files:  README.md
+                     CHANGELOG
+                     examples/gui/Main.hs
+                     examples/gui/main.html
+                     examples/gui/copilot.css
+                     examples/gui/copilot.js
+                     examples/tikz/Heater.hs
+
+data-files:          data/tikz/tikz.tex
+                     data/static_html/index.html
+
+x-curation: uncurated
+
+source-repository head
+    type:       git
+    location:   https://github.com/Copilot-Language/copilot.git
+    subdir:     copilot-visualizer
+
+flag examples
+    description: Enable examples
+    default: False
+    manual: True
+
+library
+
+  default-language:
+    Haskell2010
+
+  hs-source-dirs:
+    src
+
+  ghc-options:
+    -Wall
+
+  build-depends:
+    base       >= 4.9     && < 5,
+    aeson      >= 2.0.0.0 && < 2.3,
+    filepath   >= 1.4.2   && < 1.6,
+    hint       >= 0.9.0   && < 1.10,
+    pretty     >= 1.0     && < 1.2,
+    ogma-extra >= 1.6.0   && < 1.7,
+    text       >= 1.2.3.1 && < 2.2,
+    websockets >= 0.12.7  && < 0.14,
+
+    copilot             >= 4.4 && < 4.5,
+    copilot-core        >= 4.4 && < 4.5,
+    copilot-interpreter >= 4.4 && < 4.5,
+    copilot-language    >= 4.4 && < 4.5
+
+  exposed-modules:
+
+    Copilot.Visualize.Live
+    Copilot.Visualize.Static
+
+  other-modules:
+
+    Copilot.Visualize.Dynamic
+    Copilot.Visualize.TypedTrace
+    Copilot.Visualize.UntypedTrace
+    Paths_copilot_visualizer
+
+executable gui-example
+  main-is:
+    Main.hs
+
+  default-language:
+    Haskell2010
+
+  hs-source-dirs:
+    examples/gui
+
+  ghc-options:
+    -Wall
+
+  build-depends:
+    base >= 4.9   && < 5,
+
+    copilot-visualizer
+
+  if flag(examples)
+    buildable: True
+  else
+    buildable: False
+
+executable tikz-example
+  main-is:
+    Heater.hs
+
+  default-language:
+    Haskell2010
+
+  hs-source-dirs:
+    examples/tikz
+
+  ghc-options:
+    -Wall
+
+  build-depends:
+    base               >= 4.9 && < 5,
+
+    copilot            >= 4.4 && < 4.5,
+    copilot-visualizer
+
+  if flag(examples)
+    buildable: True
+  else
+    buildable: False
