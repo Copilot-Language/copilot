@@ -67,8 +67,4 @@ data Expr a where
 -- | A untyped expression that carries the information about the type of the
 -- expression as a value, as opposed to exposing it at type level (using an
 -- existential).
-data UExpr = forall a . Typeable a => UExpr
-  { uExprType :: Type a
-  , uExprExpr :: Expr a
-  }
-{-# DEPRECATED uExprType, uExprExpr "These fields are deprecated in Copilot 4.2. Use pattern matching instead." #-}
+data UExpr = forall a . Typeable a => UExpr (Type a) (Expr a)
