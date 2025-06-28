@@ -1,0 +1,255 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700"
+    />
+
+    <title>Copilot Visualizer</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" >
+    </script>
+
+    <script src="https://d3js.org/d3.v7.min.js">
+    </script>
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .label {
+            font-size: 12px;
+        }
+        .bool-background {
+            opacity: 0.3;
+        }
+        .hexagon {
+            stroke: black;
+            stroke-width: 1px;
+            color: green;
+        }
+        .value-text {
+            font-size: 10px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        .time-label {
+            font-family: sans-serif;
+            font-size: 12px;
+            fill: black;
+        }
+        .grid-line {
+            stroke: #ccc;
+            stroke-width: 1;
+            stroke-dasharray: 3,3;
+        }
+    </style>
+  </head>
+  <body>
+    <div>
+    <svg id="timeline"></svg>
+    </div>
+
+    <script>
+      const margin = {top: 20, right: 20, bottom: 30, left: 100};
+      const width = 960 - margin.left - margin.right;
+      const height = 200 - margin.top - margin.bottom;
+      const rowHeight = 40;
+      num_rows = 0;
+{{#adTraceElems}}
+num_rows = num_rows + 1;
+{{/adTraceElems}}
+{{#adTraceElems}}
+{{teName}}_ix = 0;
+{{/adTraceElems}}
+
+      // Sample data
+      const data = {
+{{#adTraceElems}}
+{{teName}}: [
+{{#teValues}}
+{time: {{teName}}_ix++, value: {{#teIsBoolean}}{{tvValue}}{{/teIsBoolean}}{{#teIsFloat}}{{tvValue}}{{/teIsFloat}}{{^teIsBoolean}}{{^teIsFloat}}"{{tvValue}}"{{/teIsFloat}}{{/teIsBoolean}}, duration: 1},
+{{/teValues}}
+],
+{{/adTraceElems}}
+      };
+
+      // Process numeric data to include duration and y-positions
+      function processNumericData(data) {
+          const maxValue = Math.max(...data.map(d => d.value));
+          const minValue = Math.min(...data.map(d => d.value));
+          const yScale = d3.scaleLinear()
+              .domain([minValue, maxValue])
+              .range([rowHeight * 0.8, rowHeight * 0.2]);
+
+          return data.map((d, i) => ({
+              ...d,
+              duration: i < data.length - 1 ? data[i + 1].time - d.time : {{adLastSample}} + 1 - d.time,
+              y: yScale(d.value)
+          }));
+      }
+
+      // const processedNumericData = processNumericData(data.numericRow);
+
+      // Create SVG
+      const svg = d3.select("#timeline")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", (rowHeight * num_rows) + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Create scales
+      const xScale = d3.scaleLinear()
+          .domain([0, {{adLastSample}} + 1])
+          .range([0, width]);
+
+      // Create x-axis with ticks at integer positions
+      const xAxis = d3.axisBottom(xScale)
+          .tickValues(Array.from({length: 11}, (_, i) => i))
+          .tickFormat('');
+
+      // Add row labels
+      const labels = [{{#adTraceElems}}"{{teName}}", {{/adTraceElems}} ];
+      svg.selectAll(".label")
+          .data(labels)
+          .enter()
+          .append("text")
+          .attr("class", "label")
+          .attr("x", -90)
+          .attr("y", (d, i) => i * rowHeight + rowHeight/2)
+          .text(d => d);
+
+      // Function to create hexagon path
+      function hexagonPath(width, height) {
+          return `
+              M ${width-10},0
+              L ${width},${height/2}
+              L ${width-10},${height}
+              L ${10},${height}
+              L ${0},${height/2}
+              L ${10},0
+              Z
+          `;
+      }
+
+      // Draw boolean rows with colored backgrounds
+      const drawBooleanRow = (data, rowIndex) => {
+          const rowG = svg.append("g")
+              .attr("transform", `translate(0,${rowIndex * rowHeight})`);
+
+          // Draw colored backgrounds
+          rowG.selectAll("rect")
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("class", "bool-background")
+              .attr("x", d => xScale(d.time))
+              .attr("y", 0)
+              .attr("width", d => xScale(d.duration) - xScale(0))
+              .attr("height", rowHeight)
+              .attr("fill", d => d.value ? "#90EE90" : "#FFB6C1");
+      };
+
+      // Draw numeric row with stretched hexagons
+      const drawNumericRow = (data, rowIndex) => {
+          const rowG = svg.append("g")
+              .attr("transform", `translate(0,${rowIndex * rowHeight})`);
+
+          const hexHeight = rowHeight * 0.8;
+
+          // Create hexagon groups
+          const hexGroups = rowG.selectAll("g")
+              .data(data)
+              .enter()
+              .append("g")
+              .attr("transform", d => `translate(${xScale(d.time)},${rowHeight * 0.1})`);
+
+          // Add hexagons
+          hexGroups.append("path")
+              .attr("class", "hexagon")
+              .attr("d", d => hexagonPath(xScale(d.duration) - xScale(0), hexHeight))
+              .attr("fill", "#f7fbff");
+
+          // Add value text
+          hexGroups.append("text")
+              .attr("class", "value-text")
+              .attr("x", d => (xScale(d.duration) - xScale(0)) / 2)
+              .attr("y", hexHeight / 2)
+              .text(d => d.value);
+      };
+
+
+      // Draw all rows
+      i = 0;
+{{#adTraceElems}}
+{{#teIsBoolean}}
+drawBooleanRow(data.{{teName}}, i); i++;
+{{/teIsBoolean}}
+{{^teIsBoolean}}
+drawNumericRow(processNumericData(data.{{teName}}), i); i++;
+{{/teIsBoolean}}
+{{/adTraceElems}}
+
+      // Add the axis
+      const axisGroup = svg.append("g")
+          .attr("class", "axis")
+          .attr("transform", `translate(0,${rowHeight * num_rows})`)
+          .call(xAxis);
+
+      // After creating the axis and labels, add vertical grid lines
+      const gridLines = axisGroup.selectAll(".grid-line")
+          .data(Array.from({length: 11}, (_, i) => i))
+          .enter()
+          .append("line")
+          .attr("class", "grid-line")
+          .attr("x1", d => xScale(d))
+          .attr("x2", d => xScale(d))
+          .attr("y1", -rowHeight * (num_rows + 1))  // Start from top (negative because we're going up from axis)
+          .attr("y2", 0)              // End at axis
+          .style("stroke", "#ccc")    // Light gray color
+          .style("stroke-width", "1")
+          .style("stroke-dasharray", "3,3");  // Creates dotted line
+
+      // Add offset labels
+      const timeLabels = axisGroup.selectAll(".time-label")
+          .data(Array.from({length: num_rows + 1}, (_, i) => i))
+          .enter()
+          .append("text")
+          .attr("class", "time-label")
+          .attr("x", d => xScale(d + 0.5))
+          .attr("y", 25)
+          .attr("text-anchor", "middle")
+          .text(d => d + "");
+
+      // Detect clicks on timeline.
+      svg.on("click", function(event) {
+          const mouseX = d3.pointer(event)[0];
+          const time   = Math.floor(xScale.invert(mouseX).toFixed(2));
+          const row    = Math.floor((event.offsetY - margin.top) / rowHeight);
+          const label  = labels[row];
+
+          console.log("Label:", label , "Time:", time);
+      });
+
+      // Detect mouse wheel on timeline.
+      svg.on("wheel", function(event) {
+          // Prevent default scroll behavior
+          event.preventDefault();
+
+          const mouseX = d3.pointer(event)[0];
+          const time   = Math.floor(xScale.invert(mouseX).toFixed(2));
+          const row    = Math.floor((event.offsetY - margin.top) / rowHeight);
+          const label  = labels[row];
+          const dir    = event.deltaY < 0 ? 'up' : 'down';
+
+          console.log ( "Label:", label, "Time:", time, "Direction:", dir);
+      });
+
+    </script>
+  </body>
+</html>
