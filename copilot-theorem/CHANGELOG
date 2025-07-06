@@ -1,5 +1,6 @@
-2025-05-29
+2025-07-05
         * Removed unused pragmas. (#613)
+        * Relax version constraint on what4. (#611)
 
 2025-05-07
         * Version bump (4.4). (#618)
