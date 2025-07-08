@@ -1,4 +1,5 @@
-2025-06-28
+2025-07-07
+        * Version bump (4.5). (#642)
         * Remove deprecated fields of Copilot.Core.Expr.UExpr. (#636)
 
 2025-05-07
