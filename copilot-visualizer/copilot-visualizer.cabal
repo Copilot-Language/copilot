@@ -1,6 +1,6 @@
 cabal-version:       >= 1.10
 name:                copilot-visualizer
-version:             4.4
+version:             4.5
 synopsis:            Visualizer for Copilot.
 description:
   Visualizer for Copilot.
@@ -65,10 +65,10 @@ library
     text       >= 1.2.3.1 && < 2.2,
     websockets >= 0.12.7  && < 0.14,
 
-    copilot             >= 4.4 && < 4.5,
-    copilot-core        >= 4.4 && < 4.5,
-    copilot-interpreter >= 4.4 && < 4.5,
-    copilot-language    >= 4.4 && < 4.5
+    copilot             >= 4.5 && < 4.6,
+    copilot-core        >= 4.5 && < 4.6,
+    copilot-interpreter >= 4.5 && < 4.6,
+    copilot-language    >= 4.5 && < 4.6
 
   exposed-modules:
 
@@ -121,7 +121,7 @@ executable tikz-example
   build-depends:
     base               >= 4.9 && < 5,
 
-    copilot            >= 4.4 && < 4.5,
+    copilot            >= 4.5 && < 4.6,
     copilot-visualizer
 
   if flag(examples)
