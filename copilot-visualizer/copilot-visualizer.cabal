@@ -61,7 +61,7 @@ library
     filepath   >= 1.4.2   && < 1.6,
     hint       >= 0.9.0   && < 1.10,
     pretty     >= 1.0     && < 1.2,
-    ogma-extra >= 1.6.0   && < 1.7,
+    ogma-extra >= 1.6.0   && < 1.10,
     text       >= 1.2.3.1 && < 2.2,
     websockets >= 0.12.7  && < 0.14,
 
