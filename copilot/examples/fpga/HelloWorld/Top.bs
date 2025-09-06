@@ -1,0 +1,17 @@
+package Top where
+
+  import HelloWorld
+  import HelloWorldIfc
+  import HelloWorldTypes
+
+  helloWorldIfc :: Prelude.Module HelloWorldIfc
+  helloWorldIfc =
+    module
+      -- Register that connects the LEDs to values produced by Copilot
+      led_reg :: Prelude.Reg (Prelude.UInt 8) <- mkReg 0
+      interface
+        led reg = action
+          led_reg := reg
+
+  mkTop :: Prelude.Module Prelude.Empty
+  mkTop = mkHelloWorld helloWorldIfc
