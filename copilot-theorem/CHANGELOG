@@ -1,3 +1,6 @@
+2025-09-07
+        * Remove unused function Copilot.Theorem.Misc.SExpr.parseSExpr. (#661)
+
 2025-07-07
         * Version bump (4.5). (#642)
         * Removed unused pragmas. (#613)
