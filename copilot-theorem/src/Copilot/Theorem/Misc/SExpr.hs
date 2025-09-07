@@ -2,10 +2,9 @@
 {-# LANGUAGE Safe              #-}
 
 -- | A representation for structured expression trees, with support for pretty
--- printing and for parsing.
+-- printing.
 module Copilot.Theorem.Misc.SExpr where
 
-import Text.ParserCombinators.Parsec
 import Text.PrettyPrint.HughesPJ as PP hiding (char, Str)
 
 import Control.Monad
@@ -70,37 +69,3 @@ toDoc shouldIndent printAtom expr = case expr of
         doc $$ indent (toDoc shouldIndent printAtom s)
       | otherwise =
         doc <+> toDoc shouldIndent printAtom s
-
--- | Parser for strings of characters separated by spaces into a structured
--- tree.
---
--- Parentheses are interpreted as grouping elements, that is, defining a
--- 'List', which may be empty.
-parser :: GenParser Char st (SExpr String)
-parser =
-  choice [try unitP, nodeP, leafP]
-
-  where
-    symbol     = oneOf "!#$%&|*+-/:<=>?@^_~."
-    lonelyStr  = many1 (alphaNum <|> symbol)
-
-    unitP      = string "()" >> return unit
-
-    leafP      = atom <$> lonelyStr
-
-    nodeP      = do void $ char '('
-                    spaces
-                    st <- sepBy parser spaces
-                    spaces
-                    void $ char ')'
-                    return $ List st
-
--- | Parser for strings of characters separated by spaces into a structured
--- tree.
---
--- Parentheses are interpreted as grouping elements, that is, defining a
--- 'List', which may be empty.
-parseSExpr :: String -> Maybe (SExpr String)
-parseSExpr str = case parse parser "" str of
-  Left s -> error (show s) -- Nothing
-  Right t -> Just t
