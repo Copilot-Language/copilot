@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-interpreter
-version:             4.5
+version:             4.5.1
 synopsis:            Interpreter for Copilot.
 description:
   Interpreter for Copilot.
@@ -44,7 +44,7 @@ library
     base       >= 4.9 && < 5,
     pretty     >= 1.0 && < 1.2,
 
-    copilot-core >= 4.5 && < 4.6
+    copilot-core >= 4.5.1 && < 4.6
 
   exposed-modules:
 
