@@ -10,6 +10,7 @@ module Copilot.Compile.Bluespec.Name
   , lowercaseName
   , specIfcName
   , specIfcPkgName
+  , specIfcRulesName
   , specTypesPkgName
   , streamAccessorName
   , streamElemName
@@ -34,6 +35,10 @@ specIfcName prefix = uppercaseName (specIfcPkgName prefix)
 -- letter, but the latter does.
 specIfcPkgName :: String -> String
 specIfcPkgName prefix = prefix ++ "Ifc"
+
+-- | Turn a specification name into the name of its rules-specific interface.
+specIfcRulesName :: String -> String
+specIfcRulesName prefix = uppercaseName (prefix ++ "RulesIfc")
 
 -- | Turn a specification name into the name of the package that declares its
 -- struct types.
