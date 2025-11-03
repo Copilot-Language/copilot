@@ -14,12 +14,17 @@ module Copilot.Compile.Bluespec.CodeGen
     -- * Stream generators
   , mkGenFun
 
+    -- * External streams
+  , mkExtWireDecln
+
     -- * Monitor processing
   , mkStepRule
+  , mkExtRule
   , mkTriggerRule
 
     -- * Module interface specifications
   , mkSpecIfcFields
+  , mkSpecIfcRulesFields
   ) where
 
 -- External imports
@@ -48,7 +53,17 @@ mkGenFun name expr ty =
       []
   where
     nameId = BS.mkId BS.NoPos $ fromString $ lowercaseName name
-    def = BS.CClause [] [] (transExpr expr)
+    def    = BS.CClause [] [] (transExpr expr)
+
+-- | Bind a @Wire@ variable using @mkBypassWire@.
+mkExtWireDecln :: String -> Type a -> BS.CStmt
+mkExtWireDecln name ty =
+  BS.CSBindT
+    (BS.CPVar (BS.mkId BS.NoPos (fromString (wireName name))))
+    Nothing
+    []
+    (BS.CQType [] (tWire `BS.TAp` transType ty))
+    (BS.CVar (BS.mkId BS.NoPos "mkBypassWire"))
 
 -- | Bind a buffer variable and initialise it with the stream buffer.
 mkBuffDecln :: forall a. Id -> Type a -> [a] -> [BS.CStmt]
@@ -133,44 +148,124 @@ mkAccessDecln sId ty xs =
 
 -- | Define fields for a module interface containing a specification's trigger
 -- functions and external variables.
-mkSpecIfcFields :: [Trigger] -> [External] -> [BS.CField]
-mkSpecIfcFields triggers exts =
-    map mkTriggerField triggers ++ map mkExtField exts
+mkSpecIfcFields :: [UniqueTrigger] -> [External] -> [BS.CField]
+mkSpecIfcFields uniqueTriggers exts =
+    concatMap mkTriggerFields uniqueTriggers ++ map mkExtField exts
   where
-    -- trigger :: args_1 -> ... -> args_n -> Action
-    mkTriggerField :: Trigger -> BS.CField
-    mkTriggerField (Trigger name _ args) =
-      mkField name $
-      foldr
-        (\(UExpr arg _) res -> BS.tArrow `BS.TAp` transType arg `BS.TAp` res)
-        BS.tAction
-        args
+    -- trigger_guard :: Bool
+    -- trigger_arg0 :: arg_ty_0
+    -- ...
+    -- trigger_arg(n-1) :: arg_ty_(n-1)
+    mkTriggerFields :: UniqueTrigger -> [BS.CField]
+    mkTriggerFields (UniqueTrigger uniqueName (Trigger _name _ args)) =
+        triggerGuardField : triggerArgFields
+      where
+        triggerGuardField :: BS.CField
+        triggerGuardField = mkField (guardName uniqueName) [] BS.tBool
 
-    -- ext :: Reg ty
+        triggerArgFields :: [BS.CField]
+        triggerArgFields =
+          zipWith
+            (\(UExpr arg _) argName -> mkField argName [] (transType arg))
+            args
+            (argNames uniqueName)
+
+    -- ext :: ty -> Action
     mkExtField :: External -> BS.CField
     mkExtField (External name ty) =
-      mkField name $ tReg `BS.TAp` transType ty
+      mkField
+        name
+        [ BS.PIPrefixStr ""
+        , BS.PIArgNames [BS.mkId BS.NoPos $ fromString $ lowercaseName name]
+        ]
+        (BS.tArrow `BS.TAp` transType ty `BS.TAp` BS.tAction)
 
--- | Define a rule for a trigger function.
+-- | Define fields for a module interface containing the actions to perform for
+-- a specification's trigger functions and external variables.
+mkSpecIfcRulesFields :: [Trigger] -> [External] -> [BS.CField]
+mkSpecIfcRulesFields triggers exts =
+    map mkTriggerField triggers ++ map mkExtField exts
+  where
+    -- trigger_action :: arg_ty_0 -> ... -> arg_ty_(n-1) -> Action
+    mkTriggerField :: Trigger -> BS.CField
+    mkTriggerField (Trigger name _ args) =
+        mkField (actionName name) [] triggerFieldType
+      where
+        triggerFieldType :: BS.CType
+        triggerFieldType = foldr addArgType BS.tAction args
+
+        addArgType :: UExpr -> BS.CType -> BS.CType
+        addArgType (UExpr arg _) res =
+          BS.tArrow `BS.TAp` transType arg `BS.TAp` res
+
+    -- ext_action :: ActionValue ty
+    mkExtField :: External -> BS.CField
+    mkExtField (External name ty) =
+      mkField (actionName name) [] (BS.tActionValue `BS.TAp` transType ty)
+
+-- | Define a rule for an external stream that performs an action on the most
+-- recently computed value from the stream.
+mkExtRule :: External -> BS.CRule
+mkExtRule (External name _) =
+    -- rules
+    --   "ext": when True ==>
+    --     action
+    --       extVal <- ifcRules.ext_action
+    --       ifc.ext extVal
+    BS.CRule
+      []
+      (Just $ cLit $ BS.LString name)
+      [BS.CQFilter $ BS.CCon BS.idTrue []]
+      (BS.Caction BS.NoPos [callExtAction, callExt])
+  where
+    ifcArgId      = BS.mkId BS.NoPos $ fromString ifcArgName
+    ifcRulesArgId = BS.mkId BS.NoPos $ fromString ifcRulesArgName
+
+    extActionId = BS.mkId BS.NoPos $ fromString $ actionName name
+    extId       = BS.mkId BS.NoPos $ fromString name
+    extValId    = BS.mkId BS.NoPos $ fromString $ name ++ "Val"
+
+    -- extVal <- ifcRules.ext_action
+    callExtAction :: BS.CStmt
+    callExtAction =
+      BS.CSBind
+        (BS.CPVar extValId)
+        Nothing
+        []
+        (BS.CSelect (BS.CVar ifcRulesArgId) extActionId)
+
+    -- ifc.ext extVal
+    callExt :: BS.CStmt
+    callExt =
+      BS.CSExpr Nothing $
+        BS.CApply (BS.CSelect (BS.CVar ifcArgId) extId) [BS.CVar extValId]
+
+-- | Define a rule for a trigger function that performs an action when the rule
+-- fires.
 mkTriggerRule :: UniqueTrigger -> BS.CRule
 mkTriggerRule (UniqueTrigger uniqueName (Trigger name _ args)) =
+    -- rules
+    --   "trigger": when ifc.trigger_guard ==>
+    --     ifcRules.trigger_action ifc.trigger_arg0
     BS.CRule
       []
       (Just $ cLit $ BS.LString uniqueName)
       [ BS.CQFilter $
-        BS.CVar $ BS.mkId BS.NoPos $
-        fromString $ guardName uniqueName
+          BS.CSelect
+            (BS.CVar ifcArgId)
+            (BS.mkId BS.NoPos $ fromString $ guardName uniqueName)
       ]
-      (BS.CApply nameExpr args')
+      (BS.CApply actionNameExpr args')
   where
-    ifcArgId = BS.mkId BS.NoPos $ fromString ifcArgName
+    ifcArgId      = BS.mkId BS.NoPos $ fromString ifcArgName
+    ifcRulesArgId = BS.mkId BS.NoPos $ fromString ifcRulesArgName
     -- Note that we use 'name' here instead of 'uniqueName', as 'name' is the
     -- name of the actual external function.
-    nameId   = BS.mkId BS.NoPos $ fromString $ lowercaseName name
-    nameExpr = BS.CSelect (BS.CVar ifcArgId) nameId
+    actionNameId   = BS.mkId BS.NoPos $ fromString $ actionName name
+    actionNameExpr = BS.CSelect (BS.CVar ifcRulesArgId) actionNameId
 
     args'   = take (length args) (map argCall (argNames uniqueName))
-    argCall = BS.CVar . BS.mkId BS.NoPos . fromString
+    argCall = BS.CSelect (BS.CVar ifcArgId) . BS.mkId BS.NoPos . fromString
 
 -- | Writes the @step@ rule that updates all streams.
 mkStepRule :: [Stream] -> Maybe BS.CRule
@@ -233,19 +328,20 @@ mkStructDecln x =
       -- Derive a Bits instance so that we can put this struct in a Reg
       [BS.CTypeclass BS.idBits]
   where
-    structId = BS.mkId BS.NoPos $ fromString $ uppercaseName $ typeName x
+    structId     = BS.mkId BS.NoPos $ fromString $ uppercaseName $ typeName x
     structFields = map mkStructField $ toValues x
 
     mkStructField :: Value a -> BS.CField
     mkStructField (Value ty field) =
-      mkField (fieldName field) (transType ty)
+      mkField (fieldName field) [] (transType ty)
 
--- | Write a field of a struct or interface, along with its type.
-mkField :: String -> BS.CType -> BS.CField
-mkField name ty =
+-- | Write a field of a struct or interface, along with its pragmas and type
+-- signature.
+mkField :: String -> [BS.IfcPragma] -> BS.CType -> BS.CField
+mkField name pragmas ty =
   BS.CField
     { BS.cf_name = BS.mkId BS.NoPos $ fromString $ lowercaseName name
-    , BS.cf_pragmas = Nothing
+    , BS.cf_pragmas = Just pragmas
     , BS.cf_type = BS.CQType [] ty
     , BS.cf_default = []
     , BS.cf_orig_type = Nothing
@@ -259,4 +355,13 @@ tReg = BS.TCon $
     , BS.tcon_kind = Just (BS.Kfun BS.KStar BS.KStar)
     , BS.tcon_sort = BS.TIstruct (BS.SInterface [])
                                  [BS.id_write BS.NoPos, BS.id_read BS.NoPos]
+    }
+
+-- | The @Wire@ Bluespec type.
+tWire :: BS.CType
+tWire = BS.TCon $
+  BS.TyCon
+    { BS.tcon_name = BS.mkId BS.NoPos "Wire"
+    , BS.tcon_kind = Just (BS.Kfun BS.KStar BS.KStar)
+    , BS.tcon_sort = BS.TItype 0 tReg
     }
