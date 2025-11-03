@@ -5,7 +5,7 @@ compiles a Copilot specification to a Bluespec program. We assume that you
 already have some familiarity with core Copilot concepts such as streams,
 triggers, externs, etc.
 
-## Bluespec overview
+# Bluespec overview
 
 Bluespec is a high-level hardware design language (HDL). Bluespec comes with a
 compiler, `bsc`, as well as its own simulator, which allows users to run
@@ -25,7 +25,7 @@ Bluespec SystemVerilog. This is primarily because BH's Haskell-like syntax is a
 closer fit to how Copilot is structured, which makes the design of the compiler
 simpler.
 
-## A small example
+# A small example
 
 To get a sense for how `copilot-bluespec` works, let us compile a simple
 Copilot specification down to Bluespec. Our specification will declare a stream
@@ -67,224 +67,309 @@ are:
 2. The call to `compile "Fibs" spec'` in `main`. This will compile the Copilot
    specification to a Bluespec program named `Fibs.bs`.
 
-Running this program will generate five files[^1]:
+Running this program will generate four files[^1]:
 
 [^1]: The actual code in these files is machine-generated and somewhat
 difficult to read. We have cleaned up the code slightly to make it easier to
 understand.
 
-* `FibsTypes.bs`: If the Copilot specification contains any structs, then this
-  file will contain the corresponding Bluespec struct definitions. The
-  specification does not contain any structs, so this file is mostly empty:
+### `Fibs.bs`
 
-  ```bluespec
-  package FibsTypes where
+This defines the majority of the Bluespec code needed to implement a monitor:
 
-  import FloatingPoint
-  import Vector
-  ```
+```bluespec
+package Fibs where
 
-  Later in this document, we will see a different example that makes use of
-  structs. Note that the syntax used here is much like in Haskell, with a
-  notable difference being that Bluespec uses the `package` keyword instead of
-  `module`.
+import FloatingPoint
+import Vector
 
-* `FibsIfc.bs`: This file defines a _module interface_ `FibsIfc`, whose methods
-  correspond to the names of the triggers in the Copilot spec:
+import FibsTypes
+import BluespecFP
 
-  ```bluespec
-  package FibsIfc where
+interface FibsIfc {-# always_ready, always_enabled #-} =
+    even_guard :: Bool
+    even_arg0 :: UInt 32
+    odd_guard :: Bool
+    odd_arg0 :: UInt 32
 
-  import FloatingPoint
-  import Vector
+{-# properties mkFibs = { verilog } #-}
+mkFibs :: Module FibsIfc
+mkFibs =
+  module
+    s0_0 :: Reg (UInt 32) <- mkReg 1
+    s0_1 :: Reg (UInt 32) <- mkReg 1
+    let s0 :: Vector.Vector 2 (Reg (UInt 32))
+        s0 = update (update newVector 0 s0_0) 1 s0_1
+    s0_idx :: Reg (Bit 64) <- mkReg 0
 
-  import FibsTypes
+    let s0_get :: Bit 64 -> UInt 32
+        s0_get x = (select s0 ((s0_idx + x) % 2))._read
 
-  interface FibsIfc =
-    even :: UInt 32 -> Action
-    odd :: UInt 32 -> Action
-  ```
+        s0_gen :: UInt 32
+        s0_gen = s0_get 0 + s0_get 1
 
-  An interface like `FibsIfc` can be thought of as a special form of data type
-  that describes how a module (a hardware object) interacts with the
-  surrounding environment. In order for an application to make use of a Copilot
-  monitor, it must instantiate `FibsIfc`'s methods. Each method takes a `UInt
-  32` (an unsigned 32-bit integer) as an argument and return an `Action`, which
-  is the Bluespec type for expressions that act on the state of the circuit (at
-  circuit execution time). Possible `Action`s include reading from and writing
-  to registers, as well as printing messages.
+    rules
+      "step": when True ==>
+        action
+          select s0 s0_idx := s0_gen
+          s0_idx := (s0_idx + 1) % 2
 
-  We will see an example of how to instantiate `FibsIfc` later.
+    interface FibsIfc
+      even_guard :: Bool
+      even_guard =
+        (s0_get 0 % 2) == 0
 
-* `Fibs.bs`: This file defines a `mkFibs` function, which orchestrates
-  everything in the generated Bluespec monitor:
+      even_arg0 :: UInt 32
+      even_arg0 = s0_get 0
 
-  ```bluespec
-  package Fibs where
+      odd_guard :: Bool
+      odd_guard =
+        not (s0_get 0 % 2 == 0)
 
-  import FloatingPoint
-  import Vector
+      odd_arg0 :: UInt 32
+      odd_arg0 =  s0_get 0
 
-  import FibsTypes
-  import FibsIfc
-  import BluespecFP
+interface FibsRulesIfc =
+  even_action :: UInt 32 -> Action
+  odd_action :: UInt 32 -> Action
 
-  mkFibs :: Module FibsIfc -> Module Empty
-  mkFibs ifcMod =
-    module
-      ifc <- ifcMod
+mkFibsRules :: FibsIfc -> FibsRulesIfc -> Rules
+mkFibsRules ifc ifcRules =
+  rules
+    "even": when ifc.even_guard ==>
+      ifcRules.even_action ifc.even_arg0
 
-      s0_0 :: Reg (UInt 32) <- mkReg 1
-      s0_1 :: Reg (UInt 32) <- mkReg 1
-      let s0 :: Vector 2 (Reg (UInt 32))
-          s0 = update (update newVector 0 s0_0) 1 s0_1
-      s0_idx :: Reg (Bit 64) <- mkReg 0
+    "odd": when ifc.odd_guard ==>
+      ifcRules.odd_action ifc.odd_arg0
 
-      let s0_get :: Bit 64 -> UInt 32
-          s0_get x = (select s0 ((s0_idx + x) % 2))._read
+addFibsRules :: FibsIfc -> FibsRulesIfc -> Module Empty
+addFibsRules ifc ifcRules = addRules (mkFibsRules ifc ifcRules)
+```
 
-          s0_gen :: UInt 32
-          s0_gen = s0_get 0 + s0_get 1
+Those familiar with Haskell will likely recognize much of the syntax used here,
+although it has some minor differences (e.g., using the `package` keyword
+instead of `module`, which means something else in Bluespec). We will go into
+the parts of the syntax that are unique to Bluespec as they come up.
 
-          even_guard :: Bool
-          even_guard =
-            (s0_get 0 % 2) == 0
+The `Fibs.bs` file consists of five definitions:
 
-          odd_guard :: Bool
-          odd_guard =
-            not (s0_get 0 % 2 == 0)
+1. `FibsIfc`, which is a _module interface_. An interface like `FibsIfc` can be
+   thought of as a special form of data type that describes how a module (a
+   hardware object) interacts with the surrounding environment. In order for an
+   application to make use of a Copilot monitor, it must instantiate
+   `FibsIfc`'s methods. We will see an example of how to instantiate `FibsIfc`
+   momentarily.
 
-      rules
-        "even": when even_guard ==>
-          ifc.even (s0_get 0)
+   The methods of `FibsIfc` correspond to the names of the triggers in the
+   Copilot spec. Each trigger has a corresponding _guard_ method, which always
+   has the type `Bool`, and an _argument_ method for each argument that the
+   trigger accepts, which has a type corresponding to the type of the argument.
+   We will see how these work in more detail shortly. For now, think of these
+   methods as being the "outputs" of the monitor program.
 
-        "odd:": when odd_guard ==>
-          ifc.odd (s0_get 0)
+2. `mkFibs`, which returns a module of type `Module FibsIfc`. A module can be
+   thought of as a generator of hardware objects. The module uses the `FibsIfc`
+   interface, which indicates that the implementation of the module
+   instantiates all of the methods in `FibsIfc`. If you squint, you'll
+   recognize bits and pieces of the original Copilot spec, such as the part
+   that checks for even stream elements in `even_guard`. We will go over the
+   individual definitions used in the implementation of `mkFibs` later.
 
-        "step": when True ==>
-          action
-            select s0 s0_idx := s0_gen
-            s0_idx := (s0_idx + 1) % 2
-  ```
+   Note `mkFibs`'s use of the `module` and `action` keywords. These can be
+   thought of as specialized versions of Haskell's `do`-notation, where
+   `module` denotes the `Module` monad, and `action` denotes the `ActionValue`
+   monad. (Note that `Action` is an alias for `ActionValue ()`.) The `Module`
+   monad describes how to elaborate the structure of a module, whereas the
+   `ActionValue` monad describes the behavior of a circuit at execution time.
 
-  `mkFibs` returns a module, which can be thought of as a generator of hardware
-  objects. `mkFibs` takes a `FibsIfc` module as an argument and returns another
-  module, which is parameterized by `Empty`. `Empty` is a standard interface
-  with no methods, and `Empty` is typically used in top-level modules that act
-  as program entrypoints.
+   Another piece of syntax that is unique to Bluespec modules is the `rules`
+   keyword, which denote rules that may or may not be run on each clock cycle
+   of the hardware. This particular module only has a single rule, named
+   `step`, which updates some internal state used by the module. That internal
+   state is then used to define the values that the interface methods return.
+   The `when True` part of the rule indicates that it always runs on every
+   clock cycle.
 
-  Note that the `module` and `action` keywords can be thought of as specialized
-  versions of Haskell's `do`-notation, where `module` denotes the `Module`
-  monad, and `action` denotes the `ActionValue` monad. (Note that `Action` is
-  an alias for `ActionValue ()`.) The `Monad` monad describes how to elaborate
-  the structure of a module, whereas the `ActionValue` monad describes the
-  behavior of a circuit at execution time.
+3. `FibsRulesIfc` is another module interface, with one method for each of the
+   Copilot spec's triggers. Each method takes arguments corresponding to the
+   types of the triggers' arguments and returns a value of type `Action`. As
+   the name `FibsRulesIfcs` suggests, these methods are intended to be used to
+   build up rule definitions, and we will see an example of this shortly.
 
-* `BluespecFP.bsv`: A collection of floating-point operations that leverage BDPI
-  (Bluespec's foreign-function interface). We will omit the full contents of
-  this file for brevity, but it will look something like this:
+   As an aside, you may be wondering why there are two different interfaces
+   that each have methods corresponding to the Copilot spec's trigger
+   functions. Why not just have a single interface instead? The short answer to
+   this question is that these interfaces are intended for different use cases:
+   modules that instantiate `FibsRulesIfc` are intended for simulation, whereas
+   modules that instantiate `FibsIfc` are intended for Verilog code generation.
+   For a longer answer to this question, see the "Generating Verilog code"
+   section below.
 
-  ```bluespec
-  import FloatingPoint::*;
+4. `mkFibsRules`, a function which takes two values that instantiate the
+   `FibsIfc` and `FibsRulesIfc` interfaces and returns a `Rules` value. A value
+   of type `Rules` is just a set of rules, which can be passed around in
+   Bluespec like any other value.
 
-  import "BDPI" function Float bs_fp_expf (Float x);
-  import "BDPI" function Double bs_fp_exp (Double x);
-  import "BDPI" function Float bs_fp_logf (Float x);
-  import "BDPI" function Double bs_fp_log (Double x);
+   `mkFibsRules` defines two rules, one for each trigger function in the
+   original Copilot spec. Unlike the `step` rule seen earlier, these rules may
+   not be run on every clock cycle. Specifically, the `even` rule will only run
+   if the `ifc.even_guard` expression returns `True` on a given clock cycle,
+   and the `odd` rule will only run if `ifc.odd_guard` returns `True` on a
+   given clock cycle. If one of these rules are run, then they will invoke the
+   corresponding method from the `FibsRulesIfc` interface, passing in the
+   corresponding `*_arg` method(s) from the `FibsIfc`.
+
+5. `addFibsRules`, a function which is very similar to `mkFibsRules`, except
+   that it has the return type `Module Empty` instead of `Rules`. All that
+   `addFibsRules` does is invoke `mkFibsRules` and then pass it to Bluespec's
+   `addRules` function, which actually adds the rules to a module. This is a
+   convenience that allows users to quickly define a full Bluespec module that
+   is suitable for simulation purposes (see the "Simulating Bluespec code"
+   section below).
+
+   Note that the module that this returns instantiates the `Empty` interface.
+   `Empty` is a standard interface with no methods at all, and `Empty` is
+   typically used in top-level Bluespec modules that act as entrypoints to
+   simulation.
+
+### `FibsTypes.bs`
+
+If the Copilot specification contained any structs, then the generated
+`FibsTypes.bs` file would contain the corresponding Bluespec struct
+definitions. The specification in `Fibs.hs` does not contain any structs, so
+this file is mostly empty:
+
+```bluespec
+package FibsTypes where
+
+import FloatingPoint
+import Vector
+```
+
+Later in this document, we will see a different example that makes use of
+structs.
+
+### `BluespecFP.bsv`
+
+This is a collection of floating-point operations that leverage BDPI
+(Bluespec's foreign-function interface). We will omit the full contents of this
+file for brevity, but it will look something like this:
+
+```bluespec
+import FloatingPoint::*;
+
+import "BDPI" function Float bs_fp_expf (Float x);
+import "BDPI" function Double bs_fp_exp (Double x);
+import "BDPI" function Float bs_fp_logf (Float x);
+import "BDPI" function Double bs_fp_log (Double x);
+...
+```
+
+For more information on what this file does, see the "Floating-point numbers"
+section below.
+
+### `bs_fp.c`
+
+A collection of floating-point operations implemented in C. These functions are
+imported via BDPI in `BluespecFP.bsv`. We will omit the full contents of this
+file for brevity, but it will look something like this:
+
+```bluespec
+#include <math.h>
+
+union ui_float {
+  unsigned int i;
+  float f;
+};
+
+union ull_double {
+  unsigned long long i;
+  double f;
+};
+
+unsigned int bs_fp_expf(unsigned int x) {
   ...
-  ```
+}
 
-  For more information on what this file does, see the "Floating-point numbers"
-  section below.
-
-* `bs_fp.c`: A collection of floating-point operations implemented in C. These
-  functions are imported via BDPI in `BluespecFP.bsv`. We will omit the full
-  contents of this file for brevity, but it will look something like this:
-
-  ```bluespec
-  #include <math.h>
-
-  union ui_float {
-    unsigned int i;
-    float f;
-  };
-
-  union ull_double {
-    unsigned long long i;
-    double f;
-  };
-
-  unsigned int bs_fp_expf(unsigned int x) {
-    ...
-  }
-
-  unsigned long long bs_fp_exp(unsigned long long x) {
-    ...
-  }
-
-  unsigned int bs_fp_logf(unsigned int x) {
-    ...
-  }
-
-  unsigned long long bs_fp_log(unsigned long long x) {
-    ...
-  }
-
+unsigned long long bs_fp_exp(unsigned long long x) {
   ...
-  ```
+}
 
-  For more information on what this file does, see the "Floating-point numbers"
-  section below.
+unsigned int bs_fp_logf(unsigned int x) {
+  ...
+}
 
-In a larger application, a Copilot user would instantiate `mkFibs` with a
-`FibsIfc` module that describes what should happen when the `even` and `odd`
-triggers fire. `FibsIfc` contains everything that the user must supply;
-everything else is handled within the module that `mkFibs` returns.
+unsigned long long bs_fp_log(unsigned long long x) {
+  ...
+}
 
-Here is an example of a larger application might look like:
+...
+```
+
+For more information on what this file does, see the "Floating-point numbers"
+section below.
+
+## Using the generated Bluespec code
+
+What do we do with the Bluespec code after generating it? The answer to this
+question ultimately depends on your intended use case. Sometimes, it can be
+useful to just simulate the Bluespec code in software, which we can do with a
+variety of hardware simulators. In other use cases, it can be more useful to
+directly synthesize code that can be embedded in real hardware. We will review
+each of these workflows below.
+
+### Simulating Bluespec code
+
+Hardware simulation allows us to model the behavior of hardware without
+actually needing access to physical hardware to do so. There are a number of
+different simulators out there, such as Bluespec's own Bluesim simulator, as
+well as Verilog-specific simulators such as Verilator and Icarus Verilog
+(`iverilog`). We will be using Bluesim throughout this section, as it is
+already bundled with each installation of Bluespec.
+
+Suppose we have a Bluespec program that we want to monitor with Copilot. This
+program will likely have a top-level module (typically of type `Module Empty`),
+and it is the role of the program's developer to decide what action the program
+should take whenever the monitor fires a trigger. In a full hardware setting,
+these actions might constitute something like blinking an LED or displaying a
+message on a seven-segment display. For simulation purposes, however, we can
+approximate this behavior by doing something simpler (e.g., printing messages
+to standard output on the terminal).
+
+Here is an example of a program that uses the Copilot-generated `Fibs.bs`
+monitor shown above:
 
 ```bluespec
 package Top where
 
 import Fibs
-import FibsIfc
 import FibsTypes
 
-fibsIfc :: Module FibsIfc
-fibsIfc =
-  module
-    interface
-      even x =
-        $display "Even Fibonacci number: %0d" x
-
-      odd x =
-        $display "Odd  Fibonacci number: %0d" x
-
 mkTop :: Module Empty
-mkTop = mkFibs fibsIfc
+mkTop =
+  module
+    fibsMod <- mkFibs
+    addFibsRules fibsMod $
+      interface FibsRulesIfc
+        even_action x =
+          $display "Even Fibonacci number: %0d" x
+
+        odd_action x =
+          $display "Odd  Fibonacci number: %0d" x
 ```
 
 `mkTop` is the top-level module that we will use as a program entrypoint. The
-only interesting thing that it does is instantiate `mkFibs` with a custom
-`FibsIfc`, where `even` and `odd` are defined to display a custom message
-whenever an even or odd Fibonacci number is encountered, respectively.
+only interesting thing that it does is create a `FibsIfc` module internally
+(using `mkFibs`) and then define the actions to take when the `even` or `odd`
+triggers fire. These actions are defined by the implementations of the
+`even_action` and `odd_action` methods, respectively, which print custom
+messages to standard output.
 
-We can run `mkTop` by using Bluespec's simulator like so:
+We can run `mkTop` by using Bluesim like so:
 
 ```
 $ bsc -sim -g mkTop -u Top.bs
-checking package dependencies
-compiling Top.bs
-code generation for mkTop starts
-Elaborated module file created: mkTop.ba
-All packages are up to date.
-
 $ bsc -sim -e mkTop -o mkTop.exe bs_fp.c
-Bluesim object created: mkTop.{h,o}
-Bluesim object created: model_mkTop.{h,o}
-Simulation shared library created: mkTop.exe.so
-Simulation executable created: mkTop.exe
-
 $ ./mkTop.exe -m 10
 Odd  Fibonacci number: 1
 Odd  Fibonacci number: 1
@@ -303,6 +388,94 @@ quirk of how hardware works: the reset signal is off in the first cycle, and
 the values of registers do not become ready until after the reset signal is
 enabled. Because all of the rules depend on registers, none of them will fire
 until the second clock cycle or later.
+
+### Generating Verilog code
+
+Generating code that is suitable for hardware is a somewhat different problem
+than generating code that is suitable for simulation. Many types of hardware
+(e.g., FPGAs) require specific hardware description languages in order to
+synthesize hardware circuits, such as Verilog or VHDL. Bluespec supports
+compiling to Verilog, so we will be focusing on that in this section.
+
+A typical Verilog module has a number of _signals_ that represent the paths
+into a circuit (called _inputs_), within a circuit (called _wires_), and
+outside of the circuit (called _outputs_). The generated Bluespec code seen
+above has been carefully designed such that the triggers in the Copilot spec
+compile directly to Verilog outputs. (Copilot also has a notion of external
+streams that compile to Verilog inputs; see the "External streams" section for
+more on this.)
+
+Unlike the simulation use case, generating Verilog code does not make use of
+the `FibsRulesIfc` interface at all, as this is a convenience that is only
+provided to make simulation easier. Instead, we compile the `mkFibs` module
+directly to Verilog:
+
+```
+$ bsc -verilog -g mkFibs -u Fibs.bs
+```
+
+This generates a Verilog module `mkFibs.v` that looks like the following:
+
+```verilog
+module mkFibs(CLK,
+	      RST_N,
+
+	      even_guard,
+
+	      even_arg0,
+
+	      odd_guard,
+
+	      odd_arg0);
+  input  CLK;
+  input  RST_N;
+
+  // value method even_guard
+  output even_guard;
+
+  // value method even_arg0
+  output [31 : 0] even_arg0;
+
+  // value method odd_guard
+  output odd_guard;
+
+  // value method odd_arg0
+  output [31 : 0] odd_arg0;
+
+  ...
+
+endmodule  // mkFibs
+```
+
+We show only a subset of the generated Verilog code to highlight the inputs and
+outputs. There are two inputs corresponding to the `CLK` (clock) and `RST_N`
+(reset) signals, which are generated for all Copilot monitors, regardless of
+what the underlying spec is. The outputs correspond to the methods of the
+`FibsIfc` interface. For instance, the signal in the `even_guard` output
+indicates whether the `even` trigger fires on a given clock cycle or not, and
+the value in the `even_arg0` output indicates what argument was passed to the
+trigger on that clock cycle. These outputs can then be hooked up to another
+part of a hardware circuit (e.g., LEDs) that can respond to these values as
+needed.
+
+In general, if a Bluespec interface has a method of type `t` (where `t` is a
+non-monadic type), then that method will be compiled to a Verilog output. If a
+method has type `t -> Action`, however, then that method will be compiled to a
+Verilog input instead. This is a key reason why it is necessary to separate
+`FibsIfc` from `FibsRulesIfc`. If we compiled a `Module FibsRulesIfc` to
+Verilog, then the triggers would become inputs, not outputs!
+
+(As a side note: the generated Bluespec code also employs various other tricks
+to get the compiled Verilog code to look the way it does. For instance, note
+the `{-# properties mkFibs = { verilog } #-}` pragma above `mkFibs`, which
+instructs the Bluespec compiler to synthesize Verilog code for it. Also note
+the `{-# always_ready, always_enabled #-}` attributes used in `FibsIfc`, which
+ensure that the generated Verilog code does not contain unwanted "ready" or
+"enabled" signals as inputs.)
+
+For a more in-depth tutorial on how to use the generated Verilog code on an
+actual FPGA, see [this
+tutorial](https://github.com/Copilot-Language/copilot/blob/master/copilot/examples/fpga/HelloWorld/README.md).
 
 ## Streams
 
@@ -352,8 +525,8 @@ In order to access an element of a stream, we make use of the `s0_get`
 function:
 
 ```bluespec
-      let s0_get :: Bit 64 -> UInt 32
-          s0_get x = (select s0 ((s0_idx + x) % 2))._read
+    let s0_get :: Bit 64 -> UInt 32
+        s0_get x = (select s0 ((s0_idx + x) % 2))._read
 ```
 
 This will use `s0_idx` and an offset `x` to compute which `Reg` in the `Vector`
@@ -362,48 +535,43 @@ to read from.
 ## Rules
 
 The _rules_ govern what actions are performed during each cycle. There are
-three actions in the `Fibs.hs` example:
+three actions in the `Fibs.bs` example above: one in `mkFibs`:
 
 ```bluespec
     rules
-      "even": when even_guard ==>
-        ifc.even (s0_get 0)
+      "step": when True ==>
+        action
+          select s0 s0_idx := s0_gen
+          s0_idx := (s0_idx + 1) % 2
+```
 
-      "odd:": when odd_guard ==>
-        ifc.odd (s0_get 0)
+And two more in `mkFibsRules`:
 
-      "step": when True ==> do
-        select s0 s0_idx := s0_gen
-        s0_idx := (s0_idx + 1) % 2
+```bluespec
+  rules
+    "even": when ifc.even_guard ==>
+      ifcRules.even_action ifc.even_arg0
+
+    "odd": when ifc.odd_guard ==>
+      ifcRules.odd_action ifc.odd_arg0
 ```
 
 Each rule consists of three parts:
 
-1. A label (e.g., `"even"`) that uniquely identifies the rule within the
+1. A label (e.g., `"step"`) that uniquely identifies the rule within the
    module.
 
 2. An explicit condition, which is a boolean expression of the form
    `when <cond> ==> ...`. In order for a rule to fire on a given clock cycle,
    its explicit condition `<cond>` must hold.
 
-3. A rule body (e.g., `ifc.even (s0_get 0)`), which describes what action the
-   rule performs if it fires on a given clock cycle.
+3. A rule body (of type `Action`), which describes what action the rule
+   performs if it fires on a given clock cycle.
 
 In the example above, the `"even"` and `"odd"` rules govern the behavior of the
 triggers in the Copilot specification. These rules will only fire if
-`even_guard` or `odd_guard` hold, and if they fire, they will call the `even`
-or `odd` method of `FibsIfcs`, respectively. The definitions of `even_guard`
-and `odd_guard` are:
-
-```bluespec
-          even_guard :: Bool
-          even_guard =
-            (s0_get 0 % 2) == 0
-
-          odd_guard :: Bool
-          odd_guard =
-            not (s0_get 0 % 2 == 0)
-```
+`even_guard` or `odd_guard` hold, and if they fire, they will call the
+`even_action` or `odd_action` method of `FibsRulesIfc`, respectively.
 
 The `"step"` rule is the heart of the Copilot specification, and it always runs
 on each clock cycle. `"step"` does two things:
@@ -412,8 +580,8 @@ on each clock cycle. `"step"` does two things:
    which is defined like so:
 
    ```bluespec
-             s0_gen :: UInt 32
-             s0_gen = s0_get 0 + s0_get 1
+           s0_gen :: UInt 32
+           s0_gen = s0_get 0 + s0_get 1
    ```
 
 2. It increments `s0_idx`, making sure to wrap around to `0` if its value
@@ -433,27 +601,28 @@ however. Recall the definitions of the three rules in the example program
 above:
 
 ```bluespec
-    rules
-      "even": when even_guard ==>
-        ifc.even (s0_get 0)
+"step": when True ==>
+  action
+    select s0 s0_idx := s0_gen
+    s0_idx := (s0_idx + 1) % 2
 
-      "odd:": when odd_guard ==>
-        ifc.odd (s0_get 0)
+"even": when ifc.even_guard ==>
+  ifcRules.even_action ifc.even_arg0
 
-      "step": when True ==> do
-        select s0 s0_idx := s0_gen
-        s0_idx := (s0_idx + 1) % 2
+"odd": when ifc.odd_guard ==>
+  ifcRules.odd_action ifc.odd_arg0
 ```
 
 If this were a language like C, then the order in which the rules appear would
-have an effect on the runtime semantics of the program, as the behavior of
-`s0_get` (used in the `"even"` and `"odd"` rules) depends on the current value
-of `s0` and `s0_idx`. In Bluespec, however, the order of these rules do _not_
-matter. The `"step"` rule performs side effects of updating the value of `s0`
-and `s0_idx`, but these effects are performed in a single, atomic transaction
-at the end of the clock cycle. This means that the values of `s0` and `s0_idx`
-that `s0_get` sees will always match their values at the start of the clock
-cycle, regardless of what order Bluespec uses to invoke the rules.
+have an effect on the runtime semantics of the program, as the values that
+`even_arg0` and `odd_arg0` return (used in the `"even"` and `"odd"` rules)
+depends on the current value of `s0` and `s0_idx`. In Bluespec, however, the
+order of these rules do _not_ matter. The `"step"` rule performs side effects
+of updating the value of `s0` and `s0_idx`, but these effects are performed in
+a single, atomic transaction at the end of the clock cycle. This means that the
+values of `s0` and `s0_idx` that `s0_get` sees will always match their values
+at the start of the clock cycle, regardless of what order Bluespec uses to
+invoke the rules.
 
 Because the Bluespec compiler can pick whatever rule order it wishes to, this
 can impact the order in which `$display` output is presented. This doesn't
@@ -466,8 +635,11 @@ specified.
 ## External streams
 
 The example above sampled data from a stream that was defined within the
-Copilot specification. To see what happens when a specification uses an
-external stream, let's make one small change to the example:
+Copilot specification. Copilot also features a notion of _external_ streams,
+which sample data from the surrounding environment. (For instance, one could
+populate an external stream with data read from a sensor in a real-world
+application.) To see what happens when a specification uses an external stream,
+let's make one small change to the example above:
 
 ```diff
  fibs :: Stream Word32
@@ -476,68 +648,117 @@ external stream, let's make one small change to the example:
 ```
 
 Now let's re-run the example and inspect the resulting Bluespec program. There
-are two notable changes worth commenting on. The first change is in
-`FibsIfc.bs`:
+are several notable changes worth commenting on. The first change is in the
+definition of the `FibsIfc` interface:
 
 ```bluespec
-package FibsIfc where
-
-import FloatingPoint
-import Vector
-
-import FibsTypes
-
-interface FibsIfc =
-  even :: UInt 32 -> Action
-  odd :: UInt 32 -> Action
-  fibs :: Reg (UInt 32)
+interface FibsIfc {-# always_ready, always_enabled #-} =
+    even_guard :: Bool
+    even_arg0 :: UInt 32
+    odd_guard :: Bool
+    odd_arg0 :: UInt 32
+    fibs :: UInt 32 -> Action {-# prefixs = "", arg_names = [fibs] #-}
 ```
 
-This time, the `FibsIfc` interface has an additional `fibs` method of type `Reg
-(UInt 32)`. This register corresponds to the external stream that we just
-defined, and it is the responsibility of the application which instantiates
-`FibsIfc` to dictate what values should be written to the register.
+This time, there is an additional `fibs` method of type `UInt 32 -> Action`.
+This type is carefully chosen such that when `FibsIfc` is compiled to Verilog,
+`fibs` will be represented as an input to the Verilog module, which intuitively
+matches how external streams are used in Copilot itself. (Also note the
+attributes to the right of the type signature, which ensure that the generated
+Verilog input has precisely the name "`fibs`".)
 
-The second change is in `Fibs.bs`:
+The next change is in `mkFibs`, which demonstrates how the `fibs` method is
+instantiated:
 
 ```bluespec
-package Fibs where
-
-import FloatingPoint
-import Vector
-
-import FibsTypes
-import FibsIfc
-
-mkFibs :: Module FibsIfc -> Module Empty
-mkFibs ifcMod =
+{-# properties mkFibs = { verilog } #-}
+mkFibs :: Module FibsIfc
+mkFibs =
   module
-    ifc <- ifcMod
+    fibs_wire :: Wire (UInt 32) <- mkBypassWire
 
-    let even_guard :: Bool
-        even_guard =
-          (ifc.fibs._read % 2) == 0
+    interface FibsIfc
+      even_guard :: Bool
+      even_guard =
+        (fibs_wire._read % 2) == 0
 
-        odd_guard :: Bool
-        odd_guard =
-          not (ifc.fibs._read % 2 == 0)
+      even_arg0 :: UInt 32
+      even_arg0 = fibs_wire._read
 
-    rules
-      "even": when even_guard ==>
-        ifc.even ifc.fibs._read
+      odd_guard :: Bool
+      odd_guard =
+        not (fibs_wire._read % 2 == 0)
 
-      "odd:": when odd_guard ==>
-        ifc.odd ifc.fibs._read
+      odd_arg0 :: UInt 32
+      odd_arg0 = fibs_wire._read
+
+      fibs val = fibs_wire := val
 ```
 
-This time, the only stream that is referenced is `ifc.fibs`. As a consequence,
-the `s0` stream, the `s0_idx` index, and the `"step"` rule are no longer
-necessary, making the code considerably simpler.
+This looks quite a bit different! Let's go over what has changed:
 
-The flip side to having the generated code be simpler is that the application
-which uses `mkFibs` must now do additional work to specify what the value of
-`ifc.fibs` is. For example, we can port the behavior of the previous version
-of the program like so:
+* There are no longer any registers to hold internal state, nor is there a
+  `"step"` rule that updates the registers. These registers were ultimately
+  used in service of maintaining the ring buffers that comprised the definition
+  of the `fibs` stream that was defined within Copilot. Now that `fibs` is an
+  external stream, none of the ring buffer machinery is needed anymore.
+
+  (Note that this is not an all-or-nothing proposition, as it is possible to
+  have a Copilot spec that combines defined-within-Copilot streams and external
+  streams.)
+
+* There is a new piece of internal state: the `fibs_wire` `Wire`. Moreover,
+  all places where `s0_get 0` was called before have now been replaced with
+  `fibs_wire._read`. A `Wire` is essentially a special type of register that
+  compiles to more compact Verilog code.
+
+* Finally, there is now an implementation of the `fibs` method, which writes
+  the supplied value to `fibs_wire`. This is what allows other methods to see
+  the most recently sampled value in the `fibs` external stream.
+
+The next change is in the definition of `FibsRulesIfc`, which has also gained
+another method corresponding to the `fibs` external stream:
+
+```bluespec
+interface FibsRulesIfc =
+  even_action :: UInt 32 -> Action
+  odd_action :: UInt 32 -> Action
+  fibs_action :: ActionValue (UInt 32)
+```
+
+Unlike `even_action` and `odd_action`, which denote an action for _consuming_ a
+value, the type of `fibs_action` (`ActionValue (UInt 32)`) denotes how to
+_produce_ a value. This makes sense, since the application being monitored
+ultimately has to be the source of the values that populate the external
+stream. The implementation of the `fibs_action` method is where this population
+happens.
+
+Finally, the definition of `mkFibsRules` now implements a `"fibs"` rule:
+
+```bluespec
+mkFibsRules :: FibsIfc -> FibsRulesIfc -> Rules
+mkFibsRules ifc ifcRules =
+  rules
+    "even": when ifc.even_guard ==>
+      ifcRules.even_action ifc.even_arg0
+
+    "odd": when ifc.odd_guard ==>
+      ifcRules.odd_action ifc.odd_arg0
+
+    "fibs": when Prelude.True ==>
+      action
+        fibsVal <- ifcRules.fibs_action
+        ifc.fibs fibsVal
+```
+
+This new rule produces a external value using `ifcRules.fibs_action` and then
+feeds it to `ifc.fibs` as an input.
+
+### Simulating Bluespec code involving external streams
+
+Let's update our example from the "Simulating Bluespec code" section to
+accommodate `fibs` becoming an external stream. Here is an example of what a
+`Top.bs` application might look like:
 
 ```bluespec
 package Top where
@@ -545,11 +766,10 @@ package Top where
 import Vector
 
 import Fibs
-import FibsIfc
 import FibsTypes
 
-fibsIfc :: Module FibsIfc
-fibsIfc =
+mkTop :: Module Empty
+mkTop =
   module
     s0_0 :: Reg (UInt 32) <- mkReg 1
     s0_1 :: Reg (UInt 32) <- mkReg 1
@@ -563,38 +783,73 @@ fibsIfc =
         s0_gen :: UInt 32
         s0_gen = s0_get 0 + s0_get 1
 
-    fibs_impl :: Reg (UInt 32) <- mkReg 1
+    fibsMod <- mkFibs
 
-    interface
-      even x =
-        $display "Even Fibonacci number: %0d" x
+    addFibsRules fibsMod $
+      interface FibsRulesIfc
+        even_action x =
+          $display "Even Fibonacci number: %0d" x
 
-      odd x =
-        $display "Odd  Fibonacci number: %0d" x
+        odd_action x =
+          $display "Odd  Fibonacci number: %0d" x
 
-      fibs = fibs_impl
+        fibs_action = return (s0_get 0)
 
     rules
-      "fibs": when True ==>
-        fibs_impl := s0_get 1
-
       "step": when True ==>
         action
           select s0 s0_idx := s0_gen
           s0_idx := (s0_idx + 1) % 2
-
-mkTop :: Module Empty
-mkTop = mkFibs fibsIfc
 ```
 
-The code involving `s0`, `s0_idx`, and the `"step"` rule is exactly as before.
-The only notable difference is that we create an additional `fibs_impl`
-register, declare `fibs = fibs_impl` when instantiating the `FibsIfc`
-interface, and declare an additional `"fibs"` rule to update the value of
-`fibs_impl` on each clock cycle. Note that we always set the value of
-`fibs_impl` to be `s0_get 1`, which corresponds to the most recently computed
-Fibonacci number. If we set `fibs_impl` to be `s0_get 0` instead, then
-`fibs_impl` would lag behind by one cycle. (Try it.)
+Note that all of the code involving registers and the `"step"` rule now lives
+in `Top.bs`, as it is now the responsibility of the application to produce the
+values for the `fibs` stream. There is also now an implementation of the
+`fibs_action` method that returns the most recently computed Fibonacci number
+on each clock cycle.
+
+### Generating Verilog code involving external streams
+
+Compiling the new version of `mkFibs` to Verilog produces a `mkFibs.v` file
+that looks like the following:
+
+```verilog
+module mkFibs(CLK,
+	      RST_N,
+
+	      even_guard,
+
+	      even_arg0,
+
+	      odd_guard,
+
+	      odd_arg0,
+
+	      fibs);
+  input  CLK;
+  input  RST_N;
+
+  // value method even_guard
+  output even_guard;
+
+  // value method even_arg0
+  output [31 : 0] even_arg0;
+
+  // value method odd_guard
+  output odd_guard;
+
+  // value method odd_arg0
+  output [31 : 0] odd_arg0;
+
+  // action method fibs
+  input  [31 : 0] fibs;
+
+  ...
+
+endmodule  // mkFibs
+```
+
+As expected, the only notable change is that there is now a `fibs` input.
 
 # Notes
 
