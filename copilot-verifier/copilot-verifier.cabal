@@ -1,6 +1,6 @@
 Cabal-version: 2.2
 Name:          copilot-verifier
-Version:       4.5.1
+Version:       4.6
 Author:        Galois Inc.
 Maintainer:    rscott@galois.com
 Copyright:     (c) Galois, Inc 2021-2024
@@ -45,9 +45,9 @@ common bldflags
     bv-sized >= 1.0.0 && < 1.1,
     bytestring,
     containers >= 0.5.9.0,
-    copilot-c99 >= 4.5.1 && < 4.6,
-    copilot-core >= 4.5.1 && < 4.6,
-    copilot-theorem >= 4.5.1 && < 4.6,
+    copilot-c99 >= 4.6 && < 4.7,
+    copilot-core >= 4.6 && < 4.7,
+    copilot-theorem >= 4.6 && < 4.7,
     crucible >= 0.7.1 && < 0.8,
     crucible-llvm >= 0.7 && < 0.8,
     crux >= 0.7.1 && < 0.8,
@@ -80,10 +80,10 @@ library copilot-verifier-examples
   hs-source-dirs: examples
   build-depends:
     case-insensitive,
-    copilot >= 4.5.1 && < 4.6,
-    copilot-language >= 4.5.1 && < 4.6,
-    copilot-libraries >= 4.5.1 && < 4.6,
-    copilot-prettyprinter >= 4.5.1 && < 4.6,
+    copilot >= 4.6 && < 4.7,
+    copilot-language >= 4.6 && < 4.7,
+    copilot-libraries >= 4.6 && < 4.7,
+    copilot-prettyprinter >= 4.6 && < 4.7,
     copilot-verifier
   exposed-modules:
     Copilot.Verifier.Examples

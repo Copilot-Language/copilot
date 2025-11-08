@@ -1,6 +1,6 @@
 cabal-version:       >=1.10
 name:                copilot-core
-version:             4.5.1
+version:             4.6
 synopsis:            An intermediate representation for Copilot.
 description:
   Intermediate representation for Copilot.
