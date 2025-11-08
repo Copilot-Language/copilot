@@ -1,18 +1,22 @@
 -- | Naming of variables and functions in Bluespec.
 module Copilot.Compile.Bluespec.Name
-  ( argNames
+  ( actionName
+  , argNames
   , generatorName
   , guardName
   , ifcArgName
+  , ifcRulesArgName
   , indexName
   , lowercaseName
   , specIfcName
   , specIfcPkgName
+  , specIfcRulesName
   , specTypesPkgName
   , streamAccessorName
   , streamElemName
   , streamName
   , uppercaseName
+  , wireName
   ) where
 
 -- External imports
@@ -32,6 +36,10 @@ specIfcName prefix = uppercaseName (specIfcPkgName prefix)
 specIfcPkgName :: String -> String
 specIfcPkgName prefix = prefix ++ "Ifc"
 
+-- | Turn a specification name into the name of its rules-specific interface.
+specIfcRulesName :: String -> String
+specIfcRulesName prefix = uppercaseName (prefix ++ "RulesIfc")
+
 -- | Turn a specification name into the name of the package that declares its
 -- struct types.
 specTypesPkgName :: String -> String
@@ -41,10 +49,13 @@ specTypesPkgName prefix = prefix ++ "Types"
 streamElemName :: Id -> Int -> String
 streamElemName sId n = streamName sId ++ "_" ++ show n
 
--- | The name of the variable of type @<prefix>Ifc@. This is used to select
--- trigger functions and external variables.
+-- | The name of a variable of type @<prefix>Ifc@.
 ifcArgName :: String
 ifcArgName = "ifc"
+
+-- | The name of a variable of type @<prefix>RulesIfc@.
+ifcRulesArgName :: String
+ifcRulesArgName = "ifcRules"
 
 -- | Create a Bluespec name that must start with an uppercase letter (e.g., a
 -- struct or interface name). If the supplied name already begins with an
@@ -85,6 +96,15 @@ generatorName sId = streamName sId ++ "_gen"
 -- | Turn the name of a trigger into a guard generator.
 guardName :: String -> String
 guardName name = lowercaseName name ++ "_guard"
+
+-- | Turn the name of a trigger of external stream into the name of a method
+-- that performs a Bluespec @Action@.
+actionName :: String -> String
+actionName name = lowercaseName name ++ "_action"
+
+-- | Turn the name of an external stream into a Bluespec @Wire@.
+wireName :: String -> String
+wireName name = lowercaseName name ++ "_wire"
 
 -- | Turn a trigger name into a an trigger argument name.
 argName :: String -> Int -> String

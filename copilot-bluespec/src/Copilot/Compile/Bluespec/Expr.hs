@@ -51,11 +51,8 @@ transExpr (Drop _ amount sid) =
             [BS.CLit $ BS.CLiteral BS.NoPos index]
 
 transExpr (ExternVar _ name _) =
-  let ifcArgId = BS.mkId BS.NoPos $ fromString ifcArgName in
   BS.CSelect
-    (BS.CSelect
-      (BS.CVar ifcArgId)
-      (BS.mkId BS.NoPos $ fromString $ lowercaseName name))
+    (BS.CVar $ BS.mkId BS.NoPos $ fromString $ wireName name)
     (BS.id_read BS.NoPos)
 
 transExpr (Label _ _ e) = transExpr e -- ignore label

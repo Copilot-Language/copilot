@@ -157,18 +157,15 @@ testRun = once $ ioProperty $ do
           [ "package Top where"
           , ""
           , "import CopilotTest"
-          , "import CopilotTestIfc"
           , "import CopilotTestTypes"
           , ""
-          , "copilotTestIfc :: Module CopilotTestIfc"
-          , "copilotTestIfc ="
-          , "  module"
-          , "    interface"
-          , "      nop :: Action"
-          , "      nop = return ()"
-          , ""
           , "mkTop :: Module Empty"
-          , "mkTop = mkCopilotTest copilotTestIfc"
+          , "mkTop ="
+          , "  module"
+          , "    copilotTestMod <- mkCopilotTest"
+          , "    addCopilotTestRules copilotTestMod $"
+          , "      interface CopilotTestRulesIfc"
+          , "        nop_action = return ()"
           ]
 
     writeFile "Top.bs" bluespecProgram
@@ -293,7 +290,7 @@ mkRegressionTest1 op haskellFun vals =
     t1 = typeOf
     t2 = typeOf
 
-    varName = "input"
+    varName = "input1"
 
 -- | Test the behavior of a binary operation (an @'Op2' a b c@ value) against
 -- its expected behavior (as a Haskell function of type @[a] -> [b] -> [c]@)
@@ -762,7 +759,7 @@ mkTestCase1 genO gen = do
     t1 = typeOf
     t2 = typeOf
 
-    varName = "input"
+    varName = "input1"
 
 -- | Generate test cases for expressions that behave like binary functions.
 mkTestCase2 :: (Typed a, Typed b, Typed c)
@@ -1016,24 +1013,25 @@ testRunCompareArgBluespecProgram proxy inputs outputType = unlines $
     , "import Vector"
     , ""
     , "import CopilotTest"
-    , "import CopilotTestIfc"
     , "import CopilotTestTypes"
     , ""
     ]
     ++ inputVecDecls ++
     [ ""
-    , "copilotTestIfc :: Module CopilotTestIfc"
-    , "copilotTestIfc ="
+    , "mkTop :: Module Empty"
+    , "mkTop ="
     , "  module"
+    , "    copilotTestMod <- mkCopilotTest"
     ]
     ++ inputRegs ++
     [ "    i :: Reg (Bit 64) <- mkReg 0"
     , "    ready :: Reg Bool <- mkReg False"
-    , "    interface"
-    , "      printBack :: " ++ outputType ++ " -> Action"
-    , "      printBack output = $display " ++ printBackDisplayArgs
-    , "                         when ready"
     , ""
+    , "    addCopilotTestRules copilotTestMod $"
+    , "      interface CopilotTestRulesIfc"
+    , "        printBack_action :: " ++ outputType ++ " -> Action"
+    , "        printBack_action output = $display " ++ printBackDisplayArgs
+    , "                                  when ready"
     ]
     ++ inputMethods ++
     [ ""
@@ -1043,9 +1041,6 @@ testRunCompareArgBluespecProgram proxy inputs outputType = unlines $
     ++ inputUpdates ++
     [ "        i := i + 1"
     , "        ready := True"
-    , ""
-    , "mkTop :: Module Empty"
-    , "mkTop = mkCopilotTest copilotTestIfc"
     ]
   where
     printBackDisplayArgs :: String
@@ -1070,11 +1065,9 @@ testRunCompareArgBluespecProgram proxy inputs outputType = unlines $
 
     inputMethods :: [String]
     inputMethods =
-      concatMap
-        (\(bluespecType, varName, regName, _inputVecName, _inputVals) ->
-          [ "      " ++ varName ++ " :: Reg (" ++ bluespecType ++ ")"
-          , "      " ++ varName ++ " = " ++ regName
-          ])
+      map
+        (\(_bluespecType, varName, regName, _inputVecName, _inputVals) ->
+          "        " ++ varName ++ "_action = return " ++ regName)
         vars
 
     inputUpdates :: [String]
