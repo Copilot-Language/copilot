@@ -17,30 +17,6 @@ let
     copilot-libraries = (import ../copilot-libraries { inherit sources ghc; }).copilot-libraries;
     copilot-prettyprinter = (import ../copilot-prettyprinter { inherit sources ghc; }).copilot-prettyprinter;
     copilot-theorem = (import ../copilot-theorem { inherit sources ghc; }).copilot-theorem;
-    # > crux-llvm >=0.9 && <0.10, llvm-pretty >=0.12.1.0 && <0.13
-    #  pkg = "reflex-test-host";
-         #   ver = "0.1.2.3";
-          #  sha256 = "9ee3ad9ac4fc58c6dcabcd9fbc6d109a51d8e86ba2682cee8367bc6b452f09ea";
-    # crux-llvm =
-    #   bhp.callHackageDirect {
-    #     pkg = "crux-llvm";
-    #     ver = "0.9.1";
-    #     sha256="sha256-OPCiLp0xDIvzdPtmEk0m7/RncZjo8fkRX1kiNr5DWTo=";
-    #      rev = { revision = "1";
-    #              sha256 = "sha256-vqbWx4L7SygP07H3Jn6wsqAu1Fl/oAT1H0umOvJC8yw=";
-    #            };
-    #   }  { };
-    # llvm-pretty =
-    #   bhp.callHackageDirect {
-    #     pkg = "llvm-pretty";
-    #     ver = "0.12.1.0";
-    #     sha256="sha256-0scMOvY8sXQuCXpSidRpELTyhxh7YbVOZ/2gRLo+hF0=";
-    #     rev = { revision = "1";
-    #             sha256 = "sha256-vqbWx4L7SygP07H3Jn6wsqAu1Fl/oAT1H0umOvJC8yw=";
-    #           };
-    #   }  { };
-
-    # crux-llvm = bhp.callHackage "crux-llvm" "0.9.1" { };
   };
   np = import sources.nixpkgs {};
   bhp = np.haskell.packages.${ghc};
