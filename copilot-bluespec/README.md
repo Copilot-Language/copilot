@@ -25,6 +25,8 @@ $ cabal install copilot
 $ cabal install copilot-bluespec
 ```
 
+Test execution time is about 5 minutes.
+
 For more detailed instructions on how to install Copilot, please refer to the
 [Copilot website](https://copilot-language.github.io).
 
