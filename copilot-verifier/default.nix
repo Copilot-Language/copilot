@@ -32,11 +32,21 @@ let
 
   importZ3 = drv:
     drv.overrideAttrs (oa: {
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.z3 np.clang np.llvm];
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.z3];
+    });
+
+  importClang = drv:
+    drv.overrideAttrs (oa: {
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.clang];
+    });
+
+  importLLVM = drv:
+    drv.overrideAttrs (oa: {
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.llvm_14];
     });
 
   copilot-verifier-base =
-    importZ3 (hp.callCabal2nix "copilot-verifier" (np.lib.sourceByRegex ./. sourceRegexes) {});
+    importLLVM (importClang (importZ3 (hp.callCabal2nix "copilot-verifier" (np.lib.sourceByRegex ./. sourceRegexes) {})));
 
   copilot-verifier-overlay = _n: _o: { copilot-verifier = copilot-verifier-base; };
   hp = bhp.override (o: {
