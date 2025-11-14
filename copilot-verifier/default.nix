@@ -29,12 +29,12 @@ let
 
   importClang = drv:
     drv.overrideAttrs (oa: {
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.clang];
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.clang_16];
     });
 
   importLLVM = drv:
-    drv.overrideAttrs (oa: {
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.llvm_14];
+    drv.overrideAttrs (oa: { # llvm and clang versions are coupled
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.llvm_16];
     });
 
   copilot-verifier-base =
