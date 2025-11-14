@@ -1,13 +1,5 @@
 { sources ? import ./nix/sources.nix, ghc ? "ghc98" }:
 let
-  # depOverlay2 = n: o: {
-  #   th-abstraction =
-  #     bhp.callHackageDirect {
-  #       pkg = "th-abstraction";
-  #       ver = "0.6.0.0";
-  #       sha256="sha256-eOUH1OSmLL8hS8mzijfJvGhxfMEU2vQozKHKlbv2B/A=";
-  #     }  { };
-  # };
   depOverlay = n: o: {
     copilot = (import ../copilot { inherit sources ghc; }).copilot;
     copilot-core = (import ../copilot-core { inherit sources ghc; }).copilot-core;
