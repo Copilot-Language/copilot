@@ -51,10 +51,10 @@ common bldflags
     crucible >= 0.7.1 && < 0.8,
     crucible-llvm >= 0.7 && < 0.8,
     crux >= 0.7.1 && < 0.8,
-    crux-llvm >= 0.9 && < 0.10,
+    crux-llvm >= 0.9 && < 0.11,
     filepath,
     lens,
-    llvm-pretty >= 0.12.1.0 && < 0.13,
+    llvm-pretty >= 0.12.1.0 && < 0.14,
     mtl,
     panic >= 0.3,
     parameterized-utils >= 2.1.4 && < 2.2,
@@ -62,7 +62,7 @@ common bldflags
     text,
     transformers,
     vector,
-    what4 >= 1.6.1 && < 1.7
+    what4 >= 1.6.1 && < 1.8
 
 library
   import: bldflags
