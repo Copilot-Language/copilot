@@ -13,10 +13,11 @@ let
     "^LICENSE$"
   ];
 
+  externalDeps = [ np.bluespec np.removeReferencesTo ];
   copilot-bluespec-base =
     (hp.callCabal2nix "copilot-bluespec" (np.lib.sourceByRegex ./. sourceRegexes) {}
     ).overrideAttrs(oa: {
-      nativeBuildInputs = [ np.bluespec np.removeReferencesTo ];
+      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ externalDeps;
     });
   copilot-bluespec-overlay = _n: _o: { copilot-bluespec = copilot-bluespec-base; };
   hp = bhp.override (o: {
@@ -28,5 +29,6 @@ let
 in {
   inherit np;
   inherit hp;
+  inherit externalDeps;
   inherit copilot-bluespec;
 }
