@@ -1,0 +1,10 @@
+cradle:
+  multi:
+    - path: "./src"
+      config:
+        cradle:
+          cabal:
+    - path: "./test"
+      config:
+        cradle:
+          cabal:
