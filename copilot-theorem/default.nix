@@ -1,4 +1,4 @@
-{ sources ? import ./nix/sources.nix, ghc ? "ghc98" }:
+{ sources ? import ../nix/sources.nix, ghc ? "ghc98" }:
 let
   depOverlay = n: o: {
     copilot-core = (import ../copilot-core { inherit sources ghc; }).copilot-core;

@@ -1,4 +1,4 @@
-{ sources ? import ./nix/sources.nix, ghc ? "ghc98" }:
+{ sources ? import ../nix/sources.nix, ghc ? "ghc98" }:
 let
   depOverlay = n: o: {
     copilot-language = (import ../copilot-language { inherit sources ghc; }).copilot-language;
