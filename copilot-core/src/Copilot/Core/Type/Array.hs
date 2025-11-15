@@ -53,7 +53,7 @@ arrayUpdate (Array []) _ _ = error errMsg
   where
     errMsg = "copilot-core: arrayUpdate: Attempt to update empty array"
 
-arrayUpdate (Array (x:xs)) 0 y = Array (y:xs)
+arrayUpdate (Array (_x:xs)) 0 y = Array (y:xs)
 
 arrayUpdate (Array (x:xs)) n y =
     arrayAppend x (arrayUpdate (Array xs) (n - 1) y)
@@ -61,4 +61,4 @@ arrayUpdate (Array (x:xs)) n y =
     -- | Append to an array while preserving length information at the type
     -- level.
     arrayAppend :: a -> Array (n - 1) a -> Array n a
-    arrayAppend x (Array xs) = Array (x:xs)
+    arrayAppend x' (Array xs') = Array (x':xs')

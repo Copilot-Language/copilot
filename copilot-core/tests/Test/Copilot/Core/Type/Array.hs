@@ -141,13 +141,13 @@ testArrayUpdateWrong len =
 testArrayMakeWrongLength :: forall n . KnownNat n => Proxy n -> Property
 testArrayMakeWrongLength len =
     expectFailure           $
-    forAll wrongLength      $ \length ->
-    forAll (xsInt64 length) $ \ls ->
+    forAll wrongLength      $ \length' ->
+    forAll (xsInt64 length') $ \ls ->
       let array' :: Array n Int64
           array' = array ls
       in arrayElems array' == ls
   where
-    xsInt64 length = vectorOf length arbitrary
+    xsInt64 length' = vectorOf length' arbitrary
     expectedLength = fromIntegral (natVal len)
     wrongLength    = (expectedLength +) . getNonNegative <$> arbitrary
 
@@ -157,7 +157,7 @@ testArrayUpdateElems :: forall n . KnownNat n => Proxy n -> Property
 testArrayUpdateElems len =
     forAll xsInt64  $ \ls ->
     forAll position $ \p ->
-    forAll xInt64   $ \v ->
+    forAll xInt64   $ \_v ->
       let -- Original array
           array' :: Array n Int64
           array' = array ls
