@@ -22,23 +22,16 @@ let
     "^LICENSE$"
   ];
 
-  importZ3 = drv:
-    drv.overrideAttrs (oa: {
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.z3];
-    });
-
-  importClang = drv:
-    drv.overrideAttrs (oa: {
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.clang_16];
-    });
-
-  importLLVM = drv:
-    drv.overrideAttrs (oa: { # llvm and clang versions are coupled
-      propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ [np.llvm_16];
-    });
-
+  # llvm and clang versions are coupled
+  externalDeps = [np.z3 np.clang_16 np.llvm_16];
+  shellTuning = ''export CCC_OVERRIDE_OPTIONS=+-fno-wrapv
+  '';
   copilot-verifier-base =
-    importLLVM (importClang (importZ3 (hp.callCabal2nix "copilot-verifier" (np.lib.sourceByRegex ./. sourceRegexes) {})));
+    (hp.callCabal2nix "copilot-verifier" (np.lib.sourceByRegex ./. sourceRegexes) {}).overrideAttrs
+      (oa: {
+        checkPhase = shellTuning + oa.checkPhase;
+        propagatedBuildInputs = (oa.propagatedBuildInputs or []) ++ externalDeps;
+      });
 
   copilot-verifier-overlay = _n: _o: { copilot-verifier = copilot-verifier-base; };
   hp = bhp.override (o: {
@@ -50,5 +43,7 @@ let
 in {
   inherit np;
   inherit hp;
+  inherit externalDeps;
+  inherit shellTuning;
   inherit copilot-verifier;
 }
