@@ -12,4 +12,5 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - run:
         nix-build copilot-bluespec
+    - run:
         nix-build copilot-verifier
