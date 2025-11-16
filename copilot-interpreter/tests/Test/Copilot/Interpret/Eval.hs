@@ -11,7 +11,6 @@ module Test.Copilot.Interpret.Eval where
 import Data.Bits                            (Bits, complement, shiftL, shiftR,
                                              xor, (.&.), (.|.))
 import Data.Int                             (Int16, Int32, Int64, Int8)
-import Data.List                            (lookup)
 import Data.Maybe                           (fromMaybe)
 import Data.Typeable                        (Typeable)
 import Data.Word                            (Word16, Word32, Word64, Word8)
@@ -36,6 +35,7 @@ import Copilot.PrettyPrint      (ppExpr)
 
 -- Internal imports: auxiliary functions
 import Test.Extra (apply1, apply2, apply3)
+import Text.Read (readEither)
 
 -- * Constants
 
@@ -747,7 +747,7 @@ checkSemanticsP steps streams (SemanticsP (expr, exprList)) =
     any isNaN' expectation || resultValues == expectation
   where
     -- Limit expectation to the number of evaluation steps.
-    expectation = take steps exprList
+    expectation = pure <$> take steps exprList
 
     -- Obtain the results by looking up the observer in the spec
     -- and parsing the results into Haskell values.
@@ -772,8 +772,8 @@ checkSemanticsP steps streams (SemanticsP (expr, exprList)) =
 -- * Auxiliary
 
 -- | Read a Haskell value from the output of the evaluator.
-readResult :: Read a => String -> a
-readResult = read . readResult'
+readResult :: Read a => String -> Either String a
+readResult = readEither . readResult'
   where
     readResult' :: String -> String
     readResult' "false" = "False"
@@ -787,8 +787,7 @@ lookupWithDefault k def = fromMaybe def . lookup k
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
-showType t =
-  case t of
+showType = \case
     Bool   -> "Bool"
     Int8   -> "Int8"
     Int16  -> "Int16"
@@ -801,4 +800,4 @@ showType t =
     Float  -> "Float"
     Double -> "Double"
     Array t -> "Array " ++ showType t
-    Struct t -> "Struct"
+    Struct _ -> "Struct"

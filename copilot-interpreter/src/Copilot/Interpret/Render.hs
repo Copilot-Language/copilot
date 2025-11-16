@@ -10,7 +10,7 @@ module Copilot.Interpret.Render
   ) where
 
 import Data.List (intersperse, transpose, foldl')
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import Copilot.Interpret.Eval (Output, ExecTrace (..))
 import Text.PrettyPrint
 
@@ -69,25 +69,22 @@ step ExecTrace
   where
 
   ppTriggerOutputs :: [Doc]
-  ppTriggerOutputs =
-      catMaybes
-    . fmap ppTriggerOutput
-    . map (fmap head)
-    $ trigs
+  ppTriggerOutputs = mapMaybe ppTriggerOutput $ trigs
 
-  ppTriggerOutput :: (String, Maybe [Output]) -> Maybe Doc
-  ppTriggerOutput (_,  Nothing) = Nothing
-  ppTriggerOutput (cs, Just xs) = Just $
+  ppTriggerOutput :: (String, [Maybe [Output]]) -> Maybe Doc
+  ppTriggerOutput (cs, Just xs : _) = Just $
     text cs <> text "," <>
       (foldr (<>) empty . map text . intersperse ",") xs
+  ppTriggerOutput (_,  Nothing : _) = Nothing
+  ppTriggerOutput (_,  []) = Nothing
 
   tails :: Maybe ExecTrace
   tails =
-    if any null (fmap (tail.snd) trigs)
+    if any null (fmap (drop 1.snd) trigs)
       then Nothing
       else Just
         ExecTrace
-          { interpTriggers  = map (fmap tail) trigs
+          { interpTriggers  = map (fmap (drop 1)) trigs
           , interpObservers = []
           }
 
@@ -105,11 +102,12 @@ asColumnsWithBuff lls q = normalize
           longColumnLen = maximum (map length lls)
           longEntryLen = maximum $ map docLen (concat lls)
 
+docLen :: Doc -> Int
 docLen d = length $ render d
 
 -- | Pad a string on the right to reach an expected length.
 pad :: Int -> Int -> a -> [a] -> [a]
-pad lx max b ls = ls ++ replicate (max - lx) b
+pad lx max' b ls = ls ++ replicate (max' - lx) b
 
 -- | Pad a list of strings on the right with spaces.
 pad' :: Int      -- ^ Mininum number of spaces to add

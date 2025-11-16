@@ -19,7 +19,7 @@ module Copilot.Interpret.Eval
 import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
                                 Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
                                 Trigger (..), Type (..), UExpr (..), Value (..),
-				arrayElems, arrayUpdate, specObservers,
+                                arrayElems, arrayUpdate, specObservers,
                                 specStreams, specTriggers, updateField)
 import Copilot.Interpret.Error (badUsage)
 
@@ -32,7 +32,6 @@ import Data.Dynamic      (Dynamic, fromDynamic, toDyn)
 import Data.List         (transpose)
 import Data.Maybe        (fromJust)
 import Data.Typeable     (Typeable)
-import GHC.TypeLits      (KnownNat, Nat, natVal)
 
 -- | Exceptions that may be thrown during interpretation of a Copilot
 -- specification.
@@ -142,14 +141,15 @@ type LocalEnv = [(Name, Dynamic)]
 evalExpr_ :: Typeable a => Int -> Expr a -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 locs strms = case e0 of
   Const _ x                          -> x
-  Drop t i id                        ->
-    let Just buff = lookup id strms >>= fromDynamic in
-    reverse buff !! (fromIntegral i + k)
-  Local t1 _ name e1 e2              ->
+  Drop _t i id                        ->
+    case lookup id strms >>= fromDynamic of
+      Just buff -> reverse buff !! (fromIntegral i + k)
+      Nothing -> error $ "No id " ++ show id ++ " in " ++ show strms
+  Local _t1 _ name e1 e2              ->
     let x     = evalExpr_ k e1 locs strms in
     let locs' = (name, toDyn x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2  locs' strms
-  Var t name                         -> fromJust $ lookup name locs >>= fromDynamic
+  Var _t name                         -> fromJust $ lookup name locs >>= fromDynamic
   ExternVar _ name xs                -> evalExternVar k name xs
   Op1 op e1                          ->
     let ev1 = evalExpr_ k e1 locs strms in
@@ -210,6 +210,7 @@ evalOp1 op = case op of
     BwNot _    -> complement
     Cast _ _   -> P.fromIntegral
     GetField (Struct _) _ f -> unfield . f
+    GetField {} -> error "There is a bug in the type checker"
   where
     -- Used to help GHC pick a return type for ceiling/floor
     idI :: Integer -> Integer
@@ -247,11 +248,12 @@ evalOp2 op = case op of
   BwShiftR _ _ -> ( \ !a !b -> shiftR a $! fromIntegral b )
   Index    _   -> \xs n -> (arrayElems xs) !! (fromIntegral n)
 
-  UpdateField (Struct _) ty (fieldAccessor :: a -> Field s b) ->
+  UpdateField (Struct _) ty (_fieldAccessor :: a -> Field s b) ->
     \stream fieldValue ->
       let newField :: Field s b
           newField = Field fieldValue
       in updateField stream (Value ty newField)
+  UpdateField {} -> error "There is a bug in the type checker"
 
 -- | Apply a function to two numbers, so long as the second one is
 -- not zero.
@@ -267,14 +269,14 @@ catchZero f x y = f x y
 -- 'Copilot.Core.Operators.Op3'.
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
 evalOp3 (Mux         _)  = \ !v !x !y -> if v then x else y
-evalOp3 (UpdateArray ty) = \xs n x -> arrayUpdate xs (fromIntegral n) x
+evalOp3 (UpdateArray _ty) = \xs n x -> arrayUpdate xs (fromIntegral n) x
 
 -- | Turn a stream into a key-value pair that can be added to an 'Env' for
 -- simulation.
 initStrm :: Stream -> (Id, Dynamic)
 initStrm Stream { streamId       = id
                 , streamBuffer   = buffer
-                , streamExprType = t } =
+                } =
   (id, toDyn (reverse buffer))
 
 -- | Evaluate several streams for a number of steps, producing the environment
@@ -293,7 +295,7 @@ evalStreams top specStrms initStrms =
     strms_ = map evalStream specStrms
     evalStream Stream { streamId       = id
                       , streamExpr     = e
-                      , streamExprType = t } =
+                      } =
       let xs = fromJust $ lookup id strms >>= fromDynamic      in
       let x  = evalExpr_ k e [] strms                          in
       let ls = x `seq` (x:xs)                                  in
@@ -402,5 +404,5 @@ showWit t =
     Word64 -> ShowWit
     Float  -> ShowWit
     Double -> ShowWit
-    Array t -> ShowWit
-    Struct t -> ShowWit
+    Array _ -> ShowWit
+    Struct _ -> ShowWit
