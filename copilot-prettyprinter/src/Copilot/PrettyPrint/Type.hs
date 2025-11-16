@@ -37,8 +37,7 @@ showWithType showT t x =
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
-showType t =
-  case t of
+showType = \case
     Bool   -> "Bool"
     Int8   -> "Int8"
     Int16  -> "Int16"
@@ -51,7 +50,7 @@ showType t =
     Float  -> "Float"
     Double -> "Double"
     Array t -> "Array " ++ showType t
-    Struct t -> "Struct"
+    Struct _ -> "Struct"
 
 -- * Auxiliary show instance
 
@@ -60,8 +59,7 @@ data ShowWit a = Show a => ShowWit
 
 -- | Turn a type into a show witness.
 showWit :: Type a -> ShowWit a
-showWit t =
-  case t of
+showWit = \case
     Bool   -> ShowWit
     Int8   -> ShowWit
     Int16  -> ShowWit
@@ -73,5 +71,5 @@ showWit t =
     Word64 -> ShowWit
     Float  -> ShowWit
     Double -> ShowWit
-    Array t -> ShowWit
-    Struct t -> ShowWit
+    Array _ -> ShowWit
+    Struct _ -> ShowWit
