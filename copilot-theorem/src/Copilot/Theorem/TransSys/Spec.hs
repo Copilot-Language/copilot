@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE RankNTypes                #-}
@@ -23,6 +24,11 @@ module Copilot.Theorem.TransSys.Spec
   , nodeVarsSet
   , specDependenciesGraph
   , specTopNode ) where
+
+#if MIN_VERSION_base(4,19,0)
+#else
+import Control.Applicative  (liftA2)
+#endif
 
 import qualified Copilot.Core as C
 

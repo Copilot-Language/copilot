@@ -787,7 +787,7 @@ lookupWithDefault k def = fromMaybe def . lookup k
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
-showType = \case
+showType t' = case t' of
     Bool   -> "Bool"
     Int8   -> "Int8"
     Int16  -> "Int16"

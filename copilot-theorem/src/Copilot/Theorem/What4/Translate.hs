@@ -737,14 +737,14 @@ translateOp2 sym origExpr op' xe1' xe2' = case (op', xe1', xe2') of
 
   -- None of the following should happen:
   --
-  -- * The first argument is negative, and the second argument is a finite
+  --   The first argument is negative, and the second argument is a finite
   --   noninteger
   --
-  -- * The first argument is zero, and the second argument is negative
+  --   The first argument is zero, and the second argument is negative
   --
-  -- * The arguments cause the result to overflow
+  --   The arguments cause the result to overflow
   --
-  -- * The arguments cause the result to underflow
+  --   The arguments cause the result to underflow
   (CE.Pow _, xe1, xe2) -> liftIO $ fpSpecialOp WSF.Pow xe1 xe2
   -- The second argument should not be negative or zero
   (CE.Logb _, xe1, xe2) -> liftIO $ fpOp' logbFn xe1 xe2

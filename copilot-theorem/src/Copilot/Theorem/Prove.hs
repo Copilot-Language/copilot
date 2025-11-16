@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NamedFieldPuns            #-}
@@ -21,7 +22,11 @@ module Copilot.Theorem.Prove
 import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
+#if MIN_VERSION_base(4,19,0)
 import Control.Monad        (ap, liftM)
+#else
+import Control.Applicative  (liftA2)
+#endif
 import Control.Monad.Writer
 
 -- | Output produced by a prover, containing the 'Status' of the proof and

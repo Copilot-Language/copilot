@@ -19,7 +19,6 @@ module Copilot.Library.MTL
 
 import Copilot.Language
 import qualified Prelude as P
-import Copilot.Library.Utils
 
 -- It is necessary to provide a positive number of time units
 -- dist to each function, where the distance between the times
@@ -31,10 +30,10 @@ import Copilot.Library.Utils
 -- at some time @t'@, where @(t + l) <= t' <= (t + u)@.
 eventually :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
-eventually l u clk dist s = res clk s $ (u `P.div` dist) + 1
+eventually l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
-  mins = clk + (constant l)
-  maxes = clk + (constant u)
+  mins = clk + constant l
+  maxes = clk + constant u
   res _ _ 0 = false
   res c s k =
     c <= maxes && ((mins <= c && s) || nextRes c s k)
@@ -46,10 +45,10 @@ eventually l u clk dist s = res clk s $ (u `P.div` dist) + 1
 -- true at some time @t'@, where @(t - u) <= t' <= (t - l)@.
 eventuallyPrev :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
-eventuallyPrev l u clk dist s = res clk s $ (u `P.div` dist) + 1
+eventuallyPrev l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
-  mins = clk - (constant u)
-  maxes = clk - (constant l)
+  mins = clk - constant u
+  maxes = clk - constant l
   res _ _ 0 = false
   res c s k =
     mins <= c && ((c <= maxes && s) || nextRes c s k)
@@ -61,7 +60,7 @@ eventuallyPrev l u clk dist s = res clk s $ (u `P.div` dist) + 1
 -- @t'@ where @(t + l) <= t' <= (t + u)@.
 always :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
-always l u clk dist s = res clk s $ (u `P.div` dist) + 1
+always l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
   mins = clk + (constant l)
   maxes = clk + (constant u)
@@ -76,7 +75,7 @@ always l u clk dist s = res clk s $ (u `P.div` dist) + 1
 -- @t'@ where @(t - u) <= t' <= (t - l)@.
 alwaysBeen :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
-alwaysBeen l u clk dist s = res clk s $ (u `P.div` dist) + 1
+alwaysBeen l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
   mins = clk - (constant u)
   maxes = clk - (constant l)

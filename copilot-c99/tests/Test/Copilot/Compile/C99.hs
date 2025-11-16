@@ -34,8 +34,6 @@ import Test.QuickCheck.Gen                  (chooseAny, chooseBoundedIntegral)
 
 -- External imports: Copilot
 import Copilot.Core            hiding (Property)
-import Copilot.Core.Type.Array (array)
-
 -- External imports: Modules being tested
 import Copilot.Compile.C99 (cSettingsOutputDirectory, compile, compileWith,
                             mkDefaultCSettings)
@@ -434,15 +432,15 @@ funCompose2 (f1, g1) (f2, g2) (f3, g3) =
 
 -- | Test case specification for specs with one input variable and one output.
 data TestCase1 a b = TestCase1
-  { wrapTC1Expr :: Spec
+  Spec
     -- ^ Specification containing a trigger an extern of type 'a' and a trigger
     -- with an argument of type 'b'.
 
-  , wrapTC1Fun :: [a] -> [b]
+  ([a] -> [b])
     -- ^ Function expected to function in the same way as the Spec being
     -- tested.
 
-  , wrapTC1CopInp :: (String -> String, String, String, Gen a)
+  (String -> String, String, String, Gen a)
     -- ^ Input specification.
     --
     -- - The first element is a function that prints the variable declaration
@@ -456,26 +454,26 @@ data TestCase1 a b = TestCase1
     -- - The latter contains a randomized generator for values of the given
     -- type.
 
-  , wrapTC1CopOut :: (String, String)
+  (String, String)
     -- ^ Output specification.
     --
     -- The first element of the tuple contains the type of the output in C.
     --
     -- The second element of the tuple is the formatting string when printing
     -- values of the given kind.
-  }
+
 
 -- | Test case specification for specs with two input variables and one output.
 data TestCase2 a b c = TestCase2
-  { wrapTC2Expr :: Spec
+  Spec
     -- ^ Specification containing a trigger an extern of type 'a' and a trigger
     -- with an argument of type 'b'.
 
-  , wrapTC2Fun :: [a] -> [b] -> [c]
+  ([a] -> [b] -> [c])
     -- ^ Function expected to function in the same way as the Spec being
     -- tested.
 
-  , wrapTC2CopInp1 :: (String -> String, String, String, Gen a)
+  (String -> String, String, String, Gen a)
     -- ^ Input specification for the first input.
     --
     -- - The first element is a function that prints the variable declaration
@@ -489,7 +487,7 @@ data TestCase2 a b c = TestCase2
     -- - The latter contains a randomized generator for values of the given
     -- type.
 
-  , wrapTC2CopInp2 :: (String -> String, String, String, Gen b)
+  (String -> String, String, String, Gen b)
     -- ^ Input specification for the second input.
     --
     -- - The first element is a function that prints the variable declaration
@@ -503,14 +501,14 @@ data TestCase2 a b c = TestCase2
     -- - The latter contains a randomized generator for values of the given
     -- type.
 
-  , wrapTC2CopOut :: (String, String)
+  (String, String)
     -- ^ Output specification.
     --
     -- The first element of the tuple contains the type of the output in C.
     --
     -- The second element of the tuple is the formatting string when printing
     -- values of the given kind.
-  }
+
 
 -- | Generate test cases for expressions that behave like unary functions.
 mkTestCase1 :: (Typed a, Typed b)

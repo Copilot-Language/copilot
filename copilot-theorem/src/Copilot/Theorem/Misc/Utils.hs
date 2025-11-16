@@ -1,4 +1,9 @@
+{-# LANGUAGE CPP #-}
+#if MIN_VERSION_base(4,19,0)
 {-# LANGUAGE Trustworthy #-}
+#else
+{-# LANGUAGE Safe #-}
+#endif
 
 -- | Utility / auxiliary functions.
 module Copilot.Theorem.Misc.Utils

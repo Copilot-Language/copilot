@@ -1,4 +1,4 @@
-cabal-version:       2.2
+cabal-version:       >=1.10
 name:                copilot-prettyprinter
 version:             4.6
 synopsis:            A prettyprinter of Copilot Specifications.
@@ -14,7 +14,7 @@ description:
 
 author:              Frank Dedden, Lee Pike, Robin Morisset, Alwyn Goodloe,
                      Sebastian Niller, Nis Nordbyop Wegmann, Ivan Perez
-license:             BSD-3-Clause
+license:             BSD3
 license-file:        LICENSE
 maintainer:          Ivan Perez <ivan.perezdominguez@nasa.gov>
 homepage:            https://copilot-language.github.io
@@ -34,8 +34,7 @@ source-repository head
 library
 
   default-language:  Haskell2010
-  default-extensions:
-    LambdaCase
+
   hs-source-dirs:    src
 
   ghc-options:

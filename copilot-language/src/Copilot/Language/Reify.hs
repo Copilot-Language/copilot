@@ -17,7 +17,7 @@ import Copilot.Core (Typed, Id, typeOf)
 
 import Copilot.Language.Analyze (analyze)
 import Copilot.Language.Error   (impossible)
-import Copilot.Language.Spec
+import Copilot.Language.Spec hiding (prop)
 import Copilot.Language.Stream (Stream (..))
 
 import Copilot.Theorem.Prove
@@ -27,7 +27,7 @@ import Data.IORef
 import System.Mem.StableName.Dynamic
 import System.Mem.StableName.Map (Map)
 import qualified System.Mem.StableName.Map as M
-import Control.Monad (liftM, unless)
+import Control.Monad (unless)
 
 -- | Transform a Copilot Language specification into a Copilot Core
 -- specification.
@@ -200,18 +200,6 @@ mkExpr refMkId refStreams refMap = go
       w3 <- go e3
       return $ Core.Op3 op w1 w2 w3
 
-    ------------------------------------------------------
-
-  mkFunArg :: Arg -> IO Core.UExpr
-  mkFunArg (Arg e) = do
-    w <- mkExpr refMkId refStreams refMap e
-    return $ Core.UExpr typeOf w
-
-  mkStrArg :: (Core.Name, Arg) -> IO (Core.Name, Core.UExpr)
-  mkStrArg (name, Arg e) = do
-    w <- mkExpr refMkId refStreams refMap e
-    return $ (name, Core.UExpr typeOf w)
-
 -- | Transform a Copilot stream expression into a Copilot Core stream
 -- expression.
 {-# INLINE mkStream #-}
@@ -224,7 +212,9 @@ mkStream
   -> IO Id
 mkStream refMkId refStreams refMap e0 = do
   dstn <- makeDynStableName e0
-  let Append buf _ e = e0 -- avoids warning
+  (buf, e) <- case e0 of
+    Append buf _ e -> pure (buf, e)
+    o -> fail $ "Expected Append but got " ++ show o
   mk <- haveVisited dstn
   case mk of
     Just id_ -> return id_

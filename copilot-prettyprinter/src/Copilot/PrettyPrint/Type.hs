@@ -37,7 +37,7 @@ showWithType showT t x =
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
-showType = \case
+showType t' = case t' of
     Bool   -> "Bool"
     Int8   -> "Int8"
     Int16  -> "Int16"
@@ -59,7 +59,7 @@ data ShowWit a = Show a => ShowWit
 
 -- | Turn a type into a show witness.
 showWit :: Type a -> ShowWit a
-showWit = \case
+showWit t = case t of
     Bool   -> ShowWit
     Int8   -> ShowWit
     Int16  -> ShowWit

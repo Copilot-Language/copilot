@@ -67,7 +67,7 @@ import qualified What4.Solver.DReal             as WS
 
 import Control.Exception (Exception, throw)
 import Control.Monad (forM)
-import Control.Monad.State
+import Control.Monad.State (MonadIO (liftIO), gets, get)
 import qualified Data.BitVector.Sized as BV
 import Data.Foldable (foldrM)
 import Data.List (genericLength)

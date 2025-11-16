@@ -4,6 +4,7 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP #-}
 
 -- | Translate Copilot specifications into IL specifications.
 module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
@@ -14,7 +15,9 @@ import qualified Copilot.Core as C
 
 import qualified Data.Map.Strict as Map
 
+#if MIN_VERSION_base(4,19,0)
 import Control.Monad       (forM, liftM2, when)
+#endif
 import Control.Monad.State
 
 import Data.Char

@@ -1,4 +1,9 @@
+{-# LANGUAGE CPP  #-}
+#if MIN_VERSION_base(4,19,0)
 {-# LANGUAGE Trustworthy #-}
+#else
+{-# LANGUAGE Safe #-}
+#endif
 
 -- | A prover backend based on Kind2.
 module Copilot.Theorem.Kind2.Prover

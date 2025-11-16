@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Create Copilot executables that generate code or interpret streams and
 -- print the results to stdout.
 module Language.Copilot.Main ( copilotMain, defaultMain ) where
@@ -9,7 +10,10 @@ import Copilot.Language (Spec)
 import qualified Copilot.PrettyPrint as PP
 
 import Options.Applicative
+#if MIN_VERSION_base(4,19,0)
+#else
 import Data.Semigroup ((<>))
+#endif
 import Control.Monad (when)
 
 -- | An interpreter of Copilot specifications for a given

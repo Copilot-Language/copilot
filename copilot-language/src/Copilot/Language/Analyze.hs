@@ -116,11 +116,6 @@ analyzeProperty refStreams (Property _ p) =
   -- quantifier is.
   analyzeExpr refStreams (extractProp p)
 
-data SeenExtern = NoExtern
-                | SeenFun
-                | SeenArr
-                | SeenStruct
-
 -- | Analyze a Copilot stream and report any errors detected.
 --
 -- This function can fail with one of the exceptions in 'AnalyzeException'.
@@ -128,11 +123,11 @@ analyzeExpr :: IORef Env -> Stream a -> IO ()
 analyzeExpr refStreams s = do
   b <- mapCheck refStreams
   when b (throw TooMuchRecursion)
-  go NoExtern M.empty s
+  go M.empty s
 
   where
-  go :: SeenExtern -> Env -> Stream b -> IO ()
-  go seenExt nodes e0 = do
+  go :: Env -> Stream b -> IO ()
+  go nodes e0 = do
     dstn <- makeDynStableName e0
     assertNotVisited e0 dstn nodes
     let nodes' = M.insert dstn () nodes
@@ -141,16 +136,16 @@ analyzeExpr refStreams s = do
       Const _             -> return ()
       Drop k e1           -> analyzeDrop (fromIntegral k) e1
       Extern _ _          -> return ()
-      Local e f           -> go seenExt nodes' e >>
-                             go seenExt nodes' (f (Var "dummy"))
+      Local e f           -> go nodes' e >>
+                             go nodes' (f (Var "dummy"))
       Var _               -> return ()
-      Op1 _ e             -> go seenExt nodes' e
-      Op2 _ e1 e2         -> go seenExt nodes' e1 >>
-                             go seenExt nodes' e2
-      Op3 _ e1 e2 e3      -> go seenExt nodes' e1 >>
-                             go seenExt nodes' e2 >>
-                             go seenExt nodes' e3
-      Label _ e           -> go seenExt nodes' e
+      Op1 _ e             -> go nodes' e
+      Op2 _ e1 e2         -> go nodes' e1 >>
+                             go nodes' e2
+      Op3 _ e1 e2 e3      -> go nodes' e1 >>
+                             go nodes' e2 >>
+                             go nodes' e3
+      Label _ e           -> go nodes' e
 
 -- | Detect whether the given stream name has already been visited.
 --
@@ -265,11 +260,11 @@ analyzeExts ExternEnv { externVarEnv  = vars
   groupByPred = groupBy (\(n0,_) (n1,_) -> n0 == n1)
 
   foldCheck :: (String -> a -> a -> IO (String, a)) -> [(String, a)] -> IO ()
-  foldCheck check grp =
+  foldCheck check grp@(grpHead:_) =
     foldM_ ( \(name, c0) (_, c1) -> check name c0 c1)
-           (head grp) -- should be typesafe, since this is from groupBy
+           grpHead
            grp
-
+  foldCheck _ [] = fail "Dead code executed"
 -- | Obtain all the externs in a specification.
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do

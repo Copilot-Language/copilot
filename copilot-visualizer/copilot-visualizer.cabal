@@ -54,6 +54,7 @@ library
 
   ghc-options:
     -Wall
+    -Werror
 
   build-depends:
     base       >= 4.9     && < 5,
@@ -117,6 +118,7 @@ executable tikz-example
 
   ghc-options:
     -Wall
+    -Werror
 
   build-depends:
     base               >= 4.9 && < 5,

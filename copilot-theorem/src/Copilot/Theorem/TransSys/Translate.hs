@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE NamedFieldPuns      #-}
@@ -47,7 +48,10 @@ import Copilot.Theorem.TransSys.Spec hiding (prop)
 import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.Misc.Utils
 
-import Control.Monad            (liftM, liftM2, unless)
+#if MIN_VERSION_base(4,19,0)
+import Control.Monad (liftM, liftM2, unless)
+#endif
+
 import Control.Monad.State.Lazy
 
 import Data.Char (isNumber)
