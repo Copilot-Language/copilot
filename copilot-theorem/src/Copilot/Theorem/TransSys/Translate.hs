@@ -43,7 +43,7 @@
 -- process.
 module Copilot.Theorem.TransSys.Translate ( translate ) where
 
-import Copilot.Theorem.TransSys.Spec
+import Copilot.Theorem.TransSys.Spec hiding (prop)
 import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.Misc.Utils
 
@@ -52,25 +52,31 @@ import Control.Monad.State.Lazy
 
 import Data.Char (isNumber)
 import Data.Function (on)
-
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.Bimap (Bimap)
 
 import qualified Copilot.Core as C
 import qualified Data.Map     as Map
 import qualified Data.Bimap   as Bimap
-
+import Prelude hiding (id)
 -- Naming conventions
 -- These are important in order to avoid name conflicts
 
+ncSep :: String
 ncSep         = "."
+ncMain :: String
 ncMain        = "out"
+ncNode :: Show a => a -> [Char]
 ncNode i      = "s" ++ show i
+ncPropNode :: [Char] -> [Char]
 ncPropNode s  = "prop-" ++ s
+ncTopNode :: String
 ncTopNode     = "top"
-ncAnonInput   = "in"
+ncLocal :: [Char] -> [Char]
 ncLocal s     = "l" ++ dropWhile (not . isNumber) s
 
+ncExternVarNode :: [Char] -> [Char]
 ncExternVarNode name = "ext-" ++ name
 
 ncImported :: NodeId -> String -> String
@@ -121,6 +127,7 @@ mkTopNode topNodeId dependencies cprops =
       [ (Var cp, mkExtVar (ncPropNode cp) ncMain)
       | cp <- C.propertyName <$> cprops ]
 
+mkExtVarNode :: (NodeId, U Type) -> Node
 mkExtVarNode (name, U t) =
   Node { nodeId = name
        , nodeDependencies = []
@@ -175,7 +182,6 @@ stream (C.Stream { C.streamId
                  $ from (i + 1) bs
           in from 0 buf
         nodeLocalVars = Map.union nodeAuxVars outputLocals
-        nodeOutputs = map outvar [0 .. length buf - 1]
 
     return Node
       { nodeId, nodeDependencies, nodeLocalVars
@@ -230,6 +236,8 @@ expr t (C.Op2 op e1 e2) = handleOp2
     notHandled (UnhandledOp2 _opName _ta _tb _tc) =
       newUnconstrainedVar t
 
+expr t C.Op3 {} = error $ "Not handled " ++ show t
+
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
   newNode <- getFreshNodeName
@@ -254,8 +262,8 @@ runExprTrans ::
   Type t -> NodeId -> C.Expr a ->
   Trans (Expr t, Map Var VarDescr, Bimap Var ExtVar, [NodeId])
 
-runExprTrans t curNode e = do
-  modify $ \st -> st { _curNode = curNode }
+runExprTrans t curNode' e = do
+  modify $ \st -> st { _curNode = curNode' }
   modify $ \st -> st { _nextUid = 0 }
   e' <- expr t e
   (lvs, ivs, dps) <- popLocalInfos
@@ -271,6 +279,7 @@ data TransSt = TransSt
 
 type Trans a = State TransSt a
 
+newDep :: MonadState TransSt m => NodeId -> m ()
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
 
 popLocalInfos :: State TransSt (Map Var VarDescr, Bimap Var ExtVar, [NodeId])
@@ -293,12 +302,16 @@ getUid = do
 getFreshNodeName :: Trans NodeId
 getFreshNodeName = liftM (("_" ++) . show) getUid
 
+newImportedVar :: MonadState TransSt m => Var -> ExtVar -> m ()
 newImportedVar l g = modify $
   \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
 
+newLocal :: MonadState TransSt m => Var -> VarDescr -> m ()
 newLocal l d  =  modify $ \s -> s { _lvars = Map.insert l d $ _lvars s }
 
+curNode :: StateT TransSt Data.Functor.Identity.Identity NodeId
 curNode = _curNode <$> get
 
+newExtVarNode :: MonadState TransSt m => NodeId -> U Type -> m ()
 newExtVarNode id t =
   modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }

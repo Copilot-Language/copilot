@@ -21,7 +21,6 @@ module Copilot.Theorem.Prove
 import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
-import Control.Applicative (liftA2)
 import Control.Monad        (ap, liftM)
 import Control.Monad.Writer
 
@@ -79,12 +78,11 @@ instance Functor (ProofScheme a) where
   fmap = liftM
 
 instance Applicative (ProofScheme a) where
-  pure = return
+  pure a = Proof (pure a)
   (<*>) = ap
 
 instance Monad (ProofScheme a) where
   (Proof p) >>= f = Proof $ p >>= (\a -> case f a of Proof p' -> p')
-  return a = Proof (return a)
 
 -- | Prover actions.
 data Action where

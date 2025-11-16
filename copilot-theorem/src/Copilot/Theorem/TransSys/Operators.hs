@@ -135,7 +135,7 @@ handleOp1 ::
 
   -> m (expr resT)
 
-handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
+handleOp1 resT (op', e) handleExpr notHandledF mkOp = case op' of
 
   C.Not      -> boolOp Not (handleExpr Bool e)
 
@@ -168,11 +168,12 @@ handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
 
   -- Casting operator.
   C.Cast _ tb -> castTo tb
+  _o          -> error "Not handled"
 
   where
     boolOp :: Op1 Bool -> m (expr Bool) -> m (expr resT)
-    boolOp op e = case resT of
-      Bool -> (mkOp resT op) <$> e
+    boolOp op e' = case resT of
+      Bool -> (mkOp resT op) <$> e'
       _    -> Err.impossible typeErrMsg
 
     numOp :: Op1 resT -> m (expr resT)
@@ -221,7 +222,7 @@ handleOp2 ::
 
   -> m (expr resT)
 
-handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
+handleOp2 resT (op', e1, e2) handleExpr notHandledF mkOp notOp = case op' of
 
   C.And        -> boolConnector And
   C.Or         -> boolConnector Or
@@ -261,6 +262,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
   -- be casted to 'Integer', like 'ta'
   C.BwShiftL ta _tb   -> notHandled ta "bwshiftl"
   C.BwShiftR ta _tb   -> notHandled ta "bwshiftr"
+  _o                  -> error "Not handled"
 
   where
 

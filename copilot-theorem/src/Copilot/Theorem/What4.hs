@@ -79,7 +79,7 @@ import Data.Parameterized.Some
 import qualified Data.Parameterized.Vector as V
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import LibBF (BigFloat, bfToDouble, pattern NearEven)
-import qualified Panic as Panic
+import qualified Panic
 
 import Copilot.Theorem.What4.Translate
 
@@ -307,10 +307,10 @@ proveWithCounterExample :: Solver
                         -- ^ Spec
                         -> IO [(CE.Name, SatResultCex)]
 proveWithCounterExample solver spec =
-  proveInternal solver spec $ \baseCases indStep st satRes ->
+  proveInternal solver spec $ \baseCases' indStep st satRes ->
     case satRes of
       WS.Sat ge -> do
-        gBaseCases <- traverse (WG.groundEval ge) baseCases
+        gBaseCases <- traverse (WG.groundEval ge) baseCases'
         gIndStep <- WG.groundEval ge indStep
         gExternValues <- traverse (valFromExpr ge) (externVars st)
         gStreamValues <- traverse (valFromExpr ge) (streamValues st)
@@ -634,9 +634,6 @@ computeAssumptions sym properties spec =
       [ CS.extractProp (CS.propertyProp p)
       | p <- CS.specProperties spec
       , elem (CS.propertyName p) properties
-      , let prop = case CS.propertyProp p of
-                     CS.Forall pr -> pr
-                     CS.Exists {} -> throw UnexpectedExistentialProposition
       ]
 
     -- Compute all of the what4 predicates corresponding to each user-provided

@@ -4,7 +4,11 @@
 -- | Simplify IL expressions by partly evaluating operations on booleans.
 module Copilot.Theorem.IL.Transform ( bsimpl ) where
 
-import Copilot.Theorem.IL.Spec
+import safe Copilot.Theorem.IL.Spec
+    ( Expr(FunApp, Ite, Op1, ConstB, Op2),
+      Type(Bool),
+      Op1(Not),
+      Op2(Eq, Or, And) )
 
 -- | Simplify IL expressions by partly evaluating operations on booleans,
 -- eliminating some boolean literals.

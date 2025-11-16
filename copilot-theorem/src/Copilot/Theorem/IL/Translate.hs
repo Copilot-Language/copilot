@@ -25,6 +25,7 @@ import Text.Printf
 import GHC.Float (float2Double)
 
 import Data.Typeable (Typeable)
+import Prelude hiding (id)
 
 -- 'nc' stands for naming convention.
 ncSeq :: C.Id -> SeqId
@@ -36,9 +37,6 @@ ncLocal s = "l" ++ dropWhile (not . isNumber) s
 
 ncExternVar :: C.Name -> SeqId
 ncExternVar n = "ext_" ++ n
-
-ncUnhandledOp :: String -> String
-ncUnhandledOp = id
 
 ncMux :: Integer -> SeqId
 ncMux n = "mux" ++ show n
@@ -81,7 +79,7 @@ translate' b (C.Spec {C.specStreams, C.specProperties}) = runTrans b $ do
     }
 
 bound :: Expr -> C.Type a -> Trans ()
-bound s t = case t of
+bound s t' = case t' of
   C.Int8    -> bound' C.Int8
   C.Int16   -> bound' C.Int16
   C.Int32   -> bound' C.Int32
@@ -140,14 +138,14 @@ expr (C.ExternVar t name _) = bound s t >> return s
   where
     s = SVal (trType t) (ncExternVar name) _n_
 
-expr (C.Op1 (C.Sign ta) e) = case ta of
-  C.Int8   -> trSign ta e
-  C.Int16  -> trSign ta e
-  C.Int32  -> trSign ta e
-  C.Int64  -> trSign ta e
-  C.Float  -> trSign ta e
-  C.Double -> trSign ta e
-  _        -> expr $ C.Const ta 1
+expr (C.Op1 (C.Sign ta') e') = case ta' of
+  C.Int8   -> trSign ta' e'
+  C.Int16  -> trSign ta' e'
+  C.Int32  -> trSign ta' e'
+  C.Int64  -> trSign ta' e'
+  C.Float  -> trSign ta' e'
+  C.Double -> trSign ta' e'
+  _        -> expr $ C.Const ta' 1
   where
     trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
     trSign ta e =
@@ -187,9 +185,10 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
   e1'   <- expr e1
   e2'   <- expr e2
   newMux cond' (trType t) e1' e2'
+expr (C.Op3 (C.UpdateArray _) _ _ _) = error "There is bug in the type checker"
 
 trConst :: C.Type a -> a -> Expr
-trConst t v = case t of
+trConst t' v = case t' of
   C.Bool   -> ConstB v
   C.Float  -> negifyR (float2Double v)
   C.Double -> negifyR v
@@ -201,15 +200,16 @@ trConst t v = case t of
   t@C.Word16 -> negifyI v (trType t)
   t@C.Word32 -> negifyI v (trType t)
   t@C.Word64 -> negifyI v (trType t)
+  t -> error $ "There is bug in the type checker" ++ show t
   where
     negifyR :: Double -> Expr
-    negifyR v
-      | v >= 0    = ConstR v
-      | otherwise = Op1 Real Neg $ ConstR $ negate $ v
+    negifyR v'
+      | v' >= 0    = ConstR v'
+      | otherwise = Op1 Real Neg $ ConstR $ negate v'
     negifyI :: Integral a => a -> Type -> Expr
-    negifyI v t
-      | v >= 0    = ConstI t $ toInteger v
-      | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
+    negifyI v' t
+      | v' >= 0    = ConstI t $ toInteger v'
+      | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v'
 
 trOp1 :: C.Op1 a b -> (Op1, Type)
 trOp1 = \case
@@ -282,6 +282,7 @@ trType = \case
   C.Word64 -> BV64
   C.Float  -> Real
   C.Double -> Real
+  _o       -> error "THere is a bug in the type checker"
 
 -- | Translation state.
 data TransST = TransST

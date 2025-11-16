@@ -10,7 +10,7 @@ import Copilot.Theorem.IL.Spec
 import Text.PrettyPrint.HughesPJ
 import qualified Data.Map as Map
 
-import Prelude hiding ((<>))
+import Prelude hiding ((<>), id)
 
 -- | Pretty print an IL specification.
 prettyPrint :: IL -> String
@@ -20,7 +20,9 @@ prettyPrint = render . ppSpec
 printConstraint :: Expr -> String
 printConstraint = render . ppExpr
 
+indent :: Doc -> Doc
 indent = nest 4
+emptyLine :: Doc
 emptyLine = text ""
 
 ppSpec :: IL -> Doc
@@ -36,20 +38,6 @@ ppSpec (IL { modelInit, modelRec, properties }) =
 ppProp :: PropId -> ([Expr], Expr) -> Doc
 ppProp id (as, c) = (foldr (($$) . ppExpr) empty as)
   $$ quotes (text id) <+> colon <+> ppExpr c
-
-ppSeqDescr :: SeqDescr -> Doc
-ppSeqDescr (SeqDescr id ty) = text id <+> colon <+> ppType ty
-
-ppVarDescr :: VarDescr -> Doc
-ppVarDescr (VarDescr id ret args) =
-  text id
-  <+> colon
-  <+> (hsep . punctuate (space <> text "->" <> space) $ map ppType args)
-  <+> text "->"
-  <+> ppType ret
-
-ppType :: Type -> Doc
-ppType = text . show
 
 ppExpr :: Expr -> Doc
 ppExpr (ConstB v) = text . show $ v

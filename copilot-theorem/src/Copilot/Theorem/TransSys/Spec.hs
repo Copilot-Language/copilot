@@ -32,11 +32,9 @@ import Copilot.Theorem.TransSys.Invariants
 
 import Copilot.Theorem.Misc.Utils
 
-import Control.Applicative (liftA2)
 import Control.Monad (foldM, guard)
 
 import Data.Maybe
-import Data.Monoid ((<>))
 import Data.Map (Map)
 import Data.Set (Set, isSubsetOf, member)
 import Data.Bimap (Bimap)
@@ -104,6 +102,7 @@ data Expr t where
   VarE  :: Type t -> Var -> Expr t
 
 -- | Constructor for variables identifiers in the global namespace.
+mkExtVar :: NodeId -> String -> ExtVar
 mkExtVar node name = ExtVar node (Var name)
 
 foldExpr :: (Monoid m) => (forall t . Expr t -> m) -> Expr a -> m
@@ -114,9 +113,6 @@ foldExpr f expr = f expr <> fargs
       (Op1 _ _ e)      -> foldExpr f e
       (Op2 _ _ e1 e2)  -> foldExpr f e1 <> foldExpr f e2
       _                -> mempty
-
-foldUExpr :: (Monoid m) => (forall t . Expr t -> m) -> U Expr -> m
-foldUExpr f (U e) = foldExpr f e
 
 -- | Apply an arbitrary transformation to the leafs of an expression.
 transformExpr :: (forall a . Expr a -> Expr a) -> Expr t -> Expr t

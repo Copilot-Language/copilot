@@ -185,7 +185,7 @@ evalAt _ e@(ConstI _ _) = e
 evalAt i (Op1 t op e) = Op1 t op (evalAt i e)
 evalAt i (Op2 t op e1 e2) = Op2 t op (evalAt i e1) (evalAt i e2)
 evalAt i (Ite t c e1 e2) = Ite t (evalAt i c) (evalAt i e1) (evalAt i e2)
-evalAt i (FunApp t name args) = FunApp t name $ map (\e -> evalAt i e) args
+evalAt i (FunApp t name args') = FunApp t name $ map (\e -> evalAt i e) args'
 
 evalAt _ e@(SVal _ _ (Fixed _)) = e
 evalAt (Fixed n) (SVal t s (Var d)) = SVal t s (Fixed $ n + d)
