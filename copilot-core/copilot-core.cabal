@@ -32,10 +32,9 @@ source-repository head
     subdir:     copilot-core
 
 common base
-  default-language:  GHC2021
+  default-language:  Haskell2010
   default-extensions:
     LambdaCase
-    NoGeneralizedNewtypeDeriving
 
   ghc-options:
     -Wall
