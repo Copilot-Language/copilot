@@ -289,8 +289,8 @@ instance Typed Double where
 
 instance (Typeable t, Typed t, KnownNat n) => Typed (Array n t) where
   typeOf               = Array typeOf
-  simpleType       =  \case
-    Array t ->  SArray t
+  simpleType t         = case t of
+    Array t' -> SArray t'
     o -> error $ "There is a bug in the type checker " ++ show o
 
 -- | A untyped type (no phantom type).

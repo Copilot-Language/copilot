@@ -135,7 +135,7 @@ testSimpleTypesEqualityTransitive =
 -- | Test that each type is only equal to itself.
 testSimpleTypesEqualityUniqueness :: Property
 testSimpleTypesEqualityUniqueness =
-  forAllBlind (shuffle simpleTypes) $ \case [] -> False; (t:ts) ->  notElem  t ts
+  forAllBlind (shuffle simpleTypes) $ \x -> case x of [] -> False; (t:ts) ->  notElem t ts
 
 -- | Simple types tested.
 simpleTypes :: [SimpleType]
