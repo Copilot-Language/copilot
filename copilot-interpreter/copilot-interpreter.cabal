@@ -39,7 +39,6 @@ library
 
   ghc-options:
     -Wall
-    -Werror
 
   build-depends:
     base       >= 4.9 && < 5,
@@ -87,4 +86,3 @@ test-suite unit-tests
 
   ghc-options:
     -Wall
-    -Werror

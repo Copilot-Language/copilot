@@ -74,7 +74,6 @@ library
                  , Copilot.Language.Error
   ghc-options:
     -Wall
-    -Werror
 
 test-suite unit-tests
   type:
@@ -108,4 +107,3 @@ test-suite unit-tests
 
   ghc-options:
     -Wall
-    -Werror

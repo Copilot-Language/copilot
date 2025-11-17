@@ -41,7 +41,6 @@ library
 
   ghc-options             : -Wall
                             -freduction-depth=100
-                            -Werror
 
   build-depends           : base                  >= 4.9 && < 5
                           , bimap                 (>= 0.3 && < 0.4) || (>= 0.5 && < 0.6)
@@ -134,4 +133,3 @@ test-suite unit-tests
 
   ghc-options:
     -Wall
-    -Werror
