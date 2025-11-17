@@ -10,7 +10,7 @@ import Copilot.Language (Spec)
 import qualified Copilot.PrettyPrint as PP
 
 import Options.Applicative
-#if MIN_VERSION_base(4,19,0)
+#if MIN_VERSION_base(4,13,0)
 #else
 import Data.Semigroup ((<>))
 #endif
