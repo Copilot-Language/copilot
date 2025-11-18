@@ -719,7 +719,7 @@ data SemanticsP = forall t
 -- | Show function for test triplets that limits the accompanying list
 -- to a certain length.
 semanticsShowK :: Int -> SemanticsP -> String
-semanticsShowK steps (SemanticsP (expr, exprList)) =
+semanticsShowK steps (SemanticsP (_expr, exprList)) =
   show ("Cannot show stream", take steps exprList)
 
 -- | Check that the expression in the semantics pair is evaluated to the given
