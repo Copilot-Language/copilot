@@ -22,7 +22,7 @@ import Data.Set (Set, member)
 import qualified Data.Map  as Map
 import qualified Data.Set  as Set
 import qualified Data.List as List
-import GHC.Stack (HasCallStack)
+import           GHC.Stack (HasCallStack)
 
 -- | A monad capable of keeping track of variable renames and of providing
 -- fresh names for variables.
