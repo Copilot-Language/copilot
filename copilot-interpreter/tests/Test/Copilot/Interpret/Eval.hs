@@ -35,7 +35,7 @@ import Copilot.PrettyPrint      (ppExpr)
 
 -- Internal imports: auxiliary functions
 import Test.Extra (apply1, apply2, apply3)
-import Text.Read (readEither)
+import Text.Read  (readEither)
 
 -- * Constants
 
@@ -787,7 +787,8 @@ lookupWithDefault k def = fromMaybe def . lookup k
 
 -- | Show Copilot Core type.
 showType :: Type a -> String
-showType t' = case t' of
+showType t =
+  case t of
     Bool   -> "Bool"
     Int8   -> "Int8"
     Int16  -> "Int16"
@@ -799,5 +800,5 @@ showType t' = case t' of
     Word64 -> "Word64"
     Float  -> "Float"
     Double -> "Double"
-    Array t -> "Array " ++ showType t
+    Array t' -> "Array " ++ showType t'
     Struct _ -> "Struct"

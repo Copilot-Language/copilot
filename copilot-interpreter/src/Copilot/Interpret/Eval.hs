@@ -141,15 +141,15 @@ type LocalEnv = [(Name, Dynamic)]
 evalExpr_ :: Typeable a => Int -> Expr a -> LocalEnv -> Env Id -> a
 evalExpr_ k e0 locs strms = case e0 of
   Const _ x                          -> x
-  Drop _t i id                        ->
+  Drop _ i id                        ->
     case lookup id strms >>= fromDynamic of
       Just buff -> reverse buff !! (fromIntegral i + k)
-      Nothing -> error $ "No id " ++ show id ++ " in " ++ show strms
-  Local _t1 _ name e1 e2              ->
+      Nothing   -> error $ "No id " ++ show id ++ " in " ++ show strms
+  Local _ _ name e1 e2               ->
     let x     = evalExpr_ k e1 locs strms in
     let locs' = (name, toDyn x) : locs  in
     x `seq` locs' `seq` evalExpr_ k e2  locs' strms
-  Var _t name                         -> fromJust $ lookup name locs >>= fromDynamic
+  Var _ name                         -> fromJust $ lookup name locs >>= fromDynamic
   ExternVar _ name xs                -> evalExternVar k name xs
   Op1 op e1                          ->
     let ev1 = evalExpr_ k e1 locs strms in
@@ -269,14 +269,12 @@ catchZero f x y = f x y
 -- 'Copilot.Core.Operators.Op3'.
 evalOp3 :: Op3 a b c d -> (a -> b -> c -> d)
 evalOp3 (Mux         _)  = \ !v !x !y -> if v then x else y
-evalOp3 (UpdateArray _ty) = \xs n x -> arrayUpdate xs (fromIntegral n) x
+evalOp3 (UpdateArray _)  = \xs n x -> arrayUpdate xs (fromIntegral n) x
 
 -- | Turn a stream into a key-value pair that can be added to an 'Env' for
 -- simulation.
 initStrm :: Stream -> (Id, Dynamic)
-initStrm Stream { streamId       = id
-                , streamBuffer   = buffer
-                } =
+initStrm Stream { streamId = id, streamBuffer = buffer } =
   (id, toDyn (reverse buffer))
 
 -- | Evaluate several streams for a number of steps, producing the environment
@@ -293,9 +291,7 @@ evalStreams top specStrms initStrms =
     evalStreams_ (k+1) $! strms_
     where
     strms_ = map evalStream specStrms
-    evalStream Stream { streamId       = id
-                      , streamExpr     = e
-                      } =
+    evalStream Stream { streamId = id, streamExpr = e } =
       let xs = fromJust $ lookup id strms >>= fromDynamic      in
       let x  = evalExpr_ k e [] strms                          in
       let ls = x `seq` (x:xs)                                  in

@@ -69,7 +69,7 @@ step ExecTrace
   where
 
   ppTriggerOutputs :: [Doc]
-  ppTriggerOutputs = mapMaybe ppTriggerOutput $ trigs
+  ppTriggerOutputs = mapMaybe ppTriggerOutput trigs
 
   ppTriggerOutput :: (String, [Maybe [Output]]) -> Maybe Doc
   ppTriggerOutput (cs, Just xs : _) = Just $
@@ -107,7 +107,7 @@ docLen d = length $ render d
 
 -- | Pad a string on the right to reach an expected length.
 pad :: Int -> Int -> a -> [a] -> [a]
-pad lx max' b ls = ls ++ replicate (max' - lx) b
+pad lx mx b ls = ls ++ replicate (mx - lx) b
 
 -- | Pad a list of strings on the right with spaces.
 pad' :: Int      -- ^ Mininum number of spaces to add
