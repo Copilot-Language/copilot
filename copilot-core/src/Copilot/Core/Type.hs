@@ -291,7 +291,7 @@ instance (Typeable t, Typed t, KnownNat n) => Typed (Array n t) where
   typeOf               = Array typeOf
   simpleType t         = case t of
     Array t' -> SArray t'
-    o -> error $ "There is a bug in the type checker " ++ show o
+    o        -> error $ "There is a bug in the type checker " ++ show o
 
 -- | A untyped type (no phantom type).
 data UType = forall a . Typeable a => UType (Type a)

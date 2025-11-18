@@ -53,7 +53,7 @@ arrayUpdate (Array []) _ _ = error errMsg
   where
     errMsg = "copilot-core: arrayUpdate: Attempt to update empty array"
 
-arrayUpdate (Array (_x:xs)) 0 y = Array (y:xs)
+arrayUpdate (Array (_:xs)) 0 y = Array (y:xs)
 
 arrayUpdate (Array (x:xs)) n y =
     arrayAppend x (arrayUpdate (Array xs) (n - 1) y)
