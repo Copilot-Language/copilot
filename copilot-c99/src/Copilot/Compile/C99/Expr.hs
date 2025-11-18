@@ -117,7 +117,7 @@ transExpr (Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
   modify (\(i, x, y) -> (i, x ++ [initDecl], y))
 
   let size :: Type (Array n t) -> C.Expr
-      size arrTy'@(Array ty) = C.LitInt (fromIntegral $ typeLength arrTy')
+      size arrT'@(Array ty) = C.LitInt (fromIntegral $ typeLength arrT')
                          C..* C.SizeOfType (C.TypeName $ transType ty)
       size _ = error "Unhandled case"
 
@@ -126,10 +126,10 @@ transExpr (Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
 
   -- Update element of array
   let updateStmt = case ty2 of
-        Array _ -> C.Expr $ memcpy dest e3' size'
+        Array _ -> C.Expr $ memcpy dest e3' siz'
           where
             dest = C.Index (C.Ident varName) e2'
-            size' = C.LitInt
+            siz' = C.LitInt
                        (fromIntegral $ typeSize ty2)
                        C..* C.SizeOfType (C.TypeName (tyElemName ty2))
 
