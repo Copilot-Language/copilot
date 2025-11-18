@@ -214,7 +214,7 @@ mkStream refMkId refStreams refMap e0 = do
   dstn <- makeDynStableName e0
   (buf, e) <- case e0 of
     Append buf _ e -> pure (buf, e)
-    o -> fail $ "Expected Append but got " ++ show o
+    o              -> fail $ "Expected Append but got " ++ show o
   mk <- haveVisited dstn
   case mk of
     Just id_ -> return id_

@@ -264,7 +264,7 @@ analyzeExts ExternEnv { externVarEnv  = vars
     foldM_ ( \(name, c0) (_, c1) -> check name c0 c1)
            grpHead
            grp
-  foldCheck _ [] = fail "Dead code executed"
+  foldCheck _ [] = error "Dead code executed"
 -- | Obtain all the externs in a specification.
 specExts :: IORef Env -> Spec' a -> IO ExternEnv
 specExts refStreams spec = do
