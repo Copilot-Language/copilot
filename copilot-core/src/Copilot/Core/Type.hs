@@ -46,22 +46,22 @@ module Copilot.Core.Type
   where
 
 -- External imports
-import Data.Char          (isLower, isUpper, toLower)
-import Data.Coerce        (coerce)
-import Data.Int           (Int16, Int32, Int64, Int8)
-import qualified Data.Kind  as DK
-import Data.List          (intercalate)
-import Data.Proxy         (Proxy (..))
-import Data.Type.Equality as DE
-import Data.Typeable      (Typeable, eqT, typeRep)
-import Data.Word          (Word16, Word32, Word64, Word8)
-import GHC.Generics       (Datatype (..), D1, Generic (..), K1 (..), M1 (..),
-                           U1 (..), (:*:) (..))
-import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
-                           sameSymbol, symbolVal)
+import           Data.Char               (isLower, isUpper, toLower)
+import           Data.Coerce             (coerce)
+import           Data.Int                (Int16, Int32, Int64, Int8)
+import qualified Data.Kind               as DK
+import           Data.List               (intercalate)
+import           Data.Proxy              (Proxy (..))
+import           Data.Type.Equality      as DE
+import           Data.Typeable           (Typeable, eqT, typeRep)
+import           Data.Word               (Word16, Word32, Word64, Word8)
+import           GHC.Generics            (D1, Datatype (..), Generic (..),
+                                          K1 (..), M1 (..), U1 (..), (:*:) (..))
+import           GHC.TypeLits            (KnownNat, KnownSymbol, Symbol, natVal,
+                                          sameNat, sameSymbol, symbolVal)
 
 -- Internal imports
-import Copilot.Core.Type.Array (Array)
+import           Copilot.Core.Type.Array (Array)
 
 -- | The value of that is a product or struct, defined as a constructor with
 -- several fields.
