@@ -32,8 +32,8 @@ eventually :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
 eventually l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
-  mins = clk + constant l
-  maxes = clk + constant u
+  mins = clk + (constant l)
+  maxes = clk + (constant u)
   res _ _ 0 = false
   res c s k =
     c <= maxes && ((mins <= c && s) || nextRes c s k)
@@ -47,8 +47,8 @@ eventuallyPrev :: ( Typed a, Integral a ) =>
   a -> a -> Stream a -> a -> Stream Bool -> Stream Bool
 eventuallyPrev l u clk dist s' = res clk s' $ (u `P.div` dist) + 1
   where
-  mins = clk - constant u
-  maxes = clk - constant l
+  mins = clk - (constant u)
+  maxes = clk - (constant l)
   res _ _ 0 = false
   res c s k =
     mins <= c && ((c <= maxes && s) || nextRes c s k)
