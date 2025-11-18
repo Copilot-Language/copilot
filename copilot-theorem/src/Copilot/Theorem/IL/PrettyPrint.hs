@@ -10,7 +10,7 @@ import Copilot.Theorem.IL.Spec
 import Text.PrettyPrint.HughesPJ
 import qualified Data.Map as Map
 
-import Prelude hiding ((<>), id)
+import Prelude hiding (id, (<>))
 
 -- | Pretty print an IL specification.
 prettyPrint :: IL -> String

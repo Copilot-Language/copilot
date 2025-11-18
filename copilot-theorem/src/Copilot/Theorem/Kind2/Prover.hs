@@ -53,7 +53,8 @@ kind2Prover opts = Prover
   , closeProver  = const $ return () }
 
 kind2Prog :: String
-kind2Prog        = "kind2"
+kind2Prog = "kind2"
+
 kind2BaseOptions :: [String]
 kind2BaseOptions = ["--input-format", "native", "-xml"]
 

@@ -98,8 +98,7 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
       in pred { K.predInit = init', K.predTrans = trans' }
 
     vars =
-      let
-          toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
+      let toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
           toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
       in map (varName . toTopVar . toExtVar) assumptions
 

@@ -63,22 +63,27 @@ import Data.Bimap (Bimap)
 import qualified Copilot.Core as C
 import qualified Data.Map     as Map
 import qualified Data.Bimap   as Bimap
-import Prelude hiding (id)
+
 -- Naming conventions
 -- These are important in order to avoid name conflicts
 
 ncSep :: String
-ncSep         = "."
+ncSep = "."
+
 ncMain :: String
-ncMain        = "out"
+ncMain = "out"
+
 ncNode :: Show a => a -> [Char]
-ncNode i      = "s" ++ show i
+ncNode i = "s" ++ show i
+
 ncPropNode :: [Char] -> [Char]
-ncPropNode s  = "prop-" ++ s
+ncPropNode s = "prop-" ++ s
+
 ncTopNode :: String
-ncTopNode     = "top"
+ncTopNode = "top"
+
 ncLocal :: [Char] -> [Char]
-ncLocal s     = "l" ++ dropWhile (not . isNumber) s
+ncLocal s = "l" ++ dropWhile (not . isNumber) s
 
 ncExternVarNode :: [Char] -> [Char]
 ncExternVarNode name = "ext-" ++ name
@@ -195,8 +200,8 @@ expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
 expr t (C.Const _ v) = return $ Const t (cast t $ toDyn v)
 
-expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
-  let node = ncNode id
+expr t (C.Drop _ (fromIntegral -> k :: Int) idNode) = do
+  let node = ncNode idNode
   selfRef <- (== node) <$> curNode
   let varName = ncMain `ncTimeAnnot` k
   let var = Var $ if selfRef then varName else ncImported node varName
@@ -207,12 +212,12 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
 
 expr t (C.Label _ _ e) = expr t e
 
-expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
+expr t (C.Local tl _tr idNode l e) = casting tl $ \tl' -> do
   l' <- expr tl' l
-  newLocal (Var $ ncLocal id) $ VarDescr tl' $ Expr l'
+  newLocal (Var $ ncLocal idNode) $ VarDescr tl' $ Expr l'
   expr t e
 
-expr t (C.Var _t' id) = return $ VarE t (Var $ ncLocal id)
+expr t (C.Var _t' idNode) = return $ VarE t (Var $ ncLocal idNode)
 
 expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   cond' <- expr Bool cond
@@ -317,5 +322,5 @@ curNode :: StateT TransSt Data.Functor.Identity.Identity NodeId
 curNode = _curNode <$> get
 
 newExtVarNode :: MonadState TransSt m => NodeId -> U Type -> m ()
-newExtVarNode id t =
-  modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }
+newExtVarNode idNode t =
+  modify $ \st -> st { _extVarsNodes = (idNode, t) : _extVarsNodes st }

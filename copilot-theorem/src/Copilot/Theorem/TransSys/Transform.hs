@@ -208,8 +208,10 @@ removeCycles spec =
     buildScc nrep ns =
      let depGraph = map (\n -> (nrep n, nodeId n, nodeDependencies n)) ns
      in Graph.stronglyConnComp depGraph
+
     acycN (Graph.AcyclicSCC n) = n
-    acycN Graph.CyclicSCC {} = error "Cyclic graph is not handled"
+    acycN Graph.CyclicSCC {}   = error "Cyclic graph is not handled"
+
     topoSort s = s { specNodes =
       map acycN $ buildScc id (specNodes s) }
 

@@ -64,8 +64,9 @@ import           Data.Type.Equality             (TestEquality (..), (:~:) (..))
 import           Data.Word                      (Word32)
 import           GHC.TypeLits                   (KnownSymbol)
 import           GHC.TypeNats                   (KnownNat, type (<=), type (+))
-import qualified Panic
-import Prelude hiding (pred, recip, id)
+import qualified Panic                          as Panic
+
+import           Prelude                        hiding (id, pred, recip)
 import qualified What4.BaseTypes                as WT
 import qualified What4.Interface                as WI
 import qualified What4.InterpretedFloatingPoint as WFP
@@ -463,78 +464,78 @@ translateOp1 :: forall sym a b .
              -> CE.Op1 a b
              -> XExpr sym
              -> TransM sym (XExpr sym)
-translateOp1 sym origExpr op' xe' = case (op', xe') of
+translateOp1 sym origExpr op xe = case (op, xe) of
   (CE.Not, XBool e) -> liftIO $ fmap XBool $ WI.notPred sym e
-  (CE.Not, _) -> panic ["Expected bool", show xe']
-  (CE.Abs _, xe) -> translateAbs xe
-  (CE.Sign _, xe) -> translateSign xe
+  (CE.Not, _) -> panic ["Expected bool", show xe]
+  (CE.Abs _, xe') -> translateAbs xe'
+  (CE.Sign _, xe') -> translateSign xe'
 
   -- We do not track any side conditions for floating-point operations
   -- (see Note [Side conditions for floating-point operations]), but we will
   -- make a note of which operations have partial inputs.
 
   -- The argument should not be zero
-  (CE.Recip _, xe) -> liftIO $ fpOp' recip xe
+  (CE.Recip _, xe') -> liftIO $ fpOp' recip xe'
     where
       recip :: forall fi . FPOp1 sym fi
       recip fiRepr e = do
         one <- fpLit fiRepr 1.0
         WFP.iFloatDiv @_ @fi sym fpRM one e
   -- The argument should not cause the result to overflow or underlow
-  (CE.Exp _, xe) -> liftIO $ fpSpecialOp WSF.Exp xe
+  (CE.Exp _, xe') -> liftIO $ fpSpecialOp WSF.Exp xe'
   -- The argument should not be less than -0
-  (CE.Sqrt _, xe) ->
+  (CE.Sqrt _, xe') ->
     liftIO $
-    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatSqrt @_ @fi sym fpRM) xe
+    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatSqrt @_ @fi sym fpRM) xe'
   -- The argument should not be negative or zero
-  (CE.Log _, xe) -> liftIO $ fpSpecialOp WSF.Log xe
+  (CE.Log _, xe') -> liftIO $ fpSpecialOp WSF.Log xe'
   -- The argument should not be infinite
-  (CE.Sin _, xe) -> liftIO $ fpSpecialOp WSF.Sin xe
+  (CE.Sin _, xe') -> liftIO $ fpSpecialOp WSF.Sin xe'
   -- The argument should not be infinite
-  (CE.Cos _, xe) -> liftIO $ fpSpecialOp WSF.Cos xe
+  (CE.Cos _, xe') -> liftIO $ fpSpecialOp WSF.Cos xe'
   -- The argument should not be infinite, nor should it cause the result to
   -- overflow
-  (CE.Tan _, xe) -> liftIO $ fpSpecialOp WSF.Tan xe
+  (CE.Tan _, xe') -> liftIO $ fpSpecialOp WSF.Tan xe'
   -- The argument should not cause the result to overflow
-  (CE.Sinh _, xe) -> liftIO $ fpSpecialOp WSF.Sinh xe
+  (CE.Sinh _, xe') -> liftIO $ fpSpecialOp WSF.Sinh xe'
   -- The argument should not cause the result to overflow
-  (CE.Cosh _, xe) -> liftIO $ fpSpecialOp WSF.Cosh xe
-  (CE.Tanh _, xe) -> liftIO $ fpSpecialOp WSF.Tanh xe
+  (CE.Cosh _, xe') -> liftIO $ fpSpecialOp WSF.Cosh xe'
+  (CE.Tanh _, xe') -> liftIO $ fpSpecialOp WSF.Tanh xe'
   -- The argument should not be outside the range [-1, 1]
-  (CE.Asin _, xe) -> liftIO $ fpSpecialOp WSF.Arcsin xe
+  (CE.Asin _, xe') -> liftIO $ fpSpecialOp WSF.Arcsin xe'
   -- The argument should not be outside the range [-1, 1]
-  (CE.Acos _, xe) -> liftIO $ fpSpecialOp WSF.Arccos xe
-  (CE.Atan _, xe) -> liftIO $ fpSpecialOp WSF.Arctan xe
-  (CE.Asinh _, xe) -> liftIO $ fpSpecialOp WSF.Arcsinh xe
+  (CE.Acos _, xe') -> liftIO $ fpSpecialOp WSF.Arccos xe'
+  (CE.Atan _, xe') -> liftIO $ fpSpecialOp WSF.Arctan xe'
+  (CE.Asinh _, xe') -> liftIO $ fpSpecialOp WSF.Arcsinh xe'
   -- The argument should not be less than 1
-  (CE.Acosh _, xe) -> liftIO $ fpSpecialOp WSF.Arccosh xe
+  (CE.Acosh _, xe') -> liftIO $ fpSpecialOp WSF.Arccosh xe'
   -- The argument should not be less than or equal to -1,
   -- nor should it be greater than or equal to +1
-  (CE.Atanh _, xe) -> liftIO $ fpSpecialOp WSF.Arctanh xe
+  (CE.Atanh _, xe') -> liftIO $ fpSpecialOp WSF.Arctanh xe'
   -- The argument should not cause the result to overflow
-  (CE.Ceiling _, xe) ->
+  (CE.Ceiling _, xe') ->
     liftIO $
-    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatRound @_ @fi sym WI.RTP) xe
+    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatRound @_ @fi sym WI.RTP) xe'
   -- The argument should not cause the result to overflow
-  (CE.Floor _, xe) ->
+  (CE.Floor _, xe') ->
     liftIO $
-    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatRound @_ @fi sym WI.RTN) xe
-  (CE.BwNot _, xe) -> liftIO $ case xe of
+    fpOp' (\(_ :: WFP.FloatInfoRepr fi) -> WFP.iFloatRound @_ @fi sym WI.RTN) xe'
+  (CE.BwNot _, xe') -> liftIO $ case xe' of
     XBool e -> XBool <$> WI.notPred sym e
-    _ -> bvOp' (WI.bvNotBits sym) xe
-  (CE.Cast _ tp, xe) -> liftIO $ castOp sym origExpr tp xe
-  (CE.GetField atp _ftp extractor, xe) -> translateGetField atp extractor xe
+    _ -> bvOp' (WI.bvNotBits sym) xe'
+  (CE.Cast _ tp, xe') -> liftIO $ castOp sym origExpr tp xe'
+  (CE.GetField atp _ftp extractor, xe') -> translateGetField atp extractor xe'
   where
     -- Translate an 'CE.Abs' operation and its argument into a what4
     -- representation of the appropriate type.
     translateAbs :: XExpr sym -> TransM sym (XExpr sym)
-    translateAbs xe = do
-      addBVSidePred1 xe $ \e w _ -> do
+    translateAbs xe' = do
+      addBVSidePred1 xe' $ \e w _ -> do
         -- The argument should not be INT_MIN
         bvIntMin <- liftIO $ WI.bvLit sym w (BV.minSigned w)
         eqIntMin <- liftIO $ WI.bvEq sym e bvIntMin
         WI.notPred sym eqIntMin
-      liftIO $ numOp bvAbs fpAbs xe
+      liftIO $ numOp bvAbs fpAbs xe'
       where
         bvAbs :: BVOp1 sym w
         bvAbs e = do
@@ -557,7 +558,7 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
                       -> XExpr sym
                       -- ^ The argument value (should be a struct)
                       -> TransM sym (XExpr sym)
-    translateGetField tp extractor xe = case (tp, xe) of
+    translateGetField tp extractor xe' = case (tp, xe') of
       (CT.Struct s, XStruct xes) ->
         case mIx s of
           Just ix -> return $ xes !! ix
@@ -580,7 +581,7 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
     -- @x > 0 ? 1 : (x < 0 ? -1 : x)@. This matches how copilot-c99 translates
     -- 'CE.Sign' to C code.
     translateSign :: XExpr sym -> TransM sym (XExpr sym)
-    translateSign xe = liftIO $ numOp bvSign fpSign xe
+    translateSign xe' = liftIO $ numOp bvSign fpSign xe'
       where
         bvSign :: BVOp1 sym w
         bvSign e = do
@@ -609,7 +610,7 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
           -> (forall fpp . FPOp1 sym fpp)
           -> XExpr sym
           -> IO (XExpr sym)
-    numOp bvOp fpOp xe = case xe of
+    numOp bvOp fpOp xe' = case xe' of
       XInt8 e -> XInt8 <$> bvOp e
       XInt16 e -> XInt16 <$> bvOp e
       XInt32 e -> XInt32 <$> bvOp e
@@ -623,7 +624,7 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
       _ -> unexpectedValue "numOp"
 
     bvOp' :: (forall w . BVOp1 sym w) -> XExpr sym -> IO (XExpr sym)
-    bvOp' f xe = case xe of
+    bvOp' f xe' = case xe' of
       XInt8 e -> XInt8 <$> f e
       XInt16 e -> XInt16 <$> f e
       XInt32 e -> XInt32 <$> f e
@@ -635,7 +636,7 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
       _ -> unexpectedValue "bvOp"
 
     fpOp' :: (forall fi . FPOp1 sym fi) -> XExpr sym -> IO (XExpr sym)
-    fpOp' g xe = case xe of
+    fpOp' g xe' = case xe' of
       XFloat e -> XFloat <$> g WFP.SingleFloatRepr e
       XDouble e -> XDouble <$> g WFP.DoubleFloatRepr e
       _ -> unexpectedValue "fpOp"
@@ -663,9 +664,9 @@ translateOp1 sym origExpr op' xe' = case (op', xe') of
                        (Panic.HasCallStack, MonadIO m)
                     => String
                     -> m x
-    unexpectedValue op =
-      panic [ "Unexpected value in " ++ op ++ ": " ++ show (CP.ppExpr origExpr)
-            , show xe'
+    unexpectedValue op' =
+      panic [ "Unexpected value in " ++ op' ++ ": " ++ show (CP.ppExpr origExpr)
+            , show xe
             ]
 
 type BVOp2 sym w =

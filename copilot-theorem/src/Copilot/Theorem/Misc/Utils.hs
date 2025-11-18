@@ -31,7 +31,6 @@ isSublistOf = Set.isSubsetOf `on` Set.fromList
 nubEq :: Ord a => [a] -> [a] -> Bool
 nubEq = (==) `on` Set.fromList
 
-
 -- | Remove duplicates from a list.
 --
 -- This is an efficient version of 'Data.List.nub' that works for lists with a

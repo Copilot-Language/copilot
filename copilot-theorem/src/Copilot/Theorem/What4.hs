@@ -79,7 +79,7 @@ import Data.Parameterized.Some
 import qualified Data.Parameterized.Vector as V
 import GHC.Float (castWord32ToFloat, castWord64ToDouble)
 import LibBF (BigFloat, bfToDouble, pattern NearEven)
-import qualified Panic
+import qualified Panic as Panic
 
 import Copilot.Theorem.What4.Translate
 

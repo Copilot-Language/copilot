@@ -7,8 +7,7 @@
 module Copilot.Theorem.Prover.TPTP (Tptp, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
-import safe Copilot.Theorem.IL
-    ( Expr(..), Op1(..), Op2(..), SeqIndex(Var, Fixed) )
+import Copilot.Theorem.IL hiding (args)
 
 import Data.List
 

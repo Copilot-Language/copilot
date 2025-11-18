@@ -135,7 +135,7 @@ handleOp1 ::
 
   -> m (expr resT)
 
-handleOp1 resT (op', e) handleExpr notHandledF mkOp = case op' of
+handleOp1 resT (op, e) handleExpr notHandledF mkOp = case op of
 
   C.Not      -> boolOp Not (handleExpr Bool e)
 
@@ -172,12 +172,12 @@ handleOp1 resT (op', e) handleExpr notHandledF mkOp = case op' of
 
   where
     boolOp :: Op1 Bool -> m (expr Bool) -> m (expr resT)
-    boolOp op e' = case resT of
-      Bool -> (mkOp resT op) <$> e'
+    boolOp op' e' = case resT of
+      Bool -> (mkOp resT op') <$> e'
       _    -> Err.impossible typeErrMsg
 
     numOp :: Op1 resT -> m (expr resT)
-    numOp op = (mkOp resT op) <$> (handleExpr resT e)
+    numOp op' = (mkOp resT op') <$> (handleExpr resT e)
 
     -- Casting from Integer (Only possible solution)
     castTo :: C.Type ctb -> m (expr resT)
@@ -222,7 +222,7 @@ handleOp2 ::
 
   -> m (expr resT)
 
-handleOp2 resT (op', e1, e2) handleExpr notHandledF mkOp notOp = case op' of
+handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
 
   C.And        -> boolConnector And
   C.Or         -> boolConnector Or
@@ -267,15 +267,15 @@ handleOp2 resT (op', e1, e2) handleExpr notHandledF mkOp notOp = case op' of
   where
 
     boolOp :: Op2 a Bool -> expr a -> expr a -> expr resT
-    boolOp op e1' e2' = case resT of
-      Bool -> mkOp resT op e1' e2'
+    boolOp op' e1' e2' = case resT of
+      Bool -> mkOp resT op' e1' e2'
       _    -> Err.impossible typeErrMsg
 
     boolConnector :: Op2 Bool Bool -> m (expr resT)
-    boolConnector op = do
+    boolConnector op' = do
      e1' <- handleExpr Bool e1
      e2' <- handleExpr Bool e2
-     return $ boolOp op e1' e2'
+     return $ boolOp op' e1' e2'
 
     eqOp :: C.Type cta -> m (expr resT)
     eqOp ta = casting ta $ \ta' -> do
@@ -291,31 +291,31 @@ handleOp2 resT (op', e1, e2) handleExpr notHandledF mkOp notOp = case op' of
       _ -> Err.impossible typeErrMsg
 
     numOp :: (forall num . (Num num) => Op2 num num) -> m (expr resT)
-    numOp op = case resT of
+    numOp op' = case resT of
       Integer -> do
         e1' <- handleExpr Integer e1
         e2' <- handleExpr Integer e2
-        return $ mkOp resT op e1' e2'
+        return $ mkOp resT op' e1' e2'
 
       Real -> do
         e1' <- handleExpr Real e1
         e2' <- handleExpr Real e2
-        return $ mkOp resT op e1' e2'
+        return $ mkOp resT op' e1' e2'
 
       _ -> Err.impossible typeErrMsg
 
     numComp ::
       C.Type cta ->
       (forall num . (Num num) => Op2 num Bool) -> m (expr resT)
-    numComp ta op = casting ta $ \case
+    numComp ta op' = casting ta $ \case
       Integer -> do
         e1' <- handleExpr Integer e1
         e2' <- handleExpr Integer e2
-        return $ boolOp op e1' e2'
+        return $ boolOp op' e1' e2'
       Real -> do
         e1' <- handleExpr Real e1
         e2' <- handleExpr Real e2
-        return $ boolOp op e1' e2'
+        return $ boolOp op' e1' e2'
       _       -> Err.impossible typeErrMsg
 
     notHandled :: forall a . C.Type a -> String -> m (expr resT)

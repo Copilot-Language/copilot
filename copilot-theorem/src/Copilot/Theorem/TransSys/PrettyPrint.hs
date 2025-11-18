@@ -15,7 +15,8 @@ import qualified Data.Bimap as Bimap
 import Prelude hiding ((<>))
 
 indent :: Doc -> Doc
-indent     = nest 4
+indent = nest 4
+
 emptyLine :: Doc
 emptyLine  = text ""
 

@@ -1,10 +1,10 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE CPP #-}
 
 -- | Translate Copilot specifications into IL specifications.
 module Copilot.Theorem.IL.Translate ( translate, translateWithBounds ) where
@@ -82,7 +82,7 @@ translate' b (C.Spec {C.specStreams, C.specProperties}) = runTrans b $ do
     }
 
 bound :: Expr -> C.Type a -> Trans ()
-bound s t' = case t' of
+bound s sType = case sType of
   C.Int8    -> bound' C.Int8
   C.Int16   -> bound' C.Int16
   C.Int32   -> bound' C.Int32
@@ -141,24 +141,24 @@ expr (C.ExternVar t name _) = bound s t >> return s
   where
     s = SVal (trType t) (ncExternVar name) _n_
 
-expr (C.Op1 (C.Sign ta') e') = case ta' of
-  C.Int8   -> trSign ta' e'
-  C.Int16  -> trSign ta' e'
-  C.Int32  -> trSign ta' e'
-  C.Int64  -> trSign ta' e'
-  C.Float  -> trSign ta' e'
-  C.Double -> trSign ta' e'
-  _        -> expr $ C.Const ta' 1
+expr (C.Op1 (C.Sign ta) e) = case ta of
+  C.Int8   -> trSign ta e
+  C.Int16  -> trSign ta e
+  C.Int32  -> trSign ta e
+  C.Int64  -> trSign ta e
+  C.Float  -> trSign ta e
+  C.Double -> trSign ta e
+  _        -> expr $ C.Const ta 1
   where
     trSign :: (Typeable a, Ord a, Num a) => C.Type a -> C.Expr a -> Trans Expr
-    trSign ta e =
-      expr (C.Op3 (C.Mux ta)
-        (C.Op2 (C.Lt ta) e (C.Const ta 0))
-        (C.Const ta (-1))
-        (C.Op3 (C.Mux ta)
-          (C.Op2 (C.Gt ta) e (C.Const ta 0))
-          (C.Const ta 1)
-          (C.Const ta 0)))
+    trSign tb e' =
+      expr (C.Op3 (C.Mux tb)
+        (C.Op2 (C.Lt tb) e' (C.Const tb 0))
+        (C.Const tb (-1))
+        (C.Op3 (C.Mux tb)
+          (C.Op2 (C.Gt tb) e' (C.Const tb 0))
+          (C.Const tb 1)
+          (C.Const tb 0)))
 expr (C.Op1 (C.Sqrt _) e) = do
   e' <- expr e
   return $ Op2 Real Pow e' (ConstR 0.5)
@@ -191,28 +191,28 @@ expr (C.Op3 (C.Mux t) cond e1 e2) = do
 expr (C.Op3 (C.UpdateArray _) _ _ _) = error "There is bug in the type checker"
 
 trConst :: C.Type a -> a -> Expr
-trConst t' v = case t' of
+trConst t v = case t of
   C.Bool   -> ConstB v
   C.Float  -> negifyR (float2Double v)
   C.Double -> negifyR v
-  t@C.Int8   -> negifyI v (trType t)
-  t@C.Int16  -> negifyI v (trType t)
-  t@C.Int32  -> negifyI v (trType t)
-  t@C.Int64  -> negifyI v (trType t)
-  t@C.Word8  -> negifyI v (trType t)
-  t@C.Word16 -> negifyI v (trType t)
-  t@C.Word32 -> negifyI v (trType t)
-  t@C.Word64 -> negifyI v (trType t)
-  t -> error $ "There is bug in the type checker" ++ show t
+  t'@C.Int8   -> negifyI v (trType t')
+  t'@C.Int16  -> negifyI v (trType t')
+  t'@C.Int32  -> negifyI v (trType t')
+  t'@C.Int64  -> negifyI v (trType t')
+  t'@C.Word8  -> negifyI v (trType t')
+  t'@C.Word16 -> negifyI v (trType t')
+  t'@C.Word32 -> negifyI v (trType t')
+  t'@C.Word64 -> negifyI v (trType t')
+  t'          -> error $ "There is bug in the type checker" ++ show t'
   where
     negifyR :: Double -> Expr
     negifyR v'
-      | v' >= 0    = ConstR v'
+      | v' >= 0   = ConstR v'
       | otherwise = Op1 Real Neg $ ConstR $ negate v'
     negifyI :: Integral a => a -> Type -> Expr
-    negifyI v' t
-      | v' >= 0    = ConstI t $ toInteger v'
-      | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v'
+    negifyI v' t'
+      | v' >= 0   = ConstI t' $ toInteger v'
+      | otherwise = Op1 t' Neg $ ConstI t' $ negate $ toInteger v'
 
 trOp1 :: C.Op1 a b -> (Op1, Type)
 trOp1 = \case
@@ -285,7 +285,7 @@ trType = \case
   C.Word64 -> BV64
   C.Float  -> Real
   C.Double -> Real
-  _o       -> error "THere is a bug in the type checker"
+  _        -> error "THere is a bug in the type checker"
 
 -- | Translation state.
 data TransST = TransST

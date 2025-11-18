@@ -8,15 +8,9 @@ module Copilot.Theorem.Prover.SMTLib (SmtLib, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
 
-import safe Copilot.Theorem.IL.Spec
-    ( Expr(..),
-      Type(Real, Bool),
-      Op1(Acosh, Not, Neg, Abs, Exp, Sqrt, Log, Sin, Tan, Cos, Asin,
-          Atan, Acos, Sinh, Tanh, Cosh, Asinh, Atanh),
-      Op2(Pow, Eq, Le, Lt, Ge, Gt, And, Or, Add, Sub, Mul, Mod, Fdiv),
-      SeqIndex(Var, Fixed) )
-import safe Copilot.Theorem.Misc.SExpr
-    ( SExpr, blank, atom, singleton, list, node )
+import Copilot.Theorem.IL.Spec hiding (args)
+import Copilot.Theorem.Misc.SExpr
+
 
 import Text.Printf
 
