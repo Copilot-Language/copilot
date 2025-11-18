@@ -39,6 +39,7 @@ library
 
   ghc-options:
     -Wall
+    -fno-warn-orphans
 
   build-depends:
     base   >= 4.9 && < 5,
