@@ -1,3 +1,7 @@
+2025-12-04
+        * Disable building testsuite by default, use cabal flag `test-bluespec`
+          to enable. (#673)
+
 2025-11-07
         * Version bump (4.6). (#679)
         * Flip direction of interface inputs and outputs in Bluespec. (#677)
