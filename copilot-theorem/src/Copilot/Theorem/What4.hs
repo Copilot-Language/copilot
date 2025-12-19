@@ -77,8 +77,9 @@ import Data.Parameterized.NatRepr
 import Data.Parameterized.Nonce
 import Data.Parameterized.Some
 import qualified Data.Parameterized.Vector as V
-import GHC.Float (castWord32ToFloat, castWord64ToDouble)
+import GHC.Float (castWord32ToFloat, castWord64ToDouble, double2Float)
 import LibBF (BigFloat, bfToDouble, pattern NearEven)
+import Numeric.Floating.IEEE.NaN (getPayload, isSignaling, setPayload, setPayloadSignaling)
 import qualified Panic as Panic
 
 import Copilot.Theorem.What4.Translate
@@ -707,7 +708,7 @@ valFromExpr ge xe = case xe of
   XFloat e ->
     Some . CopilotValue CT.Float <$>
       iFloatGroundEval WFP.SingleFloatRepr e
-                       (realToFrac . fst . bfToDouble NearEven)
+                       (nanSafeDoubleToFloat . fst . bfToDouble NearEven)
                        fromRational
                        (castWord32ToFloat . fromInteger . BV.asUnsigned)
   XDouble e ->
@@ -757,3 +758,17 @@ valFromExpr ge xe = case xe of
         WB.FloatIEEERepr          -> ieeeK <$> WG.groundEval ge e
         WB.FloatRealRepr          -> realK <$> WG.groundEval ge e
         WB.FloatUninterpretedRepr -> uninterpK <$> WG.groundEval ge e
+
+    -- Convert a Double to a Float. This function takes care to preserve
+    -- special floating-point values, such as negative zero, infinity, and NaN
+    -- values.
+    nanSafeDoubleToFloat :: Double -> Float
+    nanSafeDoubleToFloat x
+        -- double2Float does not preserve the payloads of NaN values, so we
+        -- include a special case for translating NaNs.
+        | isNaN x && isSignaling x = setPayloadSignaling payload
+        | isNaN x                  = setPayload payload
+        | otherwise                = double2Float x
+      where
+        payload :: Float
+        payload = double2Float $ getPayload x
