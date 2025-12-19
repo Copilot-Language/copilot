@@ -17,6 +17,8 @@ import Data.Foldable (foldl')
 import Data.String (IsString (..))
 import qualified Language.Bluespec.Classic.AST as BS
 import qualified Language.Bluespec.Classic.AST.Builtin.Ids as BS
+import Numeric.Floating.IEEE.NaN (isSignaling, setPayloadSignaling, setPayload, getPayload)
+import GHC.Float (double2Float, castFloatToWord32, castDoubleToWord64)
 
 -- Internal imports: Copilot
 import Copilot.Core
@@ -611,14 +613,63 @@ constInt ty i
 -- | Translate a Copilot floating-point literal into a Bluespec expression.
 constFP :: Type ty -> Double -> BS.CExpr
 constFP ty d
+    -- Bluespec internally represents all IEEE floating-point values as structs 
+    -- so special symbols have to be called for constructing special values,
+    -- e.g. NaN, inf, and -0.0. See
+    -- https://github.com/B-Lang-org/bsc/blob/main/src/Libraries/Base3-Math/FloatingPoint.bsv#L441
+    | isInfinite d = BS.CApply 
+                       (BS.CVar $ BS.mkId BS.NoPos "infinity") 
+                       [ if d < 0
+                           then BS.CCon BS.idTrue [] 
+                           else BS.CCon BS.idFalse []
+                       ]
+                      
+    | isNaN d      = let 
+                       cexpr = BS.CHasType 
+                                 ( BS.CLit $ BS.CLiteral BS.NoPos $ BS.LInt $
+                                     BS.IntLit Nothing 10 cval
+                                 )
+                                 ( BS.CQType [] $ BS.TCon $ 
+                                     BS.TyCon 
+                                       (BS.mkId BS.NoPos ctype) 
+                                       Nothing 
+                                       BS.TIabstract
+                                 )
+                       cval = case ty of 
+                         Float  -> fromIntegral $ 
+                                     castFloatToWord32 $ uncastDoubleNaNToFloat d
+                         Double -> fromIntegral $ 
+                                     castDoubleToWord64 d
+                         _      -> impossible "constFP" "copilot-bluespec"
+                       ctype = case ty of 
+                         Float  -> "Bit 32"
+                         Double -> "Bit 64"
+                         _      -> impossible "constFP" "copilot-bluespec"
+                     in BS.CApply (BS.CVar $ BS.mkId BS.NoPos "unpack") [cexpr]
+    | d == 0       = BS.CApply 
+                       (BS.CVar $ BS.mkId BS.NoPos "zero") 
+                       [ if isNegativeZero d 
+                           then BS.CCon BS.idTrue [] 
+                           else BS.CCon BS.idFalse []
+                       ]
+    | d > 0        = withTypeAnnotation ty $ cLit $ BS.LReal d
     -- Bluespec intentionally does not support negative literal syntax (e.g.,
     -- -42.5), so we must create negative floating-point literals using the
     -- `negate` function.
-    | d >= 0    = withTypeAnnotation ty $ cLit $ BS.LReal d
-    | otherwise = withTypeAnnotation ty $
-                  BS.CApply
-                    (BS.CVar $ BS.idNegateAt BS.NoPos)
-                    [cLit $ BS.LReal $ negate d]
+    | otherwise    = withTypeAnnotation ty $
+                     BS.CApply
+                       (BS.CVar $ BS.idNegateAt BS.NoPos)
+                       [cLit $ BS.LReal $ negate d]
+
+-- Because NaNs are specially placed as bit-representations by `constfp` and `constfp` requires Doubles as inputs,
+--  we need to convert NaN doubles safely into NaN floats. GHC Double2Float does not preserve signal nor payload 
+--  internals of NaNs so in this case we need a special conversion.
+uncastDoubleNaNToFloat :: Double -> Float
+uncastDoubleNaNToFloat nan = if (isSignaling nan) 
+              then (setPayloadSignaling payload) 
+              else (setPayload payload)
+              where 
+                payload = double2Float $ getPayload nan
 
 -- | Create a Bluespec expression consisting of a literal.
 cLit :: BS.Literal -> BS.CExpr
