@@ -1,3 +1,6 @@
+2026-01-07
+        * Relax version constraint on containers. (#603)
+
 2025-11-07
         * Version bump (4.6). (#679)
 
