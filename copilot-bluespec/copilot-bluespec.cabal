@@ -1,6 +1,6 @@
 cabal-version             : >= 1.10
 name                      : copilot-bluespec
-version                   : 4.6
+version                   : 4.6.1
 synopsis                  : A compiler for Copilot targeting FPGAs.
 description               :
   This package is a back-end from Copilot to FPGAs in Bluespec.
@@ -51,8 +51,8 @@ library
                           , ieee754           >= 0.8.0  && < 0.9
                           , pretty            >= 1.1.2  && < 1.2
 
-                          , copilot-core      >= 4.6 && < 4.7
-                          , language-bluespec >= 0.1 && < 0.2
+                          , copilot-core      >= 4.6.1 && < 4.7
+                          , language-bluespec >= 0.1   && < 0.2
 
   exposed-modules         : Copilot.Compile.Bluespec
 
