@@ -8,10 +8,11 @@ module Test.Copilot.Compile.C99
 
 -- External imports
 import Control.Arrow                        ((&&&))
-import Control.Exception                    (IOException, catch)
-import Control.Monad                        (when)
+import Control.Exception                    (ErrorCall (..), IOException, catch,
+                                             try)
+import Control.Monad                        (unless, when)
 import Data.Bits                            (Bits, complement)
-import Data.List                            (intercalate)
+import Data.List                            (intercalate, isSubsequenceOf)
 import Data.Type.Equality                   (testEquality)
 import Data.Typeable                        (Proxy (..), (:~:) (Refl))
 import GHC.TypeLits                         (KnownNat, natVal)
@@ -24,7 +25,9 @@ import System.Posix.Temp                    (mkdtemp)
 import System.Process                       (callProcess, readProcess)
 import System.Random                        (Random)
 import Test.Framework                       (Test, testGroup)
+import Test.Framework.Providers.HUnit       (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit                           (Assertion, assertFailure)
 import Test.QuickCheck                      (Arbitrary, Gen, Property,
                                              arbitrary, choose, elements,
                                              forAll, forAllBlind, frequency,
@@ -50,6 +53,7 @@ tests =
     , testProperty "Compile specification in custom dir" testCompileCustomDir
     , testProperty "Run specification"                   testRun
     , testProperty "Run and compare results"             testRunCompare
+    , testCase     "Reject empty arrays and structs"     testRejectEmpties
     ]
 
 -- * Individual tests
@@ -136,6 +140,65 @@ testCompileCustomDir = ioProperty $ do
     guard = Const Bool True
 
     args = []
+
+data Empty = Empty
+
+instance Struct Empty where
+  typeName _ = ""
+  toValues _ = []
+
+instance Typed Empty where
+  typeOf = Struct Empty
+
+-- | Test that compiling a spec with an empty array or struct raises an error.
+-- C99 does not support zero-length arrays or structs without fields, so Copilot
+-- should report an error during compilation.
+testRejectEmpties :: Assertion
+testRejectEmpties = do
+    tmpDir <- getTemporaryDirectory
+    setCurrentDirectory tmpDir
+
+    r1 <- try (compile "copilot_test" $ spec t1) :: IO (Either ErrorCall ())
+    unless (isErrZeroArray r1) $ assertFailure "Const zero-length array"
+
+    r2 <- try (compile "copilot_test" $ spec t2) :: IO (Either ErrorCall ())
+    unless (isErrZeroArray r2) $ assertFailure "Extern zero-length array"
+
+    r3 <- try (compile "copilot_test" $ spec t3) :: IO (Either ErrorCall ())
+    unless (isErrEmptyStruct r3) $ assertFailure "Const empty struct"
+
+    r4 <- try (compile "copilot_test" $ spec t4) :: IO (Either ErrorCall ())
+    unless (isErrEmptyStruct r4) $ assertFailure "Extern empty struct"
+
+  where
+
+    spec a = Spec streams observers (triggers a) properties
+
+    streams    = []
+    observers  = []
+    triggers a = [ Trigger "trig" (Const Bool True) a ]
+    properties = []
+
+    t1 = [ UExpr arrTy (Const arrTy (array [])) ]
+    t2 = [ UExpr arrTy (ExternVar arrTy "arrs" Nothing) ]
+    t3 = [ UExpr structTy (Const structTy Empty) ]
+    t4 = [ UExpr structTy (ExternVar structTy "structs" Nothing) ]
+
+    arrTy :: Type (Array 0 Bool)
+    arrTy = Array Bool
+
+    structTy :: Type Empty
+    structTy = Struct Empty
+
+    isErrZeroArray :: Either ErrorCall a -> Bool
+    isErrZeroArray e = case e of
+      Left (ErrorCall msg) -> "zero-length array" `isSubsequenceOf` msg
+      _                    -> False
+
+    isErrEmptyStruct :: Either ErrorCall a -> Bool
+    isErrEmptyStruct e = case e of
+      Left (ErrorCall msg) -> "empty struct" `isSubsequenceOf` msg
+      _                    -> False
 
 -- | Test compiling a spec and running the resulting program.
 --

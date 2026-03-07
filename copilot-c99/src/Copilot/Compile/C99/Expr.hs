@@ -18,7 +18,7 @@ import Copilot.Core ( Array, Expr (..), Field (..), Op1 (..), Op2 (..),
                       arrayElems, toValues, typeLength, typeSize )
 
 -- Internal imports
-import Copilot.Compile.C99.Error ( impossible )
+import Copilot.Compile.C99.Error ( impossible, errorEmptyStruct, errorZeroLengthArray )
 import Copilot.Compile.C99.Name  ( exCpyName, streamAccessorName )
 import Copilot.Compile.C99.Type  ( transLocalVarDeclType, transType,
                                    transTypeName )
@@ -371,14 +371,23 @@ constFieldInit (Value ty (Field val)) = C.InitItem Nothing $ constInit ty val
 
 -- | Transform a Copilot Struct, based on the struct fields, into a list of C99
 -- initializer values.
+--
+-- Raises an error if the struct is empty, as C99 does not support structs with
+-- no fields.
 constStruct :: [Value a] -> NonEmpty.NonEmpty C.InitItem
-constStruct val = NonEmpty.fromList $ map constFieldInit val
+constStruct val = case val of
+  [] -> errorEmptyStruct
+  _  -> NonEmpty.fromList $ map constFieldInit val
 
 -- | Transform a Copilot Array, based on the element values and their type,
 -- into a list of C99 initializer values.
+--
+-- Raises an error if the array is empty, as C99 does not support zero-length
+-- arrays.
 constArray :: Type a -> [a] -> NonEmpty.NonEmpty C.InitItem
-constArray ty =
-  NonEmpty.fromList . map (C.InitItem Nothing . constInit ty)
+constArray ty xs = case xs of
+  [] -> errorZeroLengthArray
+  _  -> NonEmpty.fromList $ map (C.InitItem Nothing . constInit ty) xs
 
 -- | Explicitly cast a C99 value to a type.
 explicitTy :: Type a -> C.Expr -> C.Expr

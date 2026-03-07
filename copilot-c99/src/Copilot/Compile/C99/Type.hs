@@ -12,7 +12,9 @@ module Copilot.Compile.C99.Type
 import qualified Language.C99.Simple as C
 
 -- Internal imports: Copilot
-import Copilot.Core ( Type (..), typeLength, typeName )
+import Copilot.Core              ( Struct (..), Type (..), typeLength,
+                                   typeName )
+import Copilot.Compile.C99.Error ( errorEmptyStruct, errorZeroLengthArray )
 
 -- | Translate a Copilot type to a C99 type.
 transType :: Type a -> C.Type
@@ -28,10 +30,12 @@ transType ty = case ty of
   Word64    -> C.TypeSpec $ C.TypedefName "uint64_t"
   Float     -> C.TypeSpec C.Float
   Double    -> C.TypeSpec C.Double
-  Array ty' -> C.Array (transType ty') len
+  Array ty' | typeLength ty == 0 -> errorZeroLengthArray
+            | otherwise          -> C.Array (transType ty') len
     where
       len = Just $ C.LitInt $ fromIntegral $ typeLength ty
-  Struct s  -> C.TypeSpec $ C.Struct (typeName s)
+  Struct s  | null (toValues s) -> errorEmptyStruct
+            | otherwise         -> C.TypeSpec $ C.Struct (typeName s)
 
 -- | Translate a Copilot type to a valid (local) variable declaration C99 type.
 --
