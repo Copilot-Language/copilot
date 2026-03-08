@@ -1,3 +1,6 @@
+2026-03-07
+        * Version bump (4.7). (#714)
+
 2026-01-07
         * Version bump (4.6.1). (#705)
         * Relax version constraint on containers, random. (#603)
