@@ -45,11 +45,6 @@ import           Copilot.Interpret.Eval              (ExecTrace (interpObservers
 import           Copilot.Language                    (Spec, Stream, Typed,
                                                       observer, prop)
 import qualified Copilot.Language                    as Copilot
-import qualified Copilot.Language.Operators.Boolean  as Copilot
-import qualified Copilot.Language.Operators.Constant as Copilot
-import qualified Copilot.Language.Operators.Eq       as Copilot
-import qualified Copilot.Language.Operators.Mux      as Copilot
-import qualified Copilot.Language.Operators.Ord      as Copilot
 import           Copilot.Language.Reify              (reify)
 import           Copilot.Theorem.What4               (SatResult (..),
                                                       Solver (..), prove)

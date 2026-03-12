@@ -50,8 +50,8 @@ showType t =
     Word64 -> "Word64"
     Float  -> "Float"
     Double -> "Double"
-    Array t -> "Array " ++ showType t
-    Struct t -> "Struct"
+    Array p -> "Array " ++ showType p
+    Struct _ -> "Struct"
 
 -- * Auxiliary show instance
 
@@ -73,5 +73,5 @@ showWit t =
     Word64 -> ShowWit
     Float  -> ShowWit
     Double -> ShowWit
-    Array t -> ShowWit
-    Struct t -> ShowWit
+    Array _ -> ShowWit
+    Struct _ -> ShowWit

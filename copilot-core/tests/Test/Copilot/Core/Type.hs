@@ -7,7 +7,6 @@ module Test.Copilot.Core.Type where
 
 -- External imports
 import Data.Int                             (Int16, Int32, Int64, Int8)
-import Data.Maybe                           (isJust)
 import Data.Proxy                           (Proxy (..))
 import Data.Type.Equality                   (TestEquality (..), testEquality,
                                              (:~:) (..))
@@ -136,8 +135,10 @@ testSimpleTypesEqualityTransitive =
 -- | Test that each type is only equal to itself.
 testSimpleTypesEqualityUniqueness :: Property
 testSimpleTypesEqualityUniqueness =
-  forAllBlind (shuffle simpleTypes) $ \(t:ts) ->
-    notElem t ts
+  forAllBlind (shuffle simpleTypes) $
+    \x -> case x of
+      []     -> False
+      (t:ts) -> notElem t ts
 
 -- | Simple types tested.
 simpleTypes :: [SimpleType]

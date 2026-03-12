@@ -1,4 +1,9 @@
+{-# LANGUAGE CPP #-}
+#if MIN_VERSION_base(4,19,0)
 {-# LANGUAGE Trustworthy #-}
+#else
+{-# LANGUAGE Safe #-}
+#endif
 
 -- | Utility / auxiliary functions.
 module Copilot.Theorem.Misc.Utils
@@ -7,9 +12,7 @@ module Copilot.Theorem.Misc.Utils
  ) where
 
 import Data.Function (on)
-import Data.List (groupBy, sortBy, group, sort)
-
-import Control.Applicative ((<$>))
+import qualified Data.List.NonEmpty as NE
 import Control.Monad
 
 import qualified Data.Set as Set
@@ -34,11 +37,11 @@ nubEq = (==) `on` Set.fromList
 -- stronger constraint on the type (i.e., 'Ord', as opposed of
 -- 'Data.List.nub''s 'Eq' constraint).
 nub' :: Ord a => [a] -> [a]
-nub' = map head . group . sort
+nub' = maybe [] (fmap NE.head . NE.group . NE.sort) . NE.nonEmpty
 
 -- | Variant of 'nub'' parameterized by the comparison function.
 nubBy' :: (a -> a -> Ordering) -> [a] -> [a]
-nubBy' f = map head . groupBy (\x y -> f x y == EQ) . sortBy f
+nubBy' f = maybe [] (fmap NE.head . NE.groupBy (\x y -> f x y == EQ) . NE.sortBy f) . NE.nonEmpty
 
 -- | Create a temporary file and open it for writing.
 openTempFile :: String  -- ^ Directory where the file should be created.

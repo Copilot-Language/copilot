@@ -18,6 +18,7 @@ import Copilot.Core (Typed, typeOf)
 import qualified Copilot.Core as Core
 import Copilot.Language.Error
 import Copilot.Language.Prelude
+import qualified Data.Kind as DK
 import qualified Prelude as P
 
 -- | A stream in Copilot is an infinite succession of values of the same type.
@@ -27,7 +28,7 @@ import qualified Prelude as P
 -- to streams, or by combining existing streams to form new streams (e.g.,
 -- 'Op2', 'Op3').
 
-data Stream :: * -> * where
+data Stream :: DK.Type -> DK.Type where
   Append      :: Typed a
               => [a] -> Maybe (Stream Bool) -> Stream a -> Stream a
   Const       :: Typed a => a -> Stream a

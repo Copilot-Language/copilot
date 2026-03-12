@@ -3,7 +3,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE Trustworthy       #-}
+{-# LANGUAGE Safe              #-}
 
 -- | Connections to various SMT solvers and theorem provers.
 module Copilot.Theorem.Prover.SMT
@@ -49,7 +49,7 @@ import Data.Default (Default(..))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Copilot.Theorem.Misc.Utils
-
+import Prelude hiding (seq, id)
 import System.IO (hClose)
 
 -- * Tactics
@@ -358,9 +358,9 @@ valid msg = return $ Output P.Valid [msg]
 
 kInduction' :: SmtFormat b => Word32 -> Word32 -> ProofState b -> [PropId] -> [PropId] -> IO Output
 kInduction' startK maxK s as ps = (fromMaybe (Output P.Unknown ["proof by k-induction failed"]) . fst)
-  <$> runPS (msum (map induction [(toInteger startK) .. (toInteger maxK)]) <* stopSolvers) s
+  <$> runPS (msum (map induction' [(toInteger startK) .. (toInteger maxK)]) <* stopSolvers) s
   where
-    induction k = do
+    induction' k = do
       (modelInit, modelRec, toCheck, inductive) <- getModels as ps
 
       let base    = [evalAt (Fixed i) m | m <- modelRec, i <- [0 .. k]]

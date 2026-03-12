@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE NamedFieldPuns      #-}
@@ -43,16 +44,19 @@
 -- process.
 module Copilot.Theorem.TransSys.Translate ( translate ) where
 
-import Copilot.Theorem.TransSys.Spec
+import Copilot.Theorem.TransSys.Spec hiding (prop)
 import Copilot.Theorem.TransSys.Cast
 import Copilot.Theorem.Misc.Utils
 
-import Control.Monad            (liftM, liftM2, unless)
+#if MIN_VERSION_base(4,19,0)
+import Control.Monad (liftM, liftM2, unless)
+#endif
+
 import Control.Monad.State.Lazy
 
 import Data.Char (isNumber)
 import Data.Function (on)
-
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.Bimap (Bimap)
 
@@ -63,14 +67,25 @@ import qualified Data.Bimap   as Bimap
 -- Naming conventions
 -- These are important in order to avoid name conflicts
 
-ncSep         = "."
-ncMain        = "out"
-ncNode i      = "s" ++ show i
-ncPropNode s  = "prop-" ++ s
-ncTopNode     = "top"
-ncAnonInput   = "in"
-ncLocal s     = "l" ++ dropWhile (not . isNumber) s
+ncSep :: String
+ncSep = "."
 
+ncMain :: String
+ncMain = "out"
+
+ncNode :: Show a => a -> [Char]
+ncNode i = "s" ++ show i
+
+ncPropNode :: [Char] -> [Char]
+ncPropNode s = "prop-" ++ s
+
+ncTopNode :: String
+ncTopNode = "top"
+
+ncLocal :: [Char] -> [Char]
+ncLocal s = "l" ++ dropWhile (not . isNumber) s
+
+ncExternVarNode :: [Char] -> [Char]
 ncExternVarNode name = "ext-" ++ name
 
 ncImported :: NodeId -> String -> String
@@ -121,6 +136,7 @@ mkTopNode topNodeId dependencies cprops =
       [ (Var cp, mkExtVar (ncPropNode cp) ncMain)
       | cp <- C.propertyName <$> cprops ]
 
+mkExtVarNode :: (NodeId, U Type) -> Node
 mkExtVarNode (name, U t) =
   Node { nodeId = name
        , nodeDependencies = []
@@ -175,7 +191,6 @@ stream (C.Stream { C.streamId
                  $ from (i + 1) bs
           in from 0 buf
         nodeLocalVars = Map.union nodeAuxVars outputLocals
-        nodeOutputs = map outvar [0 .. length buf - 1]
 
     return Node
       { nodeId, nodeDependencies, nodeLocalVars
@@ -185,8 +200,8 @@ expr :: Type t -> C.Expr t' -> Trans (Expr t)
 
 expr t (C.Const _ v) = return $ Const t (cast t $ toDyn v)
 
-expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
-  let node = ncNode id
+expr t (C.Drop _ (fromIntegral -> k :: Int) idNode) = do
+  let node = ncNode idNode
   selfRef <- (== node) <$> curNode
   let varName = ncMain `ncTimeAnnot` k
   let var = Var $ if selfRef then varName else ncImported node varName
@@ -197,12 +212,12 @@ expr t (C.Drop _ (fromIntegral -> k :: Int) id) = do
 
 expr t (C.Label _ _ e) = expr t e
 
-expr t (C.Local tl _tr id l e) = casting tl $ \tl' -> do
+expr t (C.Local tl _tr idNode l e) = casting tl $ \tl' -> do
   l' <- expr tl' l
-  newLocal (Var $ ncLocal id) $ VarDescr tl' $ Expr l'
+  newLocal (Var $ ncLocal idNode) $ VarDescr tl' $ Expr l'
   expr t e
 
-expr t (C.Var _t' id) = return $ VarE t (Var $ ncLocal id)
+expr t (C.Var _t' idNode) = return $ VarE t (Var $ ncLocal idNode)
 
 expr t (C.Op3 (C.Mux _) cond e1 e2) = do
   cond' <- expr Bool cond
@@ -230,6 +245,8 @@ expr t (C.Op2 op e1 e2) = handleOp2
     notHandled (UnhandledOp2 _opName _ta _tb _tc) =
       newUnconstrainedVar t
 
+expr t C.Op3 {} = error $ "Not handled " ++ show t
+
 newUnconstrainedVar :: Type t -> Trans (Expr t)
 newUnconstrainedVar t = do
   newNode <- getFreshNodeName
@@ -254,8 +271,8 @@ runExprTrans ::
   Type t -> NodeId -> C.Expr a ->
   Trans (Expr t, Map Var VarDescr, Bimap Var ExtVar, [NodeId])
 
-runExprTrans t curNode e = do
-  modify $ \st -> st { _curNode = curNode }
+runExprTrans t curNode' e = do
+  modify $ \st -> st { _curNode = curNode' }
   modify $ \st -> st { _nextUid = 0 }
   e' <- expr t e
   (lvs, ivs, dps) <- popLocalInfos
@@ -271,6 +288,7 @@ data TransSt = TransSt
 
 type Trans a = State TransSt a
 
+newDep :: MonadState TransSt m => NodeId -> m ()
 newDep d =  modify $ \s -> s { _dependencies = d : _dependencies s }
 
 popLocalInfos :: State TransSt (Map Var VarDescr, Bimap Var ExtVar, [NodeId])
@@ -293,12 +311,16 @@ getUid = do
 getFreshNodeName :: Trans NodeId
 getFreshNodeName = liftM (("_" ++) . show) getUid
 
+newImportedVar :: MonadState TransSt m => Var -> ExtVar -> m ()
 newImportedVar l g = modify $
   \s -> s { _importedVars = Bimap.insert l g (_importedVars s) }
 
+newLocal :: MonadState TransSt m => Var -> VarDescr -> m ()
 newLocal l d  =  modify $ \s -> s { _lvars = Map.insert l d $ _lvars s }
 
+curNode :: StateT TransSt Data.Functor.Identity.Identity NodeId
 curNode = _curNode <$> get
 
-newExtVarNode id t =
-  modify $ \st -> st { _extVarsNodes = (id, t) : _extVarsNodes st }
+newExtVarNode :: MonadState TransSt m => NodeId -> U Type -> m ()
+newExtVarNode idNode t =
+  modify $ \st -> st { _extVarsNodes = (idNode, t) : _extVarsNodes st }

@@ -40,10 +40,7 @@ library
   hs-source-dirs          : src
 
   ghc-options             : -Wall
-                            -fno-warn-name-shadowing
-                            -fno-warn-unused-binds
-                            -fno-warn-missing-signatures
-                            -fcontext-stack=100
+                            -freduction-depth=100
 
   build-depends           : base                  >= 4.9 && < 5
                           , bimap                 (>= 0.3 && < 0.4) || (>= 0.5 && < 0.6)

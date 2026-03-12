@@ -39,6 +39,7 @@ castedType t = case t of
   Word64  -> K.U K.Integer
   Float   -> K.U K.Real
   Double  -> K.U K.Real
+  o       -> error $ "There is a bug in type checker " ++ show o
 
 -- | Cast a dynamic value to a given type.
 cast :: K.Type t -> Dyn -> t

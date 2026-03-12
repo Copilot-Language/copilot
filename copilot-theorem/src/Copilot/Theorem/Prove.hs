@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NamedFieldPuns            #-}
@@ -21,8 +22,11 @@ module Copilot.Theorem.Prove
 import qualified Copilot.Core as Core
 
 import Data.List (intercalate)
-import Control.Applicative (liftA2)
+#if MIN_VERSION_base(4,19,0)
 import Control.Monad        (ap, liftM)
+#else
+import Control.Applicative  (liftA2)
+#endif
 import Control.Monad.Writer
 
 -- | Output produced by a prover, containing the 'Status' of the proof and
@@ -79,12 +83,11 @@ instance Functor (ProofScheme a) where
   fmap = liftM
 
 instance Applicative (ProofScheme a) where
-  pure = return
+  pure a = Proof (pure a)
   (<*>) = ap
 
 instance Monad (ProofScheme a) where
   (Proof p) >>= f = Proof $ p >>= (\a -> case f a of Proof p' -> p')
-  return a = Proof (return a)
 
 -- | Prover actions.
 data Action where

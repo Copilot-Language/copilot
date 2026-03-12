@@ -12,6 +12,7 @@ import qualified Copilot.Core as C
 
 import qualified Copilot.Theorem.Misc.Error as Err
 
+simpleName :: String -> QName
 simpleName s = QName s Nothing Nothing
 
 -- | Parse output of Kind2.
@@ -43,9 +44,6 @@ parseOutput propId propQuantifier xml = fromJust $ do
     s             -> err $ "Unrecognized status : " ++ s
 
   where
-
-    searchForRuntimeError = undefined
-
     findPropTag root =
       let rightElement elt =
             qName (elName elt) == "Property"

@@ -67,7 +67,7 @@ import qualified What4.Solver.DReal             as WS
 
 import Control.Exception (Exception, throw)
 import Control.Monad (forM)
-import Control.Monad.State
+import Control.Monad.State (MonadIO (liftIO), gets, get)
 import qualified Data.BitVector.Sized as BV
 import Data.Foldable (foldrM)
 import Data.List (genericLength)
@@ -307,10 +307,10 @@ proveWithCounterExample :: Solver
                         -- ^ Spec
                         -> IO [(CE.Name, SatResultCex)]
 proveWithCounterExample solver spec =
-  proveInternal solver spec $ \baseCases indStep st satRes ->
+  proveInternal solver spec $ \baseCases' indStep st satRes ->
     case satRes of
       WS.Sat ge -> do
-        gBaseCases <- traverse (WG.groundEval ge) baseCases
+        gBaseCases <- traverse (WG.groundEval ge) baseCases'
         gIndStep <- WG.groundEval ge indStep
         gExternValues <- traverse (valFromExpr ge) (externVars st)
         gStreamValues <- traverse (valFromExpr ge) (streamValues st)
@@ -634,9 +634,6 @@ computeAssumptions sym properties spec =
       [ CS.extractProp (CS.propertyProp p)
       | p <- CS.specProperties spec
       , elem (CS.propertyName p) properties
-      , let prop = case CS.propertyProp p of
-                     CS.Forall pr -> pr
-                     CS.Exists {} -> throw UnexpectedExistentialProposition
       ]
 
     -- Compute all of the what4 predicates corresponding to each user-provided

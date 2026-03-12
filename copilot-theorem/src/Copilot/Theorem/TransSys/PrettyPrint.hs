@@ -14,7 +14,10 @@ import qualified Data.Bimap as Bimap
 
 import Prelude hiding ((<>))
 
-indent     = nest 4
+indent :: Doc -> Doc
+indent = nest 4
+
+emptyLine :: Doc
 emptyLine  = text ""
 
 -- | Pretty print a TransSys specification as a Kind2/Lustre specification.
@@ -30,6 +33,7 @@ pSpec spec = items $$ props
         empty
         (Map.map fst (specProps spec))
 
+pProp :: String -> ExtVar -> Doc
 pProp pId extvar = quotes (text pId) <+> text "is" <+> pExtVar extvar
 
 pType :: Type t -> Doc
