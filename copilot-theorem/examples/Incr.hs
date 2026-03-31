@@ -4,7 +4,7 @@ import Prelude ()
 import Copilot.Language
 
 import Copilot.Theorem
-import Copilot.Theorem.Prover.Z3
+import Copilot.Theorem.Prover.SMT (def, induction, debug, z3)
 
 spec = do
   bounds <- prop "bounds" (forAll $ x < 255)
@@ -16,4 +16,4 @@ spec = do
     x = [2] ++ (1 + x)
 
 induct :: Proof Universal
-induct = induction def { nraNLSat = False, debug = True }
+induct = induction def { debug = True } z3
