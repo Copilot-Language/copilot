@@ -5,7 +5,7 @@ import Prelude ()
 import Copilot.Language
 import Copilot.Language.Reify
 import Copilot.Theorem
-import Copilot.Theorem.Prover.Z3
+import Copilot.Theorem.Prover.SMT (def, debug, onlySat, onlyValidity, z3)
 
 import qualified Copilot.Language.Operators.Propositional as P
 
@@ -165,7 +165,7 @@ localConvexity = do
   theorem "6"  (P.not (forAll $ locallyConvex tau)) arithSat
 
 arith :: Proof Universal
-arith    = onlyValidity def { nraNLSat = True, debug = False }
+arith    = onlyValidity def { debug = False } z3
 
 arithSat :: Proof Existential
-arithSat = onlySat      def { nraNLSat = True, debug = False }
+arithSat = onlySat      def { debug = False } z3

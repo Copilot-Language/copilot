@@ -5,7 +5,7 @@ module BoyerMoore where
 
 import Copilot.Language hiding (length)
 import Copilot.Theorem
-import Copilot.Theorem.Prover.Z3
+import Copilot.Theorem.Prover.SMT (induction, def, debug, z3)
 
 import Copilot.Core.Type
 
@@ -71,7 +71,7 @@ spec = do
     maj = majorityVote ss
 
 induct :: Proof Universal
-induct = induction def { nraNLSat = False, debug = False }
+induct = induction def { debug = False } z3
 
 -- | Initial value for a given type.
 --
