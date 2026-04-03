@@ -1,3 +1,6 @@
+2026-03-31
+        * Handle special Float values correctly for counterexamples. (#697)
+
 2026-03-07
         * Version bump (4.7). (#714)
 
