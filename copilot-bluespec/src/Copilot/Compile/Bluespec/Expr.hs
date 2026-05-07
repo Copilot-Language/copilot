@@ -18,7 +18,7 @@ import Data.String (IsString (..))
 import qualified Language.Bluespec.Classic.AST as BS
 import qualified Language.Bluespec.Classic.AST.Builtin.Ids as BS
 import Numeric.Floating.IEEE.NaN (isSignaling, setPayloadSignaling, setPayload, getPayload)
-import GHC.Float (double2Float, castFloatToWord32, castDoubleToWord64)
+import GHC.Float (double2Float, castFloatToWord32, castDoubleToWord64, float2Double)
 
 -- Internal imports: Copilot
 import Copilot.Core
@@ -535,7 +535,7 @@ constTy ty =
     Word16    -> constInt ty . toInteger
     Word32    -> constInt ty . toInteger
     Word64    -> constInt ty . toInteger
-    Float     -> constFP ty . realToFrac
+    Float     -> constFP ty . nanSafeFloat2Double
     Double    -> constFP ty
 
     -- Translating a Copilot array literal to a Bluespec Vector is somewhat
@@ -563,6 +563,20 @@ constTy ty =
                , constTy ty'' val
                ))
              (toValues v))
+  where
+    -- Convert a Float to a Double. This function takes care to preserve
+    -- special floating-point values, such as negative zero, infinity, and NaN
+    -- values.
+    nanSafeFloat2Double :: Float -> Double
+    nanSafeFloat2Double x
+        -- float2Double does not preserve the payloads of NaN values, so we
+        -- include special cases for translating NaNs.
+        | isNaN x && isSignaling x = setPayloadSignaling payload
+        | isNaN x                  = setPayload payload
+        | otherwise                = float2Double x
+      where
+        payload :: Double
+        payload = float2Double $ getPayload x
 
 -- | Transform a list of Copilot Core expressions of a given 'Type' into a
 -- Bluespec @Vector@ expression.
