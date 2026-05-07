@@ -4,7 +4,7 @@ module Grey where
 
 import Copilot.Language
 import Copilot.Theorem
-import Copilot.Theorem.Prover.Z3
+import Copilot.Theorem.Prover.SMT (Options (..), def, induction, kInduction, z3)
 
 import Prelude ()
 import Data.String (fromString)
@@ -32,7 +32,7 @@ spec = do
     r  = extern "reset" Nothing
 
 induct :: Proof Universal
-induct = induction def { nraNLSat = False, debug = False }
+induct = induction def { debug = False } z3
 
 kinduct :: Word32 -> Proof Universal
-kinduct k = kInduction def { nraNLSat = False, startK = k, maxK = k, debug = False }
+kinduct k = kInduction def { startK = k, maxK = k, debug = False } z3
