@@ -44,7 +44,8 @@ library
                , copilot-language >= 4.7 && < 4.8
 
   exposed-modules:
-      Copilot.Library.Libraries
+      Copilot.Library.Analysis
+    , Copilot.Library.Libraries
     , Copilot.Library.Clocks
     , Copilot.Library.LTL
     , Copilot.Library.PTLTL
