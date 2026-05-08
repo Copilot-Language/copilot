@@ -1,4 +1,5 @@
-2026-03-31
+2026-05-07
+        * Version bump (4.7.1). (#730)
         * Handle special Float values correctly for counterexamples. (#697)
         * Update examples to compile with copilot-theorem >= 3.0. (#692)
 
