@@ -1,4 +1,5 @@
-2026-03-31
+2026-05-07
+        * Version bump (4.7.1). (#730)
         * Fix translation of special Float values to Bluespec. (#697)
 
 2026-03-07
