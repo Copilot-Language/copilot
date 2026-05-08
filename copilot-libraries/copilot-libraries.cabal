@@ -49,6 +49,7 @@ library
     , Copilot.Library.Clocks
     , Copilot.Library.LTL
     , Copilot.Library.PTLTL
+    , Copilot.Library.StateMachines
     , Copilot.Library.Statistics
     , Copilot.Library.RegExp
     , Copilot.Library.Utils
