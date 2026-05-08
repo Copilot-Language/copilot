@@ -1,0 +1,66 @@
+name: build
+
+# Trigger the workflow on push or pull request
+on:
+  - pull_request
+  - push
+
+jobs:
+  cabal:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }} / cabal ${{ matrix.cabal }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-26.04]
+        cabal: ["2.4", "3.2", "3.4"]
+        ghc:
+          - "8.6.5"
+          - "8.8.4"
+          - "8.10.4"
+          - "9.0.1"
+
+    steps:
+
+    - uses: haskell-actions/setup@main
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      continue-on-error: true
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    - name: Prepare environment
+      run: |
+        echo "$HOME/.ghcup/bin" >> $GITHUB_PATH
+        echo "$HOME/.cabal/bin" >> $GITHUB_PATH
+        sed -i -e "s;-- \(secure.\) True;\1 False;g" $HOME/.cabal/config
+        cabal update
+
+    - uses: actions/checkout@v7
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y cppcheck z3
+
+    - name: Format check
+      run: |
+        # Fail if the any non-binary files contain trailing spaces.
+        if grep -nIHre ' \+$' * ; then exit 1; fi
+
+        # Fail if the code, Cabal files, documentation or CHANGELOGs contain tabs.
+        if grep -rP '\t' --include='*.hs' --include='*.cabal' --include='*.md' --include='CHANGELOG' . ; then exit 1; fi
+
+    - name: Install copilot
+      run: |
+        cabal v2-install --lib copilot/ copilot-core/ copilot-c99/ copilot-language/ copilot-libraries/ copilot-theorem/ copilot-interpreter/ copilot-prettyprinter/
+
+    - name: Test packages
+      if: matrix.ghc == '8.10.4'
+      run: |
+        cabal v2-test -j1 copilot-core/ copilot-language/ copilot-interpreter/ copilot-c99/ copilot-theorem/ copilot-libraries/
+
+    - name: Check cpp
+      if: matrix.ghc == '8.10.4'
+      run: |
+        export GHC_ENVIRONMENT=~/.ghc/x86_64-linux-8.10.4/environments/default
+        runhaskell copilot/examples/Heater.hs; cppcheck --force --addon=misra.py --suppress=misra-c2012-14.4 --error-exitcode=2 heater.c
