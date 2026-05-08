@@ -1,4 +1,5 @@
 2026-05-07
+        * Version bump (4.7.1). (#730)
         * Add stream analysis module. (#726)
         * Add state machine module. (#728)
 
