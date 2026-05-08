@@ -11,7 +11,7 @@
 2026-01-07
         * Version bump (4.6.1). (#705)
         * Disable test suite via newly added manual cabal flag. (#673)
-	* Fix translation of constant floating-point values. (#696)
+        * Fix translation of constant floating-point values. (#696)
 
 2025-11-07
         * Version bump (4.6). (#679)
