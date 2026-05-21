@@ -9,7 +9,7 @@ module Copilot.Theorem.TransSys.Transform
   , complete
   ) where
 
-import Copilot.Theorem.TransSys.Spec
+import Copilot.Theorem.TransSys.Spec hiding (prop)
 import Copilot.Theorem.TransSys.Renaming
 
 import Copilot.Theorem.Misc.Utils
@@ -32,7 +32,8 @@ import qualified Data.Bimap as Bimap
 prefix :: String -> Var -> Var
 prefix s1 (Var s2) = Var $ s1 ++ "." ++ s2
 
-ncNodeIdSep = "-"
+ncNodeIdSep :: Char
+ncNodeIdSep = '-'
 
 -- | Merge all the given nodes, replacing all references to the given node Ids
 -- with a reference to a fresh node id (unless the nodes given as argument
@@ -53,7 +54,7 @@ mergeNodes toMergeIds spec =
     -- its name is kept
     newNodeId
       | specTopNodeId spec `elem` toMergeIds = specTopNodeId spec
-      | otherwise = intercalate ncNodeIdSep (sort toMergeIds)
+      | otherwise = intercalate [ncNodeIdSep] (sort toMergeIds)
 
     newNode = Node
       { nodeId = newNodeId
@@ -64,10 +65,10 @@ mergeNodes toMergeIds spec =
 
     -- Computing the dependencies of the new node
     dependencies = nub'
-      [ id |
+      [ id' |
         n <- toMerge
-      , id <- nodeDependencies n
-      , id `notElem` toMergeIds ]
+      , id' <- nodeDependencies n
+      , id' `notElem` toMergeIds ]
 
     -- All the work of renaming is done in the 'Misc.Renaming' monad. Some code
     -- complexity has been added so the variable names remains as clear as
@@ -208,8 +209,11 @@ removeCycles spec =
      let depGraph = map (\n -> (nrep n, nodeId n, nodeDependencies n)) ns
      in Graph.stronglyConnComp depGraph
 
+    acycN (Graph.AcyclicSCC n) = n
+    acycN Graph.CyclicSCC {}   = error "Cyclic graph is not handled"
+
     topoSort s = s { specNodes =
-      map (\(Graph.AcyclicSCC n) -> n) $ buildScc id (specNodes s) }
+      map acycN $ buildScc id (specNodes s) }
 
 -- | Completes each node of a specification with imported variables such that
 -- each node contains a copy of all its dependencies.
@@ -231,11 +235,11 @@ complete spec =
       . completeTopNodeDeps
       $ spec
 
-    completeTopNodeDeps spec = spec { specNodes = map aux nodes }
+    completeTopNodeDeps spec' = spec' { specNodes = map aux nodes }
       where
-        nodes = specNodes spec
+        nodes = specNodes spec'
         aux n
-          | nodeId n == specTopNodeId spec =
+          | nodeId n == specTopNodeId spec' =
               n { nodeDependencies = map nodeId nodes \\ [nodeId n] }
           | otherwise = n
 
@@ -246,7 +250,7 @@ complete spec =
                            , nodeImportedVars = importedVars' }) : ns
 
       where
-        nsMap = Map.fromList [(nodeId n, n) | n <- ns]
+        nsMap = Map.fromList [(nodeId n', n') | n' <- ns]
         dependencies' =
           let newDeps = do
                 dId <- nodeDependencies n
@@ -268,7 +272,7 @@ complete spec =
                 -- which come from merged nodes as they are already
                 -- decorated
                 let preferedName
-                     | head ncNodeIdSep `elem` n' = v
+                     | ncNodeIdSep `elem` n' = v
                      | otherwise = n' `prefix` v
                 alias <- getFreshName [preferedName, n' `prefix` v]
                 return $ Bimap.tryInsert alias ev acc

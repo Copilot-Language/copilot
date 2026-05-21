@@ -62,7 +62,6 @@ import Copilot.Language.Operators.Temporal
 import Copilot.Language.Operators.BitWise
 import Copilot.Language.Operators.Array
 import Copilot.Language.Operators.Struct
-import Copilot.Language.Reify
 import Copilot.Language.Prelude
 import Copilot.Language.Spec
 import Copilot.Language.Stream (Stream)

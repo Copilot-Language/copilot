@@ -1,4 +1,9 @@
+{-# LANGUAGE CPP  #-}
+#if MIN_VERSION_base(4,19,0)
 {-# LANGUAGE Trustworthy #-}
+#else
+{-# LANGUAGE Safe #-}
+#endif
 
 -- | A prover backend based on Kind2.
 module Copilot.Theorem.Kind2.Prover
@@ -35,9 +40,7 @@ data Options = Options
 instance Default Options where
   def = Options { bmcMax = 0 }
 
-data ProverST = ProverST
-  { options  :: Options
-  , transSys :: TS.TransSys }
+data ProverST = ProverST Options TS.TransSys
 
 -- | A prover backend based on Kind2.
 --
@@ -49,11 +52,15 @@ kind2Prover opts = Prover
   , askProver    = askKind2
   , closeProver  = const $ return () }
 
-kind2Prog        = "kind2"
+kind2Prog :: String
+kind2Prog = "kind2"
+
+kind2BaseOptions :: [String]
 kind2BaseOptions = ["--input-format", "native", "-xml"]
 
 askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
-askKind2 (ProverST opts spec) assumptions toCheck = do
+askKind2 _p _assumptions [] = fail "toCheck is empty"
+askKind2 (ProverST opts spec) assumptions toCheck@(toCheckHead:_) = do
 
   let kind2Input = prettyPrint . toKind2 Inlined assumptions toCheck $ spec
 
@@ -70,7 +77,7 @@ askKind2 (ProverST opts spec) assumptions toCheck = do
 
   removeFile tempName
 
-  let propId         = head toCheck
+  let propId         = toCheckHead
       propQuantifier = case Map.lookup propId (TS.specProps spec) of
                          Just (_, quantifier) ->
                            quantifier

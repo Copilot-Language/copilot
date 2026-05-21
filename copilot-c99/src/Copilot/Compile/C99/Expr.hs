@@ -61,8 +61,8 @@ transExpr (Op2 (UpdateField ty1@(Struct _) ty2 f) e1 e2) = do
   e2' <- transExpr e2
 
   -- Variable to hold the updated struct
-  (i, _, _) <- get
-  let varName = "_v" ++ show i
+  (i', _, _) <- get
+  let varName = "_v" ++ show i'
   modify (\(i, x, y) -> (i + 1, x, y))
 
   -- Add new var decl
@@ -101,14 +101,14 @@ transExpr (Op2 op e1 e2) = do
   e2' <- transExpr e2
   return $ transOp2 op e1' e2'
 
-transExpr e@(Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
+transExpr (Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
   e1' <- transExpr e1
   e2' <- transExpr e2
   e3' <- transExpr e3
 
   -- Variable to hold the updated array
-  (i, _, _) <- get
-  let varName = "_v" ++ show i
+  (i', _, _) <- get
+  let varName = "_v" ++ show i'
   modify (\(i, x, y) -> (i + 1, x, y))
 
   -- Add new var decl
@@ -117,18 +117,19 @@ transExpr e@(Op3 (UpdateArray arrTy@(Array ty2)) e1 e2 e3) = do
   modify (\(i, x, y) -> (i, x ++ [initDecl], y))
 
   let size :: Type (Array n t) -> C.Expr
-      size arrTy@(Array ty) = C.LitInt (fromIntegral $ typeLength arrTy)
+      size arrT'@(Array ty) = C.LitInt (fromIntegral $ typeLength arrT')
                          C..* C.SizeOfType (C.TypeName $ transType ty)
+      size _ = error "Unhandled case"
 
   -- Initialize the var to the same value as the original array
   let initStmt = C.Expr $ memcpy (C.Ident varName) e1' (size arrTy)
 
   -- Update element of array
   let updateStmt = case ty2 of
-        Array _ -> C.Expr $ memcpy dest e3' size
+        Array _ -> C.Expr $ memcpy dest e3' siz'
           where
             dest = C.Index (C.Ident varName) e2'
-            size = C.LitInt
+            siz' = C.LitInt
                        (fromIntegral $ typeSize ty2)
                        C..* C.SizeOfType (C.TypeName (tyElemName ty2))
 
@@ -183,6 +184,7 @@ transOp1 op e =
     BwNot    _    -> (C..~) e
     Cast     _ ty -> C.Cast (transTypeName ty) e
     GetField (Struct _)  _ f -> C.Dot e (accessorName f)
+    _             -> error "Unhandled case"
 
 -- | Translates a Copilot binary operator and its arguments into a C99
 -- expression.

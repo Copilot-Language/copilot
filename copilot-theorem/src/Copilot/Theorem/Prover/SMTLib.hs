@@ -8,8 +8,9 @@ module Copilot.Theorem.Prover.SMTLib (SmtLib, interpret) where
 
 import Copilot.Theorem.Prover.Backend (SmtFormat (..), SatResult (..))
 
-import Copilot.Theorem.IL
+import Copilot.Theorem.IL.Spec hiding (args)
 import Copilot.Theorem.Misc.SExpr
+
 
 import Text.Printf
 

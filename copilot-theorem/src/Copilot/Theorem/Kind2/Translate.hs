@@ -24,6 +24,7 @@ import Data.Map (Map, (!))
 
 import qualified Data.Map as Map
 import qualified Data.Bimap as Bimap
+import Prelude hiding (pred)
 
 -- The following properties MUST hold for the given transition system :
 -- * Nodes are sorted by topological order
@@ -97,8 +98,7 @@ addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
       in pred { K.predInit = init', K.predTrans = trans' }
 
     vars =
-      let bindings   = nodeImportedVars (specTopNode spec)
-          toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
+      let toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
           toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
       in map (varName . toTopVar . toExtVar) assumptions
 

@@ -13,6 +13,7 @@ import Data.List (intercalate)
 type SSExpr = SExpr String
 
 -- | Reserved keyword prime.
+kwPrime :: String
 kwPrime = "prime"
 
 -- | Pretty print a Kind2 file.

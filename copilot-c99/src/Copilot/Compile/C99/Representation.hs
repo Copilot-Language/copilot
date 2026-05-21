@@ -16,6 +16,6 @@ data UniqueTrigger = UniqueTrigger UniqueTriggerId Trigger
 
 -- | Given a list of triggers, make their names unique.
 mkUniqueTriggers :: [Trigger] -> [UniqueTrigger]
-mkUniqueTriggers ts = zipWith mkUnique ts [0..]
+mkUniqueTriggers ts = zipWith mkUnique ts [0 :: Integer ..]
   where
     mkUnique t@(Trigger name _ _) n = UniqueTrigger (name ++ "_" ++ show n) t

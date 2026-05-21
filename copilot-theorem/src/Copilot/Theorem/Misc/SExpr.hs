@@ -7,30 +7,34 @@ module Copilot.Theorem.Misc.SExpr where
 
 import Text.PrettyPrint.HughesPJ as PP hiding (char, Str)
 
-import Control.Monad
-
 -- | A structured expression is either an atom, or a sequence of expressions,
 -- where the first in the sequence denotes the tag or label of the tree.
 data SExpr a = Atom a
              | List [SExpr a]
 
 -- | Empty string expression.
+blank :: SExpr String
 blank = Atom ""
 
 -- | Atomic expression constructor.
+atom :: a -> SExpr a
 atom = Atom                 -- s
 
 -- | Empty expression (empty list).
+unit :: SExpr a
 unit = List []              -- ()
 
 -- | Single expression.
+singleton :: a -> SExpr a
 singleton a  = List [Atom a]        -- (s)
 
 -- | Sequence of expressions.
+list :: [SExpr a] -> SExpr a
 list = List                 -- (ss)
 
 -- | Sequence of expressions with a root or main note, and a series of
 -- additional expressions or arguments.
+node :: a -> [SExpr a] -> SExpr a
 node a l = List (Atom a : l)    -- (s ss)
 
 -- A straightforward string representation for 'SExpr's of Strings that
@@ -44,6 +48,7 @@ instance Show (SExpr String) where
 -- More advanced printing with some basic indentation
 
 -- | Indent by a given number.
+indent :: Doc -> Doc
 indent = nest 1
 
 -- | Pretty print a structured expression as a String.

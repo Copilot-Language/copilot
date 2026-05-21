@@ -22,6 +22,7 @@ import Data.Set (Set, member)
 import qualified Data.Map  as Map
 import qualified Data.Set  as Set
 import qualified Data.List as List
+import           GHC.Stack (HasCallStack)
 
 -- | A monad capable of keeping track of variable renames and of providing
 -- fresh names for variables.
@@ -43,13 +44,14 @@ addReservedName v = modify $ \st ->
 -- use one of the names in the list as a basis for new names.
 --
 -- PRE: the given list cannot be empty.
-getFreshName :: [Var] -> Renaming Var
-getFreshName vs = do
+getFreshName :: HasCallStack => [Var] -> Renaming Var
+getFreshName [] = error "Empty list given"
+getFreshName vs@(vsHead:_) = do
   usedNames <- _reservedNames <$> get
   let varAppend (Var s) = Var $ s ++ "_"
-      applicants = vs ++ List.iterate varAppend (head vs)
+      applicants = vs ++ List.iterate varAppend vsHead
       v = case dropWhile (`member` usedNames) applicants of
-            v:_ -> v
+            v':_ -> v'
             [] -> error "No more names available"
   addReservedName v
   return v
