@@ -28,7 +28,8 @@ import qualified Copilot.Theorem.TransSys   as TS
 -- | Options for Kind2
 data Options = Options
   { bmcMax :: Int -- ^ Upper bound on the number of unrolling that base and
-                  --   step will perform. A value of 0 means /unlimited/.
+                  --   step will perform (passed to Kind2 via its
+                  --   @--unroll_max@ option). A value of 0 means /unlimited/.
   }
 
 -- | Default options with unlimited unrolling for base and step.
@@ -41,7 +42,10 @@ data ProverST = ProverST
 
 -- | A prover backend based on Kind2.
 --
--- The executable @kind2@ must exist and its location be in the @PATH@.
+-- The executable @kind2@ must exist and its location be in the @PATH@. Kind2
+-- version 1.0 or newer is required: the native input format and the
+-- command-line options this prover uses were introduced in Kind2 1.0, and
+-- remain supported as of Kind2 3.0.
 kind2Prover :: Options -> Prover
 kind2Prover opts = Prover
   { proverName =  "Kind2"
@@ -50,23 +54,21 @@ kind2Prover opts = Prover
   , closeProver  = const $ return () }
 
 kind2Prog        = "kind2"
-kind2BaseOptions = ["--input-format", "native", "-xml"]
+kind2BaseOptions = ["--input_format", "native", "-xml"]
 
 askKind2 :: ProverST -> [PropId] -> [PropId] -> IO Output
 askKind2 (ProverST opts spec) assumptions toCheck = do
 
-  let kind2Input = prettyPrint . toKind2 Inlined assumptions toCheck $ spec
+  let kind2Input = prettyPrint . toKind2 assumptions toCheck $ spec
 
   (tempName, tempHandle) <- openTempFile "." "out" "kind"
   hPutStr tempHandle kind2Input
   hClose tempHandle
 
   let kind2Options =
-        kind2BaseOptions ++ ["--bmc_max", show $ bmcMax opts, tempName]
+        kind2BaseOptions ++ ["--unroll_max", show $ bmcMax opts, tempName]
 
   (_, output, _) <- readProcessWithExitCode kind2Prog kind2Options ""
-
-  putStrLn kind2Input
 
   removeFile tempName
 

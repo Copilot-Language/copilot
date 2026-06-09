@@ -51,6 +51,7 @@ library
                           , containers            >= 0.4 && < 0.9
                           , data-default          >= 0.7 && < 0.9
                           , directory             >= 1.3 && < 1.4
+                          , extra                 >= 1.7 && < 1.9
                           , fp-ieee               >= 0.1 && < 0.2
                           , libBF                 >= 0.6.2 && < 0.7
                           , mtl                   >= 2.0 && < 2.4
@@ -60,7 +61,6 @@ library
                           , process               >= 1.6 && < 1.7
                           , random                >= 1.1 && < 1.4
                           , transformers          >= 0.5 && < 0.7
-                          , xml                   >= 1.3 && < 1.4
                           , what4                 >= 1.3 && < 1.8
 
                           , copilot-core          >= 4.7.1 && < 4.8
@@ -137,3 +137,40 @@ test-suite unit-tests
 
   ghc-options:
     -Wall
+
+-- Tests of the Kind2 backend, which require the kind2 executable (version
+-- 1.0 or newer) to be in the PATH. They must be explicitly enabled with the
+-- flag test-kind2.
+test-suite kind2-tests
+  type:
+    exitcode-stdio-1.0
+
+  main-is:
+    Kind2Main.hs
+
+  other-modules:
+    Test.Copilot.Theorem.Kind2
+
+  build-depends:
+      base
+    , HUnit
+    , mtl
+    , test-framework
+    , test-framework-hunit
+
+    , copilot-core
+    , copilot-theorem
+
+  hs-source-dirs:
+    tests
+
+  default-language:
+    Haskell2010
+
+  ghc-options:
+    -Wall
+
+  if flag(test-kind2)
+    buildable: True
+  else
+    buildable: False

@@ -1,68 +1,44 @@
-{-# LANGUAGE GADTs          #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RankNTypes     #-}
-{-# LANGUAGE Safe           #-}
-{-# LANGUAGE ViewPatterns   #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Safe       #-}
 
 -- | Convert modular transition systems ('TransSys') into Kind2 file
 -- specifications.
 module Copilot.Theorem.Kind2.Translate
   ( toKind2
-  , Style (..)
   ) where
 
 import Copilot.Theorem.TransSys
 import qualified Copilot.Theorem.Kind2.AST as K
 
-import Control.Exception.Base (assert)
-
 import Data.Function (on)
 import Data.Maybe (fromJust)
 
-import Data.List (sort, sortBy)
-import Data.Map (Map, (!))
+import Data.List (partition, sort, sortBy)
+import Data.Map ((!))
 
 import qualified Data.Map as Map
 import qualified Data.Bimap as Bimap
 
--- The following properties MUST hold for the given transition system :
--- * Nodes are sorted by topological order
--- * Nodes are `completed`, which means the dependency graph is transitive
---   and each node imports all the local variables of its dependencies
---
-
-type DepGraph = Map NodeId [NodeId]
-
--- | Style of the Kind2 files produced: modular (with multiple separate nodes),
--- or all inlined (with only one node).
---
--- In the modular style, the graph is simplified to remove cycles by collapsing
--- all nodes participating in a strongly connected components.
---
--- In the inlined style, the structure of the modular transition system is
--- discarded and the graph is first turned into a /non-modular transition/
--- /system/ with only one node, which can be then converted into a Kind2 file.
-data Style = Inlined | Modular
-
 -- | Produce a Kind2 file that checks the properties specified.
-toKind2 :: Style     -- ^ Style of the file (modular or inlined).
-        -> [PropId]  -- ^ Assumptions
+toKind2 :: [PropId]  -- ^ Assumptions
         -> [PropId]  -- ^ Properties to be checked
         -> TransSys  -- ^ Modular transition system holding the system spec
         -> K.File
-toKind2 style assumptions checkedProps spec =
-  addAssumptions spec assumptions
-  $ trSpec (complete spec') predCallsGraph assumptions checkedProps
+toKind2 assumptions checkedProps spec =
+  addAssumptions spec' assumptions $ trSpec spec' checkedProps
   where
-    predCallsGraph = specDependenciesGraph spec'
-    spec' = case style of
-      Inlined -> inline spec
-      Modular -> removeCycles spec
+    spec' = inline spec
 
-trSpec :: TransSys -> DepGraph -> [PropId] -> [PropId] -> K.File
-trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
+trSpec :: TransSys -> [PropId] -> K.File
+trSpec spec checkedProps = K.File otherNodes topNode props
   where
-    preds = map (trNode spec predCallsGraph) (specNodes spec)
+    (topNode, otherNodes) =
+      case partition ((== specTopNodeId spec) . K.nodeId) nodes of
+        ([top], others) -> (top, others)
+        _ -> error $ "Kind2.Translate: top node "
+                       ++ specTopNodeId spec ++ " not found"
+    nodes = map (trNode spec) (specNodes spec)
     props = map trProp $
       filter ((`elem` checkedProps) . fst) $
         Map.toList $ Map.map fst $ specProps spec
@@ -70,37 +46,30 @@ trSpec spec predCallsGraph _assumptions checkedProps = K.File preds props
 trProp :: (PropId, ExtVar) -> K.Prop
 trProp (pId, var) = K.Prop pId (trVar . extVarLocalPart $ var)
 
-trNode :: TransSys -> DepGraph -> Node -> K.PredDef
-trNode spec predCallsGraph node =
-  K.PredDef { K.predId, K.predStateVars, K.predInit, K.predTrans }
-  where
-    predId = nodeId node
-    predStateVars = gatherPredStateVars spec node
-    predInit  = mkConj $ initLocals  node
-                         ++ map (trExpr False) (nodeConstrs node)
-                         ++ predCalls True spec predCallsGraph node
-    predTrans = mkConj $ transLocals node
-                         ++ map (trExpr True) (nodeConstrs node)
-                         ++ predCalls False spec predCallsGraph node
+trNode :: TransSys -> Node -> K.Node
+trNode spec node = K.Node
+  { K.nodeId        = nodeId node
+  , K.nodeStateVars = gatherPredStateVars spec node
+  , K.nodeInit      = mkConj $ initLocals  node
+                               ++ map (trExpr False) (nodeConstrs node)
+  , K.nodeTrans     = mkConj $ transLocals node
+                               ++ map (trExpr True) (nodeConstrs node)
+  }
 
+-- | Add the assumptions to the top node of the file by conjoining the
+-- corresponding property variables to its initial state and transition
+-- relation predicates.
 addAssumptions :: TransSys -> [PropId] -> K.File -> K.File
-addAssumptions spec assumptions (K.File {K.filePreds, K.fileProps}) =
-  K.File (changeTail aux filePreds) fileProps
+addAssumptions spec assumptions file =
+  file { K.fileTopNode = aux (K.fileTopNode file) }
   where
-    changeTail f (reverse -> l) = case l of
-      []     -> error "impossible"
-      x : xs -> reverse $ f x : xs
+    aux node =
+      let init'  = mkConj ( K.nodeInit  node : map K.StateVar vars )
+          trans' = mkConj ( K.nodeTrans node : map K.PrimedStateVar vars )
+      in node { K.nodeInit = init', K.nodeTrans = trans' }
 
-    aux pred =
-      let init'  = mkConj ( K.predInit  pred : map K.StateVar vars )
-          trans' = mkConj ( K.predTrans pred : map K.PrimedStateVar vars )
-      in pred { K.predInit = init', K.predTrans = trans' }
-
-    vars =
-      let bindings   = nodeImportedVars (specTopNode spec)
-          toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
-          toTopVar (ExtVar nId v) = assert (nId == specTopNodeId spec) v
-      in map (varName . toTopVar . toExtVar) assumptions
+    toExtVar a = fst $ fromJust $ Map.lookup a $ specProps spec
+    vars = map (varName . extVarLocalPart . toExtVar) assumptions
 
 -- The ordering really matters here because the variables
 -- have to be given in this order in a pred call
@@ -168,39 +137,6 @@ transLocals node =
         Pre _ v' -> [mkEquality (trPrimedVar v) (trVar v')]
         Expr e   -> [mkEquality (trPrimedVar v) (trExpr True e)]
         Constrs cs  -> map (trExpr True) cs
-
-predCalls :: Bool -> TransSys -> DepGraph -> Node -> [K.Term]
-predCalls isInitCall spec predCallsGraph node =
-  map mkCall toCall
-  where
-    nid = nodeId node
-    toCall = predCallsGraph ! nid
-    nodesMap = Map.fromList [(nodeId n, n) | n <- specNodes spec]
-
-    nodeLocals n =
-      map (ExtVar n) . sort . Map.keys
-      . nodeLocalVars $ (nodesMap ! n)
-
-    mkCall callee
-      | isInitCall =
-          K.PredApp callee K.Init (argsSeq trVar)
-      | otherwise  =
-          K.PredApp callee K.Trans (argsSeq trVar ++ argsSeq trPrimedVar)
-      where
-
-        calleeLocals = nodeLocals callee
-        calleeImported =
-          (concatMap nodeLocals . sort . nodeDependencies) $ nodesMap ! callee
-
-        localAlias trVarF ev =
-          case Bimap.lookupR ev $ nodeImportedVars node of
-            Nothing -> error $
-              "This spec is not complete : "
-              ++ show ev ++ " should be imported in " ++ nid
-            Just v -> trVarF v
-
-        argsSeq trVarF =
-          map (localAlias trVarF) (calleeLocals ++ calleeImported)
 
 trExpr :: Bool -> Expr t -> K.Term
 trExpr primed = tr
