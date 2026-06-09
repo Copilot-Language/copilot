@@ -1,3 +1,6 @@
+2026-06-09
+        * Update Kind2 backend to support Kind2 1.0 and newer. (#734)
+
 2026-05-07
         * Version bump (4.7.1). (#730)
         * Handle special Float values correctly for counterexamples. (#697)
