@@ -31,7 +31,8 @@ properties on Copilot programs. It includes:
 * The *copilot-core* and *copilot-prettyprinter* Haskell libraries
 * The *Yices2* SMT-solver: `yices-smt2` must be in your `$PATH`
 * The *Z3* SMT-solver: `z3` must be in your `$PATH`
-* The *Kind2* model checker: `kind2` must be in your `$PATH`
+* The *Kind2* model checker (version 1.0 or newer): `kind2` must be in your
+  `$PATH`
 
 To build it, just install the Copilot library as described in the top-level
 README.
@@ -87,7 +88,9 @@ configuration.
 The *Kind2* prover uses the model checker with the same name, from the
 University of Iowa. It translates the Copilot specification into a *modular
 transition system* (the Kind2 native format) and then calls the `kind2`
-executable.
+executable. Kind2 version 1.0 or newer is required: the native input format
+and the command-line options used by this prover were introduced in Kind2
+1.0, and remain supported as of Kind2 3.0.
 
 It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prover
 :: Options -> Prover` where the `Options` type is defined as
@@ -95,7 +98,7 @@ It is provided by the `Copilot.Theorem.Kind2` module, which exports a `kind2Prov
 ```haskell
 data Options = Options { bmcMax :: Int }
 ```
-and where `bmcMax` corresponds to the `--bmc_max` option of *kind2* and is
+and where `bmcMax` corresponds to the `--unroll_max` option of *kind2* and is
 equivalent to the `maxK` option of the K-Induction prover. Its default value is
 0, which stands for infinity.
 
@@ -335,11 +338,16 @@ process.
 
 The transition system obtained by the `TransSys.Translate` module is perfectly
 consistent. However, it can't be directly translated into the *Kind2 native
-file format*. Indeed, it is natural to bind each node to a predicate but the
-Kind2 file format requires that each predicate only uses previously defined
-predicates. However, some nodes in our transition system could be mutually
-recursive. Therefore, the goal of the `removeCycles :: Spec -> Spec` function,
-defined in `TransSys.Transform`, is to remove such dependency cycles.
+file format*. The native input format of Kind2 (version 1.0 and newer) does
+not support predicate calls inside the initial state and transition relation
+predicates of a node, so the modular structure of the transition system cannot
+be expressed directly in it. Therefore, the system is first turned into an
+equivalent non-modular transition system with only one node by the
+`inline :: Spec -> Spec` function, defined in `TransSys.Transform`:
+```haskell
+inline :: Spec -> Spec
+inline spec = mergeNodes [nodeId n | n <- specNodes spec] spec
+```
 
 This function relies on the `mergeNodes :: [NodeId] -> Spec -> Spec` function,
 whose signature is self-explicit. The latter solves name conflicts by using the
@@ -516,10 +524,14 @@ in the Kind2 SMT solver.
 #### Displaying counterexamples
 
 Counterexamples are not displayed with the Kind2 prover because Kind2 doesn't
-support XML output of counterexamples. If the last feature is provided, it
-should be easy to implement displaying of counterexamples in *copilot-theorem*.
-For this, we recommend keeping some information about *observers* in
-`TransSys.Spec` and to add one variable per observer in the Kind2 output file.
+support the output of counterexamples for systems expressed in its native input
+format (the counterexample printing functions in Kind2's
+[`src/inputSystem.ml`](https://github.com/kind2-mc/kind2/blob/v3.0.0/src/inputSystem.ml)
+fail with an internal error for native input). If Kind2 adds this feature, it
+should be easy to implement displaying of counterexamples in
+*copilot-theorem*.  For this, we recommend keeping some information about
+*observers* in `TransSys.Spec` and to add one variable per observer in the
+Kind2 output file.
 
 #### Bad handling of non-linear operators and external functions
 
@@ -569,14 +581,14 @@ architecture of Kind2.
 
 It is true that the code of `TransSys` is quite complex. In fact, it would be
 really straightforward to produce a flattened transition system and then a
-Kind2 file with just a single *top* predicate. In fact, It would be as easy as
+Kind2 file with just a single *top* node. In fact, It would be as easy as
 producing an *IL* specification.
 
 To be honest, I'm not sure producing a modular *Kind2* output is worth the
 complexity added. It's especially true at the time I write this in the sense
 that:
 
-* Each predicate introduced is used only one time (which is true because
+* Each node introduced is used only one time (which is true because
   Copilot doesn't handle functions or parameterized streams like Lustre does
   and everything is inlined during the reification process).
 * A similar form of structure could be obtained from a flattened Kind2 native
