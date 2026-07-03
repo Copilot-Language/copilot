@@ -1,6 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE Safe                      #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
@@ -305,7 +304,7 @@ handleOp2 resT (op, e1, e2) handleExpr notHandledF mkOp notOp = case op of
     numComp ::
       C.Type cta ->
       (forall num . (Num num) => Op2 num Bool) -> m (expr resT)
-    numComp ta op = casting ta $ \case
+    numComp ta op = casting ta $ \t -> case t of
       Integer -> do
         e1' <- handleExpr Integer e1
         e2' <- handleExpr Integer e2

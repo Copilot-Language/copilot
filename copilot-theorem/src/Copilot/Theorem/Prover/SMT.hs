@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs             #-}
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE Trustworthy       #-}
@@ -329,7 +328,7 @@ getVars :: [Expr] -> [VarDescr]
 getVars = nubBy' (compare `on` varName) . concatMap getVars'
   where
     getVars' :: Expr -> [VarDescr]
-    getVars' = \case
+    getVars' = \v -> case v of
       ConstB _             -> []
       ConstI _ _           -> []
       ConstR _             -> []
@@ -370,12 +369,12 @@ kInduction' startK maxK s as ps = (fromMaybe (Output P.Unknown ["proof by k-indu
                     ++ [evalAt (_n_plus i) m | m <- toCheck, i <- [0 .. k]]
           stepInv = [evalAt (_n_plus $ k + 1) m | m <- toCheck]
 
-      entailment Base (modelInit ++ base) baseInv >>= \case
+      entailment Base (modelInit ++ base) baseInv >>= \res -> case res of
         Sat     -> invalid $ "base case failed for " ++ proofKind k
         Unknown -> unknown
         Unsat   ->
           if not inductive then valid ("proved without induction")
-          else entailment Step step stepInv >>= \case
+          else entailment Step step stepInv >>= \stepRes -> case stepRes of
             Sat     -> unknown
             Unknown -> unknown
             Unsat   -> valid $ "proved with " ++ proofKind k
@@ -391,7 +390,7 @@ onlySat' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 
       if inductive
         then unknown' "proposition requires induction to prove."
-        else entailment Base (modelInit ++ base) (map (Op1 Bool Not) baseInv) >>= \case
+        else entailment Base (modelInit ++ base) (map (Op1 Bool Not) baseInv) >>= \res -> case res of
           Unsat   -> invalid "prop not satisfiable"
           Unknown -> unknown' "failed to find a satisfying model"
           Sat     -> sat "prop is satisfiable"
@@ -407,7 +406,7 @@ onlyValidity' s as ps = (fromJust . fst) <$> runPS (script <* stopSolvers) s
 
       if inductive
         then unknown' "proposition requires induction to prove."
-        else entailment Base (modelInit ++ base) baseInv >>= \case
+        else entailment Base (modelInit ++ base) baseInv >>= \res -> case res of
           Unsat   -> valid "proof by SMT solver"
           Unknown -> unknown
           Sat     -> invalid "SMT solver found a counter-example."

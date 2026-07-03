@@ -1,6 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE Safe                      #-}
 
 -- | This module implements the specification language for the IL format, an
@@ -51,7 +50,7 @@ data Type = Bool  | Real
   deriving (Eq, Ord)
 
 instance Show Type where
-  show = \case
+  show = \t -> case t of
     Bool  -> "Bool"
     Real  -> "Real"
     SBV8  -> "SBV8"

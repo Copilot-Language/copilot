@@ -1,5 +1,4 @@
 {-# LANGUAGE GADTs               #-}
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE Safe                #-}
@@ -212,7 +211,7 @@ trConst t v = case t of
       | otherwise = Op1 t Neg $ ConstI t $ negate $ toInteger v
 
 trOp1 :: C.Op1 a b -> (Op1, Type)
-trOp1 = \case
+trOp1 = \op -> case op of 
   C.Not     -> (Not, Bool)
   C.Abs t   -> (Abs, trType t)
   -- C.Sign t  ->
@@ -237,7 +236,7 @@ trOp1 = \case
   _ -> error "Unsupported unary operator in input."
 
 trOp2 :: C.Op2 a b c -> (Op2, Type)
-trOp2 = \case
+trOp2 = \op -> case op of
   C.And          -> (And, Bool)
   C.Or           -> (Or, Bool)
 
@@ -270,7 +269,7 @@ trOp2 = \case
   _ -> error "Unsupported binary operator in input."
 
 trType :: C.Type a -> Type
-trType = \case
+trType = \op -> case op of
   C.Bool   -> Bool
   C.Int8   -> SBV8
   C.Int16  -> SBV16

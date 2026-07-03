@@ -1,5 +1,4 @@
 {-# LANGUAGE GADTs      #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe       #-}
 
 -- | A backend to <http://www.tptp.org/ TPTP>, enabling to produce assertions
@@ -46,7 +45,7 @@ interpret str
   | otherwise                                   = Nothing
 
 expr :: Expr -> TptpExpr
-expr = \case
+expr = \e -> case e of
   ConstB v        -> Atom $ if v then "$true" else "$false"
   ConstR v        -> Atom $ show v
   ConstI _ v      -> Atom $ show v
@@ -67,7 +66,7 @@ expr = \case
                        Var off -> Atom $ f ++ "_n" ++ show off
 
 showOp1 :: Op1 -> String
-showOp1 = \case
+showOp1 = \op -> case op of
   Not   -> "~"
   Neg   -> "-"
   Abs   -> "abs"
@@ -88,7 +87,7 @@ showOp1 = \case
   Acosh -> "arccosh"
 
 showOp2 :: Op2 -> String
-showOp2 = \case
+showOp2 = \op -> case op of
   Eq    -> "="
   Le    -> "<="
   Lt    -> "<"

@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -414,21 +413,21 @@ proveInternal solver spec k = do
         let k' = k base_cases ind_case st
         satRes <-
           case solver of
-            CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData clauses $ \case
+            CVC4 -> liftIO $ WS.runCVC4InOverride sym WS.defaultLogData clauses $ \res -> case res of
               WS.Sat (ge, _) -> k' (WS.Sat ge)
               WS.Unsat x -> k' (WS.Unsat x)
               WS.Unknown -> k' WS.Unknown
-            DReal -> liftIO $ WS.runDRealInOverride sym WS.defaultLogData clauses $ \case
+            DReal -> liftIO $ WS.runDRealInOverride sym WS.defaultLogData clauses $ \res -> case res of
               WS.Sat (c, m) -> do
                 ge <- WS.getAvgBindings c m
                 k' (WS.Sat ge)
               WS.Unsat x -> k' (WS.Unsat x)
               WS.Unknown -> k' WS.Unknown
-            Yices -> liftIO $ WS.runYicesInOverride sym WS.defaultLogData clauses $ \case
+            Yices -> liftIO $ WS.runYicesInOverride sym WS.defaultLogData clauses $ \res -> case res of
               WS.Sat ge -> k' (WS.Sat ge)
               WS.Unsat x -> k' (WS.Unsat x)
               WS.Unknown -> k' WS.Unknown
-            Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \case
+            Z3 -> liftIO $ WS.runZ3InOverride sym WS.defaultLogData clauses $ \res -> case res of
               WS.Sat (ge, _) -> k' (WS.Sat ge)
               WS.Unsat x -> k' (WS.Unsat x)
               WS.Unknown -> k' WS.Unknown
