@@ -1,3 +1,6 @@
+2026-08-21
+        * Remove unnecessary extension. (#733)
+
 2026-07-07
         * Version bump (4.8). (#745)
         * Extend range of versions of Kind2. (#734)
