@@ -121,7 +121,7 @@ executable tikz-example
   build-depends:
     base               >= 4.9 && < 5,
 
-    copilot            >= 4.7 && < 4.8,
+    copilot            >= 4.8 && < 4.9,
     copilot-visualizer
 
   if flag(examples)
