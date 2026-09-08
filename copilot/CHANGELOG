@@ -1,3 +1,6 @@
+2026-09-07
+        * Disable secure mode in Cabal in Travis CI. (#753)
+
 2026-07-07
         * Version bump (4.8). (#745)
 
