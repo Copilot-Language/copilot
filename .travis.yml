@@ -26,6 +26,8 @@ before_install:
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
   - cabal --version
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+  - cabal user-config init
+  - sed -i -e "s;-- \(secure.\) True;\1 False;g" ${HOME}/.cabal/config
   - travis_retry cabal update
   - git submodule update --remote
 
