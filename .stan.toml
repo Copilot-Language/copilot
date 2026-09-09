@@ -1,0 +1,5 @@
+# pattern matching on _
+[[check]]
+type = "Exclude"
+id = "STAN-0213"
+scope = "all"
