@@ -19,7 +19,7 @@ module Copilot.Interpret.Eval
 import Copilot.Core            (Expr (..), Field (..), Id, Name, Observer (..),
                                 Op1 (..), Op2 (..), Op3 (..), Spec, Stream (..),
                                 Trigger (..), Type (..), UExpr (..), Value (..),
-				arrayElems, arrayUpdate, specObservers,
+                                arrayElems, arrayUpdate, specObservers,
                                 specStreams, specTriggers, updateField)
 import Copilot.Interpret.Error (badUsage)
 
