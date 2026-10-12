@@ -37,7 +37,7 @@ array xs | datalen == typelen = Array xs
          | otherwise          = error errmsg
   where
     datalen = length xs
-    typelen = fromIntegral $ natVal (Proxy :: Proxy n)
+    typelen = fromIntegral $ natVal $! (Proxy :: Proxy n)
     errmsg = "Length of data (" ++ show datalen ++
              ") does not match length of type (" ++ show typelen ++ ")."
 

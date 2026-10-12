@@ -1,3 +1,6 @@
+2026-10-11
+	* Increase test coverage for `Copilot.Core.Type.Array`. (#767)
+
 2026-09-07
         * Version bump (4.8.1). (#760)
 

@@ -11,8 +11,9 @@ import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck                      (Gen, Property, arbitrary,
                                              chooseInt, expectFailure, forAll,
-                                             getNegative, getNonNegative, oneof,
-                                             property, vector, vectorOf)
+                                             getNegative, getNonNegative,
+                                             listOf, oneof, property, vector,
+                                             vectorOf)
 
 -- Internal imports: library modules being tested
 import Copilot.Core.Type.Array (Array, array, arrayElems, arrayUpdate)
@@ -31,6 +32,10 @@ tests =
         testArrayElemsFail
     , testProperty "Show for arrays"
         testShowArray
+    , testProperty "showsPrec for arrays"
+        testShowsPrecArray
+    , testProperty "showList for arrays"
+        testShowListArray
     , testProperty "arrayElems (arrayUpdate x i v) !! i == v"
         (testArrayUpdateElem (Proxy :: Proxy 5))
     , testProperty "arrayUpdate x i ((arrayElems x) !! i) == x"
@@ -69,6 +74,17 @@ testArrayElemsFail = expectFailure $ forAll (vector 3) $ \l ->
 testShowArray :: Property
 testShowArray = forAll (vector 3) $ \l -> property $
   show (array l :: Array 3 Int64) == show (l :: [Int64])
+
+-- | Test 'Show.showsPrec' for 'Array's.
+testShowsPrecArray :: Property
+testShowsPrecArray = forAll (getNonNegative <$> arbitrary) $ \prec ->
+                     forAll (vector 3)                     $ \l -> property $
+  showsPrec prec (array l :: Array 3 Int64) "" == show (l :: [Int64])
+
+-- | Test 'Show.showList' for 'Array's.
+testShowListArray :: Property
+testShowListArray = forAll (listOf $ vector 3) $ \l -> property $
+  showList (map array l :: [Array 3 Int64]) "" == show (l :: [[Int64]])
 
 -- | Test that updating an array updates the element appropriately (if we
 -- project that element we get the value we put in).
