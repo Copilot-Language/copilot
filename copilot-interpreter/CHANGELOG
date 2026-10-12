@@ -1,3 +1,6 @@
+2026-10-12
+        * Replace tab in `Copilot.Interpreter.Eval`. (#772)
+
 2026-09-07
         * Version bump (4.8.1). (#760)
 
