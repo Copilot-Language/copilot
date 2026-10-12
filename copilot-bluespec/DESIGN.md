@@ -418,15 +418,15 @@ This generates a Verilog module `mkFibs.v` that looks like the following:
 
 ```verilog
 module mkFibs(CLK,
-	      RST_N,
+              RST_N,
 
-	      even_guard,
+              even_guard,
 
-	      even_arg0,
+              even_arg0,
 
-	      odd_guard,
+              odd_guard,
 
-	      odd_arg0);
+              odd_arg0);
   input  CLK;
   input  RST_N;
 
@@ -815,17 +815,17 @@ that looks like the following:
 
 ```verilog
 module mkFibs(CLK,
-	      RST_N,
+              RST_N,
 
-	      even_guard,
+              even_guard,
 
-	      even_arg0,
+              even_arg0,
 
-	      odd_guard,
+              odd_guard,
 
-	      odd_arg0,
+              odd_arg0,
 
-	      fibs);
+              fibs);
   input  CLK;
   input  RST_N;
 
