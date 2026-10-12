@@ -32,6 +32,9 @@ before_install:
   - git submodule update --remote
 
 script:
+  # Fail if the code, Cabal files, documentation or CHANGELOGs contain tabs.
+  - if grep -rP '\t' --include='*.hs' --include='*.cabal' --include='*.md' --include='CHANGELOG' . ; then exit 1; fi
+
   # We explicitly install all libraries so that they are exposed and we can use
   # them for tests (e.g., with runhaskell). There is no harm in doing this
   # instead of installing just copilot.
