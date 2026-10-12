@@ -11,9 +11,9 @@
 -- and their handling functions, or streams to observe, or a theorem that must
 -- be proved.
 --
--- In order to be executed, high-level Copilot Language Spec must be turned
--- into Copilot Core's 'Spec'. This module defines the low-level Copilot Core
--- representations for Specs and the main types of element in a spec.
+-- In order to be executed, a high-level Copilot Language @Spec@ must be
+-- turned into a Copilot Core 'Spec'. This module defines the low-level Copilot
+-- Core representation for 'Spec' and the main types of element in a spec.
 module Copilot.Core.Spec
     ( Stream (..)
     , Observer (..)
@@ -32,9 +32,9 @@ import Data.Typeable (Typeable)
 import Copilot.Core.Expr (Expr, Id, Name, UExpr)
 import Copilot.Core.Type (Type, Typed)
 
--- | A stream in an infinite succession of values of the same type.
+-- | A stream is an infinite succession of values of the same type.
 --
--- Stream can carry different types of data. Boolean streams play a special
+-- Streams can carry different types of data. Boolean streams play a special
 -- role: they are used by other parts (e.g., 'Trigger') to detect when the
 -- properties being monitored are violated.
 data Stream = forall a . (Typeable a, Typed a) => Stream
