@@ -1,3 +1,6 @@
+2026-10-12
+        * Adjust Travis CI script to flag presence of tabs as an error. (#774)
+
 2026-09-07
         * Version bump (4.8.1). (#760)
         * Disable secure mode in Cabal in Travis CI. (#753)
