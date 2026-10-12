@@ -1,5 +1,5 @@
 2026-10-12
-	* Increase test coverage for `Copilot.Core.Type.Array`. (#767)
+        * Increase test coverage for `Copilot.Core.Type.Array`. (#767)
         * Fix errors in the documentation of `Copilot.Core.Spec`. (#769)
 
 2026-09-07
