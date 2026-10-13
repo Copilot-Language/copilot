@@ -1,5 +1,6 @@
 2026-10-12
         * Replace tabs in `DESIGN.md`. (#772)
+        * Remove trailing spaces. (#775)
 
 2026-09-07
         * Version bump (4.8.1). (#760)
