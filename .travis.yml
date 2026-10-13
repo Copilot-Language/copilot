@@ -32,6 +32,9 @@ before_install:
   - git submodule update --remote
 
 script:
+  # Fail if the any non-binary files contain trailing spaces.
+  - if grep -nIHre ' \+$' * ; then exit 1; fi
+
   # Fail if the code, Cabal files, documentation or CHANGELOGs contain tabs.
   - if grep -rP '\t' --include='*.hs' --include='*.cabal' --include='*.md' --include='CHANGELOG' . ; then exit 1; fi
 
