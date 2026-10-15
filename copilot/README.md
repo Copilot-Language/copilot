@@ -162,7 +162,7 @@ ghci> ghci> Leaving GHCi.
 Feel free to open an issue if you are unable to install Copilot following these
 instructions.
 
-There is a TravisCI file at the root of the repository that may help with
+There is a Travis CI file at the root of the repository that may help with
 troubleshooting the installation. Our issues often include comments with
 Dockerfiles listing the steps necessary to install Copilot from scratch.
 
