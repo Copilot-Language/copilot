@@ -391,5 +391,5 @@ https://github.com/Copilot-Language/copilot/graphs/contributors
 We are grateful for NASA Contract NNL08AD13T to Galois, Inc. and the National
 Institute of Aerospace, which partially supported this work.
 
-Additionally NASA Langley contracts 80LARC17C0004 and NNL09AA00A supported
+Additionally, NASA Langley contracts 80LARC17C0004 and NNL09AA00A supported
 further development of Copilot.
