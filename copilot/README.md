@@ -26,7 +26,7 @@ real-time requirements.
 
 - Produce hard real-time C99 runtime monitors that run in constant memory and time.
 
-- Catch errors in specifications early using expressive static type system.
+- Catch errors in specifications early using an expressive static type system.
 
 - Prove properties about specifications using theorem proving extensions.
 
