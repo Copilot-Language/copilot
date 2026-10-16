@@ -176,8 +176,9 @@ of the main repository.
 
 ```haskell
 -- This example implements a simple home heating system. The system heats
--- when the temperature gets too low, and stops when it is high enough. It read
--- temperature as a byte (range -50C to 100C) and translates this to Celsius.
+-- when the temperature gets too low, and stops when it is high enough. It
+-- reads the temperature as a byte (range -50C to 100C) and translates it to
+-- Celsius.
 
 module Heater where
 
