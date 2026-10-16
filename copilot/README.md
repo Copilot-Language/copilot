@@ -7,7 +7,7 @@
 
 Copilot is a runtime verification framework for hard real-time systems.
 Programs can be interpreted for testing, or translated into C99 code to be
-incorporated in a project or standalone application. The C99 code generated
+incorporated into a project or standalone application. The C99 code generated
 is constant in memory and time, making it suitable for systems with hard
 real-time requirements.
 
