@@ -98,7 +98,7 @@ ghci> ghci> Leaving GHCi.
 ### Other Linux distributions
 
 On other Linux distributions or older Debian-based distributions, to use
-Copilot you must install a Haskell compiler (GHC) and the package manager
+Copilot, you must install a Haskell compiler (GHC) and the package manager
 Cabal. We currently support all versions of GHC from 8.6.5 to modern versions
 (9.10 as of this writing). You can install the toolchain using
 [ghcup](https://www.haskell.org/ghcup/) or, if you are on Debian/Ubuntu,
