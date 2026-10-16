@@ -239,7 +239,7 @@ does not constitute any form of endorsement._
   built using NASA's Core Flight System or the Robot Operating System (ROS 2).
 
 - [arduino-copilot](https://hackage.haskell.org/package/arduino-copilot)
-  facilitates building copilot applications that run on Arduino.
+  facilitates building Copilot applications that run on Arduino.
 
 - [sketch-frp-copilot](https://hackage.haskell.org/package/sketch-frp-copilot)
   extends Copilot with an FRP-like interface.
