@@ -1,6 +1,7 @@
-2026-10-12
+2026-10-15
         * Adjust Travis CI script to flag presence of tabs as an error. (#774)
         * Adjust Travis CI script to flag trailing space as an error. (#777)
+        * Update README to correct typos and improve readability. (#779)
 
 2026-09-07
         * Version bump (4.8.1). (#760)

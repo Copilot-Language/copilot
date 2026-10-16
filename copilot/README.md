@@ -7,7 +7,7 @@
 
 Copilot is a runtime verification framework for hard real-time systems.
 Programs can be interpreted for testing, or translated into C99 code to be
-incorporated in a project or standalone application. The C99 code generated
+incorporated into a project or standalone application. The C99 code generated
 is constant in memory and time, making it suitable for systems with hard
 real-time requirements.
 
@@ -26,7 +26,7 @@ real-time requirements.
 
 - Produce hard real-time C99 runtime monitors that run in constant memory and time.
 
-- Catch errors in specifications early using expressive static type system.
+- Catch errors in specifications early using an expressive static type system.
 
 - Prove properties about specifications using theorem proving extensions.
 
@@ -98,7 +98,7 @@ ghci> ghci> Leaving GHCi.
 ### Other Linux distributions
 
 On other Linux distributions or older Debian-based distributions, to use
-Copilot you must install a Haskell compiler (GHC) and the package manager
+Copilot, you must install a Haskell compiler (GHC) and the package manager
 Cabal. We currently support all versions of GHC from 8.6.5 to modern versions
 (9.10 as of this writing). You can install the toolchain using
 [ghcup](https://www.haskell.org/ghcup/) or, if you are on Debian/Ubuntu,
@@ -129,7 +129,7 @@ ghci> ghci> Leaving GHCi.
 ## Mac installation
 <sup>[(Back to top)](#table-of-contents)</sup>
 
-To use Copilot you must have a Haskell compiler (GHC) and the package manager
+To use Copilot, you must have a Haskell compiler (GHC) and the package manager
 Cabal. We currently support all versions of GHC from 8.6.5 to modern versions
 (9.6 as of this writing). You can install the toolchain using
 [ghcup](https://www.haskell.org/ghcup/), as well as with Homebrew:
@@ -162,7 +162,7 @@ ghci> ghci> Leaving GHCi.
 Feel free to open an issue if you are unable to install Copilot following these
 instructions.
 
-There is a TravisCI file at the root of the repository that may help with
+There is a Travis CI file at the root of the repository that may help with
 troubleshooting the installation. Our issues often include comments with
 Dockerfiles listing the steps necessary to install Copilot from scratch.
 
@@ -176,8 +176,9 @@ of the main repository.
 
 ```haskell
 -- This example implements a simple home heating system. The system heats
--- when the temperature gets too low, and stops when it is high enough. It read
--- temperature as a byte (range -50C to 100C) and translates this to Celsius.
+-- when the temperature gets too low, and stops when it is high enough. It
+-- reads the temperature as a byte (range -50C to 100C) and translates it to
+-- Celsius.
 
 module Heater where
 
@@ -238,13 +239,13 @@ does not constitute any form of endorsement._
   built using NASA's Core Flight System or the Robot Operating System (ROS 2).
 
 - [arduino-copilot](https://hackage.haskell.org/package/arduino-copilot)
-  facilitates building copilot applications that run on Arduino.
+  facilitates building Copilot applications that run on Arduino.
 
 - [sketch-frp-copilot](https://hackage.haskell.org/package/sketch-frp-copilot)
   extends Copilot with an FRP-like interface.
 
 - [zephyr-copilot](https://hackage.haskell.org/package/zephyr-copilot)
-  facilitates building copilot applications that run on boards supported by the
+  facilitates building Copilot applications that run on boards supported by the
   Zephyr project.
 
 # Documentation
@@ -390,5 +391,5 @@ https://github.com/Copilot-Language/copilot/graphs/contributors
 We are grateful for NASA Contract NNL08AD13T to Galois, Inc. and the National
 Institute of Aerospace, which partially supported this work.
 
-Additionally NASA Langley contracts 80LARC17C0004 and NNL09AA00A supported
+Additionally, NASA Langley contracts 80LARC17C0004 and NNL09AA00A supported
 further development of Copilot.
