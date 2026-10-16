@@ -245,7 +245,7 @@ does not constitute any form of endorsement._
   extends Copilot with an FRP-like interface.
 
 - [zephyr-copilot](https://hackage.haskell.org/package/zephyr-copilot)
-  facilitates building copilot applications that run on boards supported by the
+  facilitates building Copilot applications that run on boards supported by the
   Zephyr project.
 
 # Documentation
