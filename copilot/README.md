@@ -129,7 +129,7 @@ ghci> ghci> Leaving GHCi.
 ## Mac installation
 <sup>[(Back to top)](#table-of-contents)</sup>
 
-To use Copilot you must have a Haskell compiler (GHC) and the package manager
+To use Copilot, you must have a Haskell compiler (GHC) and the package manager
 Cabal. We currently support all versions of GHC from 8.6.5 to modern versions
 (9.6 as of this writing). You can install the toolchain using
 [ghcup](https://www.haskell.org/ghcup/), as well as with Homebrew:
