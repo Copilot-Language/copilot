@@ -350,7 +350,7 @@ testShowStruct = forAll arbitrary $ \k1 ->
                  forAll arbitrary $ \k2 ->
   show (S (Field k1) (Field k2)) == "<field1:" ++ show k1 ++ ",field2:" ++ show k2 ++ ">"
 
--- | Test showing a struct.
+-- | Test updating a struct.
 testUpdateStruct :: Property
 testUpdateStruct =
    forAll arbitrary $ \k1 ->
@@ -364,7 +364,7 @@ testUpdateStruct =
  where
    unField (Field x) = x
 
--- | Test showing a struct.
+-- | Test updating a struct (should fail).
 testUpdateStructFail :: Property
 testUpdateStructFail = expectFailure $
    forAll arbitrary $ \k1 ->
