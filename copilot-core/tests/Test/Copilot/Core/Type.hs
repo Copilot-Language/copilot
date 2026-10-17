@@ -165,7 +165,7 @@ testTypeLength1 = property $ typeLength a == 3
     a :: Type (Array 3 Int8)
     a = Array Int8
 
--- | Test that the length of an multi-dimensional array is as expected.
+-- | Test that the length of a multi-dimensional array is as expected.
 testTypeLength2 :: Property
 testTypeLength2 = property $ typeLength a == 3
   where
