@@ -4,6 +4,7 @@
         * Replace tab in CHANGELOG. (#772)
         * Fix comments for two tests in `Test.Copilot.Core.Type`. (#781)
         * Fix typo in Haddock comment of test property. (#783)
+        * Fix test to use `typeSize` instead of `typeLength` (#784).
 
 2026-09-07
         * Version bump (4.8.1). (#760)
