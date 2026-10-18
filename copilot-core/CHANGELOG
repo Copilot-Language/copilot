@@ -1,8 +1,9 @@
-2026-10-16
+2026-10-17
         * Increase test coverage for `Copilot.Core.Type.Array`. (#767)
         * Fix errors in the documentation of `Copilot.Core.Spec`. (#769)
         * Replace tab in CHANGELOG. (#772)
         * Fix comments for two tests in `Test.Copilot.Core.Type`. (#781)
+        * Fix typo in Haddock comment of test property. (#783)
 
 2026-09-07
         * Version bump (4.8.1). (#760)
