@@ -174,7 +174,7 @@ testTypeLength2 = property $ typeLength a == 3
 
 -- | Test that the size of an array is as expected.
 testTypeSize1 :: Property
-testTypeSize1 = property $ typeLength a == 3
+testTypeSize1 = property $ typeSize a == 3
   where
     a :: Type (Array 3 Int8)
     a = Array Int8
