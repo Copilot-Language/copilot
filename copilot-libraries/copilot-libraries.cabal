@@ -51,6 +51,7 @@ library
     , Copilot.Library.PTLTL
     , Copilot.Library.StateMachines
     , Copilot.Library.Statistics
+    , Copilot.Library.Random
     , Copilot.Library.RegExp
     , Copilot.Library.Utils
     , Copilot.Library.Voting
