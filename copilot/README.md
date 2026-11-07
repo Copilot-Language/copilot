@@ -2,7 +2,7 @@
 
 # Copilot
 
-[![Build Status](https://api.travis-ci.com/Copilot-Language/copilot.svg?branch=master)](https://app.travis-ci.com/github/Copilot-Language/copilot)
+[![Build Status](https://github.com/Copilot-Language/copilot/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/Copilot-Language/copilot/actions/workflows/build.yml)
 [![Version on Hackage](https://img.shields.io/hackage/v/copilot.svg)](https://hackage.haskell.org/package/copilot)
 
 Copilot is a runtime verification framework for hard real-time systems.
