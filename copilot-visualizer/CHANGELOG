@@ -1,3 +1,6 @@
+2026-11-07
+        * Version bump (4.8.2). (#792)
+
 2026-09-07
         * Version bump (4.8.1). (#760)
         * Fix inconsistent version bounds for `copilot` in Cabal file. (#749)
