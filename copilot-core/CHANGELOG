@@ -1,4 +1,5 @@
-2026-10-17
+2026-11-07
+        * Version bump (4.8.2). (#792)
         * Increase test coverage for `Copilot.Core.Type.Array`. (#767)
         * Fix errors in the documentation of `Copilot.Core.Spec`. (#769)
         * Replace tab in CHANGELOG. (#772)
