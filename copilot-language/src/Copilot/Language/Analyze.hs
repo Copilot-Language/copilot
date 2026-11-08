@@ -188,7 +188,7 @@ analyzeAppend refStreams dstn e b f = do
 -- append.
 analyzeDrop :: Int -> Stream a -> IO ()
 analyzeDrop k (Append xs _ _)
-  | k >= length xs                         = throw DropIndexOverflow
+  | k > length xs                          = throw DropIndexOverflow
   | k > fromIntegral (maxBound :: DropIdx) = throw DropMaxViolation
   | otherwise                              = return ()
 analyzeDrop _ _                            = throw DropAppliedToNonAppend
