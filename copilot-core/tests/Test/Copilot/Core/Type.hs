@@ -82,8 +82,7 @@ tests =
     ]
 
 -- | Test that the function simpleTypes preserves inequality, that is, it
--- returns different values for different types. This test is limited; we do
--- not test structs or arrays.
+-- returns different values for different types.
 testSimpleTypesInequality :: Property
 testSimpleTypesInequality = forAllBlind twoDiffTypes $ \(t1, t2) ->
     t1 /= t2
