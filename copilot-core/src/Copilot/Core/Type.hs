@@ -61,8 +61,8 @@ import GHC.TypeLits       (KnownNat, KnownSymbol, Symbol, natVal, sameNat,
 -- Internal imports
 import Copilot.Core.Type.Array (Array)
 
--- | The value of that is a product or struct, defined as a constructor with
--- several fields.
+-- | Types denoting products or structs, defined as a constructor with several
+-- fields.
 class Struct a where
   -- | Returns the name of struct in the target language.
   typeName :: a -> String
