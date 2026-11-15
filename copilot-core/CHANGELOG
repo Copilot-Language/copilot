@@ -1,6 +1,7 @@
-2026-10-20
+2026-11-15
         * Fix inaccurate Haddock comment of test property. (#787)
         * Clarify documentation of `Copilot.Core.Type.Struct`. (#795)
+        * Remove unused import from `Test.Copilot.Core.Type`. (#797)
 
 2026-11-07
         * Version bump (4.8.2). (#792)
