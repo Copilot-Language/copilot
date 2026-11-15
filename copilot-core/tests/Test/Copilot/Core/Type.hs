@@ -7,7 +7,6 @@ module Test.Copilot.Core.Type where
 
 -- External imports
 import Data.Int                             (Int16, Int32, Int64, Int8)
-import Data.Maybe                           (isJust)
 import Data.Proxy                           (Proxy (..))
 import Data.Type.Equality                   (TestEquality (..), testEquality,
                                              (:~:) (..))
